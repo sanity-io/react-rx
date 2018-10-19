@@ -1,6 +1,8 @@
-import {SearchExample} from './search'
-import {SyncExample} from './sync'
 import * as React from 'react'
+import {FetchExample} from './fetch'
+import {SearchExample} from './search'
+import {SimpleExample} from './simple'
+import {SyncExample} from './sync'
 
 interface Example {
   title: string
@@ -9,7 +11,9 @@ interface Example {
 
 const examples: {[exampleName: string]: Example} = {
   search: {title: 'Search', component: SearchExample},
-  sync: {title: 'Sync', component: SyncExample}
+  sync: {title: 'Sync', component: SyncExample},
+  simple: {title: 'Simple', component: SimpleExample},
+  fetch: {title: 'Fetch', component: FetchExample}
 }
 
 interface State {

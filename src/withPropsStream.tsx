@@ -1,52 +1,57 @@
 import * as React from 'react'
 import wrapDisplayName from 'recompose/wrapDisplayName'
-import {from as observableFrom, Observable, Subject} from 'rxjs'
+import {Observable, Subject, Subscription} from 'rxjs'
 
 export function withPropsStream<OwnerProps, ChildProps>(
-  getObservable: (inputProps$: Observable<OwnerProps>) => Observable<ChildProps>,
-  BaseComponent: React.ComponentType<OwnerProps>
+  setup: (inputProps$: Observable<OwnerProps>) => Observable<ChildProps>,
+  BaseComponent: React.ComponentType<ChildProps>
 ): React.ComponentType<OwnerProps> {
   return class WithPropsStream extends React.Component<OwnerProps, ChildProps> {
-    public static displayName = wrapDisplayName(BaseComponent, 'withPropsStream')
+    static displayName = wrapDisplayName(BaseComponent, 'withPropsStream')
 
-    public subscription: any
+    subscription: Subscription
 
-    public state: ChildProps = null
-    public props$: Subject<OwnerProps> = new Subject()
+    state: ChildProps = null
+    props$: Subject<OwnerProps> = new Subject()
 
     constructor(props) {
       super(props)
-      let sync = true
-      this.subscription = getObservable(observableFrom(this.props$)).subscribe(childProps => {
-        this.setChildProps(childProps, sync)
+
+      let isSync = true
+
+      const childProps$ = setup(this.props$.asObservable())
+
+      this.subscription = childProps$.subscribe(childProps => {
+        this.setChildProps(childProps, isSync)
       })
+
       this.props$.next(this.props)
-      sync = false
+      isSync = false
     }
 
-    public setChildProps = (childProps: ChildProps, sync: boolean) => {
+    setChildProps = (childProps: ChildProps, isSync: boolean) => {
       if (typeof childProps !== 'object' || childProps === null) {
         throw new Error(
           'The observable emitted a non-object value. It should be an object that can be passed as react props.'
         )
       }
-      if (sync) {
+      if (isSync) {
         this.state = childProps
       } else {
         this.setState(childProps)
       }
     }
 
-    public componentWillUnmount() {
+    componentWillUnmount() {
       this.subscription.unsubscribe()
     }
 
     // todo: figure out a future proof way of handling this
-    public UNSAFE_componentWillReceiveProps(nextProps: OwnerProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: OwnerProps) {
       this.props$.next(nextProps)
     }
 
-    public render() {
+    render() {
       return this.state ? <BaseComponent {...this.state} /> : null
     }
   }

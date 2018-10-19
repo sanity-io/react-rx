@@ -1,7 +1,7 @@
 import * as React from 'react'
-import {withPropsStream} from '../../withPropsStream'
 import {concat, of, timer} from 'rxjs'
-import {take, map, mapTo} from 'rxjs/operators'
+import {map, mapTo, take} from 'rxjs/operators'
+import {withPropsStream} from '../../src/withPropsStream'
 
 // this will synchronously set the state before the component mounts, and thereafter
 // wait 1 second before starting updating every 500ms

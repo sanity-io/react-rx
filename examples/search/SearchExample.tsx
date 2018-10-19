@@ -1,7 +1,7 @@
 import * as React from 'react'
-import {withPropsStream} from '../../withPropsStream'
 import {Observable, timer} from 'rxjs'
-import {map, distinctUntilChanged, switchMap, tap, filter, debounceTime} from 'rxjs/operators'
+import {debounceTime, distinctUntilChanged, filter, map, switchMap} from 'rxjs/operators'
+import {withPropsStream} from '../../src/withPropsStream'
 
 interface SearchHitsSourceProps {
   keyword: string
@@ -19,7 +19,13 @@ interface SearchHitsTargetProps {
   result: SearchResult
 }
 
-const range = len => new Array(len).fill(0)
+const range = len => {
+  const res = []
+  for (let i = 0; i <= len; i++) {
+    res.push()
+  }
+  return res
+}
 
 // A search function that takes longer time to complete for shorter keywords
 // e.g. a keyword of one character takes 9 seconds while a keyword of 9 characters takes 1 second
@@ -27,7 +33,7 @@ const search = (keyword: string): Observable<SearchResult> => {
   const delay = Math.max(1, Math.round(10 - keyword.length))
   return timer(delay * 200).pipe(
     map(() => range(delay).map((_, i) => ({title: `Hit #${i}`}))),
-    map(hits => ({keyword: keyword, hits: hits}))
+    map(hits => ({keyword, hits}))
   )
 }
 

@@ -1,11 +1,11 @@
 {
-  "name": "props-stream",
+  "name": "react-props-stream",
   "version": "1.0.0",
   "private": true,
   "description": "Utility for creating reactive react components",
   "main": "index.js",
   "scripts": {
-    "start": "parcel examples/index.html"
+    "start": "mkdir -p dist/fetch && cp examples/fetch/*.txt dist/fetch && parcel examples/index.html"
   },
   "keywords": [],
   "author": "",
