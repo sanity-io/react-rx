@@ -8,7 +8,9 @@ A higher order component for mapping a reactive stream to a React component
 import {withPropsStream} from 'react-props-stream'
 import {timer} from 'rxjs'
 import {map} from 'rxjs/operators'
+
 const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
+
 const MyComponent = withPropsStream(
   () => numbers$,
   props => <div>The number is {props.number}</div>
