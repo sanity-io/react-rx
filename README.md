@@ -1,6 +1,6 @@
 # react-props-stream
 
-A higher order component for mapping a reactive stream to a React component
+Higher order components for creating React components from RxJS streams
 
 ## Simple example
 
@@ -8,16 +8,15 @@ A higher order component for mapping a reactive stream to a React component
 import {withPropsStream} from 'react-props-stream'
 import {timer} from 'rxjs'
 import {map} from 'rxjs/operators'
-
 const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
 
-const MyComponent = withPropsStream(
-  () => numbers$,
+const MyStreamingComponent = withPropsStream(
+  numbers$,
   props => <div>The number is {props.number}</div>
 )
 ```
 
-## Automatically fetch when props change
+## Component that automatically fetches `props.url` when its value change
 
 ```typescript jsx
 import {withPropsStream} from 'react-props-stream'
@@ -35,7 +34,7 @@ const FetchComponent = withPropsStream(
 )
 
 // Usage
-ReactDOM.render(<FetchComponent url="http://example.com" />, element)
+ReactDOM.render(<FetchComponent url="http://example.com" />, document.getElementById('myid'))
 ```
 
 ## More examples
