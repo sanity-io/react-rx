@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {withPropsStream} from '../../src/withPropsStream'
+import {withPropsStream} from '../../withPropsStream'
 
 const FetchComponent: React.ComponentType<{url: string}> = withPropsStream(
   props$ =>
@@ -21,12 +21,13 @@ export class FetchExample extends React.Component {
     const {currentUrl} = this.state
     return (
       <div>
-        {URLS.map(url => (
-          <button key={url} onClick={() => this.setState({currentUrl: url})}>
-            {url}
-          </button>
-        ))}
-
+        <p>
+          {URLS.map(url => (
+            <button key={url} onClick={() => this.setState({currentUrl: url})}>
+              {url}
+            </button>
+          ))}
+        </p>
         {currentUrl ? <FetchComponent url={currentUrl} /> : 'Click on url to fetch'}
       </div>
     )

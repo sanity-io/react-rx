@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
-import {debounceTime, distinctUntilChanged, filter, map, switchMap} from 'rxjs/operators'
-import {withPropsStream} from '../../src/withPropsStream'
+import {debounceTime, distinctUntilChanged, filter, map, switchMap, tap} from 'rxjs/operators'
+import {withPropsStream} from '../../withPropsStream'
 
 interface SearchHitsSourceProps {
   keyword: string
@@ -22,7 +22,7 @@ interface SearchHitsTargetProps {
 const range = len => {
   const res = []
   for (let i = 0; i <= len; i++) {
-    res.push()
+    res.push(null)
   }
   return res
 }

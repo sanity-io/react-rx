@@ -1,5 +1,8 @@
 import * as React from 'react'
+import {ErrorsExample} from './errors'
+import {EventHandlersExample} from './event-handlers'
 import {FetchExample} from './fetch'
+import {PassThroughPropsExample} from './passthrough-props'
 import {SearchExample} from './search'
 import {SimpleExample} from './simple'
 import {SyncExample} from './sync'
@@ -13,35 +16,36 @@ const examples: {[exampleName: string]: Example} = {
   search: {title: 'Search', component: SearchExample},
   sync: {title: 'Sync', component: SyncExample},
   simple: {title: 'Simple', component: SimpleExample},
-  fetch: {title: 'Fetch', component: FetchExample}
+  eventHandlers: {title: 'Event handlers', component: EventHandlersExample},
+  fetch: {title: 'Fetch', component: FetchExample},
+  passThroughProps: {title: 'Pass through props', component: PassThroughPropsExample},
+  errors: {title: 'Errors', component: ErrorsExample}
 }
 
-interface State {
-  selectedExampleName: string
+const LINK_STYLE = {
+  padding: 4
 }
-export class Examples extends React.Component {
-  state: State = {
-    selectedExampleName: 'search'
-  }
+const SELECTED_LINK_STYLE = {
+  ...LINK_STYLE,
+  backgroundColor: '#dddddd'
+}
+export class Examples extends React.Component<{selectedExampleName: string}> {
   render() {
-    const {selectedExampleName} = this.state
-    const selectedExample = examples[selectedExampleName]
+    const {selectedExampleName} = this.props
+    const selectedExample = examples[selectedExampleName] || examples[Object.keys(examples)[0]]
     const ExampleComponent = selectedExample.component
     return (
       <>
-        Select example:
         {Object.keys(examples).map(exampleName => (
-          <label key={exampleName}>
-            <input
-              name="example"
-              type="radio"
-              checked={exampleName === selectedExampleName}
-              onChange={() => this.setState({selectedExampleName: exampleName})}
-            />
+          <a
+            key={exampleName}
+            href={`#${exampleName}`}
+            style={selectedExample === examples[exampleName] ? SELECTED_LINK_STYLE : LINK_STYLE}
+          >
             {examples[exampleName].title}
-          </label>
+          </a>
         ))}
-        <h2>Example: {selectedExample.title}</h2>
+        <h2>{selectedExample.title}</h2>
         <ExampleComponent />
       </>
     )
