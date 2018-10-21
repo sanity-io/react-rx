@@ -2,24 +2,26 @@ import * as React from 'react'
 import wrapDisplayName from 'recompose/wrapDisplayName'
 import {Observable, Subject, Subscription} from 'rxjs'
 
-export function withPropsStream<OwnerProps, ChildProps>(
-  setup: (inputProps$: Observable<OwnerProps>) => Observable<ChildProps>,
-  BaseComponent: React.ComponentType<ChildProps>
-): React.ComponentType<OwnerProps> {
-  return class WithPropsStream extends React.Component<OwnerProps, ChildProps> {
-    static displayName = wrapDisplayName(BaseComponent, 'withPropsStream')
+export type SetupFunction<SourceProps, TargetProps> =
+  | Observable<TargetProps>
+  | ((props$: Observable<SourceProps>) => Observable<TargetProps>)
+
+export function withPropsStream<SourceProps, TargetProps>(
+  setup: SetupFunction<SourceProps, TargetProps>,
+  TargetComponent: React.ComponentType<TargetProps>
+): React.ComponentType<SourceProps> {
+  return class WithPropsStream extends React.Component<SourceProps, {targetProps: TargetProps}> {
+    static displayName = wrapDisplayName(TargetComponent, 'withPropsStream')
 
     subscription: Subscription
-
-    state: ChildProps = null
-    props$: Subject<OwnerProps> = new Subject()
+    props$: Subject<SourceProps> = new Subject()
 
     constructor(props) {
       super(props)
 
       let isSync = true
 
-      const childProps$ = setup(this.props$.asObservable())
+      const childProps$ = typeof setup === 'function' ? setup(this.props$.asObservable()) : setup
 
       this.subscription = childProps$.subscribe(childProps => {
         this.setChildProps(childProps, isSync)
@@ -29,16 +31,18 @@ export function withPropsStream<OwnerProps, ChildProps>(
       isSync = false
     }
 
-    setChildProps = (childProps: ChildProps, isSync: boolean) => {
+    setChildProps = (childProps: TargetProps, isSync: boolean) => {
       if (typeof childProps !== 'object' || childProps === null) {
         throw new Error(
           'The observable emitted a non-object value. It should be an object that can be passed as react props.'
         )
       }
+
+      const state = {targetProps: childProps}
       if (isSync) {
-        this.state = childProps
+        this.state = state
       } else {
-        this.setState(childProps)
+        this.setState(state)
       }
     }
 
@@ -47,12 +51,12 @@ export function withPropsStream<OwnerProps, ChildProps>(
     }
 
     // todo: figure out a future proof way of handling this
-    UNSAFE_componentWillReceiveProps(nextProps: OwnerProps) {
+    UNSAFE_componentWillReceiveProps(nextProps: SourceProps) {
       this.props$.next(nextProps)
     }
 
     render() {
-      return this.state ? <BaseComponent {...this.state} /> : null
+      return this.state ? React.createElement(TargetComponent, this.state.targetProps) : null
     }
   }
 }
