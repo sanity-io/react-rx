@@ -12,7 +12,7 @@ interface State {
 export function streamingComponent<SourceProps>(
   setup: SetupFunction<SourceProps>
 ): React.ComponentType<SourceProps> {
-  return class WithPropsStream extends React.Component<SourceProps, State> {
+  return class StreamingComponent extends React.Component<SourceProps, State> {
     subscription: Subscription
     props$: Subject<SourceProps> = new Subject()
 

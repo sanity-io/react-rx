@@ -1,7 +1,7 @@
 import {format, formatDistance, formatRelative, subDays} from 'date-fns'
 import * as React from 'react'
-import { combineLatest, timer } from "rxjs";
-import { map, share, take } from "rxjs/operators";
+import {combineLatest, timer} from 'rxjs'
+import {map, share, take} from 'rxjs/operators'
 import {withPropsStream} from '../../withPropsStream'
 
 const UPDATE_INTERVAL = 1000
