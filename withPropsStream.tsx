@@ -4,16 +4,19 @@ import {Observable} from 'rxjs'
 import {map} from 'rxjs/operators'
 import {streamingComponent} from './streamingComponent'
 
-type SetupFunction<SourceProps, TargetProps> =
-  | Observable<TargetProps>
-  | ((props$: Observable<SourceProps>) => Observable<TargetProps>)
+type ObservableFactory<SourceProps, TargetProps> = ((
+  props$: Observable<SourceProps>
+) => Observable<TargetProps>)
 
 export function withPropsStream<SourceProps, TargetProps>(
-  setup: SetupFunction<SourceProps, TargetProps>,
+  observableOrFactory: Observable<TargetProps> | ObservableFactory<SourceProps, TargetProps>,
   TargetComponent: React.ComponentType<TargetProps>
 ) {
   const ComposedComponent = streamingComponent<SourceProps>(sourceProps$ => {
-    const targetProps$ = typeof setup === 'function' ? setup(sourceProps$) : setup
+    const targetProps$ =
+      typeof observableOrFactory === 'function'
+        ? observableOrFactory(sourceProps$)
+        : observableOrFactory
     return targetProps$.pipe(map(props => <TargetComponent {...props} />))
   })
   ComposedComponent.displayName = wrapDisplayName(TargetComponent, 'withPropsStream')

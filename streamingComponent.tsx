@@ -1,16 +1,16 @@
 import * as React from 'react'
 import {Observable, Subject, Subscription} from 'rxjs'
 
-type SetupFunction<SourceProps> =
-  | Observable<React.ReactNode>
-  | ((props$: Observable<SourceProps>) => Observable<React.ReactNode>)
+type ObservableFactory<SourceProps> = ((
+  props$: Observable<SourceProps>
+) => Observable<React.ReactNode>)
 
 interface State {
-  node: React.ReactNode | null
+  node: React.ReactNode
 }
 
 export function streamingComponent<SourceProps>(
-  setup: SetupFunction<SourceProps>
+  observableOrFactory: Observable<SourceProps> | ObservableFactory<SourceProps>
 ): React.ComponentType<SourceProps> {
   return class StreamingComponent extends React.Component<SourceProps, State> {
     subscription: Subscription
@@ -18,19 +18,18 @@ export function streamingComponent<SourceProps>(
 
     constructor(props) {
       super(props)
-
-      let isSync = true
-
-      const node$ = typeof setup === 'function' ? setup(this.props$.asObservable()) : setup
-
       this.state = {node: null}
 
+      const node$ =
+        typeof observableOrFactory === 'function'
+          ? observableOrFactory(this.props$.asObservable())
+          : observableOrFactory
+
+      let isSync = true
       this.subscription = node$.subscribe(node => {
         this.setStateMaybeSync({node}, isSync)
       })
-
       this.props$.next(this.props)
-
       isSync = false
     }
 
