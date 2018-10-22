@@ -2,6 +2,7 @@ import * as React from 'react'
 import {ErrorsExample} from './errors'
 import {EventHandlersExample} from './event-handlers'
 import {FetchExample} from './fetch'
+import { FormDataExample } from "./form-data";
 import {PassThroughPropsExample} from './passthrough-props'
 import {SearchExample} from './search'
 import {SimpleExample} from './simple'
@@ -19,7 +20,8 @@ const examples: {[exampleName: string]: Example} = {
   eventHandlers: {title: 'Event handlers', component: EventHandlersExample},
   fetch: {title: 'Fetch', component: FetchExample},
   passThroughProps: {title: 'Pass through props', component: PassThroughPropsExample},
-  errors: {title: 'Errors', component: ErrorsExample}
+  errors: {title: 'Errors', component: ErrorsExample},
+  formData: {title: 'Form data', component: FormDataExample}
 }
 
 const LINK_STYLE = {
