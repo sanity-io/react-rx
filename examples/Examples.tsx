@@ -7,6 +7,7 @@ import {PassThroughPropsExample} from './passthrough-props'
 import {SearchExample} from './search'
 import {SimpleExample} from './simple'
 import {SyncExample} from './sync'
+import {WithObservableExample} from './with-observable'
 
 interface Example {
   title: string
@@ -21,7 +22,8 @@ const examples: {[exampleName: string]: Example} = {
   fetch: {title: 'Fetch', component: FetchExample},
   passThroughProps: {title: 'Pass through props', component: PassThroughPropsExample},
   errors: {title: 'Errors', component: ErrorsExample},
-  formData: {title: 'Form data', component: FormDataExample}
+  formData: {title: 'Form data', component: FormDataExample},
+  withObservable: {title: 'WithObservable component', component: WithObservableExample}
 }
 
 const LINK_STYLE = {
