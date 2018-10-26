@@ -9,7 +9,7 @@ const STYLE = {
 }
 
 export const EventHandlersExample = streamingComponent(() => {
-  const {events$: mouseMoves$, handler: onMouseMove} = createEventHandler<React.MouseEvent>()
+  const [mouseMoves$, onMouseMove] = createEventHandler<React.MouseEvent>()
 
   return mouseMoves$.pipe(
     map(event => ({x: event.clientX, y: event.clientY})),

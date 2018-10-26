@@ -1,9 +1,6 @@
-import {Subject} from 'rxjs'
+import {Observable, Subject} from 'rxjs'
 
-export function createEventHandler<Event>() {
+export function createEventHandler<Event>(): [Observable<Event>, (event: Event) => void] {
   const events$: Subject<Event> = new Subject()
-  return {
-    handler: (event: Event) => events$.next(event),
-    events$: events$.asObservable()
-  }
+  return [events$.asObservable(), (event: Event) => events$.next(event)]
 }

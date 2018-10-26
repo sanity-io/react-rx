@@ -8,7 +8,7 @@ const justNumbers$ = timer(0, 500)
 
 const numberReactElement$ = justNumbers$.pipe(map(num => <div>The number is {num}</div>))
 
-const {handler: onSpeedChange, events$: onSpeedChange$} = createEventHandler<
+const [onSpeedChange$, onSpeedChange] = createEventHandler<
   React.SyntheticEvent<HTMLInputElement>
 >()
 

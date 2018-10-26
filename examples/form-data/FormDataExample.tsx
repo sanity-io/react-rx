@@ -23,11 +23,11 @@ interface Props {
 }
 
 export const FormDataExample = streamingComponent(() => {
-  const {events$: onChange$, handler: onChange} = createEventHandler<
+  const [onChange$, onChange] = createEventHandler<
     React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   >()
 
-  const {events$: onSubmit$, handler: onSubmit} = createEventHandler<React.SyntheticEvent>()
+  const [onSubmit$, onSubmit] = createEventHandler<React.SyntheticEvent>()
 
   const formData$ = concat(
     storage.get(STORAGE_KEY, {title: '', description: ''}),
