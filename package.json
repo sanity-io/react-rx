@@ -1,8 +1,7 @@
 {
   "name": "react-props-stream",
   "version": "1.0.0",
-  "private": true,
-  "description": "Utility for creating reactive react components",
+  "description": "Utility belt for RxJS streams and React",
   "main": "build/withPropsStream.js",
   "scripts": {
     "prepublish": "tsc -d",
@@ -15,7 +14,7 @@
     "recompose": "^0.30.0"
   },
   "peerDependencies": {
-    "react": ">=15",
+    "react": ">=16",
     "rxjs": "^6"
   },
   "devDependencies": {

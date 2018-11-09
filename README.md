@@ -1,13 +1,24 @@
 # react-props-stream
 
-Higher order components for creating React components from RxJS streams
+Utility belt for RxJS streams and React
 
-## Simple example
+## API
+### `withPropsStream` HOC
+```
+withPropsStream(
+  ownerPropsToChildProps: Observable<object> | (props$: Observable<object>) => Observable<object>,
+  BaseComponent: ReactElementType
+): ReactComponent
+```
 
-```typescript jsx
+Similar to [recompose/mapPropsStream](https://github.com/acdlite/recompose/blob/master/docs/API.md#mappropsstream)
+
+#### Example: Component that displays an ever-increasing counter every second
+```jsx
 import {withPropsStream} from 'react-props-stream'
 import {timer} from 'rxjs'
 import {map} from 'rxjs/operators'
+
 const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
 
 const MyStreamingComponent = withPropsStream(
@@ -16,9 +27,9 @@ const MyStreamingComponent = withPropsStream(
 )
 ```
 
-## Component that automatically fetches `props.url` when its value change
+#### Example: Component that automatically fetches `props.url` when its value change
 
-```typescript jsx
+```jsx
 import {withPropsStream} from 'react-props-stream'
 import {map, distinctUntilChanged, switchMap} from 'rxjs/operators'
 
@@ -37,5 +48,37 @@ const FetchComponent = withPropsStream(
 ReactDOM.render(<FetchComponent url="http://example.com" />, document.getElementById('myid'))
 ```
 
+### `streamingComponent`
+Similar to [recompose/componentFromStream](https://github.com/acdlite/recompose/blob/master/docs/API.md#mappropsstream)
+
+###
+```jsx
+const FetchComponent = streamingComponent<{url: string}>(props$ =>
+  props$.pipe(
+    map(props => props.url),
+    distinctUntilChanged(),
+    switchMap(url => fetch(url).then(response => response.text())),
+    map(responseText => <div>The result was: {responseText}</div>)
+  )
+)
+```
+
+### `WithObservable` React component
+
+```jsx
+const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
+
+function MyComponent(props)  {
+  return (
+    <WithObservable observable={numbers$}>
+      {num => <div>The number is {num}</div>}
+    </WithObservable>
+  )
+}
+```
+
 ## More examples
 See more examples here: https://github.com/sanity-io/react-props-stream/tree/master/examples
+
+# Prior art
+This is heavily inspired by [recompose](https://github.com/acdlite/recompose)
