@@ -2,9 +2,12 @@
   "name": "react-props-stream",
   "version": "1.0.0",
   "description": "Utility belt for RxJS streams and React",
-  "main": "build/withPropsStream.js",
+  "main": "build/index.js",
   "scripts": {
-    "prepublish": "tsc -d",
+    "prepublish": "npm run build",
+    "postpublish": "npm run clean",
+    "build": "tsc -d",
+    "clean": "rimraf build",
     "start": "mkdir -p dist/fetch && cp examples/fetch/*.txt dist/fetch && parcel examples/index.html"
   },
   "keywords": [],
@@ -26,6 +29,7 @@
     "prettier": "1.14.3",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
+    "rimraf": "^2.6.2",
     "rxjs": "^6.3.3",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",

@@ -30,7 +30,7 @@ const MyStreamingComponent = withPropsStream(
 #### Example: Component that automatically fetches `props.url` when its value change
 
 ```jsx
-import {withPropsStream} from 'react-props-stream'
+import {createEventHandler} from 'react-props-stream'
 import {map, distinctUntilChanged, switchMap} from 'rxjs/operators'
 
 const FetchComponent = withPropsStream(
@@ -53,6 +53,9 @@ Similar to [recompose/componentFromStream](https://github.com/acdlite/recompose/
 
 ###
 ```jsx
+import {streamingComponent} from 'react-props-stream'
+import {map, distinctUntilChanged, switchMap} from 'rxjs/operators'
+
 const FetchComponent = streamingComponent<{url: string}>(props$ =>
   props$.pipe(
     map(props => props.url),
@@ -66,6 +69,10 @@ const FetchComponent = streamingComponent<{url: string}>(props$ =>
 ### `WithObservable` React component
 
 ```jsx
+import {WithObservable} from 'react-props-stream'
+import {timer} from 'rxjs'
+import {map} from 'rxjs/operators'
+
 const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
 
 function MyComponent(props)  {

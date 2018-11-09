@@ -33,7 +33,7 @@ export const ErrorsExample = withPropsStream(
   numbers$.pipe(
     map(n => ({number: n})),
     catchError((error, caught$) => {
-      const {handler: onRetry, events$: onRetry$} = createEventHandler()
+      const [onRetry$, onRetry] = createEventHandler()
       return onRetry$.pipe(
         mergeMapTo(caught$),
         startWith({error, onRetry})
