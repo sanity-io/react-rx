@@ -11,8 +11,8 @@
     "start": "mkdir -p dist/fetch && cp examples/fetch/*.txt dist/fetch && parcel examples/index.html"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Bjørge Næss <bjoerge@sanity.io>",
+  "license": "MIT",
   "dependencies": {
     "recompose": "^0.30.0"
   },
@@ -35,5 +35,16 @@
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
     "typescript": "^3.1.3"
-  }
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanity-io/react-props-stream.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sanity-io/react-props-stream/issues"
+  },
+  "homepage": "https://github.com/sanity-io/react-props-stream#readme"
 }
