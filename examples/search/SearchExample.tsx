@@ -1,25 +1,18 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
-import {debounceTime, distinctUntilChanged, filter, map, switchMap, tap} from 'rxjs/operators'
-import {withPropsStream} from '../../withPropsStream'
-
-interface SearchHitsSourceProps {
-  keyword: string
-}
+import {debounceTime, distinctUntilChanged, filter, map, switchMap} from 'rxjs/operators'
+import {stream, useObservable} from '../../hooks'
 
 interface SearchResult {
   keyword: string
   hits: Hit[]
 }
+
 interface Hit {
   title: string
 }
 
-interface SearchHitsTargetProps {
-  result: SearchResult
-}
-
-const range = len => {
+const range = (len: number) => {
   const res = []
   for (let i = 0; i <= len; i++) {
     res.push(null)
@@ -37,51 +30,37 @@ const search = (keyword: string): Observable<SearchResult> => {
   )
 }
 
-const mapOwnerPropsToChildProps = (
-  sourceProps$: Observable<SearchHitsSourceProps>
-): Observable<SearchHitsTargetProps> =>
-  sourceProps$.pipe(
-    map(props => props.keyword),
-    debounceTime(200),
-    distinctUntilChanged(),
-    filter(Boolean),
-    switchMap(keyword => search(keyword)),
-    map(result => ({result}))
+export function SearchExample() {
+  const [keyword, setKeyword] = React.useState('')
+  return (
+    <>
+      <input
+        type="search"
+        size={100}
+        value={keyword}
+        placeholder="Type a keyword to search"
+        onChange={event => setKeyword(event.target.value)}
+      />
+      <div>The more characters you type, the faster the results will appear</div>
+      {useObservable(
+        stream(keyword).pipe(
+          debounceTime(200),
+          distinctUntilChanged(),
+          filter(Boolean),
+          switchMap((kw: string) => search(kw)),
+          map((result: SearchResult) => (
+            <>
+              <h1>Searched for {result.keyword}</h1>
+              <div>Got {result.hits.length} hits</div>
+              <ul>
+                {result.hits.map((hit, i) => (
+                  <li key={i}>{hit.title}</li>
+                ))}
+              </ul>
+            </>
+          ))
+        )
+      )}
+    </>
   )
-
-const SearchHits = withPropsStream(mapOwnerPropsToChildProps, props => (
-  <>
-    <h1>Searched for {props.result.keyword}</h1>
-    <div>Got {props.result.hits.length} hits</div>
-    <ul>
-      {props.result.hits.map((hit, i) => (
-        <li key={i}>{hit.title}</li>
-      ))}
-    </ul>
-  </>
-))
-
-interface State {
-  keyword: string
-}
-
-export class SearchExample extends React.Component {
-  state: State = {
-    keyword: ''
-  }
-  render() {
-    return (
-      <>
-        <input
-          type="search"
-          size={100}
-          value={this.state.keyword}
-          placeholder="Type a keyword to search"
-          onChange={event => this.setState({keyword: event.target.value})}
-        />
-        <div>The more characters you type, the faster the results will appear</div>
-        <SearchHits keyword={this.state.keyword} />
-      </>
-    )
-  }
 }

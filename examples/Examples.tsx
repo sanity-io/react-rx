@@ -2,11 +2,13 @@ import * as React from 'react'
 import {ErrorsExample} from './errors'
 import {EventHandlersExample} from './event-handlers'
 import {FetchExample} from './fetch'
-import { FormDataExample } from "./form-data";
+import {FormDataExample} from './form-data'
+import {HooksExample} from './hooks'
 import {PassThroughPropsExample} from './passthrough-props'
 import {SearchExample} from './search'
 import {SimpleExample} from './simple'
 import {SyncExample} from './sync'
+import {TickExample} from './tick'
 import {WithObservableExample} from './with-observable'
 
 interface Example {
@@ -15,15 +17,17 @@ interface Example {
 }
 
 const examples: {[exampleName: string]: Example} = {
-  search: {title: 'Search', component: SearchExample},
-  sync: {title: 'Sync', component: SyncExample},
-  simple: {title: 'Simple', component: SimpleExample},
-  eventHandlers: {title: 'Event handlers', component: EventHandlersExample},
-  fetch: {title: 'Fetch', component: FetchExample},
-  passThroughProps: {title: 'Pass through props', component: PassThroughPropsExample},
   errors: {title: 'Errors', component: ErrorsExample},
-  formData: {title: 'Form data', component: FormDataExample},
-  withObservable: {title: 'WithObservable component', component: WithObservableExample}
+  'event-handlers': {title: 'Event handlers', component: EventHandlersExample},
+  fetch: {title: 'Fetch', component: FetchExample},
+  'form-data': {title: 'Form data', component: FormDataExample},
+  hooks: {title: 'Hooks', component: HooksExample},
+  'passthrough-props': {title: 'Pass through props', component: PassThroughPropsExample},
+  search: {title: 'Search', component: SearchExample},
+  simple: {title: 'Simple', component: SimpleExample},
+  sync: {title: 'Sync', component: SyncExample},
+  tick: {title: 'Tick', component: TickExample},
+  'with-observable': {title: 'With observable', component: WithObservableExample}
 }
 
 const LINK_STYLE = {
@@ -33,25 +37,24 @@ const SELECTED_LINK_STYLE = {
   ...LINK_STYLE,
   backgroundColor: '#dddddd'
 }
-export class Examples extends React.Component<{selectedExampleName: string}> {
-  render() {
-    const {selectedExampleName} = this.props
-    const selectedExample = examples[selectedExampleName] || examples[Object.keys(examples)[0]]
-    const ExampleComponent = selectedExample.component
-    return (
-      <>
-        {Object.keys(examples).map(exampleName => (
-          <a
-            key={exampleName}
-            href={`#${exampleName}`}
-            style={selectedExample === examples[exampleName] ? SELECTED_LINK_STYLE : LINK_STYLE}
-          >
-            {examples[exampleName].title}
-          </a>
-        ))}
-        <h2>{selectedExample.title}</h2>
-        <ExampleComponent />
-      </>
-    )
-  }
+
+export function Examples(props: {selectedExampleName: string}) {
+  const {selectedExampleName} = props
+  const selectedExample = examples[selectedExampleName] || examples[Object.keys(examples)[0]]
+  const ExampleComponent = selectedExample.component
+  return (
+    <>
+      {Object.keys(examples).map(exampleName => (
+        <a
+          key={exampleName}
+          href={`#${exampleName}`}
+          style={selectedExample === examples[exampleName] ? SELECTED_LINK_STYLE : LINK_STYLE}
+        >
+          {examples[exampleName].title}
+        </a>
+      ))}
+      <h2>{selectedExample.title}</h2>
+      <ExampleComponent />
+    </>
+  )
 }

@@ -1,6 +1,6 @@
-import {of as observableOf} from 'rxjs'
+import {Observable, of as observableOf} from 'rxjs'
 
-const tryParse = (val, defaultValue) => {
+const tryParse = <T>(val: any, defaultValue: T): T => {
   try {
     return JSON.parse(val)
   } catch (err) {
@@ -8,12 +8,12 @@ const tryParse = (val, defaultValue) => {
   }
 }
 
-const get = (key, defValue) => {
+const get = <T>(key: string, defValue: T): Observable<T> => {
   const val = localStorage.getItem(key)
-  return observableOf(val === null ? defValue : tryParse(val, defValue))
+  return observableOf(val === null ? defValue : tryParse<T>(val, defValue))
 }
 
-const set = (key, nextValue) => {
+const set = <T>(key: string, nextValue: T): Observable<T> => {
   // Can't stringify undefined, and nulls are what
   // `getItem` returns when key does not exist
   if (typeof nextValue === 'undefined' || nextValue === null) {

@@ -1,16 +1,13 @@
 import * as React from 'react'
-import {Observable, timer} from 'rxjs'
-import {map, startWith} from 'rxjs/operators'
-import {createEventHandler} from '../../createEventHandler'
-import {WithObservable} from '../../WithObservable'
+import {Observable, of, timer} from 'rxjs'
+import {map, startWith, switchMap} from 'rxjs/operators'
+import {useEventHandler, useObservable} from '../../hooks'
 
 const justNumbers$ = timer(0, 500)
 
-const numberReactElement$ = justNumbers$.pipe(map(num => <div>The number is {num}</div>))
+const numberReactElement$ = justNumbers$.pipe(map(num => <div>The number is {num}!</div>))
 
-const [onSpeedChange$, onSpeedChange] = createEventHandler<
-  React.SyntheticEvent<HTMLInputElement>
->()
+const [onSpeedChange$, onSpeedChange] = useEventHandler<React.SyntheticEvent<HTMLInputElement>>()
 
 const speed$: Observable<number> = onSpeedChange$.pipe(
   map(event => Number(event.currentTarget.value)),
@@ -20,20 +17,29 @@ const speed$: Observable<number> = onSpeedChange$.pipe(
 export const WithObservableExample = () => (
   <>
     <h2>An observable of react elements</h2>
-    <WithObservable observable={numberReactElement$} />
+    {useObservable(of(<div>HELLO SYNC</div>))}
+    {useObservable(numberReactElement$.pipe(startWith(2)))}
     <h2>An observable with child as render func</h2>
-    <WithObservable observable={justNumbers$}>{num => <>The number is {num}</>}</WithObservable>
+    {useObservable(
+      timer(0, 100).pipe(
+        startWith(2),
+        map(num => <>The number is {num}</>)
+      )
+    )}
 
     <h2>Nested</h2>
     <p>You can adjust the update speed by changing update interval below</p>
-    <WithObservable observable={speed$}>
-      {(speed: number) => (
-        <>
-          Update interval:
-          <input type="number" value={speed} onChange={onSpeedChange} step={200} min={0} />
-          <WithObservable observable={timer(0, speed).pipe(map(n => <div>Update {n}</div>))} />
-        </>
-      )}
-    </WithObservable>
+    {useObservable(
+      speed$.pipe(
+        switchMap((speed: number) => timer(0, speed).pipe(map(update => [speed, update]))),
+        map(([speed, update]) => (
+          <>
+            Update interval:
+            <input type="number" value={speed} onChange={onSpeedChange} step={200} min={0} />
+            <div>Update {update}</div>
+          </>
+        ))
+      )
+    )}
   </>
 )

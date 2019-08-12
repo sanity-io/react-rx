@@ -1,35 +1,34 @@
 import * as React from 'react'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {withPropsStream} from '../../withPropsStream'
+import {streamingComponent} from '../../hooks'
 
-const FetchComponent: React.ComponentType<{url: string}> = withPropsStream(
-  props$ =>
-    props$.pipe(
-      map(props => props.url),
-      distinctUntilChanged(),
-      switchMap(url => fetch(url).then(response => response.text())),
-      map(responseText => ({responseText}))
-    ),
-  props => <div>The result was: {props.responseText}</div>
+interface Props {
+  url: string
+}
+
+const FetchComponent = streamingComponent<Props>(props$ =>
+  props$.pipe(
+    map((props: Props) => props.url),
+    distinctUntilChanged(),
+    switchMap((url: string) => fetch(url).then(response => response.text())),
+    map(responseText => <div>The result was: {responseText}</div>)
+  )
 )
 
 const URLS = ['/fetch/a.txt', '/fetch/b.txt']
 
-export class FetchExample extends React.Component {
-  state = {currentUrl: ''}
-  render() {
-    const {currentUrl} = this.state
-    return (
-      <div>
-        <p>
-          {URLS.map(url => (
-            <button key={url} onClick={() => this.setState({currentUrl: url})}>
-              {url}
-            </button>
-          ))}
-        </p>
-        {currentUrl ? <FetchComponent url={currentUrl} /> : 'Click on url to fetch'}
-      </div>
-    )
-  }
+export function FetchExample() {
+  const [currentUrl, setCurrentUrl] = React.useState('')
+  return (
+    <div>
+      <p>
+        {URLS.map(url => (
+          <button key={url} onClick={() => setCurrentUrl(url)}>
+            {url}
+          </button>
+        ))}
+      </p>
+      {currentUrl ? <FetchComponent url={currentUrl} /> : 'Click on url to fetch'}
+    </div>
+  )
 }

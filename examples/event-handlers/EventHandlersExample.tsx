@@ -1,7 +1,6 @@
 import * as React from 'react'
 import {map, startWith} from 'rxjs/operators'
-import {createEventHandler} from '../../createEventHandler'
-import {streamingComponent} from '../../streamingComponent'
+import {streamingComponent, useEventHandler} from '../../hooks'
 
 const STYLE = {
   height: 200,
@@ -9,7 +8,7 @@ const STYLE = {
 }
 
 export const EventHandlersExample = streamingComponent(() => {
-  const [mouseMoves$, onMouseMove] = createEventHandler<React.MouseEvent>()
+  const [mouseMoves$, onMouseMove] = useEventHandler<React.MouseEvent>()
 
   return mouseMoves$.pipe(
     map(event => ({x: event.clientX, y: event.clientY})),

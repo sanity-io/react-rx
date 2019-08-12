@@ -1,8 +1,8 @@
-import {format, formatDistance, formatRelative, subDays} from 'date-fns'
+import {formatDistance} from 'date-fns'
 import * as React from 'react'
 import {combineLatest, timer} from 'rxjs'
 import {map, share, take} from 'rxjs/operators'
-import {withPropsStream} from '../../withPropsStream'
+import {streamingComponent} from '../../hooks'
 
 const UPDATE_INTERVAL = 1000
 const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(
@@ -20,17 +20,14 @@ interface ChildProps extends OwnerProps {
   relativeTime: string
 }
 
-const TimeDistance = withPropsStream<OwnerProps, ChildProps>(
-  ownerProps$ =>
-    combineLatest(currentTime$, ownerProps$).pipe(
-      map(([currentTime, ownerProps]) => ({
-        ...ownerProps,
-        relativeTime: formatDistance(ownerProps.time, currentTime, {
-          includeSeconds: ownerProps.includeSeconds
-        })
-      }))
-    ),
-  props => <>{props.relativeTime}</>
+const TimeDistance = streamingComponent<OwnerProps>(ownerProps$ =>
+  combineLatest<[Date, OwnerProps]>([currentTime$, ownerProps$]).pipe(
+    map(([currentTime, ownerProps]) =>
+      formatDistance(ownerProps.time, currentTime, {
+        includeSeconds: ownerProps.includeSeconds
+      })
+    )
+  )
 )
 
 const NOW = new Date()

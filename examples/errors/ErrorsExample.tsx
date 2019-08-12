@@ -1,10 +1,9 @@
 import * as React from 'react'
-import {timer} from 'rxjs'
-import {catchError, map, mergeMapTo, startWith, tap} from 'rxjs/operators'
-import {createEventHandler} from '../../createEventHandler'
-import {withPropsStream} from '../../withPropsStream'
+import {defer, merge, of, timer} from 'rxjs'
+import {catchError, map, mergeMapTo, startWith, switchMapTo, take, tap} from 'rxjs/operators'
+import {streamingComponent, useEventHandler} from '../../hooks'
 
-const numbers$ = timer(0, 500).pipe(
+const numbers$ = timer(500, 500).pipe(
   tap(() => {
     if (Math.random() > 0.9) {
       throw new Error('Stream failed')
@@ -12,33 +11,40 @@ const numbers$ = timer(0, 500).pipe(
   })
 )
 
-const MyComponent = props => (
-  <>
-    <p>The observable stream will fail 1 in 10 times on average</p>
+interface Props {
+  number?: number
+  error?: null | Error
+  onRetry?: (event: any) => void
+}
 
-    {props.error ? (
-      <>
-        <p>Oh no: an error occurred: {props.error.message}</p>
-        <p>
-          <button onClick={props.onRetry}>Retry</button>
-        </p>
-      </>
-    ) : (
-      `Counter: ${props.number}`
-    )}
-  </>
-)
+export const ErrorsExample = streamingComponent(() => {
+  const [onRetry$, onRetry] = useEventHandler()
 
-export const ErrorsExample = withPropsStream(
-  numbers$.pipe(
+  return numbers$.pipe(
     map(n => ({number: n})),
     catchError((error, caught$) => {
-      const [onRetry$, onRetry] = createEventHandler()
-      return onRetry$.pipe(
-        mergeMapTo(caught$),
-        startWith({error, onRetry})
+      return merge(
+        of({error}),
+        onRetry$.pipe(
+          take(1),
+          switchMapTo(caught$)
+        )
       )
-    })
-  ),
-  MyComponent
-)
+    }),
+    map((props: Props) => (
+      <>
+        <p>The observable stream will fail 1 in 10 times on average</p>
+        {props.error ? (
+          <>
+            <p>Oh no: an error occurred: {props.error.message}</p>
+            <p>
+              <button onClick={onRetry}>Retry</button>
+            </p>
+          </>
+        ) : (
+          `Counter: ${props.number}`
+        )}
+      </>
+    ))
+  )
+})
