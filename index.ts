@@ -40,7 +40,7 @@ export function useObservableState<T>(initial: T): [Observable<T>, (next: T) => 
 
 type EventHandlerPair<Event> = [Observable<Event>, (event: Event) => void]
 
-// for consumption outside of react
+// for consumption outside of react only
 export function createEventHandler<Event>(): EventHandlerPair<Event> {
   const events$: Subject<Event> = new Subject()
   const handler = (event: Event) => events$.next(event)
@@ -61,14 +61,16 @@ export function stream<T>(value: T): Observable<T> {
 
 type Component<Props> = (input$: Observable<Props>) => Observable<React.ReactNode>
 
+export function reactiveComponent<Props>(observable: Observable<Props>): React.FunctionComponent<{}>
 export function reactiveComponent<Props>(
-  observableComponent: Observable<Props>
-): React.FunctionComponent<{}>
-export function reactiveComponent<Props>(
-  observableComponent: Component<Props>
+  component: Component<Props>
 ): React.FunctionComponent<Props>
-export function reactiveComponent<Props>(arg: Observable<Props> | Component<Props>) {
-  return typeof arg === 'function' ? fromComponent(arg) : fromObservable(arg)
+export function reactiveComponent<Props>(
+  observableOrComponent: Observable<Props> | Component<Props>
+) {
+  return typeof observableOrComponent === 'function'
+    ? fromComponent(observableOrComponent)
+    : fromObservable(observableOrComponent)
 }
 
 function fromComponent<Props>(component: Component<Props>): React.FunctionComponent<Props> {

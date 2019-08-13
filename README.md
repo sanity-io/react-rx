@@ -1,6 +1,6 @@
 # ReactRx
 
-:fishing_pole_and_fish: :hammer_and_wrench: Hooks and Utilities for working with RxJS and React
+:fishing_pole_and_fish: :hammer_and_wrench: Hooks and utilities for working with RxJS and React
 
 ## API
 ### :fishing_pole_and_fish: `useObservable()`
@@ -13,14 +13,14 @@ Use observables in React components with the `useObservable` hook
 If you need to subscribe to an observable in your component, this hook will give you the current value from it
 
 Example:
-```js
+```jsx
 import {interval} from 'rxjs'
 import React from 'react'
 import {useObservable} from 'reactrx'
 
 function MyComponent(props) {
   const number = useObservable(interval(100), 0)
-  return <div>The number is {number}</div>
+  return <>The number is {number}</div>
 }
 ```
 The `initialValue` is optional. If its omitted, the value returned from `useObservable` may be `null` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored.
@@ -30,10 +30,10 @@ import {of} from 'rxjs'
 import React from 'react'
 import {useObservable} from 'reactrx'
 
-// This component will never render "Hello mars" since the observable emits "world" synchronously.
+// This component will never render "Hello mars!" since the observable emits "world" synchronously.
 function MyComponent(props) {
   const planet = useObservable(of('world'), 'mars')
-  return <div>Hello {planet}</div>
+  return <>Hello {planet}!</>
 }
 ```
 
@@ -43,13 +43,12 @@ You can create reactive components with `reactiveComponent()`
 - `function reactiveComponent<Props>(observableComponent: Observable<Props>): React.FunctionComponent<{}>`
 - `function reactiveComponent<Props>(observableComponent: Component<Props>): React.FunctionComponent<Props>`
 
-
 If you want to make a component that composes different RxJS streams into a render function, the `reactiveComponent` can help you.
 
 The `reactiveComponent()` takes as an argument a function component that is very similar to a regular function component in React, with two notable differences:
 
 1) It does not receive a props object, but an Observable of props instead 
-2) It does expect React elements to be returned, but an Observable of react elements (e.g. the same as you would otherwise return from your regular component)
+2) It does not expect React elements to be returned, but an Observable of react elements (e.g. an observable of the same type as you would otherwise return from your regular component)
 
 Here's an example
 ```ts
