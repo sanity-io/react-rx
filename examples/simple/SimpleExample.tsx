@@ -1,6 +1,8 @@
 import * as React from 'react'
 import {timer} from 'rxjs'
 import {map} from 'rxjs/operators'
-import {streamingComponent} from '../../hooks'
+import {reactiveComponent} from '../../'
 
-export const SimpleExample = streamingComponent(() => timer(0, 100).pipe(map(n => <>The number is {n}</>)))
+export const SimpleExample = reactiveComponent(
+  timer(0, 100).pipe(map(n => <>The number is {n}</>))
+)

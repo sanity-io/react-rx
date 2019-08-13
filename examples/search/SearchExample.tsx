@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
 import {debounceTime, distinctUntilChanged, filter, map, switchMap} from 'rxjs/operators'
-import {stream, useObservable} from '../../hooks'
+import {stream, useObservable} from '../../'
 
 interface SearchResult {
   keyword: string

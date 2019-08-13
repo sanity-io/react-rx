@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Observable} from 'rxjs'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {streamingComponent} from './streamingComponent'
+import {reactiveComponent} from './'
 
 interface Props<T> {
   observable: Observable<T>
@@ -16,16 +16,13 @@ function id<T>(val: T): T {
 
 // something is a bit off with the TS typings here
 function createWithObservable<T>(): ObservableComponent<T> {
-  return streamingComponent<Props<T>>(props$ =>
+  return reactiveComponent<Props<T>>(props$ =>
     props$.pipe(
       distinctUntilChanged((props, prevProps) => props.observable === prevProps.observable),
       switchMap(props =>
         props.observable.pipe(
-          map(
-            observableValue =>
-              props.children
-                ? props.children(observableValue)
-                : id(observableValue)
+          map(observableValue =>
+            props.children ? props.children(observableValue) : id(observableValue)
           )
         )
       )

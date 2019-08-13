@@ -1,13 +1,13 @@
 import * as React from 'react'
 import {Observable, of, timer} from 'rxjs'
 import {map, startWith, switchMap} from 'rxjs/operators'
-import {useEventHandler, useObservable} from '../../hooks'
+import {createEventHandler, useEventHandler, useObservable} from '../../'
 
 const justNumbers$ = timer(0, 500)
 
 const numberReactElement$ = justNumbers$.pipe(map(num => <div>The number is {num}!</div>))
 
-const [onSpeedChange$, onSpeedChange] = useEventHandler<React.SyntheticEvent<HTMLInputElement>>()
+const [onSpeedChange$, onSpeedChange] = createEventHandler<React.SyntheticEvent<HTMLInputElement>>()
 
 const speed$: Observable<number> = onSpeedChange$.pipe(
   map(event => Number(event.currentTarget.value)),

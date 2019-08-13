@@ -1,14 +1,14 @@
 import * as React from 'react'
 import {concat, of, timer} from 'rxjs'
 import {map, take, tap} from 'rxjs/operators'
-import {stream, streamingComponent, useObservable} from '../../hooks'
+import {reactiveComponent, stream, useObservable} from '../../'
 
 // this will synchronously set the state before the component mounts, and thereafter
 // wait 1 second before starting updating every 500ms
 
 const UPDATE_COUNT = 10
 
-const Sync1 = streamingComponent(() =>
+const Sync1 = reactiveComponent(() =>
   concat(
     of('First render is sync! (waiting…)'),
     timer(1000, 500).pipe(

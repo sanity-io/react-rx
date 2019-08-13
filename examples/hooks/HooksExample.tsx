@@ -2,9 +2,9 @@ import * as React from 'react'
 
 import {timer} from 'rxjs'
 import {map, startWith, switchMap} from 'rxjs/operators'
-import {streamingComponent, useObservableState} from '../../hooks'
+import {reactiveComponent, useObservableState} from '../../'
 
-export const HooksExample = streamingComponent(function Hooks() {
+export const HooksExample = reactiveComponent(function Hooks() {
   const [delay$, setDelay] = useObservableState(100)
 
   return delay$.pipe(

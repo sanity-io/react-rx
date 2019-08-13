@@ -1,91 +1,114 @@
-# react-props-stream
+# ReactRx
 
-Utility belt for RxJS streams and React
+:fishing_pole_and_fish: :hammer_and_wrench: Hooks and Utilities for working with RxJS and React
 
 ## API
-### `withPropsStream` HOC
+### :fishing_pole_and_fish: `useObservable()`
+Use observables in React components with the `useObservable` hook
+
+- `function useObservable<T>(observable$: Observable<T>): T | null`
+
+- `function useObservable<T>(observable$: Observable<T>, initialValue: T): T`
+
+If you need to subscribe to an observable in your component, this hook will give you the current value from it
+
+Example:
+```js
+import {interval} from 'rxjs'
+import React from 'react'
+import {useObservable} from 'reactrx'
+
+function MyComponent(props) {
+  const number = useObservable(interval(100), 0)
+  return <div>The number is {number}</div>
+}
 ```
-withPropsStream(
-  ownerPropsToChildProps: Observable<object> | (props$: Observable<object>) => Observable<object>,
-  BaseComponent: ReactElementType
-): ReactComponent
+The `initialValue` is optional. If its omitted, the value returned from `useObservable` may be `null` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored.
+
+```js
+import {of} from 'rxjs'
+import React from 'react'
+import {useObservable} from 'reactrx'
+
+// This component will never render "Hello mars" since the observable emits "world" synchronously.
+function MyComponent(props) {
+  const planet = useObservable(of('world'), 'mars')
+  return <div>Hello {planet}</div>
+}
 ```
 
-Similar to [recompose/mapPropsStream](https://github.com/acdlite/recompose/blob/master/docs/API.md#mappropsstream)
+## :hammer_and_wrench: `reactiveComponent()`
+You can create reactive components with `reactiveComponent()`
 
-#### Example: Component that displays an ever-increasing counter every second
-```jsx
-import {withPropsStream} from 'react-props-stream'
-import {timer} from 'rxjs'
-import {map} from 'rxjs/operators'
+- `function reactiveComponent<Props>(observableComponent: Observable<Props>): React.FunctionComponent<{}>`
+- `function reactiveComponent<Props>(observableComponent: Component<Props>): React.FunctionComponent<Props>`
 
-const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
 
-const MyStreamingComponent = withPropsStream(
-  numbers$,
-  props => <div>The number is {props.number}</div>
-)
-```
+If you want to make a component that composes different RxJS streams into a render function, the `reactiveComponent` can help you.
 
-#### Example: Component that automatically fetches `props.url` when its value change
+The `reactiveComponent()` takes as an argument a function component that is very similar to a regular function component in React, with two notable differences:
 
-```jsx
-import {createEventHandler} from 'react-props-stream'
-import {map, distinctUntilChanged, switchMap} from 'rxjs/operators'
+1) It does not receive a props object, but an Observable of props instead 
+2) It does expect React elements to be returned, but an Observable of react elements (e.g. the same as you would otherwise return from your regular component)
 
-const FetchComponent = withPropsStream(
-  props$ =>
-    props$.pipe(
-      map(props => props.url),
-      distinctUntilChanged(),
-      switchMap(url => fetch(url).then(response => response.text())),
-      map(responseText => ({responseText}))
-    ),
-  props => <div>The result was: {props.responseText}</div>
+Here's an example
+```ts
+const UpperCase = reactiveComponent(props$ =>
+  props$.pipe(
+    map(props => props.text.toUpperCase()),
+    map(text => <p>{text}</p>)
+  )
 )
 
 // Usage
-ReactDOM.render(<FetchComponent url="http://example.com" />, document.getElementById('myid'))
+ReactDOM.render(<UpperCase text="Hello world!" />, node)
 ```
 
-### `streamingComponent`
-Similar to [recompose/componentFromStream](https://github.com/acdlite/recompose/blob/master/docs/API.md#mappropsstream)
+### The `useObservableState` hook
+If you need to represent some piece of state as an observable and also want the ability to change this state during the lifetime of the component, `useObservableState` is for you. It acts like `React.useState()`, only that it returns an observable representing changes to the value instead of the value itself. The callback/setter returned acts like a the regular callback you would otherwise get from `React.useState`. This is useful when you want to compose the state change together with other observables.
+```
+function MyComponent(props) {
+  const [speed$, setSpeed] = useObservableState(1)
 
-###
-```jsx
-import {streamingComponent} from 'react-props-stream'
-import {map, distinctUntilChanged, switchMap} from 'rxjs/operators'
-
-const FetchComponent = streamingComponent<{url: string}>(props$ =>
-  props$.pipe(
-    map(props => props.url),
-    distinctUntilChanged(),
-    switchMap(url => fetch(url).then(response => response.text())),
-    map(responseText => <div>The result was: {responseText}</div>)
+  const count$ = speed$.pipe(
+    switchMap(speed => timer(0, 1000 / speed)),
+    scan(count => count + 1, 0)
   )
-)
-```
 
-### `WithObservable` React component
+  const currentSpeed = useObservable(speed$)
+  const currentCount = useObservable(count$)
 
-```jsx
-import {WithObservable} from 'react-props-stream'
-import {timer} from 'rxjs'
-import {map} from 'rxjs/operators'
-
-const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
-
-function MyComponent(props)  {
   return (
-    <WithObservable observable={numbers$}>
-      {num => <div>The number is {num}</div>}
-    </WithObservable>
+    <div>
+      <div>Counter value: {currentCount}</div>
+      <div>Counting speed: {Math.round((1 / currentSpeed) * 100) / 100}s</div>
+      <input
+        type="range"
+        value={currentSpeed}
+        min={1}
+        max={10}
+        onChange={event => setSpeed(Number(event.currentTarget.value))}
+      />
+    </div>
   )
 }
 ```
 
-## More examples
-See more examples here: https://github.com/sanity-io/react-props-stream/tree/master/examples
+### The `useEventHandler` hook
+This creates an event handler and an observable that represents calls to that handler
+```js
+  const [onSliderChange$, onSliderChange] = useEventHandler<React.ChangeEvent<HTMLInputElement>>()
 
-# Prior art
-This is heavily inspired by [recompose](https://github.com/acdlite/recompose)
+  const sliderValue = useObservable(
+    onSliderChange$.pipe(
+      map(event => event.currentTarget.value),
+      map(value => Number(value)),
+      startWith(1)
+    )
+  )
+  return (
+    <>
+      <input type="range" value={sliderValue} min={1} max={10} onChange={onSliderChange} /> {sliderValue}
+    </>
+  )
+```

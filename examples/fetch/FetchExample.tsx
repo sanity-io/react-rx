@@ -1,12 +1,12 @@
 import * as React from 'react'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {streamingComponent} from '../../hooks'
+import {reactiveComponent} from '../../'
 
 interface Props {
   url: string
 }
 
-const FetchComponent = streamingComponent<Props>(props$ =>
+const FetchComponent = reactiveComponent<Props>(props$ =>
   props$.pipe(
     map((props: Props) => props.url),
     distinctUntilChanged(),

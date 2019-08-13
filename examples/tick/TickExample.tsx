@@ -1,13 +1,13 @@
 import * as React from 'react'
 import {concat, interval, of, timer} from 'rxjs'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {streamingComponent, useObservable} from '../../hooks'
+import {reactiveComponent, useObservable} from '../../'
 
 interface TickerProps {
   tick: number
 }
 
-const Ticker = streamingComponent<TickerProps>(props$ =>
+const Ticker = reactiveComponent<TickerProps>(props$ =>
   props$.pipe(
     map((props: TickerProps) => props.tick),
     distinctUntilChanged(),
@@ -21,7 +21,7 @@ interface TickerWithSubTickProps {
   subtick: number
 }
 
-const TickerWithSubTick = streamingComponent<TickerProps>(props$ =>
+const TickerWithSubTick = reactiveComponent<TickerProps>(props$ =>
   props$.pipe(
     map((props: TickerProps) => props.tick),
     distinctUntilChanged(),

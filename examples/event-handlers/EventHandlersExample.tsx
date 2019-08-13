@@ -1,13 +1,13 @@
 import * as React from 'react'
 import {map, startWith} from 'rxjs/operators'
-import {streamingComponent, useEventHandler} from '../../hooks'
+import {reactiveComponent, useEventHandler} from '../../'
 
 const STYLE = {
   height: 200,
   border: '1px solid'
 }
 
-export const EventHandlersExample = streamingComponent(() => {
+export const EventHandlersExample = reactiveComponent(() => {
   const [mouseMoves$, onMouseMove] = useEventHandler<React.MouseEvent>()
 
   return mouseMoves$.pipe(

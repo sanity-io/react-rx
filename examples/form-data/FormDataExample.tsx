@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {concat, merge, Observable, timer} from 'rxjs'
 import {concatMap, map, scan, startWith, tap, withLatestFrom} from 'rxjs/operators'
-import {streamingComponent, useEventHandler} from '../../hooks'
+import {reactiveComponent, useEventHandler} from '../../'
 import storage from './storage'
 
 const STORAGE_KEY = '__form-submit-example__'
@@ -33,7 +33,7 @@ const INITIAL: Props = {
 
 const INITIAL_SUBMIT_STATE: SubmitState = {status: 'saving', result: null}
 
-export const FormDataExample = streamingComponent(() => {
+export const FormDataExample = reactiveComponent(() => {
   const [onChange$, onChange] = useEventHandler<
     React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   >()
