@@ -1,5 +1,5 @@
 {
-  "exclude": ["examples", "build"],
+  "exclude": ["examples", "examples-old"],
   "compilerOptions": {
     "outDir": "build",
     "target": "es5",
@@ -9,5 +9,6 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "esModuleInterop": true
-  }
+  },
+  "include": ["src/**/*"]
 }

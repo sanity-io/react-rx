@@ -6,7 +6,7 @@ export function useObservable<T>(observable$: Observable<T>): T | null
 export function useObservable<T>(observable$: Observable<T>, initialValue: T): T
 export function useObservable<T>(observable$: Observable<T>, initialValue?: T): T | null {
   const subscription = React.useRef<Subscription>()
-
+console.log('Hello from useObservable')
   const [value, setState] = React.useState<T | null>(() => {
     let isSync = true
     let syncVal = typeof initialValue === 'undefined' ? null : initialValue
