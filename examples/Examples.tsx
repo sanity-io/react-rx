@@ -1,9 +1,10 @@
 import * as React from 'react'
-import {DemoExample} from './demo'
+import {ContextExample} from './context'
 import {ErrorsExample} from './errors'
 import {EventHandlersExample} from './event-handlers'
 import {FetchExample} from './fetch'
 import {FormDataExample} from './form-data'
+import {ForwardRefExample} from './forward-ref'
 import {HooksExample} from './hooks'
 import {PassThroughPropsExample} from './passthrough-props'
 import {ReadmeExamples} from './readme-examples'
@@ -19,7 +20,8 @@ interface Example {
 }
 
 const examples: {[exampleName: string]: Example} = {
-  demo: {title: 'Demo', component: DemoExample},
+  forwardRef: {title: 'Forward ref example', component: ForwardRefExample},
+  context: {title: 'Context', component: ContextExample},
   errors: {title: 'Errors', component: ErrorsExample},
   'event-handlers': {title: 'Event handlers', component: EventHandlersExample},
   fetch: {title: 'Fetch', component: FetchExample},

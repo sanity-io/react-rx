@@ -1,7 +1,15 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
-import {map, scan, switchMap, startWith} from 'rxjs/operators'
-import {reactiveComponent, useEventHandler, useObservable, useObservableState} from '../../'
+import {map, scan, switchMap, startWith, withLatestFrom, distinctUntilChanged} from 'rxjs/operators'
+import {
+  createEventHandler,
+  createState,
+  reactiveComponent,
+  stream,
+  useEventHandler,
+  useObservable,
+  useObservableState
+} from '../../'
 
 const UseObservableState = () => {
   const [speed$, setSpeed] = useObservableState(1)
@@ -58,6 +66,40 @@ const UpperCase = reactiveComponent((props$: Observable<{text: string}>) =>
   )
 )
 
+const ClickCounterUseState = reactiveComponent(() => {
+  const [count, setCount] = React.useState(0)
+  return stream(count).pipe(
+    map(currentCount => (
+      <>
+        <div>Click count: {currentCount}</div>
+        <button onClick={() => setCount(currentCount + 1)}>Click!</button>
+      </>
+    ))
+  )
+})
+
+const ClickCounter = reactiveComponent(() => {
+  const [count$, setState] = createState(0)
+  return count$.pipe(
+    scan<number>(count => count + 1),
+    map(count => (
+      <>
+        <div>Click count: {count}</div>
+        <button onClick={() => setState(count + 1)}>Click!</button>
+      </>
+    ))
+  )
+})
+
+const Fetch = reactiveComponent<{url: string}>(props$ =>
+  props$.pipe(
+    map(props => props.url),
+    distinctUntilChanged(),
+    switchMap(url => fetch(url).then(response => response.text())),
+    map(responseText => <p>{responseText}</p>)
+  )
+)
+
 export const ReadmeExamples = () => {
   return (
     <>
@@ -69,6 +111,10 @@ export const ReadmeExamples = () => {
       <ReactiveComponentWithoutProps />
       <h2>UpperCase</h2>
       <UpperCase text="Hello world!" />
+      <h2>ClickCounter</h2>
+      <ClickCounter />
+      <h2>ClickCounter with useState</h2>
+      <ClickCounterUseState />
     </>
   )
 }

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import {BehaviorSubject, Observable, Subject, Subscription} from 'rxjs'
+import {BehaviorSubject, concat, Observable, of, Subject, Subscription} from 'rxjs'
 import {wrapDisplayName} from './displayName'
 
 export function useObservable<T>(observable$: Observable<T>): T | null
@@ -37,14 +37,24 @@ export function useObservableState<T>(initial: T): [Observable<T>, (next: T) => 
   const [value, set] = React.useState<T>(initial)
   return [stream(value), set]
 }
+export function useObservableContext<T>(context: React.Context<T>): Observable<T> {
+  const value = React.useContext<T>(context)
+  return stream(value)
+}
 
 type EventHandlerPair<Event> = [Observable<Event>, (event: Event) => void]
 
 // for consumption outside of react only
-export function createEventHandler<Event>(): EventHandlerPair<Event> {
-  const events$: Subject<Event> = new Subject()
-  const handler = (event: Event) => events$.next(event)
+export function createEventHandler<T>(): [Observable<T>, (nextValue: T) => void] {
+  const events$: Subject<T> = new Subject()
+  const handler = (event: T) => events$.next(event)
   return [events$.asObservable(), handler]
+}
+
+// for consumption outside of react only
+export function createState<T>(initialState: T): [Observable<T>, (nextValue: T) => void] {
+  const [value$, handler] = createEventHandler<T>()
+  return [concat<T>(of(initialState), value$), handler]
 }
 
 export function useEventHandler<Event>(): EventHandlerPair<Event> {
@@ -60,6 +70,10 @@ export function stream<T>(value: T): Observable<T> {
 }
 
 type Component<Props> = (input$: Observable<Props>) => Observable<React.ReactNode>
+type ForwardRefComponent<Props, Ref> = (
+  input$: Observable<Props>,
+  ref: React.RefObject<Ref>
+) => Observable<React.ReactNode>
 
 export function reactiveComponent<Props>(observable: Observable<Props>): React.FunctionComponent<{}>
 export function reactiveComponent<Props>(
@@ -80,6 +94,20 @@ function fromComponent<Props>(component: Component<Props>): React.FunctionCompon
       null,
       useObservable<React.ReactNode>(component(stream(props)))
     )
+  wrappedComponent.displayName = wrapDisplayName(component, 'reactiveComponent')
+  return wrappedComponent
+}
+
+export function reactiveComponentWithRef<Props, RefType>(
+  component: ForwardRefComponent<Props, RefType>
+) {
+  const wrappedComponent = React.forwardRef((props: Props, ref: React.RefObject<RefType>) =>
+    React.createElement(
+      React.Fragment,
+      null,
+      useObservable<React.ReactNode>(component(stream(props), ref))
+    )
+  )
   wrappedComponent.displayName = wrapDisplayName(component, 'reactiveComponent')
   return wrappedComponent
 }
