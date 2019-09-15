@@ -1,6 +1,7 @@
 {
-  "exclude": ["examples", "examples-old"],
+  "include": ["examples/**/*", "src/**/*"],
   "compilerOptions": {
+    "strict": false,
     "outDir": "build",
     "target": "es5",
     "module": "commonjs",
@@ -9,6 +10,5 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "esModuleInterop": true
-  },
-  "include": ["src/**/*"]
+  }
 }

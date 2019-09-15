@@ -42,17 +42,16 @@ export function useObservable<T>(observable$: Observable<T>, initialValue?: T): 
   return value
 }
 
-export function useObservableState<T = undefined>(): [
+export function useObservableState<T>(): [
   Observable<T | undefined>,
   React.Dispatch<React.SetStateAction<T | undefined>>
 ]
 export function useObservableState<T>(
   initial: T | (() => T)
 ): [Observable<T>, React.Dispatch<React.SetStateAction<T>>]
-export function useObservableState<T>(
-  initial?: T | (() => T)
-): [Observable<T>, React.Dispatch<React.SetStateAction<T>>] {
-  const [value, update] = React.useState<T>(initial)
+
+export function useObservableState<T>(initial?: T | (() => T)) {
+  const [value, update] = React.useState<T | undefined>(initial)
   return [toObservable(value), update]
 }
 

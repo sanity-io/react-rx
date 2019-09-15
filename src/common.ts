@@ -1,3 +1,4 @@
+import React from 'react'
 import {concat, Observable, of, Subject} from 'rxjs'
 
 // for consumption outside of react only
@@ -13,13 +14,13 @@ export function createState<T>(initialState: T): [Observable<T>, (nextValue: T) 
   return [concat<T>(of(initialState), value$), handler]
 }
 
-const getDisplayName = Component => {
+const getDisplayName = (Component: any) => {
   if (typeof Component === 'string') {
     return Component
   }
 
-  return Component.displayName || Component.name || 'Unknown'
+  return (Component && (Component.displayName || Component.name)) || 'Unknown'
 }
 
-export const wrapDisplayName = (BaseComponent, wrapperName) =>
+export const wrapDisplayName = (BaseComponent: Function, wrapperName: string) =>
   `${wrapperName}(${getDisplayName(BaseComponent)})`

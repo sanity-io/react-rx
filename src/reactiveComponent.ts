@@ -2,6 +2,7 @@ import * as React from 'react'
 import {Observable} from 'rxjs'
 import {wrapDisplayName} from './common'
 import {toObservable, useObservable} from './useObservable'
+import {RefForwardingComponent} from 'react'
 
 type Component<Props> = (input$: Observable<Props>) => Observable<React.ReactNode>
 
@@ -41,19 +42,19 @@ export function reactiveComponent<Props>(
     : fromObservable(observableOrComponent)
 }
 
-type ForwardRefComponent<Props, Ref> = (
+type ForwardRefComponent<RefType, Props> = (
   input$: Observable<Props>,
-  ref: React.RefObject<Ref>
+  ref: React.Ref<RefType>
 ) => Observable<React.ReactNode>
 
-export function forwardRef<Props, RefType>(component: ForwardRefComponent<Props, RefType>) {
-  const wrappedComponent = React.forwardRef((props: Props, ref: React.RefObject<RefType>) =>
-    React.createElement(
+export function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<RefType, Props>) {
+  const wrappedComponent = React.forwardRef((props: Props, ref: React.Ref<RefType>) => {
+    return React.createElement(
       React.Fragment,
       null,
-      useObservable<React.ReactNode>(component(toObservable(props), ref))
+      useObservable(component(toObservable(props), ref))
     )
-  )
+  })
   wrappedComponent.displayName = wrapDisplayName(component, 'reactiveComponent')
   return wrappedComponent
 }

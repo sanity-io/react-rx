@@ -1,5 +1,5 @@
 import * as React from 'react'
-import {concat, interval, of, timer} from 'rxjs'
+import {interval, Observable, timer} from 'rxjs'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
 import {reactiveComponent} from '../../src/reactiveComponent'
 import {useObservable} from '../../src/useObservable'
@@ -24,9 +24,11 @@ interface TickerWithSubTickProps {
 
 const TickerWithSubTick = reactiveComponent<TickerProps>(props$ =>
   props$.pipe(
-    map((props: TickerProps) => props.tick),
+    map(props => props.tick),
     distinctUntilChanged(),
-    switchMap(tick => interval(100).pipe(map(subtick => ({tick, subtick})))),
+    switchMap(tick =>
+      interval(100).pipe(map((subtick): TickerWithSubTickProps => ({tick, subtick})))
+    ),
     map((props: TickerWithSubTickProps) => (
       <div>
         Tick: {props.tick}, subtick: {props.subtick}

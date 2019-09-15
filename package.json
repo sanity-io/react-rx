@@ -1,10 +1,10 @@
 {
-  "name": "react-props-stream",
+  "name": "@sanity/react-observable",
   "version": "1.0.0",
-  "description": "Utility belt for RxJS streams and React",
+  "description": "Hooks and utilities for combining React with RxJS",
   "main": "index.js",
   "scripts": {
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "postpublish": "npm run clean",
     "build": "tsc",
     "watch": "tsc --watch",
@@ -20,20 +20,22 @@
     "rxjs": "^6"
   },
   "devDependencies": {
-    "@types/react": "^16.9.1",
-    "@types/react-dom": "^16.8.5",
-    "date-fns": "^2.0.0-beta.4",
-    "jest": "^24.8.0",
-    "parcel-bundler": "^1.12.3",
+    "@types/react": "^16.9.2",
+    "@types/react-dom": "^16.9.0",
+    "@typescript-eslint/eslint-plugin": "^2.2.0",
+    "@typescript-eslint/parser": "^2.2.0",
+    "date-fns": "^2.2.1",
+    "eslint": "^6.4.0",
+    "eslint-config-prettier": "^6.3.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-react": "^7.14.3",
+    "parcel": "^1.12.3",
     "prettier": "1.18.2",
-    "react": "16.8.0",
-    "react-dom": "16.8.0",
-    "rimraf": "^2.6.3",
-    "rxjs": "6",
-    "ts-node": "^8.3.0",
-    "tslint": "^5.18.0",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "3.5.3"
+    "react": "^16.8.0",
+    "react-dom": "16.9.0",
+    "rimraf": "^3.0.0",
+    "rxjs": "^6.5.3",
+    "typescript": "3.7.0-dev.20190914"
   },
   "directories": {
     "example": "examples"
@@ -45,8 +47,5 @@
   "bugs": {
     "url": "https://github.com/sanity-io/react-props-stream/issues"
   },
-  "homepage": "https://github.com/sanity-io/react-props-stream#readme",
-  "dependencies": {
-    "recompose": "^0.30.0"
-  }
+  "homepage": "https://github.com/sanity-io/react-props-stream#readme"
 }

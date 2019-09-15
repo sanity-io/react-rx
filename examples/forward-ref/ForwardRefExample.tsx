@@ -7,7 +7,7 @@ interface Props {
   onChange: (next: number) => void
 }
 
-const Input = forwardRef<Props, HTMLInputElement>((props$, ref) => {
+const Input = forwardRef<HTMLInputElement, Props>((props$, ref) => {
   return props$.pipe(
     map((props: Props) => (
       <div>
@@ -27,14 +27,18 @@ const Input = forwardRef<Props, HTMLInputElement>((props$, ref) => {
 
 export const ForwardRefExample = reactiveComponent<{}>(() => {
   const [value$, setValue] = useState(0)
-  const inputRef = React.useRef<HTMLInputElement>()
+  const inputRef = React.useRef<HTMLInputElement>(null)
 
   return value$.pipe(
     map(value => (
       <Input
         ref={inputRef}
         value={value}
-        onChange={() => setValue(Number(inputRef.current.value))}
+        onChange={() => {
+          if (inputRef.current) {
+            setValue(Number(inputRef.current.value))
+          }
+        }}
       />
     ))
   )

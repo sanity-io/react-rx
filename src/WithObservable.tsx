@@ -5,26 +5,18 @@ import {reactiveComponent} from './reactiveComponent'
 
 interface Props<T> {
   observable: Observable<T>
-  children?: (value: T) => React.ReactElement<any>
+  children: (value: T) => React.ReactNode
 }
 
 type ObservableComponent<T> = React.ComponentType<Props<T>>
 
-function id<T>(val: T): T {
-  return val
-}
-
-// something is a bit off with the TS typings here
 function createWithObservable<T>(): ObservableComponent<T> {
-  return reactiveComponent<Props<T>>(props$ =>
+  return reactiveComponent((props$: Observable<Props<T>>) =>
     props$.pipe(
       distinctUntilChanged((props, prevProps) => props.observable === prevProps.observable),
-      switchMap(props =>
-        props.observable.pipe(
-          map(observableValue =>
-            props.children ? props.children(observableValue) : id(observableValue)
-          )
-        )
+      switchMap(
+        (props): Observable<React.ReactNode> =>
+          props.observable.pipe(map((observableValue: T) => props.children(observableValue)))
       )
     )
   )

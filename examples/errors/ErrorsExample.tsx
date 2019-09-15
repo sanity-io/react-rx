@@ -1,5 +1,5 @@
 import * as React from 'react'
-import {concat, merge, of, timer} from 'rxjs'
+import {concat, merge, Observable, of, timer} from 'rxjs'
 import {catchError, map, switchMapTo, take, tap} from 'rxjs/operators'
 import {reactiveComponent, useEvent} from '../../src/reactiveComponent'
 
@@ -23,15 +23,16 @@ export const ErrorsExample = reactiveComponent(() => {
 
   return numbers$.pipe(
     map(n => ({number: n})),
-    catchError((error, caught$) =>
-      merge(
+    catchError<any, any>((error, caught$) => {
+      return of({error})
+      return merge<Props>(
         of({error}),
         onRetry$.pipe(
           take(1),
-          switchMapTo(concat(of({error, retrying: true}), caught$))
+          switchMapTo(concat(of<Props>({error, retrying: true}), caught$))
         )
-      )
-    ),
+      ) as Observable<Props>
+    }),
     map((props: Props) => (
       <>
         <p>The observable stream will fail 1 in 10 times on average</p>

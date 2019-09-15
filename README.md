@@ -1,19 +1,26 @@
 # @sanity/react-observable
 
-:fishing_pole_and_fish: :hammer_and_wrench: Hooks and utilities for combining React with RxJS
+_Hooks and utilities for combining React with RxJS_
 
 This package offers two slightly different utilities for working with RxJS and React:
 
-- The _`reactiveComponent()`_ wrapper 
-- The _`useObservable()`_ hook
+- :hammer_and_wrench: The _`reactiveComponent()`_ wrapper
+- :fishing_pole_and_fish: The _`useObservable()`_ hook
 
 Although they share a lot of similarities, and reactiveComponent is built on top of `useObservable` they are not intended to be used together inside the same component.
 
-# What's a reactive component anyway?
+---
+
+- [Reactive components](#reactive-components)
+- [Observable hooks](#use-observable)
+- [Code examples](https://github.com/sanity-io/react-observable/tree/master/packages)
+
+<a name="reactive-components"></a>
+## What's a reactive component anyway?
 
 A _reactive component_ is a React component that turns an observable of props into an observable of [values React can render](https://reactjs.org/docs/react-component.html#render) (e.g. element, strings, fragments)
 
-A _reactive component_ enables you do define components that composes different RxJS streams into a single render function, making your view purely a function of state.
+A _reactive component_ enables you to create components that composes different RxJS streams into a single render function, making your view purely a function of state.
 
 The `reactiveComponent()` utility wraps a function component that is very similar to a regular React function component, with two notable differences:
 
@@ -37,20 +44,20 @@ const Fetch = reactiveComponent(props$ =>
 ReactDOM.render(<Fetch url="/some/url)" />, container)
 ```
 
-Instead of a _function_ `reactiveComponent` can also take an `Observable` as argument as long as it's an observable of [something React can render](https://reactjs.org/docs/react-component.html#render). This is neat when you have component that doesn't take any props, but still depends on values coming from an `Observable`:
+Instead of a _function_, `reactiveComponent` can also take an `Observable` as argument as long as it's an observable of [something React can render](https://reactjs.org/docs/react-component.html#render). This is neat when you have component that doesn't take any props, but still depends on values coming from an `Observable`:
 
-```
+```jsx
 import {reactiveComponent} from '@sanity/react-observable'
 
 const Counter = reactiveComponent(
   timer(0, 100).pipe(map(counter => <>The number is {counter}</>))
 )
 
+// Usage
 ReactDOM.render(<Counter />, container)
-
 ```
 
-#### Using React hooks in a Reactive component
+### Using React hooks in a Reactive component
 
 Note: Reactive components will not automatically re render when a value coming from a hook updates, in order achieve that, you need to convert it into an observable. This is done by wrapping it using the `toObservable()` utility before combining it with the returned observable. Here's an example using `React.useState()`:
 
@@ -59,6 +66,7 @@ import {reactiveComponent} from '@sanity/react-observable
 
 const Counter = reactiveComponent(props$ => {
   const [count, setCount] = React.useState(0)
+
   return toObservable(count).pipe(
     map(currentCount => (
       <>
@@ -73,13 +81,14 @@ The `toObservable` function makes it possible to consume community provided Reac
 
 ### Local component state
 
-Instead of calling `React.useState()` directly, you can also use the `useState` function exported from this package. Instead of the actual state value it will return an observable representing the state changes along with a function to update it. Here's the example above rewritten to use `useState` from this package instead.
+Instead of calling `React.useState()` directly, you can also use the `useState` function exported from this package. Instead of the actual state value it will return an observable representing the state changes, along with a function to update it. Here's the example above rewritten to use `useState` from this package instead.
 
 ```jsx
-import {reactiveComponent, useState} from '@sanity/react-observable
+import {reactiveComponent, useState} from '@sanity/react-observable'
 
 const Counter = reactiveComponent(() => {
   const [count$, setCount] = useState(0)
+
   return count$.pipe(map(currentCount => (
     <>
       <div>Click count: {currentCount}</div>
@@ -94,10 +103,11 @@ const Counter = reactiveComponent(() => {
 Sometimes your state comes as a function of an event triggered by the user. Let's say you want to display the mouse cursors x,y position as the user moves the mouse inside a component. This can be done py using the `useEvent()` utility:
 
 ```js
-import {reactiveComponent, useEvent} from '@sanity/react-observable
+import {reactiveComponent, useEvent} from '@sanity/react-observable'
 
 const MouseTracker = reactiveComponent(() => {
   const [mouseMove$, handleMouseMove] = useEvent()
+
   return mouseMove$.pipe(
     map(event => (
       <>
@@ -117,11 +127,12 @@ The above example will not produce any DOM before a mousemove event has been tri
 We can do this by using the `startWith` operator that comes with RxJS:
 
 ```js
-import {reactiveComponent, useEvent} from '@sanity/react-observable
+import {reactiveComponent, useEvent} from '@sanity/react-observable'
 import {map, startWith} from 'rxjs/operators'
 
 const MouseTracker = reactiveComponent(() => {
   const [mouseMove$, handleMouseMove] = useEvent()
+  
   return mouseMove$.pipe(
     startWith(null),
     map(event => (
@@ -157,19 +168,19 @@ Equivalent to `React.useState()` with the only difference that instead of the st
 
 - `function useState<T>(initial: T | (() => T)): [Observable<T>, React.Dispatch<React.SetStateAction<T>>]`
 
-### `useContext`
+#### `useContext`
 
 Equivalent to `React.useContext()` with the only difference that instead of a stateful context value, it returns an observable representing the context value changes.
 
 - `function useContext<T>(context: React.Context<T>): Observable<T>`
 
-### `useEvent`
+#### `useEvent`
 
 This has no React API equivalent, but creates a `[Observable<Event>, (Event) => void]` tuple, where the first value is an observable of the arguments the second function is called with.
 
 - function useObservableEvent<Event>(): [Observable<Event>, (event: Event) => void]
 
-### `toObservable`
+#### `toObservable`
 
 Converts any value from a React hook into an observable.
 
@@ -179,7 +190,8 @@ TODO:
 
 - useElement: check if it's possible to create an observable of a ref to a dom node
 
-# :fishing_pole_and_fish: Hooks
+<a name="use-observable"></a>
+## :fishing_pole_and_fish: Hooks
 
 ### The `useObservable()` hook
 
@@ -195,6 +207,7 @@ import {interval} from 'rxjs'
 
 function MyComponent(props) {
   const number = useObservable(interval(100), 0)
+  
   return <>The number is {number}</>
 }
 ```
@@ -208,6 +221,7 @@ import {useObservable} from '@sanity/react-observable'
 // This component will never render "Hello mars!" since the observable emits "world" synchronously.
 function MyComponent(props) {
   const planet = useObservable(of('world'), 'mars')
+
   return <>Hello {planet}!</>
 }
 ```
@@ -216,7 +230,7 @@ function MyComponent(props) {
 
 If you need to represent some piece of state as an observable and also want the ability to change this state during the lifetime of the component, `useObservableState` is for you. It acts like `React.useState()`, only that it returns an observable representing changes to the value instead of the value itself. The callback/setter returned acts like a the regular callback you would otherwise get from `React.useState`. This is useful when you want to compose the state change together with other observables.
 
-Note: this is exact same hook as the `useState()` function described in the section about Reactive Component above, it's only been given a different and more explicit name to distinguish better from `React.useState()`.
+Note: this is exact same hook as the `useState()` function described in the section about Reactive Component above, it's only been exported under a different and more explicit name to distinguish better from `React.useState()`.
 
 Here's an example of a component that count numbers at a certain speed, allowing the user to adjust the counting speed by adjusting a slider:
 
@@ -252,26 +266,31 @@ function MyComponent(props) {
 
 ### The `useObservableEvent` hook
 
-This creates an event handler and an observable that represents calls to that handler. This is similar to `createEventHandler`, but wraps it in `React.createMemo` to persist it throughout the lifetime of the component.
+This creates an event handler and an observable that represents calls to that handler.
 
 Here's an example of a component thad displays the current value from a range input:
 
 ```jsx
-const [onSliderChange$, onSliderChange] = useEventHandler()
+import {useObservableEvent} from '@sanity/react-observable'
 
-const sliderValue = useObservable(
-  onSliderChange$.pipe(
-    map(event => event.currentTarget.value),
-    map(value => Number(value)),
-    startWith(1)
+const ShowSliderValue = () => {
+  const [onSliderChange$, onSliderChange] = useObservableEvent()
+
+  const sliderValue = useObservable(
+    onSliderChange$.pipe(
+      map(event => event.currentTarget.value),
+      map(value => Number(value)),
+      startWith(1)
+    )
   )
-)
-return (
-  <>
-    <input type="range" value={sliderValue} min={1} max={10} onChange={onSliderChange} />
-    <div>Current value is {sliderValue}</div>
-  </>
-)
+
+  return (
+    <>
+      <input type="range" value={sliderValue} min={1} max={10} onChange={onSliderChange} />
+      <div>Value is: {sliderValue}</div>
+    </>
+  )
+}
 ```
 
 ### API
@@ -298,5 +317,3 @@ Same as `useEvent()` described in the Reactive Component section above, only exp
 #### `toObservable()`
 
 Same as `toObservable()` described in the Reactive Component section above
-
-

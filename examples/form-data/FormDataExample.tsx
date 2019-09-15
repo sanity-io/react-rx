@@ -1,8 +1,9 @@
 import * as React from 'react'
-import {concat, merge, Observable, timer} from 'rxjs'
+import {concat, merge, MonoTypeOperatorFunction, Observable, OperatorFunction, timer} from 'rxjs'
 import {concatMap, map, scan, startWith, tap, withLatestFrom} from 'rxjs/operators'
 import {reactiveComponent, useEvent} from '../../src/reactiveComponent'
 import storage from './storage'
+import {ChangeEvent} from 'react'
 
 const STORAGE_KEY = '__form-submit-example__'
 
@@ -48,24 +49,26 @@ export const FormDataExample = reactiveComponent(() => {
         [target.name]: target.value
       }))
     )
-  ).pipe(scan((formData, update) => ({...formData, ...update}), {}))
+  ).pipe(scan<any>((formData, update) => ({...formData, ...update}), {}))
 
   const submitState$ = onSubmit$.pipe(
     tap(event => event.preventDefault()),
     withLatestFrom(formData$),
-    concatMap(([event, formData]) =>
-      save(formData).pipe(
-        map((res): SubmitState => ({status: 'saved', result: res})),
-        startWith(INITIAL_SUBMIT_STATE)
-      )
+    map(([event, formData]) => formData),
+    concatMap(
+      (formData: FormData): Observable<SubmitState> =>
+        save(formData).pipe(
+          map((res: FormData): SubmitState => ({status: 'saved', result: res})),
+          startWith(INITIAL_SUBMIT_STATE)
+        )
     )
   )
 
   return merge(
-    formData$.pipe(map(formData => ({formData}))),
-    submitState$.pipe(map(submitState => ({submitState})))
+    formData$.pipe(map((formData): Partial<Props> => ({formData, submitState: null}))),
+    submitState$.pipe(map((submitState: SubmitState): Partial<Props> => ({submitState})))
   ).pipe(
-    scan((prev, curr) => ({...prev, ...curr}), INITIAL),
+    scan<Props>((prev, curr) => ({...prev, ...curr}), INITIAL),
     map((props: Props) => (
       <div>
         <form onSubmit={onSubmit}>

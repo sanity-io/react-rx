@@ -31,8 +31,11 @@ export const WithObservableExample = () => (
     <p>You can adjust the update speed by changing update interval below</p>
     {useObservable(
       speed$.pipe(
-        switchMap((speed: number) => timer(0, speed).pipe(map(update => [speed, update]))),
-        map(([speed, update]) => (
+        switchMap(
+          (speed: number): Observable<[number, number]> =>
+            timer(0, speed).pipe(map((update): [number, number] => [speed, update]))
+        ),
+        map(([speed, update]: [number, number]) => (
           <>
             Update interval:
             <input type="number" value={speed} onChange={onSpeedChange} step={200} min={0} />
