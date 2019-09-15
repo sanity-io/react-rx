@@ -1,15 +1,9 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
-import {map, scan, switchMap, startWith, withLatestFrom, distinctUntilChanged} from 'rxjs/operators'
-import {
-  createEventHandler,
-  createState,
-  reactiveComponent,
-  stream,
-  useEventHandler,
-  useObservable,
-  useObservableState
-} from '../../'
+import {distinctUntilChanged, map, scan, startWith, switchMap} from 'rxjs/operators'
+import * as RxC from '../../src/reactiveComponent'
+import {reactiveComponent, useEvent} from '../../src/reactiveComponent'
+import {useObservable, useObservableEvent, useObservableState} from '../../src/useObservable'
 
 const UseObservableState = () => {
   const [speed$, setSpeed] = useObservableState(1)
@@ -38,7 +32,9 @@ const UseObservableState = () => {
 }
 
 const UseEventHandler = () => {
-  const [onSliderChange$, onSliderChange] = useEventHandler<React.ChangeEvent<HTMLInputElement>>()
+  const [onSliderChange$, onSliderChange] = useObservableEvent<
+    React.ChangeEvent<HTMLInputElement>
+  >()
 
   const sliderValue = useObservable(
     onSliderChange$.pipe(
@@ -55,20 +51,37 @@ const UseEventHandler = () => {
   )
 }
 
-const ReactiveComponentWithoutProps = reactiveComponent(
+const MouseTracker = reactiveComponent(() => {
+  const [mouseMove$, handleMouseMove] = useEvent<React.MouseEvent>()
+  return mouseMove$.pipe(
+    startWith(null),
+    map(event => (
+      <>
+        <div onMouseMove={handleMouseMove}>Hover me!</div>
+        {event && (
+          <pre>
+            x={event.screenX},y={event.screenY}
+          </pre>
+        )}
+      </>
+    ))
+  )
+})
+
+const ReactiveComponentWithoutProps = RxC.reactiveComponent(
   timer(0, 100).pipe(map(counter => <>The number is {counter}</>))
 )
 
-const UpperCase = reactiveComponent((props$: Observable<{text: string}>) =>
+const UpperCase = RxC.reactiveComponent((props$: Observable<{text: string}>) =>
   props$.pipe(
     map(props => props.text.toUpperCase()),
     map(text => <p>{text}</p>)
   )
 )
 
-const ClickCounterUseState = reactiveComponent(() => {
+const ClickCounterUseState = RxC.reactiveComponent(() => {
   const [count, setCount] = React.useState(0)
-  return stream(count).pipe(
+  return RxC.toObservable(count).pipe(
     map(currentCount => (
       <>
         <div>Click count: {currentCount}</div>
@@ -78,8 +91,8 @@ const ClickCounterUseState = reactiveComponent(() => {
   )
 })
 
-const ClickCounter = reactiveComponent(() => {
-  const [count$, setState] = createState(0)
+const ClickCounter = RxC.reactiveComponent(() => {
+  const [count$, setState] = RxC.useState(0)
   return count$.pipe(
     scan<number>(count => count + 1),
     map(count => (
@@ -91,7 +104,7 @@ const ClickCounter = reactiveComponent(() => {
   )
 })
 
-const Fetch = reactiveComponent<{url: string}>(props$ =>
+const Fetch = RxC.reactiveComponent<{url: string}>(props$ =>
   props$.pipe(
     map(props => props.url),
     distinctUntilChanged(),
@@ -106,6 +119,7 @@ export const ReadmeExamples = () => {
       <h2>useObservableState</h2>
       <UseObservableState />
       <h2>useEventHandler</h2>
+      <MouseTracker />
       <UseEventHandler />
       <h2>ReactiveComponentWithoutProps</h2>
       <ReactiveComponentWithoutProps />

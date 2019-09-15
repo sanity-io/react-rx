@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {map, startWith} from 'rxjs/operators'
-import {reactiveComponent, useEventHandler} from '../../'
+import {reactiveComponent, useEvent} from '../../src/reactiveComponent'
 
 const STYLE = {
   height: 200,
@@ -8,7 +8,7 @@ const STYLE = {
 }
 
 export const EventHandlersExample = reactiveComponent(() => {
-  const [mouseMoves$, onMouseMove] = useEventHandler<React.MouseEvent>()
+  const [mouseMoves$, onMouseMove] = useEvent<React.MouseEvent>()
 
   return mouseMoves$.pipe(
     map(event => ({x: event.clientX, y: event.clientY})),

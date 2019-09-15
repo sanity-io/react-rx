@@ -2,7 +2,7 @@ import {formatDistance} from 'date-fns'
 import * as React from 'react'
 import {combineLatest, timer} from 'rxjs'
 import {map, share, take} from 'rxjs/operators'
-import {reactiveComponent} from '../../'
+import {reactiveComponent} from '../../src/reactiveComponent'
 
 const UPDATE_INTERVAL = 1000
 const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(

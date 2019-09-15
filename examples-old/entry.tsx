@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import {Observable} from 'rxjs'
 import {map} from 'rxjs/operators'
-import {streamingComponent} from '../streamingComponent'
+import {reactiveComponent as streamingComponent} from '../src/reactiveComponent'
 import {Examples} from './Examples'
 
 const hash$: Observable<string> = new Observable(subscriber => {

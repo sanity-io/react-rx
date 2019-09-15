@@ -1,11 +1,14 @@
 import * as React from 'react'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {withPropsStream} from '../../withPropsStream'
+import {withPropsStream} from '../../src/withPropsStream'
 
-const FetchComponent: React.ComponentType<{url: string}> = withPropsStream(
+interface Props {
+  url: string
+}
+const FetchComponent: React.ComponentType<Props> = withPropsStream(
   props$ =>
     props$.pipe(
-      map(props => props.url),
+      map((props: Props) => props.url),
       distinctUntilChanged(),
       switchMap(url => fetch(url).then(response => response.text())),
       map(responseText => ({responseText}))

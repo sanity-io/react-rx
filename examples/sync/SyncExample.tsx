@@ -1,7 +1,8 @@
 import * as React from 'react'
 import {concat, of, timer} from 'rxjs'
 import {map, take, tap} from 'rxjs/operators'
-import {reactiveComponent, stream, useObservable} from '../../'
+import {reactiveComponent, toObservable} from '../../src/reactiveComponent'
+import {useObservable} from '../../src/useObservable'
 
 // this will synchronously set the state before the component mounts, and thereafter
 // wait 1 second before starting updating every 500ms
@@ -23,7 +24,9 @@ interface Props {
 }
 const Sync2 = (props: Props) => {
   return (
-    <div>Sync 2: {useObservable(stream(props.text).pipe(map(text => text.toUpperCase())))}</div>
+    <div>
+      Sync 2: {useObservable(toObservable(props.text).pipe(map(text => text.toUpperCase())))}
+    </div>
   )
 }
 

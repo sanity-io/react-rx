@@ -1,7 +1,8 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
 import {debounceTime, distinctUntilChanged, filter, map, switchMap} from 'rxjs/operators'
-import {stream, useObservable} from '../../'
+import {toObservable} from '../../src/reactiveComponent'
+import {useObservable} from '../../src/useObservable'
 
 interface SearchResult {
   keyword: string
@@ -43,7 +44,7 @@ export function SearchExample() {
       />
       <div>The more characters you type, the faster the results will appear</div>
       {useObservable(
-        stream(keyword).pipe(
+        toObservable(keyword).pipe(
           debounceTime(200),
           distinctUntilChanged(),
           filter(Boolean),

@@ -1,8 +1,8 @@
-import {format, formatDistance, formatRelative, subDays} from 'date-fns'
+import {formatDistance} from 'date-fns'
 import * as React from 'react'
-import {combineLatest, timer} from 'rxjs'
+import {combineLatest, Observable, timer} from 'rxjs'
 import {map, share, take} from 'rxjs/operators'
-import {withPropsStream} from '../../withPropsStream'
+import {withPropsStream} from '../../src/withPropsStream'
 
 const UPDATE_INTERVAL = 1000
 const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(
@@ -21,9 +21,9 @@ interface ChildProps extends OwnerProps {
 }
 
 const TimeDistance = withPropsStream<OwnerProps, ChildProps>(
-  ownerProps$ =>
-    combineLatest(currentTime$, ownerProps$).pipe(
-      map(([currentTime, ownerProps]) => ({
+  (ownerProps$: Observable<OwnerProps>) =>
+    combineLatest([currentTime$, ownerProps$]).pipe(
+      map(([currentTime, ownerProps]: [Date, OwnerProps]) => ({
         ...ownerProps,
         relativeTime: formatDistance(ownerProps.time, currentTime, {
           includeSeconds: ownerProps.includeSeconds

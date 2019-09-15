@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {streamingComponent} from '../../streamingComponent'
+import {reactiveComponent as streamingComponent} from '../../src/reactiveComponent'
 
 const FetchComponent = streamingComponent<{url: string}>(props$ =>
   props$.pipe(

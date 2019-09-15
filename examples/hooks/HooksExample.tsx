@@ -2,10 +2,10 @@ import * as React from 'react'
 
 import {timer} from 'rxjs'
 import {map, startWith, switchMap} from 'rxjs/operators'
-import {reactiveComponent, useObservableState} from '../../'
+import {reactiveComponent, useState} from '../../src/reactiveComponent'
 
 export const HooksExample = reactiveComponent(function Hooks() {
-  const [delay$, setDelay] = useObservableState(100)
+  const [delay$, setDelay] = useState(100)
 
   return delay$.pipe(
     switchMap(delay =>

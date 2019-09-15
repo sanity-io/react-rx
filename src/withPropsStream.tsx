@@ -1,8 +1,8 @@
 import * as React from 'react'
 import {Observable} from 'rxjs'
 import {map} from 'rxjs/operators'
-import {reactiveComponent} from '.'
-import {wrapDisplayName} from './displayName'
+import {wrapDisplayName} from './common'
+import {reactiveComponent} from './reactiveComponent'
 
 type ObservableFactory<SourceProps, TargetProps> = (
   props$: Observable<SourceProps>

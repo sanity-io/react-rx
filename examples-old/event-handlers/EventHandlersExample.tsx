@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {map, startWith} from 'rxjs/operators'
-import {createEventHandler} from '../../createEventHandler'
-import {streamingComponent} from '../../streamingComponent'
+import {createEventHandler} from '../../src/common'
+import {reactiveComponent as streamingComponent} from '../../src/reactiveComponent'
 
 const STYLE = {
   height: 200,

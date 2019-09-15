@@ -1,13 +1,13 @@
 import * as React from 'react'
 import {map} from 'rxjs/operators'
-import {createState, reactiveComponent, reactiveComponentWithRef} from '../../index'
+import {forwardRef, reactiveComponent, useState} from '../../src/reactiveComponent'
 
 interface Props {
   value: number
   onChange: (next: number) => void
 }
 
-const Input = reactiveComponentWithRef<Props, HTMLInputElement>((props$, ref) => {
+const Input = forwardRef<Props, HTMLInputElement>((props$, ref) => {
   return props$.pipe(
     map((props: Props) => (
       <div>
@@ -26,12 +26,16 @@ const Input = reactiveComponentWithRef<Props, HTMLInputElement>((props$, ref) =>
 })
 
 export const ForwardRefExample = reactiveComponent<{}>(() => {
-  const [value$, setValue] = createState(0)
+  const [value$, setValue] = useState(0)
   const inputRef = React.useRef<HTMLInputElement>()
 
   return value$.pipe(
     map(value => (
-      <Input ref={inputRef} value={value} onChange={() => setValue(Number(inputRef.current.value))} />
+      <Input
+        ref={inputRef}
+        value={value}
+        onChange={() => setValue(Number(inputRef.current.value))}
+      />
     ))
   )
 })

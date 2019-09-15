@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Observable} from 'rxjs'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {reactiveComponent} from './'
+import {reactiveComponent} from './reactiveComponent'
 
 interface Props<T> {
   observable: Observable<T>

@@ -1,7 +1,8 @@
 import * as React from 'react'
 import {concat, interval, of, timer} from 'rxjs'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {reactiveComponent, useObservable} from '../../'
+import {reactiveComponent} from '../../src/reactiveComponent'
+import {useObservable} from '../../src/useObservable'
 
 interface TickerProps {
   tick: number

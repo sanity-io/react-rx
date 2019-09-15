@@ -1,7 +1,7 @@
 import * as React from 'react'
-import {concat, defer, merge, of, timer} from 'rxjs'
-import {catchError, map, mergeMapTo, startWith, switchMapTo, take, tap} from 'rxjs/operators'
-import {reactiveComponent, useEventHandler} from '../../'
+import {concat, merge, of, timer} from 'rxjs'
+import {catchError, map, switchMapTo, take, tap} from 'rxjs/operators'
+import {reactiveComponent, useEvent} from '../../src/reactiveComponent'
 
 const numbers$ = timer(500, 500).pipe(
   tap(() => {
@@ -19,7 +19,7 @@ interface Props {
 }
 
 export const ErrorsExample = reactiveComponent(() => {
-  const [onRetry$, onRetry] = useEventHandler<React.MouseEvent>()
+  const [onRetry$, onRetry] = useEvent<React.MouseEvent>()
 
   return numbers$.pipe(
     map(n => ({number: n})),

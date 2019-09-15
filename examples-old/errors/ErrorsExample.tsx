@@ -1,8 +1,8 @@
 import * as React from 'react'
 import {timer} from 'rxjs'
 import {catchError, map, mergeMapTo, startWith, tap} from 'rxjs/operators'
-import {createEventHandler} from '../../createEventHandler'
-import {withPropsStream} from '../../withPropsStream'
+import {createEventHandler} from '../../src/common'
+import {withPropsStream} from '../../src/withPropsStream'
 
 const numbers$ = timer(0, 500).pipe(
   tap(() => {

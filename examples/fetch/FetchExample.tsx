@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {distinctUntilChanged, map, switchMap} from 'rxjs/operators'
-import {reactiveComponent} from '../../'
+import {reactiveComponent} from '../../src/reactiveComponent'
 
 interface Props {
   url: string

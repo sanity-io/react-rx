@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Observable, of, timer} from 'rxjs'
 import {map, startWith, switchMap} from 'rxjs/operators'
-import {createEventHandler, useEventHandler, useObservable} from '../../'
+import {createEventHandler, useObservable} from '../../src/useObservable'
 
 const justNumbers$ = timer(0, 500)
 

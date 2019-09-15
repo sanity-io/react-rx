@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {concat, merge, Observable, timer} from 'rxjs'
 import {concatMap, map, scan, startWith, tap, withLatestFrom} from 'rxjs/operators'
-import {reactiveComponent, useEventHandler} from '../../'
+import {reactiveComponent, useEvent} from '../../src/reactiveComponent'
 import storage from './storage'
 
 const STORAGE_KEY = '__form-submit-example__'
@@ -34,11 +34,11 @@ const INITIAL: Props = {
 const INITIAL_SUBMIT_STATE: SubmitState = {status: 'saving', result: null}
 
 export const FormDataExample = reactiveComponent(() => {
-  const [onChange$, onChange] = useEventHandler<
+  const [onChange$, onChange] = useEvent<
     React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   >()
 
-  const [onSubmit$, onSubmit] = useEventHandler<React.SyntheticEvent>()
+  const [onSubmit$, onSubmit] = useEvent<React.SyntheticEvent>()
 
   const formData$: Observable<FormData> = concat(
     storage.get(STORAGE_KEY, {title: '', description: ''}),

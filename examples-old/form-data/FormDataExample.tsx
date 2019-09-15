@@ -1,8 +1,8 @@
 import * as React from 'react'
 import {concat, merge, timer} from 'rxjs'
 import {concatMap, map, scan, startWith, tap, withLatestFrom} from 'rxjs/operators'
-import {createEventHandler} from '../../createEventHandler'
-import {streamingComponent} from '../../streamingComponent'
+import {createEventHandler} from '../../src/common'
+import {reactiveComponent as streamingComponent} from '../../src/reactiveComponent'
 import storage from './storage'
 
 const STORAGE_KEY = '__form-submit-example__'

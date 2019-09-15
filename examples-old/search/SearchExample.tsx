@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
 import {debounceTime, distinctUntilChanged, filter, map, switchMap, tap} from 'rxjs/operators'
-import {withPropsStream} from '../../withPropsStream'
+import {withPropsStream} from '../../src/withPropsStream'
 
 interface SearchHitsSourceProps {
   keyword: string

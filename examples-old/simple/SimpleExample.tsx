@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {timer} from 'rxjs'
 import {map} from 'rxjs/operators'
-import {withPropsStream} from '../../withPropsStream'
+import {withPropsStream} from '../../src/withPropsStream'
 
 const numbers$ = timer(0, 100).pipe(map(n => ({number: n})))
 
