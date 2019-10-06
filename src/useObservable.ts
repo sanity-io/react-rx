@@ -36,7 +36,7 @@ export function useObservable<T>(observable$: Observable<T>, initialValue?: T): 
         subscription.current.unsubscribe()
       }
     },
-    []
+    [],
   )
 
   return value
@@ -44,10 +44,10 @@ export function useObservable<T>(observable$: Observable<T>, initialValue?: T): 
 
 export function useObservableState<T>(): [
   Observable<T | undefined>,
-  React.Dispatch<React.SetStateAction<T | undefined>>
+  React.Dispatch<React.SetStateAction<T | undefined>>,
 ]
 export function useObservableState<T>(
-  initial: T | (() => T)
+  initial: T | (() => T),
 ): [Observable<T>, React.Dispatch<React.SetStateAction<T>>]
 
 export function useObservableState<T>(initial?: T | (() => T)) {

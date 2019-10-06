@@ -15,7 +15,7 @@ const hash$: Observable<string> = new Observable(subscriber => {
 
 const App$ = hash$.pipe(
   map(hash => hash.substring(1)),
-  map((hash: string) => <Examples selectedExampleName={hash} />)
+  map((hash: string) => <Examples selectedExampleName={hash} />),
 )
 
 const render = (container: HTMLElement) => (input$: Observable<React.ReactElement>) =>
@@ -35,6 +35,6 @@ if (!mountNode) {
 }
 
 const sub = App$.pipe(
-  render(mountNode)
+  render(mountNode),
   // takeUntil(timer(2000))
 ).subscribe()

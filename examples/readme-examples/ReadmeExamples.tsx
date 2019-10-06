@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
 import {distinctUntilChanged, map, scan, startWith, switchMap} from 'rxjs/operators'
-import * as RxC from '../../src/reactiveComponent'
+import * as ReactiveComponent from '../../src/reactiveComponent'
 import {reactiveComponent, useEvent} from '../../src/reactiveComponent'
 import {useObservable, useObservableEvent, useObservableState} from '../../src/useObservable'
 
@@ -10,7 +10,7 @@ const UseObservableState = () => {
 
   const count$ = speed$.pipe(
     switchMap(speed => timer(0, 1000 / speed)),
-    scan(count => count + 1, 0)
+    scan(count => count + 1, 0),
   )
 
   const currentSpeed = useObservable(speed$)
@@ -40,8 +40,8 @@ const UseEventHandler = () => {
     onSliderChange$.pipe(
       map(event => event.currentTarget.value),
       map(value => Number(value)),
-      startWith(1)
-    )
+      startWith(1),
+    ),
   )
   return (
     <>
@@ -64,35 +64,35 @@ const MouseTracker = reactiveComponent(() => {
           </pre>
         )}
       </>
-    ))
+    )),
   )
 })
 
-const ReactiveComponentWithoutProps = RxC.reactiveComponent(
-  timer(0, 100).pipe(map(counter => <>The number is {counter}</>))
+const ReactiveComponentWithoutProps = ReactiveComponent.reactiveComponent(
+  timer(0, 100).pipe(map(counter => <>The number is {counter}</>)),
 )
 
-const UpperCase = RxC.reactiveComponent((props$: Observable<{text: string}>) =>
+const UpperCase = ReactiveComponent.reactiveComponent((props$: Observable<{text: string}>) =>
   props$.pipe(
     map(props => props.text.toUpperCase()),
-    map(text => <p>{text}</p>)
-  )
+    map(text => <p>{text}</p>),
+  ),
 )
 
-const ClickCounterUseState = RxC.reactiveComponent(() => {
+const ClickCounterUseState = ReactiveComponent.reactiveComponent(() => {
   const [count, setCount] = React.useState(0)
-  return RxC.toObservable(count).pipe(
+  return ReactiveComponent.toObservable(count).pipe(
     map(currentCount => (
       <>
         <div>Click count: {currentCount}</div>
         <button onClick={() => setCount(currentCount + 1)}>Click!</button>
       </>
-    ))
+    )),
   )
 })
 
-const ClickCounter = RxC.reactiveComponent(() => {
-  const [count$, setState] = RxC.useState(0)
+const ClickCounter = ReactiveComponent.reactiveComponent(() => {
+  const [count$, setState] = ReactiveComponent.useState(0)
   return count$.pipe(
     scan<number>(count => count + 1),
     map(count => (
@@ -100,17 +100,17 @@ const ClickCounter = RxC.reactiveComponent(() => {
         <div>Click count: {count}</div>
         <button onClick={() => setState(count + 1)}>Click!</button>
       </>
-    ))
+    )),
   )
 })
 
-const Fetch = RxC.reactiveComponent<{url: string}>(props$ =>
+const Fetch = ReactiveComponent.reactiveComponent<{url: string}>(props$ =>
   props$.pipe(
     map(props => props.url),
     distinctUntilChanged(),
     switchMap(url => fetch(url).then(response => response.text())),
-    map(responseText => <p>{responseText}</p>)
-  )
+    map(responseText => <p>{responseText}</p>),
+  ),
 )
 
 export const ReadmeExamples = () => {

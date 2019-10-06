@@ -1,40 +1,46 @@
 import * as React from 'react'
 import {concat, of, timer} from 'rxjs'
-import {map, take, tap} from 'rxjs/operators'
+import {map, take} from 'rxjs/operators'
 import {reactiveComponent, toObservable} from '../../src/reactiveComponent'
 import {useObservable} from '../../src/useObservable'
-
-// this will synchronously set the state before the component mounts, and thereafter
-// wait 1 second before starting updating every 500ms
 
 const UPDATE_COUNT = 10
 
 const Sync1 = reactiveComponent(() =>
   concat(
-    of('First render is sync! (waiting…)'),
+    of("This is the first render render and it's sync! (waiting…)"),
     timer(1000, 500).pipe(
       map(n => `Update #${n + 1} of ${UPDATE_COUNT}`),
-      take(UPDATE_COUNT)
+      take(UPDATE_COUNT),
     ),
-    of('Completed!')
-  )
+    of('Completed!'),
+  ),
 )
+
 interface Props {
   text: string
 }
-const Sync2 = (props: Props) => {
+
+const UseObservableSync = (props: Props) => {
   return (
     <div>
-      Sync 2: {useObservable(toObservable(props.text).pipe(map(text => text.toUpperCase())))}
+      {useObservable(toObservable(props.text).pipe(map(text => text.toUpperCase())))}
+      <div>(initial render is sync)</div>
     </div>
   )
 }
 
 export const SyncExample = () => {
   return (
-    <div>
+    <div style={{border: '1px solid', padding: '1em'}}>
       <Sync1 />
-      {useObservable(timer(0, 100).pipe(map(n => <Sync2 text={`This is a text ${n}`} />)))}
+      <hr />
+      {useObservable(
+        timer(0, 1000).pipe(
+          map(n => <UseObservableSync text={`This is a text ${n}`} />),
+          take(5),
+        ),
+      )}
     </div>
   )
 }

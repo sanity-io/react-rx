@@ -1,1 +1,0 @@
-export {HooksExample} from './HooksExample'

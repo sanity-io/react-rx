@@ -5,12 +5,15 @@ import {wrapDisplayName} from './common'
 import {reactiveComponent} from './reactiveComponent'
 
 type ObservableFactory<SourceProps, TargetProps> = (
-  props$: Observable<SourceProps>
+  props$: Observable<SourceProps>,
 ) => Observable<TargetProps>
 
+/**
+ * @deprecated Use reactiveComponent instead
+ */
 export function withPropsStream<SourceProps, TargetProps>(
   observableOrFactory: Observable<TargetProps> | ObservableFactory<SourceProps, TargetProps>,
-  TargetComponent: React.ComponentType<TargetProps>
+  TargetComponent: React.ComponentType<TargetProps>,
 ) {
   const ComposedComponent = reactiveComponent<SourceProps>(sourceProps$ => {
     const targetProps$ =

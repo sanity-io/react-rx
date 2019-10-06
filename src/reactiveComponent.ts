@@ -11,7 +11,7 @@ function fromComponent<Props>(component: Component<Props>): React.FunctionCompon
     React.createElement(
       React.Fragment,
       null,
-      useObservable<React.ReactNode>(component(toObservable(props)))
+      useObservable<React.ReactNode>(component(toObservable(props))),
     )
   wrappedComponent.displayName = wrapDisplayName(component, 'reactiveComponent')
   return wrappedComponent
@@ -27,15 +27,15 @@ export {
   useObservableState as useState,
   useObservableContext as useContext,
   useObservableEvent as useEvent,
-  toObservable
+  toObservable,
 } from './useObservable'
 
 export function reactiveComponent<Props>(observable: Observable<Props>): React.FunctionComponent<{}>
 export function reactiveComponent<Props>(
-  component: Component<Props>
+  component: Component<Props>,
 ): React.FunctionComponent<Props>
 export function reactiveComponent<Props>(
-  observableOrComponent: Observable<Props> | Component<Props>
+  observableOrComponent: Observable<Props> | Component<Props>,
 ) {
   return typeof observableOrComponent === 'function'
     ? fromComponent(observableOrComponent)
@@ -44,7 +44,7 @@ export function reactiveComponent<Props>(
 
 type ForwardRefComponent<RefType, Props> = (
   input$: Observable<Props>,
-  ref: React.Ref<RefType>
+  ref: React.Ref<RefType>,
 ) => Observable<React.ReactNode>
 
 export function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<RefType, Props>) {
@@ -52,7 +52,7 @@ export function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<R
     return React.createElement(
       React.Fragment,
       null,
-      useObservable(component(toObservable(props), ref))
+      useObservable(component(toObservable(props), ref)),
     )
   })
   wrappedComponent.displayName = wrapDisplayName(component, 'reactiveComponent')

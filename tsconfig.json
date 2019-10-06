@@ -9,6 +9,7 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "plugins": [{"name": "typescript-plugin-css-modules"}]
   }
 }

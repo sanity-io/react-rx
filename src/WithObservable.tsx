@@ -16,10 +16,13 @@ function createWithObservable<T>(): ObservableComponent<T> {
       distinctUntilChanged((props, prevProps) => props.observable === prevProps.observable),
       switchMap(
         (props): Observable<React.ReactNode> =>
-          props.observable.pipe(map((observableValue: T) => props.children(observableValue)))
-      )
-    )
+          props.observable.pipe(map((observableValue: T) => props.children(observableValue))),
+      ),
+    ),
   )
 }
 
+/**
+ * @deprecated Use the useObservable hook instead
+ */
 export const WithObservable = createWithObservable()

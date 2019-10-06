@@ -1,1 +1,0 @@
-export {TickExample} from './TickExample'
