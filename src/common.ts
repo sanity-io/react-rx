@@ -1,4 +1,3 @@
-import React from 'react'
 import {concat, Observable, of, Subject} from 'rxjs'
 
 // for consumption outside of react only

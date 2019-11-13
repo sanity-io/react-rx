@@ -14,8 +14,8 @@ import UseObservableExample from './use-observable/use-observable'
 import ReadmeExamples from './readme-examples'
 import SyncExample from './sync'
 import {CodeBlock} from './components/CodeBlock'
-import styles from './Examples.module.css'
-import {Grid, Cell} from 'styled-css-grid'
+import styled from 'styled-components'
+import {Cell, Grid} from 'styled-css-grid'
 import FizzBuzzExample from './reactive-component/FizzBuzz'
 
 export interface Example {
@@ -52,6 +52,14 @@ const SELECTED_LINK_STYLE = {
   backgroundColor: '#444',
 }
 
+const CodeWrapper = styled.div`
+  & pre {
+    font-family: SF Mono, Roboto Mono, Menlo, monospace;
+    font-size: 0.8em;
+    line-height: 1.5em;
+  }
+`
+
 export function Examples(props: {selectedExampleName: string}) {
   const {selectedExampleName} = props
   const selectedExample = examples[selectedExampleName] || examples[Object.keys(examples)[0]]
@@ -78,9 +86,9 @@ export function Examples(props: {selectedExampleName: string}) {
       <Cell style={{padding: '1em'}}>
         <h4>Source (TypeScript)</h4>
         <hr />
-        <div className={styles.code}>
+        <CodeWrapper>
           <CodeBlock source={selectedExample.source} />
-        </div>
+        </CodeWrapper>
       </Cell>
     </Grid>
   )

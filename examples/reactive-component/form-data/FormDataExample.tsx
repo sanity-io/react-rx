@@ -48,7 +48,7 @@ export const FormDataExample = reactiveComponent(() => {
         [target.name]: target.value,
       })),
     ),
-  ).pipe(scan<any>((formData, update) => ({...formData, ...update}), {}))
+  ).pipe(scan((formData, update) => ({...formData, ...update}), {}))
 
   const submitState$ = onSubmit$.pipe(
     tap(event => event.preventDefault()),

@@ -6,6 +6,7 @@ import {LineNo, Pre} from './styles'
 interface Props {
   source: string
 }
+
 export function CodeBlock(props: Props) {
   return (
     <Highlight {...defaultProps} theme={theme} code={props.source} language="jsx">

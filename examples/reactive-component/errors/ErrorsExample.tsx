@@ -1,29 +1,26 @@
 import * as React from 'react'
-import {concat, merge, of, timer} from 'rxjs'
-import {catchError, map, switchMapTo, take, tap} from 'rxjs/operators'
+import {concat, merge, of, throwError, timer} from 'rxjs'
+import {catchError, map, mergeMapTo, switchMapTo, take} from 'rxjs/operators'
 import {reactiveComponent, useEvent} from '../../../src/reactiveComponent'
 
-const numbers$ = timer(500, 500).pipe(
-  tap(() => {
-    if (Math.random() > 0.9) {
-      throw new Error('A random error occurred')
-    }
-  }),
-)
+const numbers$ = timer(500, 500)
 
 interface Props {
   number?: number
   error?: null | Error
   retrying?: boolean | Error
-  onRetry?: (event: any) => void
+  onRetry?: (event: React.MouseEvent) => void
 }
 
 export const ErrorsExample = reactiveComponent(() => {
   const [onRetry$, onRetry] = useEvent<React.MouseEvent>()
+  const [onError$, onError] = useEvent<React.MouseEvent>()
 
-  return numbers$.pipe(
+  const errors$ = onError$.pipe(mergeMapTo(throwError(new Error('User triggered an error'))))
+
+  return merge(numbers$, errors$).pipe(
     map(n => ({number: n})),
-    catchError<any, any>((error, caught$) => {
+    catchError((error, caught$) => {
       return merge(
         of({error}),
         onRetry$.pipe(
@@ -34,7 +31,13 @@ export const ErrorsExample = reactiveComponent(() => {
     }),
     map((props: Props) => (
       <>
-        <p>This observable stream will fail 1 in 10 times on average</p>
+        <p>This observable stream will fail when you click the button below</p>
+
+        <p>
+          <button type="button" onClick={onError}>
+            Trigger error!
+          </button>
+        </p>
         {props.error ? (
           <>
             {props.retrying ? (

@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import {Observable} from 'rxjs'
 import {map, tap} from 'rxjs/operators'
-import {Examples} from './Examples'
+import {App} from './App'
 
 const hash$: Observable<string> = new Observable(subscriber => {
   const emitHash = () => subscriber.next(window.location.hash)
@@ -15,7 +15,7 @@ const hash$: Observable<string> = new Observable(subscriber => {
 
 const App$ = hash$.pipe(
   map(hash => hash.substring(1)),
-  map((hash: string) => <Examples selectedExampleName={hash} />),
+  map((hash: string) => <App selectedExampleName={hash} />),
 )
 
 const render = (container: HTMLElement) => (input$: Observable<React.ReactElement>) =>
@@ -29,12 +29,12 @@ const render = (container: HTMLElement) => (input$: Observable<React.ReactElemen
     }
   })
 
-const mountNode = document.getElementById('main')
+const mountNode = document.getElementById('app')
 if (!mountNode) {
-  throw new Error('No element with id "main" found')
+  throw new Error('No element with id "app" found')
 }
 
-const sub = App$.pipe(
+App$.pipe(
   render(mountNode),
   // takeUntil(timer(2000))
 ).subscribe()

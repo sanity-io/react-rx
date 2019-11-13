@@ -2,7 +2,6 @@ import * as React from 'react'
 import {Observable} from 'rxjs'
 import {wrapDisplayName} from './common'
 import {toObservable, useObservable} from './useObservable'
-import {RefForwardingComponent} from 'react'
 
 type Component<Props> = (input$: Observable<Props>) => Observable<React.ReactNode>
 
