@@ -5,7 +5,7 @@ import {reactiveComponent as streamingComponent} from '../../src/reactiveCompone
 
 const STYLE = {
   height: 200,
-  border: '1px solid'
+  border: '1px solid',
 }
 
 export const EventHandlersExample = streamingComponent(() => {
@@ -22,6 +22,6 @@ export const EventHandlersExample = streamingComponent(() => {
         Current position:
         <pre>{JSON.stringify(props, null, 2)}</pre>
       </div>
-    ))
+    )),
   )
 })

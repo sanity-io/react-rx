@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig",
+  "include": ["**/*"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@sanity/react-observable": ["../src"]
+    }
+  }
+}

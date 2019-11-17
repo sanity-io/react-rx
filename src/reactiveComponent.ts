@@ -22,13 +22,6 @@ function fromObservable<Props>(input$: Observable<Props>): React.FunctionCompone
   }
 }
 
-export {
-  useObservableState as useState,
-  useObservableContext as useContext,
-  useObservableEvent as useEvent,
-  toObservable,
-} from './useObservable'
-
 export function reactiveComponent<Props>(observable: Observable<Props>): React.FunctionComponent<{}>
 export function reactiveComponent<Props>(
   component: Component<Props>,

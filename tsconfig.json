@@ -1,8 +1,8 @@
 {
-  "include": ["examples/**/*", "src/**/*"],
+  "include": ["src/**/*"],
   "compilerOptions": {
-    "strict": false,
-    "outDir": "build",
+    "strict": true,
+    "outDir": "dist",
     "target": "es5",
     "module": "commonjs",
     "jsx": "react",
