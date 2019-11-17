@@ -9,8 +9,8 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "clean": "rimraf build",
-    "start": "mkdir -p .build-examples/fetch && cp web/reactive-component/fetch/*.txt .build-examples/fetch && parcel --no-autoinstall serve --no-cache web/index.html -d .build-examples",
-    "build-web": "NODE_ENV=production mkdir -p build-web/fetch && cp web/reactive-component/fetch/*.txt build-web/fetch && parcel build web/index.html -d build-web",
+    "start": "mkdir -p .build-examples/fetch && cp web/examples/fetch/*.txt .build-examples/fetch && parcel --no-autoinstall serve --no-cache web/index.html -d .build-examples",
+    "build-web": "NODE_ENV=production mkdir -p build-web/fetch && cp web/examples/fetch/*.txt build-web/fetch && parcel build web/index.html -d build-web",
     "start-old": "mkdir -p dist/fetch && cp web/fetch/*.txt dist/fetch && parcel examples-old/index.html"
   },
   "keywords": [],

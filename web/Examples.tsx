@@ -1,31 +1,35 @@
 import * as React from 'react'
-import {ContextExample} from './reactive-component/context'
-import {ErrorsExample} from './reactive-component/errors'
-import {EventHandlersExample} from './reactive-component/event-handlers'
-import {FetchExample} from './reactive-component/fetch'
-import {FormDataExample} from './reactive-component/form-data'
-import {ForwardRefExample} from './reactive-component/forward-ref'
-import {PassThroughPropsExample} from './reactive-component/passthrough-props'
-import {SimpleExample} from './reactive-component/simple'
-import {TickExample} from './reactive-component/tick'
-import {UseReactiveStateExample} from './reactive-component/use-reactive-state'
+import {ContextExample} from './examples/context'
+import {ErrorsExample} from './examples/errors'
+import {EventHandlersExample} from './examples/event-handlers'
+import {FetchExample} from './examples/fetch'
+import {FormDataExample} from './examples/form-data'
+import {ForwardRefExample} from './examples/forward-ref'
+import {PassThroughPropsExample} from './examples/passthrough-props'
+import {TickExample} from './examples/tick'
+import {UseReactiveStateExample} from './examples/use-state'
 import SearchExample from './use-observable/search'
 import UseObservableExample from './use-observable/use-observable'
 // import ReadmeExamples from './readme-examples'
 import SyncExample from './sync'
 import {CodeBlock} from './components/CodeBlock'
 import styled from 'styled-components'
-import FizzBuzzExample from './reactive-component/FizzBuzz'
+import {FizzBuzzExample} from './examples/FizzBuzz'
+import {TodoAppExample} from './examples/todo-app'
+import {HelloWorldExample} from './examples/hello-world'
+import {SimpleExample} from './examples/simple'
 
 export interface Example {
-  name: string
+  id: string
   title: string
-  type: string
   source: string
   scope?: {[variableName: string]: any}
 }
 
 const reactiveComponentExamples: Example[] = [
+  HelloWorldExample,
+  SimpleExample,
+  TodoAppExample,
   ContextExample,
   ErrorsExample,
   EventHandlersExample,
@@ -33,18 +37,17 @@ const reactiveComponentExamples: Example[] = [
   FormDataExample,
   ForwardRefExample,
   PassThroughPropsExample,
-  SimpleExample,
   TickExample,
   UseReactiveStateExample,
   FizzBuzzExample,
 ]
-
-const useObservableExamples: Example[] = [
-  SearchExample,
-  UseObservableExample,
-  // ReadmeExamples,
-  SyncExample,
-]
+//
+// const useObservableExamples: Example[] = [
+//   SearchExample,
+//   UseObservableExample,
+//   // ReadmeExamples,
+//   SyncExample,
+// ]
 
 const LINK_STYLE = {
   padding: 4,
@@ -64,9 +67,9 @@ export function Examples(props: {selectedExampleName: string}) {
       <div style={{position: 'sticky', top: 0, background: '#222', padding: 10, zIndex: 1}}>
         {reactiveComponentExamples.map(ex => (
           <a
-            style={selectedExampleName === ex.name ? SELECTED_LINK_STYLE : LINK_STYLE}
-            key={ex.name}
-            href={`#${ex.name}`}
+            style={selectedExampleName === ex.id ? SELECTED_LINK_STYLE : LINK_STYLE}
+            key={ex.id}
+            href={`#${ex.id}`}
           >
             {ex.title}
           </a>
@@ -74,9 +77,9 @@ export function Examples(props: {selectedExampleName: string}) {
       </div>
       <div style={{paddingTop: '1em'}}>
         {reactiveComponentExamples.map(ex => (
-          <div key={ex.name}>
-            <h2 id={ex.name}>{ex.title}</h2>
-            <CodeBlock source={ex.source} scope={ex.scope} />
+          <div key={ex.id}>
+            <h2 id={ex.id}>{ex.title}</h2>
+            <CodeBlock source={ex.source} scope={ex.scope} filename={`${ex.id}.tsx`} />
           </div>
         ))}
       </div>
