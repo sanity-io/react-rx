@@ -18,6 +18,7 @@ import {FizzBuzzExample} from './examples/FizzBuzz'
 import {TodoAppExample} from './examples/todo-app'
 import {HelloWorldExample} from './examples/hello-world'
 import {SimpleExample} from './examples/simple'
+import {SharedStateExample} from './examples/shared-state'
 
 export interface Example {
   id: string
@@ -30,6 +31,7 @@ const reactiveComponentExamples: Example[] = [
   HelloWorldExample,
   SimpleExample,
   TodoAppExample,
+  SharedStateExample,
   ContextExample,
   ErrorsExample,
   EventHandlersExample,

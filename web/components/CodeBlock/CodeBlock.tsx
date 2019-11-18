@@ -6,6 +6,11 @@ import {Editor, EvalCode} from 'react-repl'
 import prism, {languages} from 'prismjs'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/components/prism-jsx'
+
+import {Controlled as CodeMirror} from 'react-codemirror2'
+require('codemirror/mode/javascript/javascript')
+require('codemirror/mode/jsx/jsx')
+
 // import 'prismjs/components/prism-tsx'
 // import './prism-tsx'
 import Highlight, {defaultProps} from 'prism-react-renderer'
@@ -129,6 +134,15 @@ const COMMON_PRELUDE_ELEMENT = {__html: highlight(COMMON_PRELUDE)}
 
 const HEIGHT_EM = 30
 
+const StyledCodeMirror = styled(CodeMirror)`
+  max-height: 40rem;
+  .CodeMirror {
+    padding: 5px;
+    height: auto;
+    font-family: 'Dank Mono', 'Fira Code', 'Fira Mono', monospace;
+    line-height: 1.4em;
+  }
+}`
 export function CodeBlock(props: Props) {
   const source = stripImports(props.source)
   const [code, setCode] = React.useState(source.trim())
@@ -145,19 +159,16 @@ export function CodeBlock(props: Props) {
           width: '60%',
         }}
       >
-        <Prelude>
-          <summary style={commentStyle.style}>{'// Show imports'}</summary>
-          <div
-            style={{opacity: 0.5, padding: 8}}
-            dangerouslySetInnerHTML={COMMON_PRELUDE_ELEMENT}
-          />
-        </Prelude>
-        <StyledEditor
-          style={{minHeight: '10em'}}
-          padding={8}
+        <StyledCodeMirror
           value={code}
-          onChange={setCode}
-          highlight={highlight}
+          options={{
+            theme: 'custom',
+            mode: {name: 'jsx', base: {name: 'javascript', typescript: true}},
+          }}
+          onBeforeChange={(editor, data, value) => {
+            setCode(value)
+          }}
+          onChange={(editor, data, value) => {}}
         />
       </div>
 

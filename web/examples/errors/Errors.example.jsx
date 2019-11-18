@@ -16,17 +16,17 @@ import {
 } from '../_utils/globalScope'
 //@endimport
 
-const numbers$ = timer(500, 500)
+const timer$ = timer(0, 1000)
 
 const ErrorsExample = component(() => {
   const [onRetry$, onRetry] = useEvent()
   const [onError$, onError] = useEvent()
 
   const errors$ = onError$.pipe(
-    mergeMapTo(throwError(new Error('User triggered an error')))
+    mergeMapTo(throwError(new Error("You clicked the button, didn't you!?")))
   )
 
-  return merge(numbers$, errors$).pipe(
+  return merge(timer$, errors$).pipe(
     map(n => ({number: n})),
     catchError((error, caught$) => {
       return merge(
@@ -38,31 +38,29 @@ const ErrorsExample = component(() => {
       )
     }),
     map(props => (
-      <>
-        <p>This observable stream will fail when you click the button below</p>
-
-        <p>
-          <button type="button" onClick={onError}>
-            Trigger error!
-          </button>
-        </p>
+      <div>
         {props.error ? (
-          <>
-            {props.retrying ? (
-              <>Retrying…</>
-            ) : (
-              <>
-                <p>Oh no: an error occurred: {props.error.message}</p>
-                <p>
-                  <button onClick={onRetry}>Retry</button>
-                </p>
-              </>
-            )}
-          </>
+          props.retrying ? (
+            <>Trying again…</>
+          ) : (
+            <>
+              <div style={{color: 'red'}}>
+                Oh no! An error occurred:
+                <br />
+                {props.error.message}
+              </div>
+              <button onClick={onRetry}>Try again</button>
+            </>
+          )
         ) : (
-          <>Counter: {props.number}</>
+          <>
+            <div>You did not click the button for: {props.number}s</div>
+            <button type="button" onClick={onError}>
+              DO NOT CLICK THE BUTTON
+            </button>
+          </>
         )}
-      </>
+      </div>
     ))
   )
 })

@@ -30,7 +30,9 @@ import {
   switchMapTo,
   sampleTime,
   take,
-  share
+  share,
+  takeUntil,
+  endWith
 } from 'rxjs/operators'
 import * as operators from 'rxjs/operators'
 //@endimport
@@ -43,6 +45,7 @@ import {
   forwardRef
 } from '../../../src'
 
+export {createEventHandler} from '../../../src/common'
 export {of, from, timer, interval, concat, merge, throwError, combineLatest}
 export {
   map,
@@ -63,7 +66,9 @@ export {
   catchError,
   switchMapTo,
   sampleTime,
-  share
+  share,
+  endWith,
+  takeUntil
 }
 
 export {React, ReactDOM}
