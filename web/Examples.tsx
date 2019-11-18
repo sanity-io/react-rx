@@ -60,7 +60,9 @@ const SELECTED_LINK_STYLE = {
 
 export function Examples(props: {selectedExampleName: string}) {
   const {selectedExampleName} = props
-  // const selectedExample = examples.find(ex => ex.name === selectedExampleName) || examples[0]
+  const selectedExample =
+    reactiveComponentExamples.find(ex => ex.id === selectedExampleName) ||
+    reactiveComponentExamples[0]
 
   return (
     <div style={{margin: 10}}>
@@ -77,13 +79,13 @@ export function Examples(props: {selectedExampleName: string}) {
       </div>
       <div style={{paddingTop: '1em'}}>
         {reactiveComponentExamples
-          // .slice(4, 5)
+          .filter(ex => ex === selectedExample)
           .map(ex => (
-          <div key={ex.id}>
-            <h2 id={ex.id}>{ex.title}</h2>
-            <CodeBlock source={ex.source} scope={ex.scope} filename={`${ex.id}.tsx`} />
-          </div>
-        ))}
+            <div key={ex.id}>
+              <h2 id={ex.id}>{ex.title}</h2>
+              <CodeBlock source={ex.source} scope={ex.scope} filename={`${ex.id}.tsx`} />
+            </div>
+          ))}
       </div>
     </div>
   )

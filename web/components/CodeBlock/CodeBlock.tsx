@@ -141,7 +141,6 @@ export function CodeBlock(props: Props) {
         style={{
           padding: 4,
           ...theme.plain,
-          maxHeight: `${HEIGHT_EM}em`,
           overflowY: 'auto',
           width: '60%',
         }}
@@ -153,11 +152,17 @@ export function CodeBlock(props: Props) {
             dangerouslySetInnerHTML={COMMON_PRELUDE_ELEMENT}
           />
         </Prelude>
-        <StyledEditor padding={8} value={code} onChange={setCode} highlight={highlight} />
+        <StyledEditor
+          style={{minHeight: '10em'}}
+          padding={8}
+          value={code}
+          onChange={setCode}
+          highlight={highlight}
+        />
       </div>
 
       <div style={{width: '40%'}}>
-        <Checkerboard style={{width: '100%', maxHeight: `${HEIGHT_EM - 0.6}em`, overflowY: 'auto'}}>
+        <Checkerboard style={{width: '100%', height: '100%', overflowY: 'auto'}}>
           <div style={{maxHeight: '94%', maxWidth: '95%', padding: 10}}>
             {compileError ? (
               <ShowError title="Compile error">{compileError.message}</ShowError>
