@@ -76,7 +76,9 @@ export function Examples(props: {selectedExampleName: string}) {
         ))}
       </div>
       <div style={{paddingTop: '1em'}}>
-        {reactiveComponentExamples.map(ex => (
+        {reactiveComponentExamples
+          // .slice(4, 5)
+          .map(ex => (
           <div key={ex.id}>
             <h2 id={ex.id}>{ex.title}</h2>
             <CodeBlock source={ex.source} scope={ex.scope} filename={`${ex.id}.tsx`} />

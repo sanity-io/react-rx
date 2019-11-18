@@ -6,5 +6,5 @@ export const FormDataExample: Example = {
   id: 'form-data',
   title: 'Form data',
   scope: {storage},
-  source: fs.readFileSync(`${__dirname}/FormDataExample.tsx`, 'utf-8')
+  source: fs.readFileSync(`${__dirname}/FormDataExample.jsx`, 'utf-8')
 }

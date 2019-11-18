@@ -9,7 +9,7 @@ const STORAGE_KEY = '__form-submit-example__'
 
 const save = data =>
   timer(100 + Math.round(Math.random() * 1000)).pipe(
-    concatMap(() => storage.set(STORAGE_KEY, data))
+    concatMap(() => storage.set(STORAGE_KEY, data)),
   )
 
 interface FormData {
@@ -34,9 +34,9 @@ export const FormDataExample = streamingComponent(() => {
     onChange$.pipe(
       map(event => event.target),
       map(target => ({
-        [target.name]: target.value
-      }))
-    )
+        [target.name]: target.value,
+      })),
+    ),
   ).pipe(scan((formData, update) => ({...formData, ...update}), {}))
 
   const submitState$ = onSubmit$.pipe(
@@ -45,14 +45,14 @@ export const FormDataExample = streamingComponent(() => {
     concatMap(([event, formData]) =>
       save(formData).pipe(
         map(res => ({status: 'saved', result: res})),
-        startWith({status: 'saving'})
-      )
-    )
+        startWith({status: 'saving'}),
+      ),
+    ),
   )
 
   return merge(
     formData$.pipe(map(formData => ({formData}))),
-    submitState$.pipe(map(submitState => ({submitState})))
+    submitState$.pipe(map(submitState => ({submitState}))),
   ).pipe(
     scan((prev, curr) => ({...prev, ...curr}), {}),
     map((props: Props) => (
@@ -71,6 +71,6 @@ export const FormDataExample = streamingComponent(() => {
           </div>
         </form>
       </div>
-    ))
+    )),
   )
 })

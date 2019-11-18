@@ -33,6 +33,7 @@ import {
   share
 } from 'rxjs/operators'
 import * as operators from 'rxjs/operators'
+//@endimport
 
 import {
   component,
@@ -41,7 +42,6 @@ import {
   useState,
   forwardRef
 } from '../../../src'
-//@endimport
 
 export {of, from, timer, interval, concat, merge, throwError, combineLatest}
 export {

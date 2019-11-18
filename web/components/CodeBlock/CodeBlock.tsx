@@ -3,6 +3,11 @@ import * as React from 'react'
 import * as globalScope from '../../examples/_utils/globalScope'
 import * as repl from 'react-repl'
 import {Editor, EvalCode} from 'react-repl'
+import prism, {languages} from 'prismjs'
+import 'prismjs/components/prism-javascript'
+import 'prismjs/components/prism-jsx'
+// import 'prismjs/components/prism-tsx'
+// import './prism-tsx'
 import Highlight, {defaultProps} from 'prism-react-renderer'
 import theme from 'prism-react-renderer/themes/oceanicNext'
 // import theme from 'prism-react-renderer/themes/github'
@@ -37,7 +42,17 @@ const evalRender = (code: string, scope: Scope = {}) => {
 }
 
 const fs = require('fs')
-const COMMON_PRELUDE = fs.readFileSync(`${__dirname}/../../examples/_utils/globalScope.ts`, 'utf-8')
+const COMMON_PRELUDE =
+  fs
+    .readFileSync(`${__dirname}/../../examples/_utils/globalScope.ts`, 'utf-8')
+    .split('//@endimport')[0] +
+  `import {
+  component,
+  useEvent,
+  useContext,
+  useState,
+  forwardRef
+} from 'react-rx'`
 
 const stripImports = (str: string) => {
   return str
@@ -46,10 +61,10 @@ const stripImports = (str: string) => {
     .trim()
 }
 const Line = styled.div`
-  white-space: pre;
+  overflow-wrap: break-word;
 `
 
-const highlight = (code: string) => (
+const highlightReactPrismRenderer = (code: string) => (
   <Highlight {...defaultProps} theme={theme} code={code} language="jsx">
     {({className, style, tokens, getLineProps, getTokenProps}) => (
       <>
@@ -64,6 +79,7 @@ const highlight = (code: string) => (
     )}
   </Highlight>
 )
+const highlightNativePrism = (code: string) => prism.highlight(code, languages.jsx, 'jsx')
 
 const Prelude = styled.details`
   border: 0;
@@ -74,6 +90,7 @@ const Prelude = styled.details`
     right: 0;
     text-align: right;
   }
+  white-space: pre;
   box-sizing: border-box;
   font-family: 'Dank Mono', 'Fira Code', 'Fira Mono', monospace;
   font-size: 0.9em;
@@ -93,7 +110,8 @@ const Output = styled.div`
     display: block;
     margin-top: 10px;
   }
-  input {
+  input,
+  textarea {
     width: 100%;
     display: block;
     border-width: 1px;
@@ -106,7 +124,8 @@ const Output = styled.div`
 
 const commentStyle = theme.styles.find(s => s.types.includes('comment'))
 
-const COMMON_PRELUDE_ELEMENT = highlight(COMMON_PRELUDE)
+const highlight = highlightNativePrism
+const COMMON_PRELUDE_ELEMENT = {__html: highlight(COMMON_PRELUDE)}
 
 const HEIGHT_EM = 30
 
@@ -129,7 +148,10 @@ export function CodeBlock(props: Props) {
       >
         <Prelude>
           <summary style={commentStyle.style}>{'// Show imports'}</summary>
-          <div style={{opacity: 0.5, padding: 8}}>{COMMON_PRELUDE_ELEMENT}</div>
+          <div
+            style={{opacity: 0.5, padding: 8}}
+            dangerouslySetInnerHTML={COMMON_PRELUDE_ELEMENT}
+          />
         </Prelude>
         <StyledEditor padding={8} value={code} onChange={setCode} highlight={highlight} />
       </div>
