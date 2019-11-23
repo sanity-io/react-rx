@@ -68,7 +68,7 @@ export function Examples(props: {selectedExampleName: string}) {
 
   return (
     <div style={{margin: 10}}>
-      <div style={{position: 'sticky', top: 0, background: '#222', padding: 10, zIndex: 1}}>
+      <div style={{position: 'sticky', top: 0, padding: 10, zIndex: 1}}>
         {reactiveComponentExamples.map(ex => (
           <a
             style={selectedExampleName === ex.id ? SELECTED_LINK_STYLE : LINK_STYLE}

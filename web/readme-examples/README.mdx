@@ -1,4 +1,4 @@
-# @sanity/react-observable
+# react-rx
 
 _Hooks and utilities for combining React with RxJS_
 
@@ -35,7 +35,7 @@ The `reactiveComponent()` utility wraps a function component that is very simila
 Here's an example component that fetches some text from the url passed as the `url` prop:
 
 ```jsx
-import {reactiveComponent} from '@sanity/react-observable'
+import {reactiveComponent} from 'react-rx'
 import {switchMap, map} from 'rxjs'
 
 const Fetch = reactiveComponent(props$ =>
@@ -52,7 +52,7 @@ ReactDOM.render(<Fetch url="/some/url)" />, container)
 Instead of a _function_, `reactiveComponent` can also take an `Observable` as argument as long as it's an observable of [something React can render](https://reactjs.org/docs/react-component.html#render). This is neat when you have component that doesn't take any props, but still depends on values coming from an `Observable`:
 
 ```jsx
-import {reactiveComponent} from '@sanity/react-observable'
+import {reactiveComponent} from 'react-rx'
 
 const Counter = reactiveComponent(
   timer(0, 100).pipe(map(counter => <>The number is {counter}</>))
@@ -67,7 +67,7 @@ ReactDOM.render(<Counter />, container)
 Note: Reactive components will not automatically re render when a value coming from a hook updates, in order achieve that, you need to convert it into an observable. This is done by wrapping it using the `toObservable()` utility before combining it with the returned observable. Here's an example using `React.useState()`:
 
 ```jsx
-import {reactiveComponent} from '@sanity/react-observable
+import {reactiveComponent} from 'react-rx
 
 const Counter = reactiveComponent(props$ => {
   const [count, setCount] = React.useState(0)
@@ -89,7 +89,7 @@ The `toObservable` function makes it possible to consume community provided Reac
 Instead of calling `React.useState()` directly, you can also use the `useState` function exported from this package. Instead of the actual state value it will return an observable representing the state changes, along with a function to update it. Here's the example above rewritten to use `useState` from this package instead.
 
 ```jsx
-import {reactiveComponent, useState} from '@sanity/react-observable'
+import {reactiveComponent, useState} from 'react-rx'
 
 const Counter = reactiveComponent(() => {
   const [count$, setCount] = useState(0)
@@ -108,7 +108,7 @@ const Counter = reactiveComponent(() => {
 Sometimes your state comes as a function of an event triggered by the user. Let's say you want to display the mouse cursors x,y position as the user moves the mouse inside a component. This can be done py using the `useEvent()` utility:
 
 ```js
-import {reactiveComponent, useEvent} from '@sanity/react-observable'
+import {reactiveComponent, useEvent} from 'react-rx'
 
 const MouseTracker = reactiveComponent(() => {
   const [mouseMove$, handleMouseMove] = useEvent()
@@ -132,7 +132,7 @@ The above example will not produce any DOM before a mousemove event has been tri
 We can do this by using the `startWith` operator that comes with RxJS:
 
 ```js
-import {reactiveComponent, useEvent} from '@sanity/react-observable'
+import {reactiveComponent, useEvent} from 'react-rx'
 import {map, startWith} from 'rxjs/operators'
 
 const MouseTracker = reactiveComponent(() => {
@@ -207,7 +207,7 @@ If you need to subscribe to an observable in your component, this hook will give
 Example:
 
 ```jsx
-import {useObservable} from '@sanity/react-observable'
+import {useObservable} from 'react-rx'
 import {interval} from 'rxjs'
 
 function MyComponent(props) {
@@ -221,7 +221,7 @@ The `initialValue` argument is optional. If its omitted, the value returned from
 
 ```jsx
 import {of} from 'rxjs'
-import {useObservable} from '@sanity/react-observable'
+import {useObservable} from 'react-rx'
 
 // This component will never render "Hello mars!" since the observable emits "world" synchronously.
 function MyComponent(props) {
@@ -240,7 +240,7 @@ Note: this is exact same hook as the `useState()` function described in the sect
 Here's an example of a component that count numbers at a certain speed, allowing the user to adjust the counting speed by adjusting a slider:
 
 ```jsx
-import {useObservableState} from '@sanity/react-observable'
+import {useObservableState} from 'react-rx'
 
 function MyComponent(props) {
   const [speed$, setSpeed] = useObservableState(1)
@@ -276,7 +276,7 @@ This creates an event handler and an observable that represents calls to that ha
 Here's an example of a component thad displays the current value from a range input:
 
 ```jsx
-import {useObservableEvent} from '@sanity/react-observable'
+import {useObservableEvent} from 'react-rx'
 
 const ShowSliderValue = () => {
   const [onSliderChange$, onSliderChange] = useObservableEvent()

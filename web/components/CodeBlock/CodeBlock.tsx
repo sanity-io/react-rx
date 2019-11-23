@@ -3,19 +3,14 @@ import * as React from 'react'
 import * as globalScope from '../../examples/_utils/globalScope'
 import * as repl from 'react-repl'
 import {Editor, EvalCode} from 'react-repl'
-import prism, {languages} from 'prismjs'
-import 'prismjs/components/prism-javascript'
-import 'prismjs/components/prism-jsx'
 
 import {Controlled as CodeMirror} from 'react-codemirror2'
 require('codemirror/mode/javascript/javascript')
 require('codemirror/mode/jsx/jsx')
+require('codemirror/addon/selection/active-line')
+require('codemirror/addon/edit/matchbrackets')
+require('codemirror/addon/edit/matchtags')
 
-// import 'prismjs/components/prism-tsx'
-// import './prism-tsx'
-import Highlight, {defaultProps} from 'prism-react-renderer'
-import theme from 'prism-react-renderer/themes/oceanicNext'
-// import theme from 'prism-react-renderer/themes/github'
 import styled from 'styled-components'
 import {Checkerboard} from './Checkerboard'
 import {ShowError} from './ShowError'
@@ -69,23 +64,6 @@ const Line = styled.div`
   overflow-wrap: break-word;
 `
 
-const highlightReactPrismRenderer = (code: string) => (
-  <Highlight {...defaultProps} theme={theme} code={code} language="jsx">
-    {({className, style, tokens, getLineProps, getTokenProps}) => (
-      <>
-        {tokens.map((line, i) => (
-          <Line {...getLineProps({line, key: i})}>
-            {line.map((token, key) => (
-              <span {...getTokenProps({token, key})} />
-            ))}
-          </Line>
-        ))}
-      </>
-    )}
-  </Highlight>
-)
-const highlightNativePrism = (code: string) => prism.highlight(code, languages.jsx, 'jsx')
-
 const Prelude = styled.details`
   border: 0;
   summary {
@@ -127,19 +105,15 @@ const Output = styled.div`
   }
 `
 
-const commentStyle = theme.styles.find(s => s.types.includes('comment'))
-
-const highlight = highlightNativePrism
-const COMMON_PRELUDE_ELEMENT = {__html: highlight(COMMON_PRELUDE)}
-
-const HEIGHT_EM = 30
-
 const StyledCodeMirror = styled(CodeMirror)`
   max-height: 40rem;
+  background-color: rgb(40, 44, 52);
   .CodeMirror {
     padding: 5px;
     height: auto;
-    font-family: 'Dank Mono', 'Fira Code', 'Fira Mono', monospace;
+    font-family: source-code-pro,Menlo,Monaco,Consolas,Courier New,monospace;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
     line-height: 1.4em;
   }
 }`
@@ -154,7 +128,6 @@ export function CodeBlock(props: Props) {
       <div
         style={{
           padding: 4,
-          ...theme.plain,
           overflowY: 'auto',
           width: '60%',
         }}
@@ -163,7 +136,13 @@ export function CodeBlock(props: Props) {
           value={code}
           options={{
             theme: 'custom',
+            styleActiveLine: true,
+            smartIndent: false,
+            tabSize: 2,
+            matchBrackets: true,
+            matchTags: true,
             mode: {name: 'jsx', base: {name: 'javascript', typescript: true}},
+            // mode: 'javascript',
           }}
           onBeforeChange={(editor, data, value) => {
             setCode(value)

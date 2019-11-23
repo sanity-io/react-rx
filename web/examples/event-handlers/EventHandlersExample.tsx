@@ -18,7 +18,7 @@ import {NEVER} from 'rxjs'
 
 //@endimport
 
-const STYLE = {
+const STYLE: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   textAlign: 'center',
@@ -37,16 +37,14 @@ const EventHandlersExample = component(() => {
   )
   return mousePosition$.pipe(
     map(position => (
-      <div>
-        <div style={STYLE} onMouseMove={onMouseMove}>
-          Move mouse here
-        </div>
-        <div style={{padding: 4, height: '2em', textAlign: 'center'}}>
-          {position && (
+      <div style={STYLE} onMouseMove={onMouseMove}>
+        <div style={{width: '100%'}}>
+          {position ? (
             <>
-              Cursor position:
-              <br /> X:{position.x}, Y: {position.y}
+              Cursor position: X:{position.x}, Y: {position.y}
             </>
+          ) : (
+            <>Move mouse here</>
           )}
         </div>
       </div>

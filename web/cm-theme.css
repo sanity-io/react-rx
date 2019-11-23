@@ -84,6 +84,9 @@
 .cm-s-custom span.cm-tag {
   color: rgb(252, 146, 158);
 }
+.cm-s-custom span.cm-tag.cm-bracket {
+  color: rgb(88, 200, 252);
+}
 .cm-s-custom span.cm-header {
   color: #c594c5;
 }
@@ -96,9 +99,18 @@
 }
 
 .cm-s-custom .CodeMirror-activeline-background {
-  background: rgba(101, 115, 126, 0.33);
+  background: rgba(101, 115, 126, 0.1);
+}
+
+.cm-s-custom .CodeMirror-nonmatchingbracket {
+  color: #fa87b5 !important;
 }
 .cm-s-custom .CodeMirror-matchingbracket {
-  text-decoration: underline;
-  color: white !important;
+  color: #fa87b5 !important;
+  background-color: rgba(255, 255, 255, 0.22) !important;
+  border-radius: 2px;
+}
+.cm-s-custom .CodeMirror-matchingtag {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 2px;
 }
