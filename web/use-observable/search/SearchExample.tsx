@@ -2,7 +2,7 @@ import * as React from 'react'
 import {Observable, timer} from 'rxjs'
 import {debounceTime, distinctUntilChanged, filter, map, switchMap} from 'rxjs/operators'
 
-import {toObservable, useObservable} from '../../../src/useObservable'
+import {toObservable, useObservable} from '../../../src'
 
 interface SearchResult {
   keyword: string

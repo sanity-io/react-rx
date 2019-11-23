@@ -2,8 +2,8 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import {Observable} from 'rxjs'
 import {distinctUntilChanged, map} from 'rxjs/operators'
-import {App} from './App'
-import {component} from '../src'
+import {App} from '../App'
+import {component} from '../../src'
 
 const hash$: Observable<string> = new Observable(subscriber => {
   const emitHash = () => subscriber.next(window.location.hash)
