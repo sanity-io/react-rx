@@ -19,6 +19,7 @@ import {TodoAppExample} from './examples/todo-app'
 import {HelloWorldExample} from './examples/hello-world'
 import {SimpleExample} from './examples/simple'
 import {SharedStateExample} from './examples/shared-state'
+import {UseElementExample} from './examples/use-element'
 
 export interface Example {
   id: string
@@ -28,6 +29,7 @@ export interface Example {
 }
 
 const reactiveComponentExamples: Example[] = [
+  UseElementExample,
   HelloWorldExample,
   SimpleExample,
   TodoAppExample,

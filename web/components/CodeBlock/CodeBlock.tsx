@@ -3,6 +3,7 @@ import * as React from 'react'
 import * as globalScope from '../../examples/_utils/globalScope'
 import * as repl from 'react-repl'
 import {Editor, EvalCode} from 'react-repl'
+import optionalChaining from '@babel/plugin-proposal-optional-chaining'
 
 import {Controlled as CodeMirror} from 'react-codemirror2'
 require('codemirror/mode/javascript/javascript')
@@ -28,7 +29,7 @@ interface Props {
 
 const tryCompile = (code: string, filename: string) => {
   try {
-    return [null, repl.babel(code, {filename})?.code || '']
+    return [null, repl.babel(code, {filename, plugins: [optionalChaining]})?.code || '']
   } catch (error) {
     return [error]
   }
