@@ -89,23 +89,6 @@ const StyledEditor = styled(Editor)`
   font-size: 0.9em;
 `
 
-const Output = styled.div`
-  label {
-    display: block;
-    margin-top: 10px;
-  }
-  input,
-  textarea {
-    width: 100%;
-    display: block;
-    border-width: 1px;
-    border-style: solid;
-    border-color: rgb(204, 204, 204);
-    border-image: initial;
-    padding: 5px;
-  }
-`
-
 const StyledCodeMirror = styled(CodeMirror)`
   max-height: 40rem;
   background-color: rgb(40, 44, 52);
@@ -155,15 +138,11 @@ export function CodeBlock(props: Props) {
             {compileError ? (
               <ShowError title="Compile error">{compileError.message}</ShowError>
             ) : (
-              <Output>
-                <EvalCode
-                  code={transformed}
-                  evalWith={src => evalRender(src, props.scope)}
-                  renderError={error => (
-                    <ShowError title="Runtime error">{error.message}</ShowError>
-                  )}
-                />
-              </Output>
+              <EvalCode
+                code={transformed}
+                evalWith={src => evalRender(src, props.scope)}
+                renderError={error => <ShowError title="Runtime error">{error.message}</ShowError>}
+              />
             )}
           </div>
         </Checkerboard>

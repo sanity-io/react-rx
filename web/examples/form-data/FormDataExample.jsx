@@ -15,6 +15,7 @@ import {
 } from 'examples/_utils/globalScope'
 
 import storage from './storage'
+import styled from 'styled-components'
 //@endimport
 
 const STORAGE_KEY = '__form-submit-example__'
@@ -63,7 +64,7 @@ const FormDataExample = reactiveComponent(() => {
   ).pipe(
     scan((prev, curr) => ({...prev, ...curr}), INITIAL_PROPS),
     map(props => (
-      <form onSubmit={onSubmit}>
+      <Form onSubmit={onSubmit}>
         <div>
           <label>
             <strong>Title: </strong>
@@ -94,7 +95,7 @@ const FormDataExample = reactiveComponent(() => {
               : 'Save'}
           </button>
         </div>
-      </form>
+      </Form>
     ))
   )
 })
@@ -103,3 +104,15 @@ ReactDOM.render(
   <FormDataExample />,
   document.getElementById('formdata-example')
 )
+
+const Form = styled.form`
+  label {
+    display: block;
+    margin-top: 10px;
+  }
+  input,
+  textarea {
+    width: 100%;
+    padding: 5px;
+  }
+`

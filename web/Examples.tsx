@@ -16,6 +16,7 @@ import {HelloWorldExample} from './examples/hello-world'
 import {SimpleExample} from './examples/simple'
 import {SharedStateExample} from './examples/shared-state'
 import {UseElementExample} from './examples/use-element'
+import {AnimationExample} from './examples/animation'
 
 export interface Example {
   id: string
@@ -25,10 +26,12 @@ export interface Example {
 }
 
 const reactiveComponentExamples: Example[] = [
-  UseElementExample,
   HelloWorldExample,
   SimpleExample,
+  UseReactiveStateExample,
   TodoAppExample,
+  AnimationExample,
+  UseElementExample,
   SharedStateExample,
   ContextExample,
   ErrorsExample,
@@ -38,7 +41,6 @@ const reactiveComponentExamples: Example[] = [
   ForwardRefExample,
   PassThroughPropsExample,
   TickExample,
-  UseReactiveStateExample,
   FizzBuzzExample,
 ]
 //

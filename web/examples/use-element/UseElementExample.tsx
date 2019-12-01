@@ -1,14 +1,12 @@
 import {
-  reactiveComponent,
   map,
   React,
   ReactDOM,
-  startWith,
-  useEvent,
-  useState
+  reactiveComponent,
+  timer,
+  useState,
+  withLatestFrom
 } from '../_utils/globalScope'
-import {Observable, timer} from 'rxjs'
-import {mapTo, switchMap, withLatestFrom} from 'rxjs/operators'
 //@endimport
 
 const STYLE: React.CSSProperties = {
@@ -16,13 +14,15 @@ const STYLE: React.CSSProperties = {
   border: '1px dashed'
 }
 
+const SPEED = 2
 const unpx = (v: string) => Number(v.replace(/px$/, ''))
 
 const UseElementExample = reactiveComponent(() => {
   const [element$, ref] = useState<HTMLElement | null>(null)
 
-  const count$ = timer(0, 3000).pipe(
-    switchMap(i => timer(0, 5).pipe(mapTo(i % 2 === 0 ? 1 : -1)))
+  const count$ = timer(0, 16).pipe(
+    map(n => n % 400),
+    map(n => (n > 200 ? -1 : 1))
   )
   return count$.pipe(
     withLatestFrom(element$),
@@ -36,9 +36,10 @@ const UseElementExample = reactiveComponent(() => {
             ...STYLE,
             backgroundColor: Tag == 'article' ? '#335186' : '#90441a',
             borderRadius:
-              unpx(element?.style.borderRadius || '20px') + direction * -0.1,
-            height: (element?.clientHeight || 0) + direction,
-            width: (element?.clientWidth || 0) + direction
+              unpx(element?.style.borderRadius || '20px') +
+              direction * SPEED * -0.1,
+            height: (element?.clientHeight || 0) + direction * SPEED,
+            width: (element?.clientWidth || 0) + direction * SPEED
           }}
         >
           <div

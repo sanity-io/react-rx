@@ -14,6 +14,7 @@ import {
   useEvent,
   withLatestFrom
 } from '../_utils/globalScope'
+import styled from 'styled-components'
 //@endimport
 
 interface TodoItem {
@@ -43,7 +44,7 @@ const TodoApp = reactiveComponent(() => {
 
   return combineLatest([inputValue$, items$]).pipe(
     map(([text, items]) => (
-      <div>
+      <Wrapper>
         <h3>TODO</h3>
         <TodoList items={items} />
         <form onSubmit={handleSubmit}>
@@ -51,7 +52,7 @@ const TodoApp = reactiveComponent(() => {
           <input id="new-todo" onChange={handleInput} value={text} />
           <button>Add #{items.length + 1}</button>
         </form>
-      </div>
+      </Wrapper>
     ))
   )
 })
@@ -70,3 +71,14 @@ function TodoList(props: ListProps) {
 }
 
 ReactDOM.render(<TodoApp />, document.getElementById('todo-app'))
+
+const Wrapper = styled.div`
+  label {
+    display: block;
+    margin-top: 10px;
+  }
+  input {
+    width: 100%;
+    padding: 5px;
+  }
+`

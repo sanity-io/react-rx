@@ -1,4 +1,4 @@
-import {Observable, of as observableOf} from 'rxjs'
+import {Observable, of} from 'rxjs'
 
 const tryParse = <T>(val: any, defaultValue: T): T => {
   try {
@@ -10,7 +10,7 @@ const tryParse = <T>(val: any, defaultValue: T): T => {
 
 const get = <T>(key: string, defValue: T): Observable<T> => {
   const val = localStorage.getItem(key)
-  return observableOf(val === null ? defValue : tryParse<T>(val, defValue))
+  return of(val === null ? defValue : tryParse<T>(val, defValue))
 }
 
 const set = <T>(key: string, nextValue: T): Observable<T> => {
@@ -21,7 +21,7 @@ const set = <T>(key: string, nextValue: T): Observable<T> => {
   } else {
     localStorage.setItem(key, JSON.stringify(nextValue))
   }
-  return observableOf(nextValue)
+  return of(nextValue)
 }
 
 export default {get, set}

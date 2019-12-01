@@ -4,10 +4,11 @@ import {
   React,
   ReactDOM,
   scan,
-  timer
+  timer,
+  of
 } from '../_utils/globalScope'
 import {createEventHandler} from '../../../src/common'
-import {of} from 'rxjs'
+
 import {CSSProperties} from 'react'
 //@endimport
 
