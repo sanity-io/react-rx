@@ -1,7 +1,7 @@
 import {
   React,
   ReactDOM,
-  component,
+  reactiveComponent,
   useContext,
   map,
   useState
@@ -20,7 +20,7 @@ const MODE = {light: LIGHT, dark: DARK}
 
 const useMode = () => useContext(ModeContext).pipe(map(({current}) => current))
 
-const ModeSwitch = component(() => {
+const ModeSwitch = reactiveComponent(() => {
   const modeCtx$ = useContext(ModeContext)
 
   return modeCtx$.pipe(
@@ -35,7 +35,7 @@ const ModeSwitch = component(() => {
   )
 })
 
-const App = component(() => {
+const App = reactiveComponent(() => {
   const mode$ = useMode()
 
   return mode$.pipe(
@@ -48,7 +48,7 @@ const App = component(() => {
   )
 })
 
-const ContextExample = component(() => {
+const ContextExample = reactiveComponent(() => {
   const [mode$, setMode] = useState('light')
 
   return mode$.pipe(

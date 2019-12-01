@@ -1,7 +1,7 @@
 import {
   React,
   ReactDOM,
-  component,
+  reactiveComponent,
   distinctUntilChanged,
   switchMap,
   map,
@@ -9,7 +9,7 @@ import {
 } from '../_utils/globalScope'
 //@endimport
 
-const FetchComponent = component(props$ =>
+const FetchComponent = reactiveComponent(props$ =>
   props$.pipe(
     map(props => props.url),
     distinctUntilChanged(),

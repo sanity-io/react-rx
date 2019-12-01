@@ -38,7 +38,7 @@ import * as operators from 'rxjs/operators'
 //@endimport
 
 import {
-  component,
+  reactiveComponent,
   useEvent,
   useContext,
   useState,
@@ -74,4 +74,4 @@ export {
 export {React, ReactDOM}
 export {RxJS, operators}
 
-export {component, useEvent, useContext, useState, forwardRef}
+export {reactiveComponent, useEvent, useContext, useState, forwardRef}

@@ -1,7 +1,7 @@
 import {
   React,
   ReactDOM,
-  component,
+  reactiveComponent,
   share,
   take,
   timer,
@@ -18,7 +18,7 @@ const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(
   share()
 )
 
-const TimeDistance = component(props$ =>
+const TimeDistance = reactiveComponent(props$ =>
   combineLatest([currentTime$, props$]).pipe(
     map(([currentTime, ownerProps]) =>
       formatDistance(ownerProps.time, currentTime, {

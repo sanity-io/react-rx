@@ -1,6 +1,6 @@
 import {
   ReactDOM,
-  component,
+  reactiveComponent,
   forwardRef,
   map,
   React,
@@ -26,7 +26,7 @@ const Input = forwardRef((props$, ref) => {
   )
 })
 
-const ForwardRefExample = component(() => {
+const ForwardRefExample = reactiveComponent(() => {
   const [value$, setValue] = useState(0)
   const inputRef = React.useRef(null)
 

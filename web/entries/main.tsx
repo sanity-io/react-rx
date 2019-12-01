@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom'
 import {Observable} from 'rxjs'
 import {distinctUntilChanged, map} from 'rxjs/operators'
 import {App} from '../App'
-import {component} from '../../src'
+import {reactiveComponent} from '../../src'
 
 const hash$: Observable<string> = new Observable(subscriber => {
   const emitHash = () => subscriber.next(window.location.hash)
@@ -19,7 +19,7 @@ const selectedExample$ = hash$.pipe(
   distinctUntilChanged(),
 )
 
-const Main = component(
+const Main = reactiveComponent(
   selectedExample$.pipe(map(selectedExample => <App selectedExampleName={selectedExample} />)),
 )
 

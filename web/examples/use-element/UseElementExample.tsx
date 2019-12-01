@@ -1,4 +1,12 @@
-import {component, map, React, ReactDOM, useState} from '../_utils/globalScope'
+import {
+  reactiveComponent,
+  map,
+  React,
+  ReactDOM,
+  startWith,
+  useEvent,
+  useState
+} from '../_utils/globalScope'
 import {Observable, timer} from 'rxjs'
 import {mapTo, switchMap, withLatestFrom} from 'rxjs/operators'
 //@endimport
@@ -8,10 +16,10 @@ const STYLE: React.CSSProperties = {
   border: '1px dashed'
 }
 
-const unpx = v => Number(v.replace(/px$/, ''))
+const unpx = (v: string) => Number(v.replace(/px$/, ''))
 
-const UseElementExample = component(() => {
-  const [element$, ref] = useState<HTMLElement>(null)
+const UseElementExample = reactiveComponent(() => {
+  const [element$, ref] = useState<HTMLElement | null>(null)
 
   const count$ = timer(0, 3000).pipe(
     switchMap(i => timer(0, 5).pipe(mapTo(i % 2 === 0 ? 1 : -1)))

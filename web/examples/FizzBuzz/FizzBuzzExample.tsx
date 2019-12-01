@@ -1,14 +1,14 @@
 import {
   React,
   ReactDOM,
-  component,
+  reactiveComponent,
   map,
   timer,
   take
 } from '../_utils/globalScope'
 //@endimport
 
-const FizzBuzzExample = component(
+const FizzBuzzExample = reactiveComponent(
   timer(0, 500).pipe(
     map(n => n + 1),
     map(n => {

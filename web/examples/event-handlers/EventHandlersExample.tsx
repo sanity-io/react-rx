@@ -1,21 +1,4 @@
-import {
-  component,
-  map,
-  RxJS,
-  React,
-  ReactDOM,
-  startWith,
-  takeUntil,
-  useEvent,
-  endWith,
-  combineLatest,
-  switchMap,
-  of,
-  tap,
-  merge
-} from '../_utils/globalScope'
-import {NEVER} from 'rxjs'
-
+import {reactiveComponent, map, React, ReactDOM, startWith, useEvent} from '../_utils/globalScope'
 //@endimport
 
 const STYLE: React.CSSProperties = {
@@ -25,15 +8,15 @@ const STYLE: React.CSSProperties = {
   height: 150,
   width: 150,
   border: '1px dashed',
-  padding: '1em'
+  padding: '1em',
 }
 
-const EventHandlersExample = component(() => {
+const EventHandlersExample = reactiveComponent(() => {
   const [mouseMoves$, onMouseMove] = useEvent<React.MouseEvent>()
 
   const mousePosition$ = mouseMoves$.pipe(
     map(event => ({x: event.clientX, y: event.clientY})),
-    startWith(null)
+    startWith(null),
   )
   return mousePosition$.pipe(
     map(position => (
@@ -48,11 +31,11 @@ const EventHandlersExample = component(() => {
           )}
         </div>
       </div>
-    ))
+    )),
   )
 })
 
 ReactDOM.render(
   <EventHandlersExample />,
-  document.getElementById('event-handlers')
+  document.getElementById('event-handlers'),
 )

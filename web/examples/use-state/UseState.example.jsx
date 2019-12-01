@@ -1,7 +1,7 @@
 import {
   React,
   ReactDOM,
-  component,
+  reactiveComponent,
   useState,
   switchMap,
   startWith,
@@ -10,7 +10,7 @@ import {
 } from '../_utils/globalScope'
 //@endimport
 
-const UseStateExample = component(() => {
+const UseStateExample = reactiveComponent(() => {
   const [delay$, setDelay] = useState(100)
 
   return delay$.pipe(

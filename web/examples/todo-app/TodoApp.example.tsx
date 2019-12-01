@@ -1,6 +1,7 @@
+import {ChangeEvent, FormEvent} from 'react'
 import {
   combineLatest,
-  component,
+  reactiveComponent,
   filter,
   map,
   mapTo,
@@ -12,12 +13,16 @@ import {
   tap,
   useEvent,
   withLatestFrom
-} from 'examples/_utils/globalScope'
+} from '../_utils/globalScope'
 //@endimport
 
-const TodoApp = component(() => {
-  const [onInput$, handleInput] = useEvent()
-  const [onSubmit$, handleSubmit] = useEvent()
+interface TodoItem {
+  id: number
+  text: string
+}
+const TodoApp = reactiveComponent(() => {
+  const [onInput$, handleInput] = useEvent<ChangeEvent<HTMLInputElement>>()
+  const [onSubmit$, handleSubmit] = useEvent<FormEvent<HTMLFormElement>>()
 
   const text$ = onInput$.pipe(
     map(e => e.currentTarget.value),
@@ -30,7 +35,7 @@ const TodoApp = component(() => {
     map(([_, text]) => text),
     filter(text => text.length > 0),
     map(text => ({text, id: Date.now()})),
-    scan((items, item) => items.concat(item), []),
+    scan((items: TodoItem[], item) => items.concat(item), []),
     startWith([])
   )
 
@@ -51,7 +56,10 @@ const TodoApp = component(() => {
   )
 })
 
-function TodoList(props) {
+interface ListProps {
+  items: TodoItem[]
+}
+function TodoList(props: ListProps) {
   return (
     <ul>
       {props.items.map(item => (

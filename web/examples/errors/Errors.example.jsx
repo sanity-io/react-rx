@@ -11,14 +11,14 @@ import {
   take,
   throwError,
   timer,
-  component,
+  reactiveComponent,
   useEvent
 } from '../_utils/globalScope'
 //@endimport
 
 const timer$ = timer(0, 1000)
 
-const ErrorsExample = component(() => {
+const ErrorsExample = reactiveComponent(() => {
   const [onRetry$, onRetry] = useEvent()
   const [onError$, onError] = useEvent()
 

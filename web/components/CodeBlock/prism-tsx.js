@@ -1,5 +1,5 @@
 ;(function(Prism) {
-  var typescript = Prism.util.clone(Prism.languages.typescript)
+  const typescript = Prism.util.clone(Prism.languages.typescript)
 
   Prism.languages.tsx = Prism.languages.extend('markup', typescript)
   Prism.languages.tsx.tag.pattern = /<\/?(?:[\w.:-]+\s*(?:\s+(?:[\w.:-]+(?:=(?:("|')(?:\\[\s\S]|(?!\1)[^\\])*\1|[^\s{'">=]+|\{(?:\{(?:\{[^}]*\}|[^{}])*\}|[^{}])+\}))?|\{\.{3}[a-z_$][\w$]*(?:\.[a-z_$][\w$]*)*\}))*\s*\/?)?>/i
@@ -60,10 +60,10 @@
   }
 
   var walkTokens = function(tokens) {
-    var openedTags = []
-    for (var i = 0; i < tokens.length; i++) {
-      var token = tokens[i]
-      var notTagNorBrace = false
+    const openedTags = []
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i]
+      let notTagNorBrace = false
 
       if (typeof token !== 'string') {
         if (token.type === 'tag' && token.content[0] && token.content[0].type === 'tag') {
@@ -109,7 +109,7 @@
         if (openedTags.length > 0 && openedTags[openedTags.length - 1].openedBraces === 0) {
           // Here we are inside a tag, and not inside a JSX context.
           // That's plain text: drop any tokens matched.
-          var plainText = stringifyToken(token)
+          let plainText = stringifyToken(token)
 
           // And merge text with adjacent text
           if (

@@ -1,7 +1,7 @@
 import {
   timer,
   concatMap,
-  component,
+  reactiveComponent,
   useEvent,
   concat,
   map,
@@ -31,7 +31,7 @@ const INITIAL_PROPS = {
 
 const INITIAL_SUBMIT_STATE = {status: 'saving', result: null}
 
-const FormDataExample = component(() => {
+const FormDataExample = reactiveComponent(() => {
   const [onChange$, onChange] = useEvent()
   const [onSubmit$, onSubmit] = useEvent()
 

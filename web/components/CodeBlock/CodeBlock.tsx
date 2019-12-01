@@ -48,7 +48,7 @@ const COMMON_PRELUDE =
     .readFileSync(`${__dirname}/../../examples/_utils/globalScope.ts`, 'utf-8')
     .split('//@endimport')[0] +
   `import {
-  component,
+  reactiveComponent,
   useEvent,
   useContext,
   useState,
@@ -137,11 +137,8 @@ export function CodeBlock(props: Props) {
           value={code}
           options={{
             theme: 'custom',
-            styleActiveLine: true,
             smartIndent: false,
             tabSize: 2,
-            matchBrackets: true,
-            matchTags: true,
             mode: {name: 'jsx', base: {name: 'javascript', typescript: true}},
             // mode: 'javascript',
           }}

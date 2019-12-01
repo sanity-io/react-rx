@@ -1,5 +1,5 @@
 import {
-  component,
+  reactiveComponent,
   map,
   React,
   ReactDOM,
@@ -8,9 +8,10 @@ import {
 } from '../_utils/globalScope'
 import {createEventHandler} from '../../../src/common'
 import {of} from 'rxjs'
+import {CSSProperties} from 'react'
 //@endimport
 
-const CONTAINER = {
+const CONTAINER: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   position: 'relative',
@@ -19,7 +20,7 @@ const CONTAINER = {
   textAlign: 'center'
 }
 
-const BADGE = {
+const BADGE: CSSProperties = {
   borderRadius: 26,
   backgroundColor: 'red',
   padding: 4,
@@ -30,11 +31,13 @@ const BADGE = {
 const [clicks$, click] = createEventHandler()
 const clickCount$ = clicks$.pipe(scan(count => count + 1, 0))
 
-const ClickCountBadge = component(
+const ClickCountBadge = reactiveComponent(
   clickCount$.pipe(map(clicks => <span style={BADGE}>{clicks}</span>))
 )
 
-const Clicker = component(of(<button onClick={click}>CLICK ME!</button>))
+const Clicker = reactiveComponent(
+  of(<button onClick={click}>CLICK ME!</button>)
+)
 
 const Example = (
   <div style={CONTAINER}>

@@ -1,5 +1,5 @@
 // Main package exports
-export {reactiveComponent, reactiveComponent as component, forwardRef} from './reactiveComponent'
+export {reactiveComponent, forwardRef} from './reactiveComponent'
 
 export {
   useObservableState as useState,

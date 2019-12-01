@@ -1,7 +1,7 @@
 import {
   React,
   ReactDOM,
-  component,
+  reactiveComponent,
   timer,
   map,
   distinctUntilChanged,
@@ -12,7 +12,7 @@ import {
 } from '../_utils/globalScope'
 //@endimport
 
-const Ticker = component(props$ =>
+const Ticker = reactiveComponent(props$ =>
   props$.pipe(
     map(props => props.tick),
     distinctUntilChanged(),
@@ -22,7 +22,7 @@ const Ticker = component(props$ =>
   )
 )
 
-const TickerWithSubTick = component(props$ =>
+const TickerWithSubTick = reactiveComponent(props$ =>
   props$.pipe(
     map(props => props.tick),
     distinctUntilChanged(),
@@ -36,7 +36,7 @@ const TickerWithSubTick = component(props$ =>
   )
 )
 
-const TickExample = component(
+const TickExample = reactiveComponent(
   timer(0, 1000).pipe(
     map(tick => (
       <>

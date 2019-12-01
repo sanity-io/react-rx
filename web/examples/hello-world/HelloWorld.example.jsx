@@ -1,6 +1,6 @@
-import {component, of, React, ReactDOM} from '../_utils/globalScope'
+import {reactiveComponent, of, React, ReactDOM} from '../_utils/globalScope'
 //@endimport
 
-const HelloWorld = component(of(<div>Hello World!</div>))
+const HelloWorld = reactiveComponent(of(<div>Hello World!</div>))
 
 ReactDOM.render(<HelloWorld />, document.getElementById('hello-world'))
