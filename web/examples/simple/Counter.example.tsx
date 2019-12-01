@@ -7,9 +7,8 @@ import {
 } from '../_utils/globalScope'
 //@endimport
 
-// This will only show even numbers
 const Counter = reactiveComponent(
-  timer(0, 1000).pipe(map(seconds => <div>Seconds: {seconds}</div>))
+  timer(0, 1000).pipe(map(seconds => <>Seconds: {seconds}</>))
 )
 
 ReactDOM.render(<Counter />, document.getElementById('counter'))

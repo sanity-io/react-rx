@@ -15,21 +15,22 @@ const UseStateExample = reactiveComponent(() => {
 
   return delay$.pipe(
     switchMap(delay =>
-      timer(200, delay).pipe(
-        startWith('Starting…'),
-        map(n => `N: ${n}`),
+      timer(500, delay).pipe(
+        map(n => `Count: ${n}`),
+        startWith('Starting counter…'),
         map(label => (
-          <div>
-            Current delay: {delay}
+          <>
+            Counter interval (ms):{' '}
             <input
               type="range"
               min={0}
               max={1000}
               step={100}
-              onClick={e => setDelay(Number(e.currentTarget.value) || 1000)}
+              onChange={e => setDelay(Number(e.currentTarget.value))}
             />
-            {label}
-          </div>
+            {delay}
+            <div>{label}</div>
+          </>
         ))
       )
     )
