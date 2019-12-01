@@ -17,6 +17,7 @@ import {SimpleExample} from './examples/simple'
 import {SharedStateExample} from './examples/shared-state'
 import {UseElementExample} from './examples/use-element'
 import {AnimationExample} from './examples/animation'
+import {SyncExample} from './examples/sync'
 
 export interface Example {
   id: string
@@ -37,6 +38,7 @@ const reactiveComponentExamples: Example[] = [
   ErrorsExample,
   EventHandlersExample,
   FetchExample,
+  SyncExample,
   FormDataExample,
   ForwardRefExample,
   PassThroughPropsExample,

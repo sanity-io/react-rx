@@ -183,7 +183,7 @@ Equivalent to `React.useContext()` with the only difference that instead of a st
 
 This has no React API equivalent, but creates a `[Observable<Event>, (Event) => void]` tuple, where the first value is an observable of the arguments the second function is called with.
 
-- function useObservableEvent<Event>(): [Observable<Event>, (event: Event) => void]
+- `function useObservableEvent<Event>(): [Observable<Event>, (event: Event) => void]`
 
 #### `toObservable`
 
