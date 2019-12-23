@@ -1,4 +1,4 @@
-import {evalCode} from 'react-repl'
+import {evalCode} from './evalCode'
 
 export const evalReactDomRender = (code: string, scope = {}): any => {
   let renderCount = 0
