@@ -1,4 +1,4 @@
-import {Example} from '../../Examples'
+import {Example} from '../../pages/Examples/Examples'
 const fs = require('fs')
 
 export const FetchExample: Example = {

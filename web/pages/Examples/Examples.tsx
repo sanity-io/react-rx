@@ -1,23 +1,24 @@
 import * as React from 'react'
-import {ContextExample} from './examples/context'
-import {ErrorsExample} from './examples/errors'
-import {EventHandlersExample} from './examples/event-handlers'
-import {FetchExample} from './examples/fetch'
-import {FormDataExample} from './examples/form-data'
-import {ForwardRefExample} from './examples/forward-ref'
-import {PassThroughPropsExample} from './examples/passthrough-props'
-import {TickExample} from './examples/tick'
-import {UseReactiveStateExample} from './examples/use-state'
+import {ContextExample} from '../../examples/context'
+import {ErrorsExample} from '../../examples/errors'
+import {EventHandlersExample} from '../../examples/event-handlers'
+import {FetchExample} from '../../examples/fetch'
+import {FormDataExample} from '../../examples/form-data'
+import {ForwardRefExample} from '../../examples/forward-ref'
+import {PassThroughPropsExample} from '../../examples/passthrough-props'
+import {TickExample} from '../../examples/tick'
+import {UseReactiveStateExample} from '../../examples/use-state'
 // import ReadmeExamples from './readme-examples'
-import {CodeBlock} from './components/repl'
-import {FizzBuzzExample} from './examples/FizzBuzz'
-import {TodoAppExample} from './examples/todo-app'
-import {HelloWorldExample} from './examples/hello-world'
-import {SimpleExample} from './examples/simple'
-import {SharedStateExample} from './examples/shared-state'
-import {UseElementExample} from './examples/use-element'
-import {AnimationExample} from './examples/animation'
-import {SyncExample} from './examples/sync'
+import {CodeBlock} from '../../components/repl'
+import {FizzBuzzExample} from '../../examples/FizzBuzz'
+import {TodoAppExample} from '../../examples/todo-app'
+import {HelloWorldExample} from '../../examples/hello-world'
+import {SimpleExample} from '../../examples/simple'
+import {SharedStateExample} from '../../examples/shared-state'
+import {UseElementExample} from '../../examples/use-element'
+import {AnimationExample} from '../../examples/animation'
+import {SyncExample} from '../../examples/sync'
+import {Link} from '../../components/Link'
 
 export interface Example {
   id: string
@@ -71,15 +72,15 @@ export function Examples(props: {selectedExampleName: string}) {
 
   return (
     <div style={{margin: 10}}>
-      <div style={{position: 'sticky', top: 0, padding: 10, zIndex: 1}}>
+      <div>
         {reactiveComponentExamples.map(ex => (
-          <a
+          <Link
             style={selectedExampleName === ex.id ? SELECTED_LINK_STYLE : LINK_STYLE}
             key={ex.id}
             href={`#${ex.id}`}
           >
             {ex.title}
-          </a>
+          </Link>
         ))}
       </div>
       <div style={{paddingTop: '1em'}}>

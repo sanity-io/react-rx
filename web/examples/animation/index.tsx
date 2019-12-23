@@ -1,4 +1,4 @@
-import {Example} from '../../Examples'
+import {Example} from '../../pages/Examples/Examples'
 import styled from 'styled-components'
 import bezier from 'bezier-easing'
 
