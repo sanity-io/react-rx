@@ -10,7 +10,7 @@ function fromComponent<Props>(component: Component<Props>): React.FunctionCompon
     React.createElement(
       React.Fragment,
       null,
-      useObservable<React.ReactNode>(component(toObservable(props))),
+      useObservable<React.ReactNode>(toObservable(props, component)),
     )
   wrappedComponent.displayName = wrapDisplayName(component, 'reactiveComponent')
   return wrappedComponent

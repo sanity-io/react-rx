@@ -2,12 +2,12 @@ import {
   React,
   ReactDOM,
   reactiveComponent,
-  distinctUntilChanged,
   switchMap,
-  map,
-  render
+  map
 } from '../_utils/globalScope'
 //@endimport
+
+const {distinctUntilChanged} = operators
 
 const FetchComponent = reactiveComponent(props$ =>
   props$.pipe(

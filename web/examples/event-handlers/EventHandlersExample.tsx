@@ -1,4 +1,11 @@
-import {reactiveComponent, map, React, ReactDOM, startWith, useEvent} from '../_utils/globalScope'
+import {
+  reactiveComponent,
+  map,
+  React,
+  ReactDOM,
+  startWith,
+  useEvent
+} from '../_utils/globalScope'
 //@endimport
 
 const STYLE: React.CSSProperties = {
@@ -8,7 +15,7 @@ const STYLE: React.CSSProperties = {
   height: 150,
   width: 150,
   border: '1px dashed',
-  padding: '1em',
+  padding: '1em'
 }
 
 const EventHandlersExample = reactiveComponent(() => {
@@ -16,7 +23,7 @@ const EventHandlersExample = reactiveComponent(() => {
 
   const mousePosition$ = mouseMoves$.pipe(
     map(event => ({x: event.clientX, y: event.clientY})),
-    startWith(null),
+    startWith(null)
   )
   return mousePosition$.pipe(
     map(position => (
@@ -31,11 +38,11 @@ const EventHandlersExample = reactiveComponent(() => {
           )}
         </div>
       </div>
-    )),
+    ))
   )
 })
 
 ReactDOM.render(
   <EventHandlersExample />,
-  document.getElementById('event-handlers'),
+  document.getElementById('event-handlers-example')
 )

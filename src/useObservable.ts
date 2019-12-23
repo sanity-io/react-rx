@@ -4,12 +4,34 @@ import {createEventHandler} from './common'
 
 export {createState, createEventHandler} from './common'
 
-export function toObservable<T>(value: T): Observable<T> {
-  const subject$ = React.useMemo<Subject<T>>(() => new BehaviorSubject(value), [])
+export function toObservable<T>(value: T): Observable<T>
+export function toObservable<T, K>(
+  value: T,
+  setup: (props$: Observable<T>) => Observable<K>,
+): Observable<K>
+export function toObservable<T, K>(
+  value: T,
+  setup?: (props$: Observable<T>) => Observable<K>,
+): Observable<T | K> {
+  const isInitial = React.useRef(true)
+  const subject = React.useRef<Subject<T>>(new BehaviorSubject(value))
 
-  React.useEffect(() => subject$.next(value), [value])
+  React.useEffect(() => {
+    if (isInitial.current) {
+      isInitial.current = false
+    } else {
+      // emit only on update
+      subject.current.next(value)
+    }
+  }, [value])
+  React.useEffect(() => {
+    return () => {
+      return subject.current.complete()
+    }
+  }, [])
 
-  return subject$.asObservable()
+  const o = subject.current.asObservable()
+  return setup ? setup(o) : o
 }
 
 export function useObservable<T>(observable$: Observable<T>): T | null
@@ -64,4 +86,11 @@ type ObservableEventTuple<Event> = [Observable<Event>, (event: Event) => void]
 
 export function useObservableEvent<Event>(): ObservableEventTuple<Event> {
   return React.useMemo<ObservableEventTuple<Event>>(createEventHandler, [])
+}
+
+export function useObservableElement<Element extends HTMLElement>(): [
+  Observable<Element | null>,
+  (el: Element | null) => void,
+] {
+  return useObservableState<Element | null>(null)
 }

@@ -18,7 +18,7 @@ Although they share a lot of similarities, and reactiveComponent is built on top
 
 - [Reactive components](#reactive-components)
 - [Observable hooks](#use-observable)
-- [Code examples](https://github.com/sanity-io/react-observable/tree/master/packages)
+- [Code examples](https://github.com/sanity-io/react-rx/tree/master/web/examples)
 
 <a name="reactive-components"></a>
 ## What's a reactive component anyway?
@@ -89,10 +89,10 @@ The `toObservable` function makes it possible to consume community provided Reac
 Instead of calling `React.useState()` directly, you can also use the `useState` function exported from this package. Instead of the actual state value it will return an observable representing the state changes, along with a function to update it. Here's the example above rewritten to use `useState` from this package instead.
 
 ```jsx
-import {reactiveComponent, useState} from 'react-rx'
+import * as ReactRx from 'react-rx'
 
-const Counter = reactiveComponent(() => {
-  const [count$, setCount] = useState(0)
+const Counter = ReactRx.component(() => {
+  const [count$, setCount] = ReactRx.useState(0)
 
   return count$.pipe(map(currentCount => (
     <>
@@ -108,10 +108,10 @@ const Counter = reactiveComponent(() => {
 Sometimes your state comes as a function of an event triggered by the user. Let's say you want to display the mouse cursors x,y position as the user moves the mouse inside a component. This can be done py using the `useEvent()` utility:
 
 ```js
-import {reactiveComponent, useEvent} from 'react-rx'
+import * as ReactRx from 'react-rx'
 
-const MouseTracker = reactiveComponent(() => {
-  const [mouseMove$, handleMouseMove] = useEvent()
+const MouseTracker = ReactRx.component(() => {
+  const [mouseMove$, onMouseMove] = useEvent()
 
   return mouseMove$.pipe(
     map(event => (
@@ -125,7 +125,7 @@ const MouseTracker = reactiveComponent(() => {
 
 ```
 
-#### Gotcha: initial render?
+#### Gotcha: Initial render
 
 The above example will not produce any DOM before a mousemove event has been triggered, and the mouse event can't be triggered before the DOM has been rendered, which puts us in a catch-22 situation. To cope with it, we can make the observable start by emitting an initial value for the event.
 

@@ -6,4 +6,4 @@ const Sync = reactiveComponent(
   from(['This', 'will', 'only', 'render', 'once!'])
 )
 
-ReactDOM.render(<Sync />, document.getElementById('counter'))
+ReactDOM.render(<Sync />, document.getElementById('counter-example'))

@@ -1,13 +1,12 @@
 import {
   React,
   ReactDOM,
+  operators,
   catchError,
   concat,
   map,
   merge,
-  mergeMapTo,
   of,
-  switchMapTo,
   take,
   throwError,
   timer,
@@ -15,6 +14,8 @@ import {
   useEvent
 } from '../_utils/globalScope'
 //@endimport
+
+const {mergeMapTo, switchMapTo} = operators
 
 const timer$ = timer(0, 1000)
 
@@ -65,4 +66,4 @@ const ErrorsExample = reactiveComponent(() => {
   )
 })
 
-ReactDOM.render(<ErrorsExample />, document.getElementById('errors'))
+ReactDOM.render(<ErrorsExample />, document.getElementById('errors-example'))

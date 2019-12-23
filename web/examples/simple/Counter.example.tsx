@@ -11,4 +11,4 @@ const Counter = reactiveComponent(
   timer(0, 1000).pipe(map(seconds => <>Seconds: {seconds}</>))
 )
 
-ReactDOM.render(<Counter />, document.getElementById('counter'))
+ReactDOM.render(<Counter />, document.getElementById('counter-example'))

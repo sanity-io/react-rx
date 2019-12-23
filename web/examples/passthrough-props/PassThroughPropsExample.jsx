@@ -2,7 +2,6 @@ import {
   React,
   ReactDOM,
   reactiveComponent,
-  share,
   take,
   timer,
   map,
@@ -10,6 +9,8 @@ import {
 } from '../_utils/globalScope'
 import {formatDistance} from 'date-fns'
 //@endimport
+
+const {share} = operators
 
 const UPDATE_INTERVAL = 1000
 const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(
@@ -52,5 +53,5 @@ const PassThroughPropsExample = () => (
 
 ReactDOM.render(
   <PassThroughPropsExample />,
-  document.getElementById('pass-through-props')
+  document.getElementById('pass-through-props-example')
 )

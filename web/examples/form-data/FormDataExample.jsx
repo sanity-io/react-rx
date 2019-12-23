@@ -18,6 +18,8 @@ import storage from './storage'
 import styled from 'styled-components'
 //@endimport
 
+const {withLatestFrom} = operators
+
 const STORAGE_KEY = '__form-submit-example__'
 
 const save = formData =>

@@ -49,4 +49,7 @@ const ForwardRefExample = reactiveComponent(() => {
   )
 })
 
-ReactDOM.render(<ForwardRefExample />, document.getElementById('forward-ref'))
+ReactDOM.render(
+  <ForwardRefExample />,
+  document.getElementById('forward-ref-example')
+)

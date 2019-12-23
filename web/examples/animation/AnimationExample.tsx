@@ -64,7 +64,10 @@ const AnimationExample = reactiveComponent(() => {
   )
 })
 
-ReactDOM.render(<AnimationExample />, document.getElementById('event-handlers'))
+ReactDOM.render(
+  <AnimationExample />,
+  document.getElementById('animation-example')
+)
 
 // --- easing definitions and stylings
 const EASINGS = {

@@ -33,4 +33,7 @@ const FizzBuzzExample = reactiveComponent(
   )
 )
 
-ReactDOM.render(<FizzBuzzExample />, document.getElementById('fizz-buzz'))
+ReactDOM.render(
+  <FizzBuzzExample />,
+  document.getElementById('fizz-buzz-example')
+)

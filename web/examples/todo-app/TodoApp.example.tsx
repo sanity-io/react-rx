@@ -1,5 +1,6 @@
 import {ChangeEvent, FormEvent} from 'react'
 import {
+  operators,
   combineLatest,
   reactiveComponent,
   filter,
@@ -11,11 +12,12 @@ import {
   scan,
   startWith,
   tap,
-  useEvent,
-  withLatestFrom
+  useEvent
 } from '../_utils/globalScope'
 import styled from 'styled-components'
 //@endimport
+
+const {withLatestFrom} = operators
 
 interface TodoItem {
   id: number
@@ -70,7 +72,7 @@ function TodoList(props: ListProps) {
   )
 }
 
-ReactDOM.render(<TodoApp />, document.getElementById('todo-app'))
+ReactDOM.render(<TodoApp />, document.getElementById('todo-app-example'))
 
 const Wrapper = styled.div`
   label {

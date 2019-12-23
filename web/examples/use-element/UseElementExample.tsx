@@ -1,13 +1,15 @@
 import {
   map,
+  operators,
   React,
   ReactDOM,
   reactiveComponent,
-  timer,
-  useState,
-  withLatestFrom
+  timer
 } from '../_utils/globalScope'
+import {useElement} from '../../../src'
 //@endimport
+
+const {withLatestFrom} = operators
 
 const STYLE: React.CSSProperties = {
   textAlign: 'center',
@@ -18,7 +20,7 @@ const SPEED = 2
 const unpx = (v: string) => Number(v.replace(/px$/, ''))
 
 const UseElementExample = reactiveComponent(() => {
-  const [element$, ref] = useState<HTMLElement | null>(null)
+  const [element$, ref] = useElement<HTMLElement>()
 
   const count$ = timer(0, 16).pipe(
     map(n => n % 400),
@@ -60,5 +62,5 @@ const UseElementExample = reactiveComponent(() => {
 
 ReactDOM.render(
   <UseElementExample />,
-  document.getElementById('event-handlers')
+  document.getElementById('use-element-example')
 )

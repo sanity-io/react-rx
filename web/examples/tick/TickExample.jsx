@@ -4,13 +4,13 @@ import {
   reactiveComponent,
   timer,
   map,
-  distinctUntilChanged,
   switchMap,
   startWith,
-  mapTo,
-  sampleTime
+  mapTo
 } from '../_utils/globalScope'
 //@endimport
+
+const {distinctUntilChanged, sampleTime} = operators
 
 const Ticker = reactiveComponent(props$ =>
   props$.pipe(
@@ -48,4 +48,4 @@ const TickExample = reactiveComponent(
   )
 )
 
-ReactDOM.render(<TickExample />, document.getElementById('ticker'))
+ReactDOM.render(<TickExample />, document.getElementById('ticker-example'))

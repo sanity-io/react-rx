@@ -1,12 +1,3 @@
-/*
-
-    Name:       custom
-    Author:     Filype Pereira (https://github.com/fpereira1)
-
-    Original custom color scheme by Dmitri Voronianski (https://github.com/voronianski/custom-color-scheme)
-
-*/
-
 .cm-s-custom.CodeMirror {
   background: rgb(32, 35, 42);
   color: #f8f8f2;

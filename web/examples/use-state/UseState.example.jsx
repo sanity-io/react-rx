@@ -37,4 +37,7 @@ const UseStateExample = reactiveComponent(() => {
   )
 })
 
-ReactDOM.render(<UseStateExample />, document.getElementById('use-state'))
+ReactDOM.render(
+  <UseStateExample />,
+  document.getElementById('use-state-example')
+)

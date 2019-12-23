@@ -59,4 +59,4 @@ const Example = (
     </div>
   </div>
 )
-ReactDOM.render(Example, document.getElementById('counter'))
+ReactDOM.render(Example, document.getElementById('shared-state-example'))

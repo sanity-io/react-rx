@@ -8,6 +8,7 @@ export {
   useObservableContext,
   useObservableEvent as useEvent,
   useObservableEvent,
+  useObservableElement as useElement,
   createState,
   useObservable,
   toObservable,

@@ -9,7 +9,7 @@ import {PassThroughPropsExample} from './examples/passthrough-props'
 import {TickExample} from './examples/tick'
 import {UseReactiveStateExample} from './examples/use-state'
 // import ReadmeExamples from './readme-examples'
-import {CodeBlock} from './components/CodeBlock'
+import {CodeBlock} from './components/repl'
 import {FizzBuzzExample} from './examples/FizzBuzz'
 import {TodoAppExample} from './examples/todo-app'
 import {HelloWorldExample} from './examples/hello-world'
@@ -23,6 +23,7 @@ export interface Example {
   id: string
   title: string
   source: string
+  description?: string
   scope?: {[variableName: string]: any}
 }
 
@@ -86,7 +87,8 @@ export function Examples(props: {selectedExampleName: string}) {
           .filter(ex => ex === selectedExample)
           .map(ex => (
             <div key={ex.id}>
-              <h2 id={ex.id}>{ex.title}</h2>
+              <h2>{ex.title}</h2>
+              {ex.description && <p>{ex.description}</p>}
               <CodeBlock source={ex.source} scope={ex.scope} filename={`${ex.id}.tsx`} />
             </div>
           ))}
