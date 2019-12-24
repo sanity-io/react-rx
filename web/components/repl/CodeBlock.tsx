@@ -90,7 +90,7 @@ export function CodeBlock(props: Props) {
 
       <div style={{width: '40%'}}>
         <Checkerboard style={{width: '100%', height: '100%', overflowY: 'auto'}}>
-          <div style={{maxHeight: '94%', maxWidth: '95%'}}>
+          <div style={{padding: '2em', maxHeight: '94%', maxWidth: '95%'}}>
             {compileError ? (
               <ShowError title="Compile error">{compileError.message}</ShowError>
             ) : (

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import {navigate} from '../utils/location'
+import {navigate} from '../datastores/location'
 
 export function Link(props: React.ComponentProps<'a'>) {
   const onClick = React.useCallback(

@@ -2,7 +2,6 @@ import styled from 'styled-components'
 import {Controlled} from 'react-codemirror2'
 
 export const CodeMirror = styled(Controlled)`
-  max-height: 40rem;
   background-color: rgb(40, 44, 52);
   .CodeMirror {
     padding: 0.6rem;

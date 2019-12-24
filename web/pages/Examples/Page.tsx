@@ -1,5 +1,5 @@
 import {reactiveComponent} from '../../../src/reactiveComponent'
-import {location$} from '../../utils/location'
+import {location$} from '../../datastores/location'
 import {map, tap} from 'rxjs/operators'
 import {Examples} from './Examples'
 import * as React from 'react'

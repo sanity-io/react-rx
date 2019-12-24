@@ -1,3 +1,3 @@
 import React from 'react'
 
-export const Page = () => <h2>Not found!</h2>
+export const NotFound = () => <h2>Not found!</h2>

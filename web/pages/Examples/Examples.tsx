@@ -19,6 +19,8 @@ import {UseElementExample} from '../../examples/use-element'
 import {AnimationExample} from '../../examples/animation'
 import {SyncExample} from '../../examples/sync'
 import {Link} from '../../components/Link'
+import {Container, Content, ContentInner, Sidebar} from './styles'
+import {Header} from '../../components/Header'
 
 export interface Example {
   id: string
@@ -55,15 +57,6 @@ const reactiveComponentExamples: Example[] = [
 //   SyncExample,
 // ]
 
-const LINK_STYLE = {
-  padding: 4,
-  display: 'inline-block',
-}
-const SELECTED_LINK_STYLE = {
-  ...LINK_STYLE,
-  backgroundColor: '#444',
-}
-
 export function Examples(props: {selectedExampleName: string}) {
   const {selectedExampleName} = props
   const selectedExample =
@@ -71,29 +64,39 @@ export function Examples(props: {selectedExampleName: string}) {
     reactiveComponentExamples[0]
 
   return (
-    <div style={{margin: 10}}>
-      <div>
-        {reactiveComponentExamples.map(ex => (
-          <Link
-            style={selectedExampleName === ex.id ? SELECTED_LINK_STYLE : LINK_STYLE}
-            key={ex.id}
-            href={`#${ex.id}`}
-          >
-            {ex.title}
-          </Link>
-        ))}
-      </div>
-      <div style={{paddingTop: '1em'}}>
-        {reactiveComponentExamples
-          .filter(ex => ex === selectedExample)
-          .map(ex => (
-            <div key={ex.id}>
-              <h2>{ex.title}</h2>
-              {ex.description && <p>{ex.description}</p>}
-              <CodeBlock source={ex.source} scope={ex.scope} filename={`${ex.id}.tsx`} />
-            </div>
-          ))}
-      </div>
-    </div>
+    <>
+      <Header />
+      <Container>
+        <Sidebar>
+          <h4>Examples</h4>
+          <ul>
+            {reactiveComponentExamples.map(ex => (
+              <li>
+                <Link
+                  className={selectedExampleName === ex.id ? 'selected' : ''}
+                  key={ex.id}
+                  href={`#${ex.id}`}
+                >
+                  {ex.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Sidebar>
+        <Content>
+          <ContentInner>
+            {reactiveComponentExamples
+              .filter(ex => ex === selectedExample)
+              .map(ex => (
+                <div key={ex.id}>
+                  <h2>{ex.title}</h2>
+                  {ex.description && <p>{ex.description}</p>}
+                  <CodeBlock source={ex.source} scope={ex.scope} filename={`${ex.id}.tsx`} />
+                </div>
+              ))}
+          </ContentInner>
+        </Content>
+      </Container>
+    </>
   )
 }

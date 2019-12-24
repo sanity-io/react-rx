@@ -1,40 +1,81 @@
 import {Link} from './Link'
 import * as React from 'react'
 import styled from 'styled-components'
+import {reactiveComponent} from '../../src/reactiveComponent'
+import {pages} from '../pages/pages'
+import {map} from 'rxjs/operators'
+import {RxJSLogo} from './logos/rxjs'
+import {ReactLogo} from './logos/react'
 
+const LogoWrapper = styled.div`
+  font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande',
+    sans-serif;
+  -webkit-font-smoothing: antialised;
+  width: 10em;
+  font-size: 2em;
+  display: flex;
+`
 const StyledHeader = styled.header`
-  background-color: #4b213c;
+  z-index: 2000;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #d9376e;
+`
+
+const HeaderInner = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   padding: 1em;
 `
 
 const LinkWrapper = styled.div`
-  display: inline-block;
-  background-color: ${props => (props.isActive ? '#5d2e4c' : '')};
   color: #efefef;
   padding: 0.5em;
 `
 
 const PageLink = styled(Link)`
-  padding: 0.5em;
-  color: #efefef;
-  &:link {
-    color: #efefef;
-  }
+  display: block;
+  color: #eff0f3;
+  &:link,
   &:visited {
-    color: #efefef;
+    color: #eff0f3;
   }
 `
 
-export const Header = ({pages, current}) => (
-  <StyledHeader>
-    {pages.map(page => {
-      return (
-        <LinkWrapper isActive={page.id === current.id}>
-          <PageLink key={page.id} href={page.route}>
-            {page.title}
-          </PageLink>
-        </LinkWrapper>
-      )
-    })}
-  </StyledHeader>
+const Logo = () => (
+  <LogoWrapper>
+    <div style={{position: 'relative', width: 70}}>
+      <ReactLogo height="50" style={{position: 'absolute', left: 0}} />
+      <RxJSLogo width="50" style={{opacity: 0.7, position: 'absolute', left: 0}} />
+    </div>
+    <div>
+      <Link href="/">ReactRx</Link>
+    </div>
+  </LogoWrapper>
+)
+export const Header = reactiveComponent(page$ =>
+  page$.pipe(
+    map(currentPage => (
+      <StyledHeader>
+        <HeaderInner>
+          <Logo />
+          {pages
+            .filter(page => page.id !== 'home')
+            .map(page => {
+              return (
+                <LinkWrapper isActive={page.id === currentPage.id}>
+                  <PageLink key={page.id} href={page.route}>
+                    {page.title}
+                  </PageLink>
+                </LinkWrapper>
+              )
+            })}
+        </HeaderInner>
+      </StyledHeader>
+    )),
+  ),
 )

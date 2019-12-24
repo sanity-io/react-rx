@@ -6,8 +6,9 @@ const CHECKER_BG = '#222'
 
 export const Checkerboard = styled.div`
   display: flex;
-  align-items: center;
+  /*align-items: center;*/
   justify-content: center;
+  color: #fff;
   height: 100%;
   width: 100%;
   background-color: ${CHECKER_FG};
