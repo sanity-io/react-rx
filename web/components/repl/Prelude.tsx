@@ -1,10 +1,6 @@
-import {reactiveComponent} from '../../../src'
-import {combineLatest} from 'rxjs'
-import {map, tap} from 'rxjs/operators'
-import codemirror from 'codemirror'
 import * as React from 'react'
 import styled from 'styled-components'
-import {useElement} from '../../../src'
+import {CodeMirrorMode} from './CodeMirrorMode'
 
 const Details = styled.details`
   white-space: pre;
@@ -25,35 +21,9 @@ const Summary = styled.summary`
   padding: 0em 0.3em;
 `
 
-const Code = styled.div`
-  margin: 0;
-  padding: 0.8rem;
-  white-space: pre;
-  overflow: auto;
+const StyledCodeMirrorMode = styled(CodeMirrorMode)`
   opacity: 0.7;
-  padding: 0.9rem;
-  font-family: source-code-pro, Menlo, Monaco, Consolas, Courier New, monospace;
-  font-size: 14px;
-  -webkit-font-smoothing: antialiased;
-  line-height: 1.4em;
 `
-
-interface CodeMirrorModeProps {
-  mode: {}
-  children: string
-}
-
-const CodeMirrorMode = reactiveComponent<CodeMirrorModeProps>(props$ => {
-  const [ref$, setRef] = useElement<HTMLDivElement>()
-  return combineLatest([props$, ref$]).pipe(
-    tap(([props, ref]) => {
-      if (ref) {
-        ;(codemirror as any).runMode(props.children, props.mode, ref)
-      }
-    }),
-    map(() => <Code className="cm-s-custom" ref={setRef} />),
-  )
-})
 
 interface Props {
   mode: {}
@@ -67,7 +37,7 @@ export const Prelude = (props: Props) => {
       <Summary onClick={() => setOpen(current => !current)}>
         {isOpen ? '// hide prelude' : '// show prelude'}
       </Summary>
-      <CodeMirrorMode mode={props.mode}>{props.value}</CodeMirrorMode>
+      <StyledCodeMirrorMode mode={props.mode}>{props.value}</StyledCodeMirrorMode>
     </Details>
   )
 }

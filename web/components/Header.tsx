@@ -14,6 +14,7 @@ const LogoWrapper = styled.div`
   width: 10em;
   font-size: 2em;
   display: flex;
+  flex-grow: 1;
 `
 const StyledHeader = styled.header`
   z-index: 2000;
@@ -29,12 +30,12 @@ const HeaderInner = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  padding: 1em;
+  padding: 1em 2em 1em 1em;
 `
 
 const LinkWrapper = styled.div`
   color: #efefef;
-  padding: 0.5em;
+  padding: 0.5em 0.8em;
 `
 
 const PageLink = styled(Link)`

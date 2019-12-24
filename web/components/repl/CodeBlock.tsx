@@ -8,15 +8,9 @@ import {compile} from './compile/babel'
 import {evalReactDomRender} from './eval/evalReactDomRender'
 import {Prelude} from './Prelude'
 import {EvalCode} from './EvalCode'
+import './codemirror-lib'
 
 const fs = require('fs')
-
-require('codemirror/mode/javascript/javascript')
-require('codemirror/mode/jsx/jsx')
-require('codemirror/addon/selection/active-line')
-require('codemirror/addon/edit/matchbrackets')
-require('codemirror/addon/edit/matchtags')
-require('codemirror/addon/runmode/runmode')
 
 interface Scope {
   [variableName: string]: any
