@@ -45,7 +45,7 @@ const ErrorsExample = reactiveComponent(() => {
             <>Trying again…</>
           ) : (
             <>
-              <div style={{color: 'red'}}>
+              <div style={{color: 'crimson'}}>
                 Oh no! An error occurred:
                 <br />
                 {props.error.message}

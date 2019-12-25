@@ -9,13 +9,11 @@ export const Page = () => (
   <>
     <Header />
     <Container>
-      <Content>
-        <ContentInner>
-          <MDXProvider components={components}>
-            <Readme />
-          </MDXProvider>
-        </ContentInner>
-      </Content>
+      <ContentInner>
+        <MDXProvider components={components}>
+          <Readme />
+        </MDXProvider>
+      </ContentInner>
     </Container>
   </>
 )

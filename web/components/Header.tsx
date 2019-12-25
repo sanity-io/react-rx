@@ -6,6 +6,7 @@ import {pages} from '../pages/pages'
 import {map} from 'rxjs/operators'
 import {RxJSLogo} from './logos/rxjs'
 import {ReactLogo} from './logos/react'
+import {GithubLogo} from './logos/Github'
 
 const LogoWrapper = styled.div`
   font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande',
@@ -30,12 +31,13 @@ const HeaderInner = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
   padding: 1em 2em 1em 1em;
 `
 
 const LinkWrapper = styled.div`
   color: #efefef;
-  padding: 0.5em 0.8em;
+  padding: 0.5em 1.6em 0.5em 0;
 `
 
 const PageLink = styled(Link)`
@@ -58,6 +60,7 @@ const Logo = () => (
     </div>
   </LogoWrapper>
 )
+
 export const Header = reactiveComponent(page$ =>
   page$.pipe(
     map(currentPage => (
@@ -75,6 +78,9 @@ export const Header = reactiveComponent(page$ =>
                 </LinkWrapper>
               )
             })}
+          <a href="https://github.com/sanity-io/react-rx">
+            <GithubLogo style={{color: '#fff'}} height="25" width="25" />
+          </a>
         </HeaderInner>
       </StyledHeader>
     )),

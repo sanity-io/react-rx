@@ -8,6 +8,7 @@ import styled from 'styled-components'
 interface CodeMirrorModeProps {
   mode: {}
   children: string
+  className?: string
 }
 
 export const CodeMirrorMode = reactiveComponent<CodeMirrorModeProps>(props$ => {
@@ -18,7 +19,9 @@ export const CodeMirrorMode = reactiveComponent<CodeMirrorModeProps>(props$ => {
         ;(codemirror as any).runMode(props.children, props.mode, ref)
       }
     }),
-    map(() => <Code className="cm-s-custom" ref={setRef} />),
+    map(([props]) => (
+      <Code className={`cm-s-custom${props.className ? ` ${props.className}` : ''}`} ref={setRef} />
+    )),
   )
 })
 

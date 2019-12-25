@@ -12,11 +12,28 @@ import {NotFound} from './pages/NotFound'
 
 const GlobalStyle = createGlobalStyle`
 body {
+  padding:0;
+  margin:0;
   background: #eff0f3;
   color: #2a2a2a;
   font-family: Inter, -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
     'Droid Sans', 'Helvetica Neue', 'Fira Sans', system-ui, sans-serif;
   font-size: 1.125rem;
+  overflow-y: scroll;
+}
+h1::before, h2::before, h3::before, h4::before { 
+  display: block; 
+  content: " "; 
+  visibility: hidden; 
+  pointer-events: none;
+}
+h2::before, h3::before, h4::before { 
+  margin-top: -100px; 
+  height: 100px; 
+}
+h1::before { 
+  margin-top: -100px; 
+  height: 100px; 
 }
 a:link,
 a:visited {

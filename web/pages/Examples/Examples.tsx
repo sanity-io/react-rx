@@ -69,7 +69,6 @@ export function Examples(props: {selectedExampleName: string}) {
       <Header />
       <Container>
         <Sidebar>
-          <h4>Examples</h4>
           <ul>
             {reactiveComponentExamples.map(ex => (
               <li>

@@ -1,8 +1,6 @@
+# table-of-contents
 
-## Table of Contents
-
-
-# reactiveComponent API
+# Reactive Component
 
 ## `reactiveComponent()`
 
@@ -37,120 +35,15 @@ This has no React API equivalent, but creates a `[Observable<Event>, (Event) => 
 
 ## `toObservable`
 
-Converts any value from a React hook into an observable.
+Converts any value inside a Functional React component to an observable of changes to that value.
 
 - `function toObservable<T>(value: T): Observable<T>`
 
-
-<a name="use-observable"></a>
-
-# :fishing_pole_and_fish: Hooks API
-
-### The `useObservable()` hook
-
-Use observables in React components with the `useObservable` hook.
-
-If you need to subscribe to an observable in your component, this hook will give you the current value from it
-
-Example:
-
-```jsx
-import {useObservable} from 'react-rx'
-import {interval} from 'rxjs'
-
-function MyComponent(props) {
-  const number = useObservable(interval(100), 0)
-
-  return <>The number is {number}</>
-}
-```
-
-The `initialValue` argument is optional. If its omitted, the value returned from `useObservable` may be `null` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored:
-
-```jsx
-import {of} from 'rxjs'
-import {useObservable} from 'react-rx'
-
-// This component will never render "Hello mars!" since the observable emits "world" synchronously.
-function MyComponent(props) {
-  const planet = useObservable(of('world'), 'mars')
-
-  return <>Hello {planet}!</>
-}
-```
-
-### The `useObservableState` hook
-
-If you need to represent some piece of state as an observable and also want the ability to change this state during the lifetime of the component, `useObservableState` is for you. It acts like `React.useState()`, only that it returns an observable representing changes to the value instead of the value itself. The callback/setter returned acts like a the regular callback you would otherwise get from `React.useState`. This is useful when you want to compose the state change together with other observables.
-
-Note: this is exact same hook as the `useState()` function described in the section about Reactive Component above, it's only been exported under a different and more explicit name to distinguish better from `React.useState()`.
-
-Here's an example of a component that count numbers at a certain speed, allowing the user to adjust the counting speed by adjusting a slider:
-
-```jsx
-import {useObservableState} from 'react-rx'
-
-function MyComponent(props) {
-  const [speed$, setSpeed] = useObservableState(1)
-
-  const count$ = speed$.pipe(
-    switchMap(speed => timer(0, 1000 / speed)),
-    scan(count => count + 1, 0)
-  )
-
-  const currentSpeed = useObservable(speed$)
-  const currentCount = useObservable(count$)
-
-  return (
-    <div>
-      <div>Counter value: {currentCount}</div>
-      <div>Counting speed: {Math.round((1 / currentSpeed) * 100) / 100}s</div>
-      <input
-        type="range"
-        value={currentSpeed}
-        min={1}
-        max={10}
-        onChange={event => setSpeed(Number(event.currentTarget.value))}
-      />
-    </div>
-  )
-}
-```
-
-### The `useObservableEvent` hook
-
-This creates an event handler and an observable that represents calls to that handler.
-
-Here's an example of a component thad displays the current value from a range input:
-
-```jsx
-import {useObservableEvent} from 'react-rx'
-
-const ShowSliderValue = () => {
-  const [onSliderChange$, onSliderChange] = useObservableEvent()
-
-  const sliderValue = useObservable(
-    onSliderChange$.pipe(
-      map(event => event.currentTarget.value),
-      map(value => Number(value)),
-      startWith(1)
-    )
-  )
-
-  return (
-    <>
-      <input type="range" value={sliderValue} min={1} max={10} onChange={onSliderChange} />
-      <div>Value is: {sliderValue}</div>
-    </>
-  )
-}
-```
-
-### API
+# React hooks
 
 ## `useObservable()`
 
-A React hook that returns the latest value from an observable
+A React hook that returns the current/latest value from an observable
 
 - `function useObservable<T>(observable$: Observable<T>): T | null`
 - `function useObservable<T>(observable$: Observable<T>, initialValue: T): T`

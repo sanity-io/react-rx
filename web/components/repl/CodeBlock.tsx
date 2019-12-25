@@ -75,7 +75,7 @@ export function CodeBlock(props: Props) {
       >
         <Prelude
           mode={CODEMIRROR_MODE}
-          value={`${COMMON_PRELUDE}${props.prelude && `${props.prelude}`}`}
+          value={`${COMMON_PRELUDE}${props.prelude ? props.prelude : ''}`}
         />
         <CodeMirror
           value={code}

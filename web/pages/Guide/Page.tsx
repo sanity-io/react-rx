@@ -1,6 +1,6 @@
 import {Header} from '../../components/Header'
 import {Container, Content, ContentInner} from '../Home/styles'
-import MDXContent from './Api.mdx'
+import MDXContent from './Guide.mdx'
 import * as React from 'react'
 import {MDXProvider} from '@mdx-js/react'
 import {components} from '../../mdx-components'
@@ -30,8 +30,8 @@ const StyledInner = styled(ContentInner)`
       a.selected {
         border-bottom: 5px solid #ff8e3c;
       }
-      ul {
-        padding-left: 0.7em;
+      > ul {
+        padding: 0 0 1em 0.7em;
       }
     }
   }
