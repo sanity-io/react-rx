@@ -1,8 +1,9 @@
-# react-rx
+## react-rx
 
 _Hooks and utilities for combining React with RxJS_
 
 Features:
+
 - Works well with Observables emitting values synchronously. You don't pay the re-render-on-mount tax.
 - Lightweight. Implemented on top of a small React Hook based core.
 - Full TypeScript support.
@@ -42,8 +43,8 @@ import {switchMap, map} from 'rxjs'
 const Fetch = reactiveComponent(props$ =>
   props$.pipe(
     switchMap(props => fetch(props.url).then(response => response.text())),
-    map(responseText => <>Response is {responseText}</>)
-  )
+    map(responseText => <>Response is {responseText}</>),
+  ),
 )
 
 // Usage
@@ -55,9 +56,7 @@ Instead of a _function_, `reactiveComponent` can also take an `Observable` as ar
 ```jsx
 import {reactiveComponent} from 'react-rx'
 
-const Counter = reactiveComponent(
-  timer(0, 100).pipe(map(counter => <>The number is {counter}</>))
-)
+const Counter = reactiveComponent(timer(0, 100).pipe(map(counter => <>The number is {counter}</>)))
 
 // Usage
 ReactDOM.render(<Counter />, container)
@@ -95,12 +94,14 @@ import * as ReactRx from 'react-rx'
 const Counter = ReactRx.component(() => {
   const [count$, setCount] = ReactRx.useState(0)
 
-  return count$.pipe(map(currentCount => (
-    <>
-      <div>Click count: {currentCount}</div>
-      <button onClick={() => setCount(currentCount + 1)}>Click!</button>
-    </>
-  )))
+  return count$.pipe(
+    map(currentCount => (
+      <>
+        <div>Click count: {currentCount}</div>
+        <button onClick={() => setCount(currentCount + 1)}>Click!</button>
+      </>
+    )),
+  )
 })
 ```
 
@@ -118,12 +119,13 @@ const MouseTracker = ReactRx.component(() => {
     map(event => (
       <>
         <div onMouseMove={handleMouseMove}>Hover me!</div>
-        <pre>x={event.screenX},y={event.screenY}</pre>
+        <pre>
+          x={event.screenX},y={event.screenY}
+        </pre>
       </>
-    ))
+    )),
   )
 })
-
 ```
 
 #### Gotcha: Initial render
@@ -144,9 +146,13 @@ const MouseTracker = reactiveComponent(() => {
     map(event => (
       <>
         <div onMouseMove={handleMouseMove}>Hover me!</div>
-        {event && <pre>x={event.screenX},y={event.screenY}</pre>}
+        {event && (
+          <pre>
+            x={event.screenX},y={event.screenY}
+          </pre>
+        )}
       </>
-    ))
+    )),
   )
 })
 ```
