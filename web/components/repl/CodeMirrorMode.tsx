@@ -24,6 +24,7 @@ export const CodeMirrorMode = reactiveComponent<CodeMirrorModeProps>(props$ => {
 
 const Code = styled.div`
   background-color: rgb(40, 44, 52);
+  color: #fff;
   margin: 0;
   padding: 0.8rem;
   white-space: pre;

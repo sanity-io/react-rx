@@ -4,13 +4,13 @@ _Hooks and utilities for combining React with RxJS_
 
 Features:
 - Works well with Observables emitting values synchronously. You don't pay the re-render-on-mount tax.
-- Lightweight. Implemented on top of a small React Hook based core. 
+- Lightweight. Implemented on top of a small React Hook based core.
 - Full TypeScript support.
 
 This package offers two slightly different utilities for working with RxJS and React:
 
-- :hammer_and_wrench: The _`reactiveComponent()`_ wrapper
-- :fishing_pole_and_fish: The _`useObservable()`_ hook
+- :hammer_and_wrench: The *`reactiveComponent()`* wrapper
+- :fishing_pole_and_fish: The *`useObservable()`* hook
 
 Although they share a lot of similarities, and reactiveComponent is built on top of `useObservable` are not intended to be used together inside the same component as they represent two different programming styles.
 
@@ -138,7 +138,7 @@ import {map, startWith} from 'rxjs/operators'
 
 const MouseTracker = reactiveComponent(() => {
   const [mouseMove$, handleMouseMove] = useEvent()
-  
+
   return mouseMove$.pipe(
     startWith(null),
     map(event => (
@@ -152,175 +152,3 @@ const MouseTracker = reactiveComponent(() => {
 ```
 
 This means the `event` argument now can also be `null` so we also need to guard about that in our render function.
-
-### API
-
-#### `reactiveComponent()`
-
-- `function reactiveComponent<Props>(observable: Observable<Props>): React.FunctionComponent<{}>`
-- `function reactiveComponent<Props>(component: Component<Props>): React.FunctionComponent<Props>`
-
-#### `forwardRef()`
-
-The `React.forwardRef()` equivalent for a Reactive component.
-
-- `function forwardRef<Props, Ref>(component: (input$: Observable<Props>,ref: React.RefObject<Ref>) => React.FunctionComponent<Props>)`
-
-#### `useState`
-
-Equivalent to `React.useState()` with the only difference that instead of the stateful value, it returns an observable representing the state changes (e.g. instead of `[T, update(value: T)]`, it returns `[Observable<T>, update(value: T)]`.
-
-- `function useState<T = undefined>(): [Observable<T | undefined>, React.Dispatch<React.SetStateAction<T | undefined>>]`
-
-- `function useState<T>(initial: T | (() => T)): [Observable<T>, React.Dispatch<React.SetStateAction<T>>]`
-
-#### `useContext`
-
-Equivalent to `React.useContext()` with the only difference that instead of a stateful context value, it returns an observable representing the context value changes.
-
-- `function useContext<T>(context: React.Context<T>): Observable<T>`
-
-#### `useEvent`
-
-This has no React API equivalent, but creates a `[Observable<Event>, (Event) => void]` tuple, where the first value is an observable of the arguments the second function is called with.
-
-- `function useObservableEvent<Event>(): [Observable<Event>, (event: Event) => void]`
-
-#### `toObservable`
-
-Converts any value from a React hook into an observable.
-
-- `function toObservable<T>(value: T): Observable<T>`
-
-TODO:
-
-- useElement: check if it's possible to create an observable of a ref to a dom node
-
-<a name="use-observable"></a>
-
-## :fishing_pole_and_fish: Hooks
-
-### The `useObservable()` hook
-
-Use observables in React components with the `useObservable` hook.
-
-If you need to subscribe to an observable in your component, this hook will give you the current value from it
-
-Example:
-
-```jsx
-import {useObservable} from 'react-rx'
-import {interval} from 'rxjs'
-
-function MyComponent(props) {
-  const number = useObservable(interval(100), 0)
-  
-  return <>The number is {number}</>
-}
-```
-
-The `initialValue` argument is optional. If its omitted, the value returned from `useObservable` may be `null` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored:
-
-```jsx
-import {of} from 'rxjs'
-import {useObservable} from 'react-rx'
-
-// This component will never render "Hello mars!" since the observable emits "world" synchronously.
-function MyComponent(props) {
-  const planet = useObservable(of('world'), 'mars')
-
-  return <>Hello {planet}!</>
-}
-```
-
-### The `useObservableState` hook
-
-If you need to represent some piece of state as an observable and also want the ability to change this state during the lifetime of the component, `useObservableState` is for you. It acts like `React.useState()`, only that it returns an observable representing changes to the value instead of the value itself. The callback/setter returned acts like a the regular callback you would otherwise get from `React.useState`. This is useful when you want to compose the state change together with other observables.
-
-Note: this is exact same hook as the `useState()` function described in the section about Reactive Component above, it's only been exported under a different and more explicit name to distinguish better from `React.useState()`.
-
-Here's an example of a component that count numbers at a certain speed, allowing the user to adjust the counting speed by adjusting a slider:
-
-```jsx
-import {useObservableState} from 'react-rx'
-
-function MyComponent(props) {
-  const [speed$, setSpeed] = useObservableState(1)
-
-  const count$ = speed$.pipe(
-    switchMap(speed => timer(0, 1000 / speed)),
-    scan(count => count + 1, 0)
-  )
-
-  const currentSpeed = useObservable(speed$)
-  const currentCount = useObservable(count$)
-
-  return (
-    <div>
-      <div>Counter value: {currentCount}</div>
-      <div>Counting speed: {Math.round((1 / currentSpeed) * 100) / 100}s</div>
-      <input
-        type="range"
-        value={currentSpeed}
-        min={1}
-        max={10}
-        onChange={event => setSpeed(Number(event.currentTarget.value))}
-      />
-    </div>
-  )
-}
-```
-
-### The `useObservableEvent` hook
-
-This creates an event handler and an observable that represents calls to that handler.
-
-Here's an example of a component thad displays the current value from a range input:
-
-```jsx
-import {useObservableEvent} from 'react-rx'
-
-const ShowSliderValue = () => {
-  const [onSliderChange$, onSliderChange] = useObservableEvent()
-
-  const sliderValue = useObservable(
-    onSliderChange$.pipe(
-      map(event => event.currentTarget.value),
-      map(value => Number(value)),
-      startWith(1)
-    )
-  )
-
-  return (
-    <>
-      <input type="range" value={sliderValue} min={1} max={10} onChange={onSliderChange} />
-      <div>Value is: {sliderValue}</div>
-    </>
-  )
-}
-```
-
-### API
-
-#### `useObservable()`
-
-A React hook that returns the latest value from an observable
-
-- `function useObservable<T>(observable$: Observable<T>): T | null`
-- `function useObservable<T>(observable$: Observable<T>, initialValue: T): T`
-
-#### `useObservableState()`
-
-Same as `useState()` described in the Reactive Component section above, only exported under a different name for clarity when using in regular React components
-
-#### `useObservableContext()`
-
-Same as `useContext()` described in the Reactive Component section above, only exported under a different name for clarity when using in regular React components
-
-#### `useObservableEvent()`
-
-Same as `useEvent()` described in the Reactive Component section above, only exported under a different name for clarity when using in regular React components
-
-#### `toObservable()`
-
-Same as `toObservable()` described in the Reactive Component section above

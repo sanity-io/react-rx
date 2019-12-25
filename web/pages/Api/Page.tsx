@@ -1,9 +1,21 @@
-import {reactiveComponent} from '../../../src/reactiveComponent'
-import {location$} from '../../datastores/location'
-import {map, tap} from 'rxjs/operators'
-import {Api} from './Api'
+import {Header} from '../../components/Header'
+import {Container, Content, ContentInner} from '../Home/styles'
+import MDXContent from './Api.mdx'
 import * as React from 'react'
+import {MDXProvider} from '@mdx-js/react'
+import {components} from '../../mdx-components'
 
-export const Page = reactiveComponent(
-  location$.pipe(map(location => <Api selectedExampleName={location.hash?.substring(1)} />)),
+export const Page = () => (
+  <>
+    <Header />
+    <Container>
+      <Content>
+        <ContentInner>
+          <MDXProvider components={components}>
+            <MDXContent />
+          </MDXProvider>
+        </ContentInner>
+      </Content>
+    </Container>
+  </>
 )

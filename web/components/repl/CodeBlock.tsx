@@ -20,6 +20,7 @@ interface Props {
   source: string
   scope?: Scope
   filename: string
+  prelude?: string
 }
 
 const tryCompile = (code: string, filename: string) => {
@@ -72,7 +73,10 @@ export function CodeBlock(props: Props) {
           width: '60%',
         }}
       >
-        <Prelude mode={CODEMIRROR_MODE} value={COMMON_PRELUDE} />
+        <Prelude
+          mode={CODEMIRROR_MODE}
+          value={`${COMMON_PRELUDE}${props.prelude && `${props.prelude}`}`}
+        />
         <CodeMirror
           value={code}
           options={CODEMIRROR_OPTIONS}
@@ -84,7 +88,7 @@ export function CodeBlock(props: Props) {
 
       <div style={{width: '40%'}}>
         <Checkerboard style={{width: '100%', height: '100%', overflowY: 'auto'}}>
-          <div style={{padding: '2em', maxHeight: '94%', maxWidth: '95%'}}>
+          <div style={{padding: '2em'}}>
             {compileError ? (
               <ShowError title="Compile error">{compileError.message}</ShowError>
             ) : (

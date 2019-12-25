@@ -28,6 +28,7 @@ export interface Example {
   source: string
   description?: string
   scope?: {[variableName: string]: any}
+  prelude?: string
 }
 
 const reactiveComponentExamples: Example[] = [
@@ -91,7 +92,12 @@ export function Examples(props: {selectedExampleName: string}) {
                 <div key={ex.id}>
                   <h2>{ex.title}</h2>
                   {ex.description && <p>{ex.description}</p>}
-                  <CodeBlock source={ex.source} scope={ex.scope} filename={`${ex.id}.tsx`} />
+                  <CodeBlock
+                    source={ex.source}
+                    scope={ex.scope}
+                    prelude={ex.prelude}
+                    filename={`${ex.id}.tsx`}
+                  />
                 </div>
               ))}
           </ContentInner>

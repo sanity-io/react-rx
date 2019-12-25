@@ -31,30 +31,32 @@ const UseElementExample = reactiveComponent(() => {
     map(([direction, element]) => {
       const Tag = direction === 1 ? 'section' : 'article'
       return (
-        <Tag
-          // this connects the element$ observable to the actual element
-          ref={ref}
-          style={{
-            ...STYLE,
-            backgroundColor: Tag == 'article' ? '#335186' : '#90441a',
-            borderRadius:
-              unpx(element?.style.borderRadius || '20px') +
-              direction * SPEED * -0.1,
-            height: (element?.clientHeight || 0) + direction * SPEED,
-            width: (element?.clientWidth || 0) + direction * SPEED
-          }}
-        >
-          <div
+        <div style={{height: '20em', display: 'flex', alignItems: 'center'}}>
+          <Tag
+            // this connects the element$ observable to the actual element
+            ref={ref}
             style={{
-              ...(element && {fontSize: element.clientHeight / 5}),
-              width: '100%',
-              height: '100%',
-              lineHeight: '500%'
+              ...STYLE,
+              backgroundColor: Tag == 'article' ? '#335186' : '#90441a',
+              borderRadius:
+                unpx(element?.style.borderRadius || '20px') +
+                direction * SPEED * -0.1,
+              height: (element?.clientHeight || 0) + direction * SPEED,
+              width: (element?.clientWidth || 0) + direction * SPEED
             }}
           >
-            {`<${Tag}>`}
-          </div>
-        </Tag>
+            <div
+              style={{
+                ...(element && {fontSize: element.clientHeight / 5}),
+                width: '100%',
+                height: '100%',
+                lineHeight: '500%'
+              }}
+            >
+              {`<${Tag}>`}
+            </div>
+          </Tag>
+        </div>
       )
     })
   )
