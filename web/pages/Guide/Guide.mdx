@@ -25,7 +25,7 @@ const Fetch = reactiveComponent(props$ =>
 )
 
 // Usage
-ReactDOM.render(<Fetch url="/some/url)" />, container)
+ReactDOM.render(<Fetch url="/some/url" />, container)
 ```
 
 Instead of a _function_, `reactiveComponent` can also take an `Observable` as argument as long as it's an observable of [something React can render](https://reactjs.org/docs/react-component.html#render). This is neat when you have component that doesn't take any props, but still depends on values coming from an `Observable`:
