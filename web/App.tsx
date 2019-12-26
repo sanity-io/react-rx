@@ -45,7 +45,9 @@ a:visited {
 export const App = reactiveComponent(
   page$.pipe(
     switchMap(page => {
-      return page ? from(page.load()).pipe(map(res => ({...page, Component: res.Page}))) : of(page)
+      return page
+        ? from(page.load()).pipe(map(res => ({...page, Component: res.Page})))
+        : of(page)
     }),
     map(matchingPage => {
       return (
@@ -54,6 +56,6 @@ export const App = reactiveComponent(
           {matchingPage ? <matchingPage.Component /> : <NotFound />}
         </>
       )
-    }),
-  ),
+    })
+  )
 )

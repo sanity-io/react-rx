@@ -1,6 +1,12 @@
 import * as React from 'react'
 import {Observable, timer} from 'rxjs'
-import {debounceTime, distinctUntilChanged, filter, map, switchMap} from 'rxjs/operators'
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  map,
+  switchMap
+} from 'rxjs/operators'
 
 import {toObservable, useObservable} from '../../../src'
 
@@ -27,7 +33,7 @@ const search = (keyword: string): Observable<SearchResult> => {
   const delay = Math.max(1, Math.round(10 - keyword.length))
   return timer(delay * 200).pipe(
     map(() => range(delay).map((_, i) => ({title: `Hit #${i}`}))),
-    map(hits => ({keyword, hits})),
+    map(hits => ({keyword, hits}))
   )
 }
 
@@ -42,7 +48,9 @@ export function SearchExample() {
         placeholder="Type a keyword to search"
         onChange={event => setKeyword(event.target.value)}
       />
-      <div>The more characters you type, the faster the results will appear</div>
+      <div>
+        The more characters you type, the faster the results will appear
+      </div>
       {useObservable(
         toObservable(keyword).pipe(
           debounceTime(200),
@@ -59,8 +67,8 @@ export function SearchExample() {
                 ))}
               </ul>
             </>
-          )),
-        ),
+          ))
+        )
       )}
     </>
   )

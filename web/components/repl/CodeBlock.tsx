@@ -34,7 +34,7 @@ const tryCompile = (code: string, filename: string) => {
 const evalRender = (code: string, scope: Scope = {}) => {
   return evalReactDomRender(code, {
     ...scope,
-    ...globalScope,
+    ...globalScope
   })
 }
 
@@ -51,13 +51,16 @@ const stripImports = (str: string) => {
     .trim()
 }
 
-const CODEMIRROR_MODE = {name: 'jsx', base: {name: 'javascript', typescript: true}}
+const CODEMIRROR_MODE = {
+  name: 'jsx',
+  base: {name: 'javascript', typescript: true}
+}
 
 const CODEMIRROR_OPTIONS = {
   theme: 'custom',
   smartIndent: false,
   tabSize: 2,
-  mode: CODEMIRROR_MODE,
+  mode: CODEMIRROR_MODE
 }
 
 export function CodeBlock(props: Props) {
@@ -70,7 +73,7 @@ export function CodeBlock(props: Props) {
       <div
         style={{
           overflowY: 'auto',
-          width: '60%',
+          width: '60%'
         }}
       >
         <Prelude
@@ -87,15 +90,21 @@ export function CodeBlock(props: Props) {
       </div>
 
       <div style={{width: '40%'}}>
-        <Checkerboard style={{width: '100%', height: '100%', overflowY: 'auto'}}>
+        <Checkerboard
+          style={{width: '100%', height: '100%', overflowY: 'auto'}}
+        >
           <div style={{padding: '2em'}}>
             {compileError ? (
-              <ShowError title="Compile error">{compileError.message}</ShowError>
+              <ShowError title="Compile error">
+                {compileError.message}
+              </ShowError>
             ) : (
               <EvalCode
                 code={transformed}
                 evalWith={src => evalRender(src, props.scope)}
-                renderError={error => <ShowError title="Runtime error">{error.message}</ShowError>}
+                renderError={error => (
+                  <ShowError title="Runtime error">{error.message}</ShowError>
+                )}
               />
             )}
           </div>

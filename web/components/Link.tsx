@@ -12,7 +12,7 @@ export function Link(props: React.ComponentProps<'a'>) {
         navigate(props.href)
       }
     },
-    [props.href, props.onClick],
+    [props.href, props.onClick]
   )
   return <a {...props} onClick={onClick} />
 }

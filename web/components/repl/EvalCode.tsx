@@ -9,7 +9,10 @@ interface EvalErrorBoundaryState {
   error: Error | null
 }
 
-class EvalErrorBoundary extends React.Component<EvalErrorBoundaryProps, EvalErrorBoundaryState> {
+class EvalErrorBoundary extends React.Component<
+  EvalErrorBoundaryProps,
+  EvalErrorBoundaryState
+> {
   state: EvalErrorBoundaryState = {error: null}
 
   static getDerivedStateFromError(error: Error) {
@@ -18,7 +21,7 @@ class EvalErrorBoundary extends React.Component<EvalErrorBoundaryProps, EvalErro
 
   componentDidUpdate(
     prevProps: Readonly<EvalErrorBoundaryProps>,
-    prevState: Readonly<EvalErrorBoundaryState>,
+    prevState: Readonly<EvalErrorBoundaryState>
   ) {
     if (prevProps.code !== this.props.code) {
       this.setState({error: null})
@@ -33,7 +36,9 @@ class EvalErrorBoundary extends React.Component<EvalErrorBoundaryProps, EvalErro
 
 type Runner = (code: string) => React.ReactNode
 
-const Eval = (props: {with: Runner; code: string}) => <>{props.with(props.code)}</>
+const Eval = (props: {with: Runner; code: string}) => (
+  <>{props.with(props.code)}</>
+)
 
 interface Props {
   code: string

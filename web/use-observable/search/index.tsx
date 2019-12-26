@@ -6,5 +6,5 @@ export default {
   component: SearchExample,
   title: 'Search',
   type: 'mixed',
-  source: fs.readFileSync(`${__dirname}/SearchExample.tsx`, 'utf-8'),
+  source: fs.readFileSync(`${__dirname}/SearchExample.tsx`, 'utf-8')
 }

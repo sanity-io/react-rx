@@ -37,7 +37,9 @@ export const Prelude = (props: Props) => {
       <Summary onClick={() => setOpen(current => !current)}>
         {isOpen ? '// hide prelude' : '// show prelude'}
       </Summary>
-      <StyledCodeMirrorMode mode={props.mode}>{props.value}</StyledCodeMirrorMode>
+      <StyledCodeMirrorMode mode={props.mode}>
+        {props.value}
+      </StyledCodeMirrorMode>
     </Details>
   )
 }

@@ -16,11 +16,13 @@ const hash$: Observable<string> = new Observable(subscriber => {
 
 const selectedExample$ = hash$.pipe(
   map(hash => hash.substring(1)),
-  distinctUntilChanged(),
+  distinctUntilChanged()
 )
 
 const Main = reactiveComponent(
-  selectedExample$.pipe(map(selectedExample => <App selectedExampleName={selectedExample} />)),
+  selectedExample$.pipe(
+    map(selectedExample => <App selectedExampleName={selectedExample} />)
+  )
 )
 
 ReactDOM.render(<Main />, document.getElementById('app'))

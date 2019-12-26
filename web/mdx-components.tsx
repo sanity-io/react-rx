@@ -18,13 +18,16 @@ const Pre = styled.code`
   font-family: monospace;
 `
 
-const CODEMIRROR_TSX_MODE = {name: 'jsx', base: {name: 'javascript', typescript: true}}
+const CODEMIRROR_TSX_MODE = {
+  name: 'jsx',
+  base: {name: 'javascript', typescript: true}
+}
 
 const CODEMIRROR_MODE_MAP = {
   js: CODEMIRROR_TSX_MODE,
   jsx: CODEMIRROR_TSX_MODE,
   tsx: CODEMIRROR_TSX_MODE,
-  ts: CODEMIRROR_TSX_MODE,
+  ts: CODEMIRROR_TSX_MODE
 }
 
 interface InlineCodeProps {
@@ -40,14 +43,18 @@ export const components = {
     return <Pre>{props.children}</Pre>
   },
   code: (props: CodeProps) => {
-    const [lang, range] = parseCodeFenceHeader(props.className.replace(/^language-/, ''))
+    const [lang, range] = parseCodeFenceHeader(
+      props.className.replace(/^language-/, '')
+    )
 
     return (
       <ModeWrapper>
-        <CodeMirrorMode highlighted={range} mode={CODEMIRROR_MODE_MAP[lang]}>{props.children}</CodeMirrorMode>
+        <CodeMirrorMode highlighted={range} mode={CODEMIRROR_MODE_MAP[lang]}>
+          {props.children}
+        </CodeMirrorMode>
       </ModeWrapper>
     )
-  },
+  }
 }
 
 const hash$ = location$.pipe(map(location => location.hash))
@@ -58,10 +65,10 @@ const BookmarkedLink = reactiveComponent(props$ =>
       <a href={props.href} className={hash === props.href ? 'selected' : ''}>
         {props.children}
       </a>
-    )),
-  ),
+    ))
+  )
 )
 
 export const tocComponents = {
-  a: BookmarkedLink,
+  a: BookmarkedLink
 }

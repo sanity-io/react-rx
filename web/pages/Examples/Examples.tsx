@@ -48,7 +48,7 @@ const reactiveComponentExamples: Example[] = [
   ForwardRefExample,
   PassThroughPropsExample,
   TickExample,
-  FizzBuzzExample,
+  FizzBuzzExample
 ]
 //
 // const useObservableExamples: Example[] = [

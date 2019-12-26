@@ -1,6 +1,10 @@
 import {evalCode} from './evalCode'
 
-export const evalCallback = (code: string, callbackName = 'callback', scope = {}): any => {
+export const evalCallback = (
+  code: string,
+  callbackName = 'callback',
+  scope = {}
+): any => {
   let renderCount = 0
   let renderRes = null
 

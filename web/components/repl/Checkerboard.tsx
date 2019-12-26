@@ -20,6 +20,6 @@ export const Checkerboard = styled.div`
   background-position: 0 0, 0 10px, 10px -10px, -10px 0;
 
   background-size: ${CHECKER_SIZE}px ${CHECKER_SIZE}px;
-  background-position: 0 0, 0 ${CHECKER_SIZE / 2}px, ${CHECKER_SIZE / 2}px -${CHECKER_SIZE / 2}px,
-    -${CHECKER_SIZE / 2}px 0;
+  background-position: 0 0, 0 ${CHECKER_SIZE / 2}px,
+    ${CHECKER_SIZE / 2}px -${CHECKER_SIZE / 2}px, -${CHECKER_SIZE / 2}px 0;
 `

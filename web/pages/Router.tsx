@@ -12,6 +12,6 @@ export const Router = reactiveComponent(
     }),
     map(({Page}) => {
       return <Page />
-    }),
-  ),
+    })
+  )
 )

@@ -30,8 +30,8 @@ export function toObservable<T, K>(
     }
   }, [])
 
-  const o = subject.current.asObservable()
-  return setup ? setup(o) : o
+  const observable = subject.current.asObservable()
+  return setup ? setup(observable) : observable
 }
 
 export function useObservable<T>(observable$: Observable<T>): T | null

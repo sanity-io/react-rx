@@ -17,11 +17,17 @@ export const CodeMirrorMode = reactiveComponent<CodeMirrorModeProps>(props$ => {
       runMode(props.children, props.mode).pipe(
         toArray(),
         map(lines => (
-          <Code className={`cm-s-custom${props.className ? ` ${props.className}` : ''}`}>
+          <Code
+            className={`cm-s-custom${
+              props.className ? ` ${props.className}` : ''
+            }`}
+          >
             {lines.map((line, lineNo) => (
               <div
                 className={`cm-line${
-                  (props.highlighted || []).includes(lineNo + 1) ? ' CodeMirror-selected' : ''
+                  (props.highlighted || []).includes(lineNo + 1)
+                    ? ' CodeMirror-selected'
+                    : ''
                 }`}
               >
                 {line.map((token, i) =>
@@ -31,14 +37,14 @@ export const CodeMirrorMode = reactiveComponent<CodeMirrorModeProps>(props$ => {
                     </span>
                   ) : (
                     token.token
-                  ),
+                  )
                 )}
               </div>
             ))}
           </Code>
-        )),
-      ),
-    ),
+        ))
+      )
+    )
   )
 })
 

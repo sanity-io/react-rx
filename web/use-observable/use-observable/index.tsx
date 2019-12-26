@@ -6,5 +6,5 @@ export default {
   component: UseObservableExample,
   title: 'Use observable',
   type: 'mixed',
-  source: fs.readFileSync(`${__dirname}/UseObservableExample.tsx`, 'utf-8'),
+  source: fs.readFileSync(`${__dirname}/UseObservableExample.tsx`, 'utf-8')
 }
