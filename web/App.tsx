@@ -37,7 +37,7 @@ h1::before {
 }
 a:link,
 a:visited {
-  color: #eff0f3;
+  color: #d9376e;
   text-decoration: none;
 }
 `

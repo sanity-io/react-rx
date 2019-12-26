@@ -19,8 +19,8 @@ import {UseElementExample} from '../../examples/use-element'
 import {AnimationExample} from '../../examples/animation'
 import {SyncExample} from '../../examples/sync'
 import {Link} from '../../components/Link'
-import {Container, Content, ContentInner, Sidebar} from './styles'
 import {Header} from '../../components/Header'
+import {Container, Content, ContentInner, Sidebar} from '../styles'
 
 export interface Example {
   id: string

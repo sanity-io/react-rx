@@ -25,6 +25,11 @@ const StyledHeader = styled.header`
   left: 0;
   right: 0;
   background-color: #d9376e;
+  a,
+  a:link,
+  a:visited {
+    color: #eff0f3;
+  }
 `
 
 const HeaderInner = styled.div`
