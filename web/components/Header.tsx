@@ -9,11 +9,12 @@ import {ReactLogo} from './logos/react'
 import {GithubLogo} from './logos/Github'
 
 const LogoWrapper = styled.div`
-  font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande',
-    sans-serif;
-  -webkit-font-smoothing: antialised;
+  font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica,
+    Arial, 'Lucida Grande', sans-serif;
+  -webkit-font-smoothing: antialiased;
   width: 10em;
-  font-size: 2em;
+  font-size: 1.5em;
+  line-height: 2em;
   display: flex;
   flex-grow: 1;
 `
@@ -58,7 +59,10 @@ const Logo = () => (
   <LogoWrapper>
     <div style={{position: 'relative', width: 70}}>
       <ReactLogo height="50" style={{position: 'absolute', left: 0}} />
-      <RxJSLogo width="50" style={{opacity: 0.7, position: 'absolute', left: 0}} />
+      <RxJSLogo
+        width="50"
+        style={{opacity: 0.7, position: 'absolute', left: 0}}
+      />
     </div>
     <div>
       <Link href="/">ReactRx</Link>
@@ -88,6 +92,6 @@ export const Header = reactiveComponent(page$ =>
           </a>
         </HeaderInner>
       </StyledHeader>
-    )),
-  ),
+    ))
+  )
 )

@@ -19,6 +19,7 @@ body {
   font-family: Inter, -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
     'Droid Sans', 'Helvetica Neue', 'Fira Sans', system-ui, sans-serif;
   font-size: 1.125rem;
+  line-height: 1.3em;
   overflow-y: scroll;
 }
 h1::before, h2::before, h3::before, h4::before { 

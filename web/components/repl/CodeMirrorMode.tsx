@@ -1,27 +1,44 @@
-import {reactiveComponent, useElement} from '../../../src'
-import {combineLatest} from 'rxjs'
-import {map, tap} from 'rxjs/operators'
-import codemirror from './codemirror-lib'
+import {reactiveComponent} from '../../../src'
+import {map, mergeMap, switchMap, toArray} from 'rxjs/operators'
 import * as React from 'react'
 import styled from 'styled-components'
+import {runMode} from './runMode'
 
 interface CodeMirrorModeProps {
   mode: {}
+  highlighted: number[]
   children: string
   className?: string
 }
 
 export const CodeMirrorMode = reactiveComponent<CodeMirrorModeProps>(props$ => {
-  const [ref$, setRef] = useElement<HTMLDivElement>()
-  return combineLatest([props$, ref$]).pipe(
-    tap(([props, ref]) => {
-      if (ref) {
-        ;(codemirror as any).runMode(props.children, props.mode, ref)
-      }
-    }),
-    map(([props]) => (
-      <Code className={`cm-s-custom${props.className ? ` ${props.className}` : ''}`} ref={setRef} />
-    )),
+  return props$.pipe(
+    switchMap(props =>
+      runMode(props.children, props.mode).pipe(
+        toArray(),
+        map(lines => (
+          <Code className={`cm-s-custom${props.className ? ` ${props.className}` : ''}`}>
+            {lines.map((line, lineNo) => (
+              <div
+                className={`cm-line${
+                  (props.highlighted || []).includes(lineNo + 1) ? ' CodeMirror-selected' : ''
+                }`}
+              >
+                {line.map((token, i) =>
+                  token.style ? (
+                    <span key={i} className={`cm-${token.style}`}>
+                      {token.token}
+                    </span>
+                  ) : (
+                    token.token
+                  ),
+                )}
+              </div>
+            ))}
+          </Code>
+        )),
+      ),
+    ),
   )
 })
 

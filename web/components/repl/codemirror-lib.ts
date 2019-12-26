@@ -4,6 +4,5 @@ import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/selection/active-line'
 import 'codemirror/addon/edit/matchbrackets'
 import 'codemirror/addon/edit/matchtags'
-import 'codemirror/addon/runmode/runmode'
 
 export default codemirror

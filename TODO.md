@@ -1,0 +1,4 @@
+- Front page
+- Deploy to now
+- Publish setup
+- Last cleanup

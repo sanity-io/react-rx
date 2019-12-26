@@ -69,6 +69,7 @@ export function Examples(props: {selectedExampleName: string}) {
       <Header />
       <Container>
         <Sidebar>
+          <h4>Examples</h4>
           <ul>
             {reactiveComponentExamples.map(ex => (
               <li>
@@ -89,7 +90,7 @@ export function Examples(props: {selectedExampleName: string}) {
               .filter(ex => ex === selectedExample)
               .map(ex => (
                 <div key={ex.id}>
-                  <h2>{ex.title}</h2>
+                  <h1>{ex.title}</h1>
                   {ex.description && <p>{ex.description}</p>}
                   <CodeBlock
                     source={ex.source}

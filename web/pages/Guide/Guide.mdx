@@ -14,14 +14,14 @@ The `reactiveComponent()` utility wraps a function component that is very simila
 Here's an example component that fetches some text from the url passed as the `url` prop:
 
 ```jsx
-import {reactiveComponent} from 'react-rx'
+import * as ReactRx from 'react-rx'
 import {switchMap, map} from 'rxjs'
 
-const Fetch = reactiveComponent(props$ =>
+const Fetch = ReactRx.component(props$ =>
   props$.pipe(
     switchMap(props => fetch(props.url).then(response => response.text())),
-    map(responseText => <>Response is {responseText}</>),
-  ),
+    map(responseText => <>Response is {responseText}</>)
+  )
 )
 
 // Usage
@@ -31,41 +31,20 @@ ReactDOM.render(<Fetch url="/some/url" />, container)
 Instead of a _function_, `reactiveComponent` can also take an `Observable` as argument as long as it's an observable of [something React can render](https://reactjs.org/docs/react-component.html#render). This is neat when you have component that doesn't take any props, but still depends on values coming from an `Observable`:
 
 ```jsx
-import {reactiveComponent} from 'react-rx'
+import * as ReacRx from 'react-rx'
 
-const Counter = reactiveComponent(timer(0, 100).pipe(map(counter => <>The number is {counter}</>)))
+const Counter = ReactRx.component(
+  timer(0, 100).pipe(map(counter => <>The number is {counter}</>))
+)
 
-// Usage
 ReactDOM.render(<Counter />, container)
 ```
-
-## Using React hooks in a Reactive component
-
-Note: Reactive components will not automatically re render when a value coming from a hook updates, in order achieve that, you need to convert it into an observable. This is done by wrapping it using the `toObservable()` utility before combining it with the returned observable. Here's an example using `React.useState()`:
-
-```jsx
-import {reactiveComponent} from 'react-rx
-
-const Counter = reactiveComponent(props$ => {
-  const [count, setCount] = React.useState(0)
-
-  return toObservable(count).pipe(
-    map(currentCount => (
-      <>
-        <div>Click count: {currentCount}</div>
-        <button onClick={() => setCount(currentCount + 1)}>Click!</button>
-      </>
-    )))
-})
-```
-
-The `toObservable` function makes it possible to consume community provided React hooks inside a reactive component. However, this package also export some utility functions that wraps regular hooks so you can use them with less boilerplate, for example, the `useState` function.
 
 ## Local component state
 
 Instead of calling `React.useState()` directly, you can also use the `useState` function exported from this package. Instead of the actual state value it will return an observable representing the state changes, along with a function to update it. Here's the example above rewritten to use `useState` from this package instead.
 
-```jsx
+```jsx{4}
 import * as ReactRx from 'react-rx'
 
 const Counter = ReactRx.component(() => {
@@ -77,7 +56,7 @@ const Counter = ReactRx.component(() => {
         <div>Click count: {currentCount}</div>
         <button onClick={() => setCount(currentCount + 1)}>Click!</button>
       </>
-    )),
+    ))
   )
 })
 ```
@@ -86,7 +65,7 @@ const Counter = ReactRx.component(() => {
 
 Sometimes your state comes as a function of an event triggered by the user. Let's say you want to display the mouse cursors x,y position as the user moves the mouse inside a component. This can be done py using the `useEvent()` utility:
 
-```js
+```js{4}
 import * as ReactRx from 'react-rx'
 
 const MouseTracker = ReactRx.component(() => {
@@ -100,7 +79,7 @@ const MouseTracker = ReactRx.component(() => {
           x={event.screenX},y={event.screenY}
         </pre>
       </>
-    )),
+    ))
   )
 })
 ```
@@ -111,7 +90,7 @@ The above example will not produce any DOM before a mousemove event has been tri
 
 We can do this by using the `startWith` operator that comes with RxJS:
 
-```js
+```js{8}
 import {reactiveComponent, useEvent} from 'react-rx'
 import {map, startWith} from 'rxjs/operators'
 
@@ -129,12 +108,34 @@ const MouseTracker = reactiveComponent(() => {
           </pre>
         )}
       </>
-    )),
+    ))
   )
 })
 ```
 
 This means the `event` argument now can also be `null` so we also need to guard about that in our render function.
+
+## Consuming React hooks
+
+Reactive components will not automatically re render when a `useState()` value updates. In order to respond to state updates from React hooks, the value needs to be converted to an observable. This is done by wrapping it using the `toObservable()` utility before combining it with the returned observable. Here's an example:
+
+```jsx{4}
+import {reactiveComponent} from 'react-rx
+
+const Counter = reactiveComponent(props$ => {
+  const [count, setCount] = React.useState(0)
+
+  return toObservable(count).pipe(
+    map(currentCount => (
+      <>
+        <div>Click count: {currentCount}</div>
+        <button onClick={() => setCount(currentCount + 1)}>Click!</button>
+      </>
+    )))
+})
+```
+
+The `toObservable` function makes it possible to consume community provided React hooks inside a reactive component. However, this package also export some utility functions that wraps regular hooks so you can use them with less boilerplate, for example, the `ReactRx.useState` function described above.
 
 # Observable Hooks
 
@@ -187,7 +188,7 @@ function MyComponent(props) {
 
   const count$ = speed$.pipe(
     switchMap(speed => timer(0, 1000 / speed)),
-    scan(count => count + 1, 0),
+    scan(count => count + 1, 0)
   )
 
   const currentSpeed = useObservable(speed$)
@@ -225,13 +226,19 @@ const ShowSliderValue = () => {
     onSliderChange$.pipe(
       map(event => event.currentTarget.value),
       map(value => Number(value)),
-      startWith(1),
-    ),
+      startWith(1)
+    )
   )
 
   return (
     <>
-      <input type="range" value={sliderValue} min={1} max={10} onChange={onSliderChange} />
+      <input
+        type="range"
+        value={sliderValue}
+        min={1}
+        max={10}
+        onChange={onSliderChange}
+      />
       <div>Value is: {sliderValue}</div>
     </>
   )
