@@ -3,26 +3,31 @@ import styled from 'styled-components'
 import {CodeMirrorMode} from './CodeMirrorMode'
 
 const Details = styled.details`
+  text-align: right;
   white-space: pre;
   background-color: #1f222a;
   line-height: 1.4em;
   border: 0;
   box-sizing: border-box;
-  background-color: #282c34;
 `
 
 const Summary = styled.summary`
+  background-color: #242831;
   display: inline-block;
   color: #65737e;
-  font-size: 0.8em;
-  margin: 0.4em 0.4em;
+  font-size: 0.6em;
+  border-radius: 2px 2px 0 0;
+  margin: 1px 0 0 0;
+  text-transform: uppercase;
+  padding: 0.4em 0.9em;
   font-family: source-code-pro, Menlo, Monaco, Consolas, Courier New, monospace;
   -webkit-font-smoothing: antialiased;
-  padding: 0em 0.3em;
+  outline: none;
 `
 
 const StyledCodeMirrorMode = styled(CodeMirrorMode)`
   opacity: 0.7;
+  text-align: left;
 `
 
 interface Props {
@@ -35,7 +40,7 @@ export const Prelude = (props: Props) => {
   return (
     <Details>
       <Summary onClick={() => setOpen(current => !current)}>
-        {isOpen ? '// hide prelude' : '// show prelude'}
+        {isOpen ? 'hide prelude' : 'show prelude'}
       </Summary>
       <StyledCodeMirrorMode mode={props.mode}>
         {props.value}

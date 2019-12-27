@@ -7,25 +7,27 @@ import {map} from 'rxjs/operators'
 import {RxJSLogo} from './logos/rxjs'
 import {ReactLogo} from './logos/react'
 import {GithubLogo} from './logos/Github'
+import {media} from '../theme'
 
-const LogoWrapper = styled.div`
-  font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica,
-    Arial, 'Lucida Grande', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  width: 10em;
-  font-size: 1.5em;
-  line-height: 2em;
-  display: flex;
-  flex-grow: 1;
-`
 const StyledHeader = styled.header`
+  ${media.between('xsmall', 'small')} {
+    font-size: 12px;
+  }
+  ${media.between('small', 'medium')} {
+    font-size: 14px;
+  }
+  ${media.greaterThan('medium')} {
+    font-size: 18px;
+  }
+  height: 5em;
   z-index: 2000;
   position: fixed;
   width: 100%;
   top: 0;
   left: 0;
   right: 0;
-  background-color: #d9376e;
+  padding-bottom: 0;
+  background: #d9376e;
   a,
   a:link,
   a:visited {
@@ -38,7 +40,9 @@ const HeaderInner = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 1em 2em 1em 1em;
+  height: 5em;
+  padding: 0 2em 1.2em 2em;
+  background-color: #d9376e;
 `
 
 const LinkWrapper = styled.div`
@@ -49,24 +53,42 @@ const LinkWrapper = styled.div`
 const PageLink = styled(Link)`
   display: block;
   color: #eff0f3;
+  font-size: 1em;
   &:link,
   &:visited {
     color: #eff0f3;
   }
 `
 
+const LOGO_STYLE = `
+  height: 2em;
+  opacity: 0.7;
+  position: absolute;
+`
+const StyledReactLogo = styled(ReactLogo)`
+  ${LOGO_STYLE}
+`
+const StyledRxJSLogo = styled(RxJSLogo)`
+  ${LOGO_STYLE}
+`
+
+const LogoWrapper = styled.div`
+  font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica,
+    Arial, 'Lucida Grande', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-weight: bold;
+  font-size: 1.3em;
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+`
 const Logo = () => (
   <LogoWrapper>
-    <div style={{position: 'relative', width: 70}}>
-      <ReactLogo height="50" style={{position: 'absolute', left: 0}} />
-      <RxJSLogo
-        width="50"
-        style={{opacity: 0.7, position: 'absolute', left: 0}}
-      />
-    </div>
-    <div>
-      <Link href="/">ReactRx</Link>
-    </div>
+    <StyledReactLogo />
+    <StyledRxJSLogo />
+    <Link style={{paddingLeft: '3em'}} href="/">
+      ReactRx
+    </Link>
   </LogoWrapper>
 )
 

@@ -9,7 +9,7 @@ export const Checkerboard = styled.div`
   /*align-items: center;*/
   justify-content: center;
   color: #fff;
-  height: 100%;
+  height: calc(100% - 1.95em);
   width: 100%;
   background-color: ${CHECKER_FG};
   background-image: linear-gradient(45deg, ${CHECKER_BG} 25%, transparent 25%),

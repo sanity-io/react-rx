@@ -2,7 +2,7 @@ import * as React from 'react'
 import {ErrorsExample} from './errors'
 import {EventHandlersExample} from './event-handlers'
 import {FetchExample} from './fetch'
-import { FormDataExample } from "./form-data";
+import {FormDataExample} from './form-data'
 import {PassThroughPropsExample} from './passthrough-props'
 import {SearchExample} from './search'
 import {SimpleExample} from './simple'
@@ -23,15 +23,15 @@ const examples: {[exampleName: string]: Example} = {
   passThroughProps: {title: 'Pass through props', component: PassThroughPropsExample},
   errors: {title: 'Errors', component: ErrorsExample},
   formData: {title: 'Form data', component: FormDataExample},
-  withObservable: {title: 'WithObservable component', component: WithObservableExample}
+  withObservable: {title: 'WithObservable component', component: WithObservableExample},
 }
 
 const LINK_STYLE = {
-  padding: 4
+  padding: 4,
 }
 const SELECTED_LINK_STYLE = {
   ...LINK_STYLE,
-  backgroundColor: '#dddddd'
+  backgroundColor: '#dddddd',
 }
 export class Examples extends React.Component<{selectedExampleName: string}> {
   render() {
