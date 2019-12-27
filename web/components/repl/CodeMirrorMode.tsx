@@ -49,15 +49,15 @@ export const CodeMirrorMode = reactiveComponent<CodeMirrorModeProps>(props$ => {
 })
 
 const Code = styled.div`
+  font-size: 0.8em;
+
   background-color: rgb(40, 44, 52);
   color: #fff;
   margin: 0;
-  padding: 0.8rem;
   white-space: pre;
   overflow: auto;
   padding: 0.9rem;
   font-family: source-code-pro, Menlo, Monaco, Consolas, Courier New, monospace;
-  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   line-height: 1.4em;
 `

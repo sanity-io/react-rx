@@ -20,7 +20,8 @@ import {AnimationExample} from '../../examples/animation'
 import {SyncExample} from '../../examples/sync'
 import {Link} from '../../components/Link'
 import {Header} from '../../components/Header'
-import {Container, Content, ContentInner, Sidebar} from '../styles'
+import {Container, ContentWrapper, ContentInner, Content} from '../styles'
+import {Sidebar} from '../../components/Sidebar'
 
 export interface Example {
   id: string
@@ -68,8 +69,7 @@ export function Examples(props: {selectedExampleName: string}) {
     <>
       <Header />
       <Container>
-        <Sidebar>
-          <h4>Examples</h4>
+        <Sidebar heading="Examples">
           <ul>
             {reactiveComponentExamples.map(ex => (
               <li>
@@ -85,22 +85,20 @@ export function Examples(props: {selectedExampleName: string}) {
           </ul>
         </Sidebar>
         <Content>
-          <ContentInner>
-            {reactiveComponentExamples
-              .filter(ex => ex === selectedExample)
-              .map(ex => (
-                <div key={ex.id}>
-                  <h1>{ex.title}</h1>
-                  {ex.description && <p>{ex.description}</p>}
-                  <CodeBlock
-                    source={ex.source}
-                    scope={ex.scope}
-                    prelude={ex.prelude}
-                    filename={`${ex.id}.tsx`}
-                  />
-                </div>
-              ))}
-          </ContentInner>
+          {reactiveComponentExamples
+            .filter(ex => ex === selectedExample)
+            .map(ex => (
+              <div key={ex.id}>
+                <h1>{ex.title}</h1>
+                {ex.description && <p>{ex.description}</p>}
+                <CodeBlock
+                  source={ex.source}
+                  scope={ex.scope}
+                  prelude={ex.prelude}
+                  filename={`${ex.id}.tsx`}
+                />
+              </div>
+            ))}
         </Content>
       </Container>
     </>

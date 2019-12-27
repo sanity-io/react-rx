@@ -76,7 +76,7 @@ const StyledWrapper = styled.div`
 `
 const Header = styled.div`
   color: #d8d8d8;
-  font-size: 0.7em;
+  font-size: 0.9em;
   text-transform: uppercase;
   padding: 0.5em 1.5em;
 `

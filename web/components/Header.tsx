@@ -7,31 +7,20 @@ import {map} from 'rxjs/operators'
 import {RxJSLogo} from './logos/rxjs'
 import {ReactLogo} from './logos/react'
 import {GithubLogo} from './logos/Github'
-import {media} from '../theme'
+import {COLORS} from '../theme'
 
 const StyledHeader = styled.header`
-  ${media.between('xsmall', 'small')} {
-    font-size: 12px;
-  }
-  ${media.between('small', 'medium')} {
-    font-size: 14px;
-  }
-  ${media.greaterThan('medium')} {
-    font-size: 18px;
-  }
-  height: 5em;
   z-index: 2000;
   position: fixed;
-  width: 100%;
   top: 0;
   left: 0;
   right: 0;
   padding-bottom: 0;
-  background: #d9376e;
+  background: ${COLORS.header.background};
   a,
   a:link,
   a:visited {
-    color: #eff0f3;
+    color: ${COLORS.header.text};
   }
 `
 
@@ -41,22 +30,22 @@ const HeaderInner = styled.div`
   justify-content: space-between;
   align-items: center;
   height: 5em;
-  padding: 0 2em 1.2em 2em;
-  background-color: #d9376e;
+  padding: 0.5em 1em 0.5em 1em;
+  background-color: ${COLORS.header.background};
 `
 
 const LinkWrapper = styled.div`
   color: #efefef;
-  padding: 0.5em 1.6em 0.5em 0;
+  padding: 0.5em 1.2em 0.5em 0;
 `
 
 const PageLink = styled(Link)`
   display: block;
-  color: #eff0f3;
+  color: ${COLORS.text};
   font-size: 1em;
   &:link,
   &:visited {
-    color: #eff0f3;
+    color: ${COLORS.text};
   }
 `
 
@@ -114,6 +103,6 @@ export const Header = reactiveComponent(page$ =>
           </a>
         </HeaderInner>
       </StyledHeader>
-    ))
-  )
+    )),
+  ),
 )

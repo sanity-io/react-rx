@@ -4,6 +4,8 @@ const SCROLLBAR_BG_COLOR = '#1f222a'
 const SCROLLBAR_THUMB_COLOR = '#575757'
 
 export const CodeMirror = styled(Controlled)`
+  font-size: 0.8em;
+
   background-color: #282c34;
 
   & ::-webkit-scrollbar {
@@ -23,10 +25,8 @@ export const CodeMirror = styled(Controlled)`
     border: 3px solid ${SCROLLBAR_BG_COLOR};
   }
   .CodeMirror {
-    height: 600px;
     padding: 0.6rem;
     font-family: source-code-pro,Menlo,Monaco,Consolas,Courier New,monospace;
-    font-size: 14px;
     -webkit-font-smoothing: antialiased;
     line-height: 1.4em;
   }

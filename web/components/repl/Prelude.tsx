@@ -15,7 +15,7 @@ const Summary = styled.summary`
   background-color: #242831;
   display: inline-block;
   color: #65737e;
-  font-size: 0.6em;
+  font-size: 0.8em;
   border-radius: 2px 2px 0 0;
   margin: 1px 0 0 0;
   text-transform: uppercase;

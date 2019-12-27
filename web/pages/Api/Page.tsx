@@ -1,26 +1,24 @@
 import {Header} from '../../components/Header'
-import {Container, Content, ContentInner, Sidebar} from '../styles'
+import {Container, Content} from '../styles'
 import MDXContent, {Toc} from './Api.mdx'
 import * as React from 'react'
 import {MDXProvider} from '@mdx-js/react'
 import {components, tocComponents} from '../../mdx-components'
+import {Sidebar} from '../../components/Sidebar'
 
 export const Page = () => (
   <>
     <Header />
     <Container>
-      <Sidebar>
-        <h4>API Reference</h4>
+      <Sidebar heading="API Reference">
         <MDXProvider components={tocComponents}>
           <Toc />
         </MDXProvider>
       </Sidebar>
       <Content>
-        <ContentInner>
-          <MDXProvider components={components}>
-            <MDXContent />
-          </MDXProvider>
-        </ContentInner>
+        <MDXProvider components={components}>
+          <MDXContent />
+        </MDXProvider>
       </Content>
     </Container>
   </>

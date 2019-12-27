@@ -1,26 +1,36 @@
 import * as React from 'react'
 import {createGlobalStyle} from 'styled-components'
 import {reactiveComponent} from '../src'
-import {location$} from './datastores/location'
 import {map, switchMap} from 'rxjs/operators'
-import {pages} from './pages/pages'
 import {from, of} from 'rxjs'
-import {Link} from './components/Link'
-import {Header} from './components/Header'
 import {page$} from './datastores/page'
 import {NotFound} from './pages/NotFound'
+import {COLORS, media} from './theme'
 
 const GlobalStyle = createGlobalStyle`
 body {
-  padding:0;
-  margin:0;
-  background: #eff0f3;
-  color: #2a2a2a;
+  ${media.between('xsmall', 'small')} {
+    font-size: 12px;
+  }
+  ${media.between('small', 'medium')} {
+    font-size: 14px;
+  }
+  ${media.greaterThan('medium')} {
+    font-size: 16px;
+  }
+  ${media.greaterThan('large')} {
+    font-size: 18px;
+  }
+  padding: 0;
+  margin: 0;
+  background: ${COLORS.background};
+  color: ${COLORS.text};
   font-family: Inter, -apple-system, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
     'Droid Sans', 'Helvetica Neue', 'Fira Sans', system-ui, sans-serif;
   font-size: 1.125rem;
   overflow-y: scroll;
 }
+
 h1::before, h2::before, h3::before, h4::before { 
   display: block; 
   content: " "; 
@@ -28,16 +38,16 @@ h1::before, h2::before, h3::before, h4::before {
   pointer-events: none;
 }
 h2::before, h3::before, h4::before { 
-  margin-top: -100px; 
-  height: 100px; 
+  margin-top:  -6em; 
+  height: 6em; 
 }
 h1::before { 
-  margin-top: -100px; 
-  height: 100px; 
+  margin-top:  -6em; 
+  height: 6em; 
 }
 a:link,
 a:visited {
-  color: #d9376e;
+  color: ${COLORS.link};
   text-decoration: none;
 }
 `

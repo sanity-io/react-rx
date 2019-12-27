@@ -44,3 +44,18 @@ export const media = {
     }
   }
 }
+
+const PRIMARY = '#d9376e'
+const LIGHT = '#eff0f3'
+export const COLORS = {
+  header: {
+    background: PRIMARY,
+    text: LIGHT
+  },
+  background: LIGHT,
+  text: '#2a2a2a',
+  link: PRIMARY,
+  secondary: '#ff8e3c',
+  tertiary: '#ff8e3c',
+  shadow: '#444'
+}
