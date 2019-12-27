@@ -8,6 +8,7 @@ import {RxJSLogo} from './logos/rxjs'
 import {ReactLogo} from './logos/react'
 import {GithubLogo} from './logos/Github'
 import {COLORS} from '../theme'
+import {ReactRxLogo} from './logos/ReactRxLogo'
 
 const StyledHeader = styled.header`
   z-index: 2000;
@@ -49,18 +50,6 @@ const PageLink = styled(Link)`
   }
 `
 
-const LOGO_STYLE = `
-  height: 2em;
-  opacity: 0.7;
-  position: absolute;
-`
-const StyledReactLogo = styled(ReactLogo)`
-  ${LOGO_STYLE}
-`
-const StyledRxJSLogo = styled(RxJSLogo)`
-  ${LOGO_STYLE}
-`
-
 const LogoWrapper = styled.div`
   font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica,
     Arial, 'Lucida Grande', sans-serif;
@@ -73,9 +62,8 @@ const LogoWrapper = styled.div`
 `
 const Logo = () => (
   <LogoWrapper>
-    <StyledReactLogo />
-    <StyledRxJSLogo />
-    <Link style={{paddingLeft: '3em'}} href="/">
+    <Link href="/">
+      <ReactRxLogo size="2em" style={{paddingRight: '0.4em'}} />
       ReactRx
     </Link>
   </LogoWrapper>
@@ -103,6 +91,6 @@ export const Header = reactiveComponent(page$ =>
           </a>
         </HeaderInner>
       </StyledHeader>
-    )),
-  ),
+    ))
+  )
 )

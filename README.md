@@ -1,4 +1,4 @@
-_Hooks and utilities for combining React with RxJS Observables_
+> Hooks and utilities for combining React with RxJS Observables
 
 Features:
 
