@@ -4,7 +4,6 @@ import * as React from 'react'
 import Burger from 'react-css-burger'
 
 const SidebarContentInner = styled.div`
-  font-size: 0.9em;
   ${media.greaterThan('large')} {
     position: fixed;
   }

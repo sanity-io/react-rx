@@ -1,6 +1,6 @@
 # Reactive Component
 
-## `component()`
+## component()
 
 **Signature**
 
@@ -23,7 +23,7 @@ export const MyComponent = ReactRx.component(props$ =>
 )
 ```
 
-## `forwardRef()`
+## forwardRef()
 
 The `React.forwardRef()` equivalent for a Reactive component.
 
@@ -57,7 +57,7 @@ const MyInputWrapper = ReactRx.forwardRef((props$, ref) =>
 )
 ```
 
-## `useState()`
+## useState()
 
 Equivalent to `React.useState()` with the only difference that instead of the stateful value, it returns an observable representing the state changes (e.g. instead of `[T, update(value: T)]`, it returns `[Observable<T>, update(value: T)]`.
 
@@ -73,7 +73,7 @@ function useState<T>(
 ): [Observable<T>, React.Dispatch<React.SetStateAction<T>>]
 ```
 
-## `useContext()`
+## useContext()
 
 Equivalent to `React.useContext()` with the only difference that instead of a stateful context value, it returns an observable representing the context value changes.
 
@@ -83,7 +83,7 @@ Equivalent to `React.useContext()` with the only difference that instead of a st
 function useContext<T>(context: React.Context<T>): Observable<T>
 ```
 
-## `useEvent()`
+## useEvent()
 
 This has no React API equivalent, but creates a `[Observable<Event>, (Event) => void]` tuple, where the first value is an observable of the arguments the second function is called with.
 
@@ -96,7 +96,7 @@ function useObservableEvent<Event>(): [
 ]
 ```
 
-## `toObservable()`
+## toObservable()
 
 Converts any value inside a Functional React component to an observable of changes to that value.
 
@@ -106,7 +106,7 @@ function toObservable<T>(value: T): Observable<T>
 
 # React hooks
 
-## `useObservable()`
+## useObservable()
 
 A React hook that returns the current/latest value from an observable
 
@@ -117,18 +117,18 @@ function useObservable<T>(observable$: Observable<T>): T | null
 function useObservable<T>(observable$: Observable<T>, initialValue: T): T
 ```
 
-## `useObservableState()`
+## useObservableState()
 
 Same as `useState()` described in the Reactive Component section above, exported under a different name for clarity when using in regular React components
 
-## `useObservableContext()`
+## useObservableContext()
 
 Same as `useContext()` described in the Reactive Component section above, exported under a different name for clarity when using in regular React components
 
-## `useObservableEvent()`
+## useObservableEvent()
 
 Same as `useEvent()` described in the Reactive Component section above, exported under a different name for clarity when using in regular React components
 
-## `toObservable()`
+## toObservable()
 
 Same as `toObservable()` described in the Reactive Component section above
