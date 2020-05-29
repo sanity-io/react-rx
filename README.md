@@ -1,91 +1,20 @@
-# react-props-stream
+> Hooks and utilities for combining React with RxJS Observables
 
-Utility belt for RxJS streams and React
+Features:
 
-## API
-### `withPropsStream` HOC
-```
-withPropsStream(
-  ownerPropsToChildProps: Observable<object> | (props$: Observable<object>) => Observable<object>,
-  BaseComponent: ReactElementType
-): ReactComponent
-```
+- Works well with Observables emitting values synchronously. You don't pay the re-render-on-mount tax.
+- Lightweight. Implemented on top of a small React Hook based core.
+- Full TypeScript support.
 
-Similar to [recompose/mapPropsStream](https://github.com/acdlite/recompose/blob/master/docs/API.md#mappropsstream)
+This package offers two slightly different utilities for working with RxJS and React:
 
-#### Example: Component that displays an ever-increasing counter every second
-```jsx
-import {withPropsStream} from 'react-props-stream'
-import {timer} from 'rxjs'
-import {map} from 'rxjs/operators'
+- A set of utilities for creating _Reactive components_
+- A set of React hooks for using with observables with React
 
-const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
+Although they share a lot of similarities, and reactiveComponent is built on top of `useObservable` are not intended to be used together inside the same component as they represent two different programming styles.
 
-const MyStreamingComponent = withPropsStream(
-  numbers$,
-  props => <div>The number is {props.number}</div>
-)
-```
+---
 
-#### Example: Component that automatically fetches `props.url` when its value change
-
-```jsx
-import {createEventHandler} from 'react-props-stream'
-import {map, distinctUntilChanged, switchMap} from 'rxjs/operators'
-
-const FetchComponent = withPropsStream(
-  props$ =>
-    props$.pipe(
-      map(props => props.url),
-      distinctUntilChanged(),
-      switchMap(url => fetch(url).then(response => response.text())),
-      map(responseText => ({responseText}))
-    ),
-  props => <div>The result was: {props.responseText}</div>
-)
-
-// Usage
-ReactDOM.render(<FetchComponent url="http://example.com" />, document.getElementById('myid'))
-```
-
-### `streamingComponent`
-Similar to [recompose/componentFromStream](https://github.com/acdlite/recompose/blob/master/docs/API.md#mappropsstream)
-
-###
-```jsx
-import {streamingComponent} from 'react-props-stream'
-import {map, distinctUntilChanged, switchMap} from 'rxjs/operators'
-
-const FetchComponent = streamingComponent<{url: string}>(props$ =>
-  props$.pipe(
-    map(props => props.url),
-    distinctUntilChanged(),
-    switchMap(url => fetch(url).then(response => response.text())),
-    map(responseText => <div>The result was: {responseText}</div>)
-  )
-)
-```
-
-### `WithObservable` React component
-
-```jsx
-import {WithObservable} from 'react-props-stream'
-import {timer} from 'rxjs'
-import {map} from 'rxjs/operators'
-
-const numbers$ = timer(0, 1000).pipe(map(n => ({number: n})))
-
-function MyComponent(props)  {
-  return (
-    <WithObservable observable={numbers$}>
-      {num => <div>The number is {num}</div>}
-    </WithObservable>
-  )
-}
-```
-
-## More examples
-See more examples here: https://github.com/sanity-io/react-props-stream/tree/master/examples
-
-# Prior art
-This is heavily inspired by [recompose](https://github.com/acdlite/recompose)
+- [Reactive components](https://react-rx.dev/guide#reactive-components)
+- [Observable hooks](https://react-rx.dev/guide#observable-hooks)
+- [Code examples](https://react-rx.dev/examples)

@@ -1,13 +1,11 @@
 {
-  "exclude": ["examples", "build"],
+  "include": ["src/**/*"],
   "compilerOptions": {
-    "outDir": "build",
-    "target": "es5",
-    "module": "commonjs",
+    "strict": true,
+    "outDir": "dist",
     "jsx": "react",
     "declaration": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "moduleResolution": "node"
   }
 }

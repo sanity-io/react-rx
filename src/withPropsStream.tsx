@@ -1,18 +1,21 @@
 import * as React from 'react'
-import wrapDisplayName from 'recompose/wrapDisplayName'
 import {Observable} from 'rxjs'
 import {map} from 'rxjs/operators'
-import {streamingComponent} from './streamingComponent'
+import {wrapDisplayName} from './displayName'
+import {reactiveComponent} from './reactiveComponent'
 
-type ObservableFactory<SourceProps, TargetProps> = ((
-  props$: Observable<SourceProps>
-) => Observable<TargetProps>)
+type ObservableFactory<SourceProps, TargetProps> = (
+  props$: Observable<SourceProps>,
+) => Observable<TargetProps>
 
+/**
+ * @deprecated Use reactiveComponent instead
+ */
 export function withPropsStream<SourceProps, TargetProps>(
   observableOrFactory: Observable<TargetProps> | ObservableFactory<SourceProps, TargetProps>,
-  TargetComponent: React.ComponentType<TargetProps>
+  TargetComponent: React.ComponentType<TargetProps>,
 ) {
-  const ComposedComponent = streamingComponent<SourceProps>(sourceProps$ => {
+  const ComposedComponent = reactiveComponent<SourceProps>(sourceProps$ => {
     const targetProps$ =
       typeof observableOrFactory === 'function'
         ? observableOrFactory(sourceProps$)

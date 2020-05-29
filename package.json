@@ -1,50 +1,65 @@
 {
-  "name": "react-props-stream",
-  "version": "1.0.0",
-  "description": "Utility belt for RxJS streams and React",
-  "main": "build/index.js",
+  "name": "react-rx",
+  "version": "0.0.0",
+  "description": "React + RxJS = <3",
+  "main": "dist/cjs/index.js",
+  "types": "dist/cjs/index.d.ts",
+  "module": "dist/esm/index.js",
+  "es2015": "dist/es2015/index.js",
   "scripts": {
-    "prepublish": "npm run build",
+    "build": "npm run build:es2015 && npm run build:esm && npm run build:cjs",
+    "build:es2015": "tsc --module es2015 --target es2015 --outDir dist/es2015",
+    "build:esm": "tsc --module es2015 --target es5 --outDir dist/esm",
+    "build:cjs": "tsc --module commonjs --target es5 --outDir dist/cjs",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run clean && npm run build",
     "postpublish": "npm run clean",
-    "build": "tsc -d",
-    "clean": "rimraf build",
-    "start": "mkdir -p dist/fetch && cp examples/fetch/*.txt dist/fetch && parcel examples/index.html"
+    "watch": "run-p \"build:* -- --watch\"",
+    "test": "jest"
   },
   "keywords": [],
   "author": "Bjørge Næss <bjoerge@sanity.io>",
   "license": "MIT",
-  "dependencies": {
-    "recompose": "^0.30.0"
-  },
   "peerDependencies": {
-    "react": ">=16",
+    "react": "^16.12",
     "rxjs": "^6"
   },
   "devDependencies": {
-    "@types/react": "^16.4.18",
-    "@types/react-dom": "^16.0.9",
-    "date-fns": "^2.0.0-alpha.23",
-    "jest": "^23.6.0",
-    "parcel-bundler": "^1.10.3",
-    "prettier": "1.14.3",
-    "react": "^16.5.2",
-    "react-dom": "^16.5.2",
-    "rimraf": "^2.6.2",
-    "rxjs": "^6.3.3",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
-    "tslint-config-prettier": "^1.15.0",
-    "typescript": "^3.1.3"
+    "@testing-library/dom": "^7.2.0",
+    "@testing-library/react": "^10.0.2",
+    "@testing-library/react-hooks": "^3.2.1",
+    "@types/jest": "^25.1.5",
+    "@types/react": "^16.9.32",
+    "@types/react-dom": "^16.9.6",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react": "^7.19.0",
+    "jest": "^25.2.6",
+    "jsdom": "^16.2.2",
+    "npm-run-all": "^4.1.5",
+    "observable-callback": "^1.0.0",
+    "prettier": "2.0.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-test-renderer": "^16.13.1",
+    "rimraf": "^3.0.2",
+    "rxjs": "^6.5.5",
+    "ts-jest": "^25.3.0",
+    "typescript": "^3.8.3"
   },
   "directories": {
-    "example": "examples"
+    "example": "web"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sanity-io/react-props-stream.git"
+    "url": "git+https://github.com/sanity-io/react-rx.git"
   },
   "bugs": {
-    "url": "https://github.com/sanity-io/react-props-stream/issues"
+    "url": "https://github.com/sanity-io/react-rx/issues"
   },
-  "homepage": "https://github.com/sanity-io/react-props-stream#readme"
+  "homepage": "https://github.com/sanity-io/react-rx#readme",
+  "dependencies": {}
 }
