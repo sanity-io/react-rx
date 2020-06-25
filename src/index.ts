@@ -1,5 +1,5 @@
 // Main package exports
-export {reactiveComponent, forwardRef} from './reactiveComponent'
+export {reactiveComponent, reactiveComponent as rxComponent, forwardRef} from './reactiveComponent'
 export {createEventHandler, createState} from './utils'
 
 export {
