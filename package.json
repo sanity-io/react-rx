@@ -18,7 +18,7 @@
     "test": "jest"
   },
   "keywords": [],
-  "author": "Bjørge Næss <bjoerge@sanity.io>",
+  "author": "Bjørge Næss <bjoerge@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
     "react": "^16.13",
@@ -50,16 +50,12 @@
     "ts-jest": "^26.1.1",
     "typescript": "^3.9.5"
   },
-  "directories": {
-    "example": "web"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sanity-io/react-rx.git"
+    "url": "git+https://github.com/bjoerge/react-rx.git"
   },
   "bugs": {
-    "url": "https://github.com/sanity-io/react-rx/issues"
+    "url": "https://github.com/bjoerge/react-rx/issues"
   },
-  "homepage": "https://github.com/sanity-io/react-rx#readme",
-  "dependencies": {}
+  "homepage": "https://react-rx.dev"
 }
