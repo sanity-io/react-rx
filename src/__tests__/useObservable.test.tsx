@@ -2,7 +2,7 @@ import {act, renderHook} from '@testing-library/react-hooks'
 import {useObservable} from '../useObservable'
 import {asyncScheduler, Observable, of, scheduled, Subject} from 'rxjs'
 
-test('should subscribe immediately and unsubscribe on component unmount', () => {
+test('should subscribe immediately on component mount and unsubscribe on component unmount', () => {
   let subscribed = false
   const observable = new Observable(() => {
     subscribed = true

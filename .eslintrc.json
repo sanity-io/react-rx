@@ -4,12 +4,7 @@
     "browser": true
   },
   "parser": "@typescript-eslint/parser",
-  "extends": [
-    "plugin:@typescript-eslint/recommended",
-    "prettier/@typescript-eslint",
-    "prettier/react",
-    "prettier"
-  ],
+  "extends": ["plugin:@typescript-eslint/recommended", "prettier"],
   "rules": {
     "prettier/prettier": "error",
     "@typescript-eslint/explicit-function-return-type": "off"
