@@ -12,24 +12,26 @@ export function toObservable<T, K>(
   setup?: (props$: Observable<T>) => Observable<K>,
 ): Observable<T | K> {
   const isInitial = React.useRef(true)
-  const subject = React.useRef<Subject<T>>(new BehaviorSubject(value))
+  const subjectRef = React.useRef<Subject<T>>(new BehaviorSubject(value))
+  const observableRef = React.useRef<Observable<T> | Observable<K>>(
+    setup ? setup(subjectRef.current.asObservable()) : subjectRef.current.asObservable(),
+  )
 
   React.useEffect(() => {
     if (isInitial.current) {
       isInitial.current = false
     } else {
       // emit only on update
-      subject.current.next(value)
+      subjectRef.current.next(value)
     }
   }, [value])
   React.useEffect(() => {
     return () => {
-      return subject.current.complete()
+      return subjectRef.current.complete()
     }
   }, [])
 
-  const observable = subject.current.asObservable()
-  return setup ? setup(observable) : observable
+  return observableRef.current
 }
 
 const isCallable = (val: unknown): val is (...args: unknown[]) => unknown =>
