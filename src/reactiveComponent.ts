@@ -1,17 +1,19 @@
 import * as React from 'react'
 import {Observable} from 'rxjs'
 import {wrapDisplayName} from './displayName'
-import {toObservable, useObservable} from './useObservable'
+import {useAsObservable} from './useAsObservable'
+import {useObservable} from './useObservable'
 
 type Component<Props> = (input$: Observable<Props>) => Observable<React.ReactNode>
 
 function fromComponent<Props>(component: Component<Props>): React.FunctionComponent<Props> {
-  const wrappedComponent = (props: Props) =>
-    React.createElement(
+  const wrappedComponent = (props: Props) => {
+    return React.createElement(
       React.Fragment,
       null,
-      useObservable<React.ReactNode>(toObservable(props, component)),
+      useObservable<React.ReactNode>(React.useRef(component(useAsObservable(props))).current),
     )
+  }
   wrappedComponent.displayName = wrapDisplayName(component, 'reactiveComponent')
   return wrappedComponent
 }
@@ -44,7 +46,7 @@ export function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<R
     return React.createElement(
       React.Fragment,
       null,
-      useObservable(component(toObservable(props), ref)),
+      useObservable<React.ReactNode>(React.useRef(component(useAsObservable(props), ref)).current),
     )
   })
   wrappedComponent.displayName = wrapDisplayName(component, 'reactiveComponent')

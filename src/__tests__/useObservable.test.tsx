@@ -20,7 +20,7 @@ test('should subscribe immediately on component mount and unsubscribe on compone
   expect(subscribed).toBe(false)
 })
 
-test('should only subscribe once when given same observable on rerenders', () => {
+test('should only subscribe once when given same observable on re-renders', () => {
   let subscriptionCount = 0
   const observable = new Observable(() => {
     subscriptionCount++
@@ -40,7 +40,7 @@ test('should have sync values from an observable as initial value', () => {
   expect(result.current).toBe('something sync')
 })
 
-test('should have undefined as initial value from async observables', () => {
+test('should have undefined as initial value from delayed observables', () => {
   const {result, unmount} = renderHook(() =>
     useObservable(scheduled('something async', asyncScheduler)),
   )
@@ -48,7 +48,7 @@ test('should have undefined as initial value from async observables', () => {
   unmount()
 })
 
-test('should have passed initialValue as initial value from async observables', () => {
+test('should have passed initialValue as initial value from delayed observables', () => {
   const {result, unmount} = renderHook(() =>
     useObservable(scheduled('something async', asyncScheduler), 'initial'),
   )
