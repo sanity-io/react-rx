@@ -10,7 +10,7 @@ import {
   startWith,
   tap,
   timer,
-  observeCallback
+  handler
 } from 'examples/_utils/globalScope'
 
 import storage from './storage'
@@ -34,8 +34,8 @@ const INITIAL_PROPS = {
 const INITIAL_SUBMIT_STATE = {status: 'saving', result: null}
 
 const FormDataExample = rxComponent(() => {
-  const [onChange$, onChange] = observeCallback()
-  const [onSubmit$, onSubmit] = observeCallback()
+  const [onChange$, onChange] = handler()
+  const [onSubmit$, onSubmit] = handler()
 
   const formData$ = concat(
     storage.get(STORAGE_KEY, {title: '', description: ''}),

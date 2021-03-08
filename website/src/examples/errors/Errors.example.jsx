@@ -11,7 +11,7 @@ import {
   take,
   throwError,
   timer,
-  observeCallback
+  handler
 } from '../_utils/globalScope'
 //@endimport
 
@@ -20,8 +20,8 @@ const {mergeMapTo, switchMapTo} = operators
 const timer$ = timer(0, 1000)
 
 const ErrorsExample = rxComponent(() => {
-  const [onRetry$, onRetry] = observeCallback()
-  const [onError$, onError] = observeCallback()
+  const [onRetry$, onRetry] = handler()
+  const [onError$, onError] = handler()
 
   const errors$ = onError$.pipe(
     mergeMapTo(throwError(new Error("You clicked the button, didn't you!?")))

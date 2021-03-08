@@ -1,10 +1,10 @@
 import {
   map,
-  observeContext,
   React,
   ReactDOM,
   rxComponent,
-  observeState
+  context,
+  state
 } from '../_utils/globalScope'
 import { tap } from "rxjs/operators";
 //@endimport
@@ -14,7 +14,7 @@ const ModeContext = React.createContext({
   set: (nextMode) => {}
 })
 
-const observeMode = () => observeContext(ModeContext).pipe(map(({current}) => current))
+const observeMode = () => context(ModeContext).pipe(map(({current}) => current))
 
 const LIGHT = {backgroundColor: '#eee', color: '#333'}
 const DARK = {backgroundColor: '#222', color: '#eee'}
@@ -22,7 +22,7 @@ const DARK = {backgroundColor: '#222', color: '#eee'}
 const MODE = {light: LIGHT, dark: DARK}
 
 const ModeSwitch = rxComponent(() => {
-  const modeCtx$ = observeContext(ModeContext)
+  const modeCtx$ = context(ModeContext)
 
   return modeCtx$.pipe(
     map(({current, set}) => {
@@ -51,7 +51,7 @@ const App = rxComponent(() => {
 })
 
 const ContextExample = rxComponent(() => {
-  const [mode$, setMode] = observeState('light')
+  const [mode$, setMode] = state('light')
 
   return mode$.pipe(
     map((mode) => (

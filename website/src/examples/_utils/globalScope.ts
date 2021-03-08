@@ -32,10 +32,10 @@ export {RxJS, operators}
 
 export {
   rxComponent,
-  observeContext,
-  observeCallback,
-  observeState,
-  observeElement,
+  context,
+  handler,
+  state,
+  elementRef,
   forwardRef,
   useAsObservable
 } from 'react-rx'

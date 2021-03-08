@@ -24,11 +24,14 @@ const HooksInteropExample = rxComponent(() => {
   // This is required in order to turn clickCount into an observable value
   const click$ = useAsObservable(clickCount)
 
-  return click$.pipe(
-    map((clickCount) => (
-      <button onClick={inc}>
-        This button has been clicked {clickCount} times
-      </button>
+  return combineLatest([click$, ticks$]).pipe(
+    map(([clickCount, tickNumber]) => (
+      <>
+        Tick: {tickNumber}
+        <button onClick={inc}>
+          This button has been clicked {clickCount} times
+        </button>
+      </>
     ))
   )
 })

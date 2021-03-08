@@ -6,12 +6,12 @@ import {
   startWith,
   switchMap,
   timer,
-  observeState
+  state
 } from '../_utils/globalScope'
 //@endimport
 
 const ReactiveStateExample = rxComponent(() => {
-  const [delay$, setDelay] = observeState(100)
+  const [delay$, setDelay] = state(100)
 
   return delay$.pipe(
     switchMap(delay =>

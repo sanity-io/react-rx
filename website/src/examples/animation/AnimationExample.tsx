@@ -6,7 +6,7 @@ import {
   rxComponent,
   switchMap,
   timer,
-  observeState
+  state
 } from '../_utils/globalScope'
 import styled from 'styled-components'
 import bezier from 'bezier-easing'
@@ -25,7 +25,7 @@ function easeCustom(n: number) {
 type EasingName = keyof typeof EASINGS
 
 const AnimationExample = rxComponent(() => {
-  const [easing$, setEasing] = observeState<EasingName>('easeCustom')
+  const [easing$, setEasing] = state<EasingName>('easeCustom')
   return easing$.pipe(
     switchMap((easing: EasingName) =>
       timer(0, 16).pipe(
@@ -47,7 +47,7 @@ const AnimationExample = rxComponent(() => {
         <SelectWrapperLabel>Easing function:</SelectWrapperLabel>
         <SelectWrapper>
           {Object.keys(EASINGS).map((easingName) => (
-            <label className={easingName === currentEasing ? 'selected' : ''}>
+            <label key={easingName} className={easingName === currentEasing ? 'selected' : ''}>
               <input
                 tabIndex={0}
                 type="checkbox"

@@ -4,7 +4,7 @@ import {
   React,
   ReactDOM,
   rxComponent,
-  observeState
+  state
 } from '../_utils/globalScope'
 //@endimport
 
@@ -22,7 +22,7 @@ const CustomInput = forwardRef((props$, ref) => {
 })
 
 const ForwardRefExample = rxComponent(() => {
-  const [value$, setValue] = observeState('hello world')
+  const [value$, setValue] = state('hello world')
   const inputRef = React.useRef<HTMLInputElement>(null)
 
   return value$.pipe(

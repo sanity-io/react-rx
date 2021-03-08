@@ -1,6 +1,6 @@
 import {
   map,
-  observeElement,
+  element,
   operators,
   React,
   ReactDOM,
@@ -21,7 +21,7 @@ const SPEED = 2
 const unpx = (v: string) => Number(v.replace(/px$/, ''))
 
 const UseElementExample = rxComponent(() => {
-  const [element$, ref] = observeElement<HTMLElement>()
+  const [element$, ref] = elementRef<HTMLElement>()
 
   const count$ = timer(0, 16).pipe(
     map((n) => n % 400),

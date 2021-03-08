@@ -4,7 +4,7 @@ import {
   ReactDOM,
   rxComponent,
   startWith,
-  observeCallback
+  handler
 } from '../_utils/globalScope'
 //@endimport
 
@@ -19,7 +19,7 @@ const STYLE: React.CSSProperties = {
 }
 
 const EventHandlersExample = rxComponent(() => {
-  const [mouseMoves$, onMouseMove] = observeCallback<React.MouseEvent>()
+  const [mouseMoves$, onMouseMove] = handler<React.MouseEvent>()
 
   const mousePosition$ = mouseMoves$.pipe(
     map(event => ({x: event.clientX, y: event.clientY})),

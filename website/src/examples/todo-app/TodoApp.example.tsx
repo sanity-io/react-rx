@@ -12,7 +12,7 @@ import {
   scan,
   startWith,
   tap,
-  observeCallback
+  handler
 } from '../_utils/globalScope'
 import styled from 'styled-components'
 //@endimport
@@ -25,8 +25,8 @@ interface TodoItem {
 }
 
 const TodoApp = rxComponent(() => {
-  const [onInput$, handleInput] = observeCallback<ChangeEvent<HTMLInputElement>>()
-  const [onSubmit$, handleSubmit] = observeCallback<FormEvent<HTMLFormElement>>()
+  const [onInput$, handleInput] = handler<ChangeEvent<HTMLInputElement>>()
+  const [onSubmit$, handleSubmit] = handler<FormEvent<HTMLFormElement>>()
 
   const text$ = onInput$.pipe(
     map(e => e.currentTarget.value),
