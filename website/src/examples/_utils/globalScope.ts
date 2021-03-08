@@ -4,14 +4,14 @@ import * as RxJS from 'rxjs'
 import * as operators from 'rxjs/operators'
 
 const {of, from, concat, merge} = RxJS
-const {timer, interval, throwError, combineLatest} = RxJS
+const {timer, interval, throwError, combineLatest, Observable} = RxJS
 
 const {map, filter, reduce, scan, tap} = operators
 const {concatMap, mergeMap, switchMap, mapTo} = operators
 const {startWith, catchError, take} = operators
 //@endimport
 
-export {of, from, timer, interval, concat, merge, throwError, combineLatest}
+export {of, from, timer, interval, concat, merge, throwError, combineLatest, Observable}
 export {
   map,
   filter,
@@ -31,6 +31,8 @@ export {React, ReactDOM}
 export {RxJS, operators}
 
 export {
+  useObservable,
+  useMemoObservable,
   rxComponent,
   context,
   handler,

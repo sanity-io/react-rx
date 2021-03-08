@@ -22,7 +22,9 @@ import {Link} from '../../components/Link'
 import {Header} from '../../components/Header'
 import {Container, Content} from '../styles'
 import {Sidebar} from '../../components/Sidebar'
-import { HooksInteropExample } from "../../examples/hooks-interop";
+import {HooksInteropExample} from '../../examples/hooks-interop'
+import {UseObservableExample} from '../../examples/use-observable/use-observable'
+import {SearchExample} from '../../examples/use-observable/search'
 
 export interface Example {
   id: string
@@ -53,19 +55,15 @@ const rxComponentExamples: Example[] = [
   TickExample,
   FizzBuzzExample
 ]
-//
-// const useObservableExamples: Example[] = [
-//   SearchExample,
-//   UseObservableExample,
-//   // ReadmeExamples,
-//   SyncExample,
-// ]
+
+const useObservableExamples: Example[] = [UseObservableExample, SearchExample]
+
+const allExamples = rxComponentExamples.concat(useObservableExamples)
 
 export function Examples(props: {selectedExampleName: string}) {
   const {selectedExampleName} = props
   const selectedExample =
-    rxComponentExamples.find((ex) => ex.id === selectedExampleName) ||
-    rxComponentExamples[0]
+    allExamples.find((ex) => ex.id === selectedExampleName) || allExamples[0]
 
   return (
     <>
@@ -73,7 +71,7 @@ export function Examples(props: {selectedExampleName: string}) {
       <Container>
         <Sidebar heading="Examples">
           <ul>
-            {rxComponentExamples.map((ex) => (
+            {allExamples.map((ex) => (
               <li key={ex.id}>
                 <Link
                   className={selectedExampleName === ex.id ? 'selected' : ''}
@@ -86,7 +84,7 @@ export function Examples(props: {selectedExampleName: string}) {
           </ul>
         </Sidebar>
         <Content>
-          {rxComponentExamples
+          {allExamples
             .filter((ex) => ex === selectedExample)
             .map((ex) => (
               <div key={ex.id}>
