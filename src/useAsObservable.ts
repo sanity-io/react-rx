@@ -4,6 +4,7 @@ import * as React from 'react'
 /**
  * React hook to convert any props or state value into an observable
  * Returns an observable representing updates to any React value (props, state or any other calculated value)
+ * Note: the returned observable is the same instance throughout the component lifecycle
  * @param value
  */
 export function useAsObservable<T>(value: T): Observable<T> {

@@ -9,7 +9,7 @@ export function useObservable<T>(observable$: Observable<T>): T | undefined
 export function useObservable<T>(observable$: Observable<T>, initialValue: T): T
 export function useObservable<T>(observable$: Observable<T>, initialValue: () => T): T
 export function useObservable<T>(
-  observable$: Observable<T>,
+  observable: Observable<T>,
   initialValue?: T | (() => T),
 ) {
   const subscription = React.useRef<Subscription>()
@@ -17,7 +17,7 @@ export function useObservable<T>(
   const [value, setState] = React.useState(() => {
     let isSync = true
     let syncVal = getValue(initialValue)
-    subscription.current = observable$.subscribe(nextVal => {
+    subscription.current = observable.subscribe(nextVal => {
       if (isSync) {
         syncVal = nextVal
       } else {
@@ -31,7 +31,7 @@ export function useObservable<T>(
   React.useEffect(() => {
     // when the observable$ changes after initial (possibly sync render)
     if (!isInitial.current) {
-      subscription.current = observable$.subscribe(nextVal => setState(nextVal))
+      subscription.current = observable.subscribe(nextVal => setState(nextVal))
     }
     isInitial.current = false
     return () => {
@@ -40,7 +40,7 @@ export function useObservable<T>(
         subscription.current = undefined
       }
     }
-  }, [observable$])
+  }, [observable])
 
   return value
 }
