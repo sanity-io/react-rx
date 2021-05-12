@@ -1,20 +1,17 @@
-import * as React from 'react'
 import {Observable, Subscription} from 'rxjs'
+import {DependencyList, useEffect, useMemo, useRef, useState} from 'react'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
   return typeof value === 'function' ? value() : value
 }
 
-export function useObservable<T>(observable$: Observable<T>): T | undefined
-export function useObservable<T>(observable$: Observable<T>, initialValue: T): T
-export function useObservable<T>(observable$: Observable<T>, initialValue: () => T): T
-export function useObservable<T>(
-  observable: Observable<T>,
-  initialValue?: T | (() => T),
-) {
-  const subscription = React.useRef<Subscription>()
-  const isInitial = React.useRef(true)
-  const [value, setState] = React.useState(() => {
+export function useObservable<T>(observable: Observable<T>): T | undefined
+export function useObservable<T>(observable: Observable<T>, initialValue: T): T
+export function useObservable<T>(observable: Observable<T>, initialValue: () => T): T
+export function useObservable<T>(observable: Observable<T>, initialValue?: T | (() => T)) {
+  const subscription = useRef<Subscription>()
+  const isInitial = useRef(true)
+  const [value, setState] = useState(() => {
     let isSync = true
     let syncVal = getValue(initialValue)
     subscription.current = observable.subscribe(nextVal => {
@@ -28,8 +25,8 @@ export function useObservable<T>(
     return syncVal
   })
 
-  React.useEffect(() => {
-    // when the observable$ changes after initial (possibly sync render)
+  useEffect(() => {
+    // when the observable changes after initial (possibly sync render)
     if (!isInitial.current) {
       subscription.current = observable.subscribe(nextVal => setState(nextVal))
     }
@@ -47,20 +44,20 @@ export function useObservable<T>(
 
 export function useMemoObservable<T>(
   observableOrFactory: Observable<T> | (() => Observable<T>),
-  deps: React.DependencyList,
+  deps: DependencyList,
 ): Observable<T | undefined>
 export function useMemoObservable<T>(
   observableOrFactory: Observable<T> | (() => Observable<T>),
-  deps: React.DependencyList,
+  deps: DependencyList,
   initialValue: T | (() => T),
 ): Observable<T>
 export function useMemoObservable<T>(
   observableOrFactory: Observable<T> | (() => Observable<T>),
-  deps: React.DependencyList,
+  deps: DependencyList,
   initialValue?: T | (() => T),
 ) {
   return useObservable(
-    React.useMemo(() => getValue(observableOrFactory), deps),
+    useMemo(() => getValue(observableOrFactory), deps),
     initialValue,
   )
 }

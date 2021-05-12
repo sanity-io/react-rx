@@ -1,5 +1,5 @@
 import {BehaviorSubject, Observable, Subject} from 'rxjs'
-import * as React from 'react'
+import {useEffect, useRef} from 'react'
 
 /**
  * React hook to convert any props or state value into an observable
@@ -8,14 +8,14 @@ import * as React from 'react'
  * @param value
  */
 export function useAsObservable<T>(value: T): Observable<T> {
-  const isInitial = React.useRef(true)
-  const subjectRef = React.useRef<Subject<T>>(new BehaviorSubject(value))
-  const observableRef = React.useRef<Observable<T>>()
+  const isInitial = useRef(true)
+  const subjectRef = useRef<Subject<T>>(new BehaviorSubject(value))
+  const observableRef = useRef<Observable<T>>()
   if (!observableRef.current) {
     observableRef.current = subjectRef.current.asObservable()
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isInitial.current) {
       isInitial.current = false
     } else {
@@ -23,7 +23,7 @@ export function useAsObservable<T>(value: T): Observable<T> {
       subjectRef.current.next(value)
     }
   }, [value])
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       return subjectRef.current.complete()
     }
