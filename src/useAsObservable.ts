@@ -8,12 +8,21 @@ import {useIsomorphicEffect} from './useIsomorphicEffect'
  * Note: the returned observable is the same instance throughout the component lifecycle
  * @param value
  */
-export function useAsObservable<T>(value: T): Observable<T> {
+export function useAsObservable<T>(value: T): Observable<T>
+export function useAsObservable<T, K>(
+  value: T,
+  operator: (input: Observable<T>) => Observable<K>,
+): Observable<K>
+export function useAsObservable<T, K = T>(
+  value: T,
+  operator?: (input: Observable<T>) => Observable<K>,
+): Observable<T | K> {
   const isInitial = useRef(true)
   const subjectRef = useRef<Subject<T>>(new BehaviorSubject(value))
-  const observableRef = useRef<Observable<T>>()
+  const observableRef = useRef<Observable<T | K>>()
   if (!observableRef.current) {
-    observableRef.current = subjectRef.current.asObservable()
+    const observable = subjectRef.current.asObservable()
+    observableRef.current = operator ? observable.pipe(operator) : observable
   }
 
   useIsomorphicEffect(() => {
