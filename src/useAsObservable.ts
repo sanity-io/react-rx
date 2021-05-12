@@ -1,5 +1,6 @@
 import {BehaviorSubject, Observable, Subject} from 'rxjs'
-import {useEffect, useRef} from 'react'
+import {useRef} from 'react'
+import {useIsomorphicEffect} from './useIsomorphicEffect'
 
 /**
  * React hook to convert any props or state value into an observable
@@ -15,7 +16,7 @@ export function useAsObservable<T>(value: T): Observable<T> {
     observableRef.current = subjectRef.current.asObservable()
   }
 
-  useEffect(() => {
+  useIsomorphicEffect(() => {
     if (isInitial.current) {
       isInitial.current = false
     } else {
@@ -23,7 +24,7 @@ export function useAsObservable<T>(value: T): Observable<T> {
       subjectRef.current.next(value)
     }
   }, [value])
-  useEffect(() => {
+  useIsomorphicEffect(() => {
     return () => {
       return subjectRef.current.complete()
     }

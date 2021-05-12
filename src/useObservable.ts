@@ -1,5 +1,6 @@
 import {Observable, Subscription} from 'rxjs'
-import {DependencyList, useEffect, useMemo, useRef, useState} from 'react'
+import {DependencyList, useMemo, useRef, useState} from 'react'
+import {useIsomorphicEffect} from './useIsomorphicEffect'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
   return typeof value === 'function' ? value() : value
@@ -25,7 +26,7 @@ export function useObservable<T>(observable: Observable<T>, initialValue?: T | (
     return syncVal
   })
 
-  useEffect(() => {
+  useIsomorphicEffect(() => {
     // when the observable changes after initial (possibly sync render)
     if (!isInitial.current) {
       subscription.current = observable.subscribe(nextVal => setState(nextVal))
