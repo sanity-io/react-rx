@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "React + RxJS = <3",
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
