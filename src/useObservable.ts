@@ -46,12 +46,12 @@ export function useObservable<T>(observable: Observable<T>, initialValue?: T | (
 export function useMemoObservable<T>(
   observableOrFactory: Observable<T> | (() => Observable<T>),
   deps: DependencyList,
-): Observable<T | undefined>
+): T | undefined
 export function useMemoObservable<T>(
   observableOrFactory: Observable<T> | (() => Observable<T>),
   deps: DependencyList,
   initialValue: T | (() => T),
-): Observable<T>
+): T
 export function useMemoObservable<T>(
   observableOrFactory: Observable<T> | (() => Observable<T>),
   deps: DependencyList,
