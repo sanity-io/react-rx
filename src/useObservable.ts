@@ -1,20 +1,17 @@
-import {Observable, Subscription} from 'rxjs'
-import {DependencyList, useMemo, useRef, useState} from 'react'
-import {useIsomorphicEffect} from './useIsomorphicEffect'
+import {concat, defer, Observable, of, pipe, Subscription} from 'rxjs'
+import {DependencyList, useEffect, useMemo, useRef, useState} from 'react'
+import {useAsObservable} from './useAsObservable'
+import {distinctUntilChanged, switchMap} from 'rxjs/operators'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
   return typeof value === 'function' ? value() : value
 }
 
-export function useObservable<T>(observable: Observable<T>): T | undefined
-export function useObservable<T>(observable: Observable<T>, initialValue: T): T
-export function useObservable<T>(observable: Observable<T>, initialValue: () => T): T
-export function useObservable<T>(observable: Observable<T>, initialValue?: T | (() => T)) {
+function useSubscription<T>(observable: Observable<T>): T {
   const subscription = useRef<Subscription>()
-  const isInitial = useRef(true)
-  const [value, setState] = useState(() => {
+  const [value, setState] = useState<T>(() => {
     let isSync = true
-    let syncVal = getValue(initialValue)
+    let syncVal: T
     subscription.current = observable.subscribe(nextVal => {
       if (isSync) {
         syncVal = nextVal
@@ -23,24 +20,36 @@ export function useObservable<T>(observable: Observable<T>, initialValue?: T | (
       }
     })
     isSync = false
-    return syncVal
+    return syncVal!
   })
 
-  useIsomorphicEffect(() => {
-    // when the observable changes after initial (possibly sync render)
-    if (!isInitial.current) {
-      subscription.current = observable.subscribe(nextVal => setState(nextVal))
-    }
-    isInitial.current = false
+  useEffect(() => {
     return () => {
-      if (subscription.current) {
-        subscription.current.unsubscribe()
-        subscription.current = undefined
-      }
+      subscription.current!.unsubscribe()
     }
-  }, [observable])
+  }, [])
 
   return value
+}
+
+export function useObservable<T>(observable: Observable<T>): T | undefined
+export function useObservable<T>(observable: Observable<T>, initialValue: T): T
+export function useObservable<T>(observable: Observable<T>, initialValue: () => T): T
+export function useObservable<T>(observable: Observable<T>, initialValue?: T | (() => T)) {
+  return useSubscription(
+    useAsObservable(
+      observable,
+      pipe(
+        distinctUntilChanged(),
+        switchMap(observable =>
+          concat(
+            defer(() => of(getValue(initialValue))),
+            observable,
+          ),
+        ),
+      ),
+    ),
+  )
 }
 
 export function useMemoObservable<T>(

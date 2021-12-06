@@ -17,27 +17,26 @@ export function useAsObservable<T, K = T>(
   value: T,
   operator?: (input: Observable<T>) => Observable<K>,
 ): Observable<T | K> {
-  const isInitial = useRef(true)
-  const subjectRef = useRef<Subject<T>>(new BehaviorSubject(value))
+  const initialized = useRef(false)
   const observableRef = useRef<Observable<T | K>>()
-  if (!observableRef.current) {
+  const subjectRef = useRef<Subject<T>>(new BehaviorSubject(value))
+
+  if (!initialized.current) {
     const observable = subjectRef.current.asObservable()
     observableRef.current = operator ? observable.pipe(operator) : observable
+    initialized.current = true
   }
 
   useIsomorphicEffect(() => {
-    if (isInitial.current) {
-      isInitial.current = false
-    } else {
-      // emit only on update
-      subjectRef.current.next(value)
-    }
+    // emit only on update
+    subjectRef.current.next(value)
   }, [value])
+
   useIsomorphicEffect(() => {
     return () => {
       return subjectRef.current.complete()
     }
   }, [])
 
-  return observableRef.current
+  return observableRef.current!
 }

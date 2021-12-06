@@ -76,7 +76,7 @@ test('should re-subscribe when receiving a new observable', () => {
 
   let current$ = first$
 
-  const {result, rerender, unmount} = renderHook(() => useObservable(current$))
+  const {result, rerender, unmount} = renderHook(() => useObservable(current$, '!!initial!!'))
 
   act(() => first$.next('first 1'))
   expect(result.current).toBe('first 1')
@@ -85,8 +85,8 @@ test('should re-subscribe when receiving a new observable', () => {
 
   rerender()
 
-  // since observable #2 hasn't emitted a value yet, we should still have the previous
-  expect(result.current).toBe('first 1')
+  // since observable #2 hasn't emitted a value yet, we should use the initial value
+  expect(result.current).toBe('!!initial!!')
 
   // Now we should be subscribed to second$ and it's emission should be returned
   act(() => second$.next('second 1'))
