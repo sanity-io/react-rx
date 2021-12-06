@@ -44,7 +44,7 @@
     "react-codemirror2": "^7.2.1",
     "react-css-burger": "^0.2.0",
     "react-dom": "^17.0.1",
-    "react-rx": "1.0.0-beta.4",
+    "react-rx": "^1.0.1",
     "remark-emoji": "^2.1.0",
     "rimraf": "^3.0.2",
     "rxjs": "^6.5.5",
