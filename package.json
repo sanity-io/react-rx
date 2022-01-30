@@ -64,5 +64,6 @@
   "workspaces": [
     "website",
     "."
-  ]
+  ],
+  "private": true
 }
