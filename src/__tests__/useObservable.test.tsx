@@ -1,6 +1,9 @@
 import {act, renderHook} from '@testing-library/react-hooks'
+import {render} from '@testing-library/react'
 import {useObservable} from '../useObservable'
-import {asyncScheduler, Observable, of, scheduled, Subject} from 'rxjs'
+import {asyncScheduler, Observable, of, scheduled, Subject, timer} from 'rxjs'
+import {mapTo} from 'rxjs/operators'
+import {createElement, Fragment} from 'react'
 
 test('should subscribe immediately on component mount and unsubscribe on component unmount', () => {
   let subscribed = false
@@ -33,10 +36,27 @@ test('should only subscribe once when given same observable on re-renders', () =
   rerender()
   expect(subscriptionCount).toBe(1)
   unmount()
+
+  renderHook(() => useObservable(observable))
+  expect(subscriptionCount).toBe(2)
+})
+
+test('should not return undefined during render', () => {
+  const observable = timer(100).pipe(mapTo('emitted value'))
+
+  const returnedValues: unknown[] = []
+  function ObservableComponent() {
+    const observedValue = useObservable(observable, 'initial value')
+    returnedValues.push(observedValue)
+    return createElement(Fragment, null, observedValue)
+  }
+  render(createElement(ObservableComponent))
+  expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
 })
 
 test('should have sync values from an observable as initial value', () => {
-  const {result} = renderHook(() => useObservable(of('something sync')))
+  const observable = of('something sync')
+  const {result} = renderHook(() => useObservable(observable))
   expect(result.current).toBe('something sync')
 })
 
