@@ -1,5 +1,5 @@
-import {Observable} from 'rxjs'
-import {DependencyList, useMemo} from 'react'
+import {Observable, Subject, Subscription} from 'rxjs'
+import {DependencyList, useMemo, useRef} from 'react'
 import {useSyncExternalStore} from 'use-sync-external-store/shim'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
@@ -12,14 +12,19 @@ export function useObservable<T>(observable: Observable<T>, initialValue: () => 
 export function useObservable<T>(observable: Observable<T>, initialValue?: T | (() => T)) {
   const [getSnapshot, subscribe] = useMemo(() => {
     let currentValue = getValue(initialValue)
+    const subject = new Subject<T>()
+    const subscription = observable.subscribe(value => {
+      currentValue = value
+      subject.next(value)
+    })
     return [
       () => currentValue,
       (callback: (value: T) => void) => {
-        const subscription = observable.subscribe(value => {
-          currentValue = value
-          callback(value)
-        })
-        return () => subscription.unsubscribe()
+        const subjectSub = subject.subscribe(value => callback(value))
+        return () => {
+          subscription.unsubscribe()
+          subjectSub.unsubscribe()
+        }
       },
     ]
   }, [observable])
