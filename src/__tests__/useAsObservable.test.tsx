@@ -4,7 +4,7 @@ import {renderHook} from '@testing-library/react-hooks'
 import {Observable} from 'rxjs'
 
 test('the returned observable should receive a new value when component is rendered with a new value', () => {
-  let receivedValues: string[] = []
+  const receivedValues: string[] = []
   const {unmount, rerender} = renderHook(
     (props: {value: string}) => {
       const observable = useAsObservable(props.value)
@@ -30,7 +30,7 @@ test('the returned observable should receive a new value when component is rende
 })
 
 test('the returned observable should *not* receive a new value when component is rendered with an unchanged value', () => {
-  let receivedValues: string[] = []
+  const receivedValues: string[] = []
   const {unmount, rerender} = renderHook(
     (props: {value: string}) => {
       const observable = useAsObservable(props.value)
@@ -56,7 +56,7 @@ test('the returned observable should *not* receive a new value when component is
 })
 
 test('the returned observable should have the same identity across multiple re-renders/hook calls', () => {
-  let returnValues: Observable<unknown>[] = []
+  const returnValues: Observable<unknown>[] = []
   const {unmount, rerender} = renderHook(() => {
     returnValues.push(useAsObservable('render'))
   })
