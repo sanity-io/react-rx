@@ -22,7 +22,8 @@
   "author": "Bjørge Næss <bjoerge@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "observable-callback": "^1.0.1"
+    "observable-callback": "^1.0.1",
+    "use-sync-external-store": "^1.2.0"
   },
   "peerDependencies": {
     "react": "^16.8 || ^17 || ^18",
@@ -49,7 +50,6 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-test-renderer": "^17.0.1",
-    "use-sync-external-store": "^1.2.0",
     "rimraf": "^3.0.2",
     "rxjs": "^6.5.5",
     "ts-jest": "^26.5.2",
