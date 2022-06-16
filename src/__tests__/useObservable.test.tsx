@@ -1,7 +1,7 @@
 import {act, renderHook} from '@testing-library/react-hooks'
 import {render} from '@testing-library/react'
 import {useObservable} from '../useObservable'
-import {asyncScheduler, Observable, of, scheduled, Subject, timer} from 'rxjs'
+import {asyncScheduler, merge, Observable, of, scheduled, Subject, timer} from 'rxjs'
 import {mapTo} from 'rxjs/operators'
 import {createElement, Fragment} from 'react'
 
@@ -41,7 +41,7 @@ test('should only subscribe once when given same observable on re-renders', () =
   expect(subscriptionCount).toBe(2)
 })
 
-test('should not return undefined during render', () => {
+test('should not return undefined during render if initial value is given', () => {
   const observable = timer(100).pipe(mapTo('emitted value'))
 
   const returnedValues: unknown[] = []
@@ -52,6 +52,32 @@ test('should not return undefined during render', () => {
   }
   render(createElement(ObservableComponent))
   expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
+})
+
+test('should not return undefined during render if observable is sync', () => {
+  const observable = of('initial value')
+
+  const returnedValues: unknown[] = []
+  function ObservableComponent() {
+    const observedValue = useObservable(observable)
+    returnedValues.push(observedValue)
+    return createElement(Fragment, null, observedValue)
+  }
+  render(createElement(ObservableComponent))
+  expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
+})
+
+test('should return undefined during first render if observable is async', () => {
+  const observable = scheduled('async value', asyncScheduler)
+
+  const returnedValues: unknown[] = []
+  function ObservableComponent() {
+    const observedValue = useObservable(observable)
+    returnedValues.push(observedValue)
+    return createElement(Fragment, null, observedValue)
+  }
+  render(createElement(ObservableComponent))
+  expect(returnedValues).toEqual(expect.arrayContaining([undefined]))
 })
 
 test('should have sync values from an observable as initial value', () => {
