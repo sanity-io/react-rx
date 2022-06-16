@@ -1,5 +1,5 @@
-import {BehaviorSubject, Observable, Subject} from 'rxjs'
-import {useRef} from 'react'
+import {BehaviorSubject, Observable} from 'rxjs'
+import {useEffect, useMemo} from 'react'
 import {useIsomorphicEffect} from './useIsomorphicEffect'
 
 /**
@@ -17,26 +17,22 @@ export function useAsObservable<T, K = T>(
   value: T,
   operator?: (input: Observable<T>) => Observable<K>,
 ): Observable<T | K> {
-  const initialized = useRef(false)
-  const observableRef = useRef<Observable<T | K>>()
-  const subjectRef = useRef<Subject<T>>(new BehaviorSubject(value))
+  const [observable, subject] = useMemo(() => {
+    const subject = new BehaviorSubject(value)
 
-  if (!initialized.current) {
-    const observable = subjectRef.current.asObservable()
-    observableRef.current = operator ? observable.pipe(operator) : observable
-    initialized.current = true
-  }
+    const observable = subject.asObservable()
+    return [operator ? observable.pipe(operator) : observable, subject]
+  }, [])
 
   useIsomorphicEffect(() => {
-    // emit only on update
-    subjectRef.current.next(value)
+    subject.next(value)
   }, [value])
 
-  useIsomorphicEffect(() => {
+  useEffect(() => {
     return () => {
-      return subjectRef.current.complete()
+      subject.complete()
     }
   }, [])
 
-  return observableRef.current!
+  return observable
 }

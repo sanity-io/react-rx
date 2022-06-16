@@ -1,48 +1,44 @@
-import {concat, defer, Observable, of, pipe, Subscription} from 'rxjs'
-import {DependencyList, useEffect, useMemo, useRef, useState} from 'react'
+import {defer, merge, Observable, of, pipe} from 'rxjs'
+import {DependencyList, useMemo} from 'react'
 import {useAsObservable} from './useAsObservable'
 import {distinctUntilChanged, switchMap} from 'rxjs/operators'
+import {useSyncExternalStore} from 'use-sync-external-store/shim'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
   return typeof value === 'function' ? value() : value
 }
 
-function useSubscription<T>(observable: Observable<T>): T {
-  const subscription = useRef<Subscription>()
-  const [value, setState] = useState<T>(() => {
-    let isSync = true
-    let syncVal: T
-    subscription.current = observable.subscribe(nextVal => {
-      if (isSync) {
-        syncVal = nextVal
-      } else {
-        setState(nextVal)
-      }
-    })
-    isSync = false
-    return syncVal!
-  })
-
-  useEffect(() => {
-    return () => {
-      subscription.current!.unsubscribe()
+function useObservableSubscription<T>(observable: Observable<T>): T {
+  const store = useMemo(() => {
+    let currentValue: T
+    return {
+      // Note: this works because the given observable always emits a value synchronously by concat-ing the given initialValue
+      getCurrentValue: () => currentValue,
+      subscribe: (callback: (value: T) => void) => {
+        const subscription = observable.subscribe(value => {
+          currentValue = value
+          callback(value)
+        })
+        return () => {
+          subscription.unsubscribe()
+        }
+      },
     }
-  }, [])
-
-  return value
+  }, [observable])
+  return useSyncExternalStore(store.subscribe, store.getCurrentValue)
 }
 
 export function useObservable<T>(observable: Observable<T>): T | undefined
 export function useObservable<T>(observable: Observable<T>, initialValue: T): T
 export function useObservable<T>(observable: Observable<T>, initialValue: () => T): T
 export function useObservable<T>(observable: Observable<T>, initialValue?: T | (() => T)) {
-  return useSubscription(
+  return useObservableSubscription(
     useAsObservable(
       observable,
       pipe(
         distinctUntilChanged(),
         switchMap(observable =>
-          concat(
+          merge(
             defer(() => of(getValue(initialValue))),
             observable,
           ),
