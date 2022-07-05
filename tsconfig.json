@@ -1,6 +1,7 @@
 {
   "include": ["src/**/*"],
   "compilerOptions": {
+    "target": "ES2015",
     "strict": true,
     "outDir": "dist",
     "jsx": "react",

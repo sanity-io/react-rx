@@ -1,6 +1,6 @@
 import {useAsObservable} from '../useAsObservable'
 import React from 'react'
-import {renderHook} from '@testing-library/react-hooks'
+import {renderHook} from '@testing-library/react'
 import {Observable} from 'rxjs'
 
 test('the returned observable should receive a new value when component is rendered with a new value', () => {

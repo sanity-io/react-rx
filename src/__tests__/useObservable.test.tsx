@@ -1,7 +1,6 @@
-import {act, renderHook} from '@testing-library/react-hooks'
-import {render} from '@testing-library/react'
+import {act, render, renderHook} from '@testing-library/react'
 import {useObservable} from '../useObservable'
-import {asyncScheduler, merge, Observable, of, scheduled, Subject, timer} from 'rxjs'
+import {asyncScheduler, Observable, of, scheduled, Subject, timer} from 'rxjs'
 import {mapTo} from 'rxjs/operators'
 import {createElement, Fragment} from 'react'
 

@@ -26,16 +26,16 @@ function fromComponent<Props>(component: Component<Props>): FunctionComponent<Pr
   return wrappedComponent
 }
 
-function fromObservable<Props>(input$: Observable<Props>): FunctionComponent<{}> {
+function fromObservable<Props>(input$: Observable<ReactNode>): FunctionComponent<{}> {
   return function ReactiveComponent() {
     return createElement(Fragment, null, useObservable<ReactNode>(input$))
   }
 }
 
-export function reactiveComponent<Props>(observable: Observable<Props>): FunctionComponent<{}>
+export function reactiveComponent<Props>(observable: Observable<Props>): FunctionComponent<Props>
 export function reactiveComponent<Props>(component: Component<Props>): FunctionComponent<Props>
 export function reactiveComponent<Props>(
-  observableOrComponent: Observable<Props> | Component<Props>,
+  observableOrComponent: Observable<ReactNode> | Component<Props>,
 ) {
   return typeof observableOrComponent === 'function'
     ? fromComponent(observableOrComponent)
