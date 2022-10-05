@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>sanity-io/renovate-presets//ecosystem/auto"],
+  "packageRules": [
+    {
+      "matchFiles": ["website/package.json"],
+      "extends": [":semanticCommitTypeAll(chore)"],
+      "groupName": "website dependencies",
+      "separateMajorMinor": false,
+      "groupSlug": "website",
+      "packageRules": [
+        {
+          "matchPackagePatterns": [
+            "*"
+          ],
+          "groupName": "website dependencies",
+          "groupSlug": "website"
+        }
+      ],
+      "lockFileMaintenance": {
+        "enabled": false
+      }
+    }
+  ]
+}
