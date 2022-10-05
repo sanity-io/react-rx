@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "2.0.4",
+  "version": "2.1.0",
   "description": "React + RxJS = <3",
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
