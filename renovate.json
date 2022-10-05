@@ -10,9 +10,7 @@
       "groupSlug": "website",
       "packageRules": [
         {
-          "matchPackagePatterns": [
-            "*"
-          ],
+          "matchPackagePatterns": ["*"],
           "groupName": "website dependencies",
           "groupSlug": "website"
         }
