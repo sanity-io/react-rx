@@ -1,6 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base"
+  "extends": ["github>sanity-io/renovate-presets//ecosystem/auto"],
+  "packageRules": [
+    {
+      "packageNames": ["react-rx"],
+      "rangeStrategy": "pin",
+      "automerge": true,
+      "semanticCommitType": "chore",
+      "schedule": ["at any time"]
+    },
+    {
+      "matchFiles": ["website/package.json"],
+      "extends": [":semanticCommitTypeAll(chore)"]
+    }
   ]
 }
