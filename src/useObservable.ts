@@ -49,7 +49,7 @@ export function useObservable<T>(observable: Observable<T>, initialValue?: T | (
       },
       function subscribe(callback: () => void) {
         // @TODO: perf opt opportunity: we could do `record.subscription.unsubscribe()` here as we only need 1 subscription active to keep the observer alive
-        const sub = record.observable.subscribe(() => callback())
+        const sub = record.observable.subscribe(callback)
         return () => {
           sub.unsubscribe()
         }
