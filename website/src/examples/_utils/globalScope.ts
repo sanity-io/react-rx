@@ -11,7 +11,17 @@ const {concatMap, mergeMap, switchMap, mapTo} = operators
 const {startWith, catchError, take} = operators
 //@endimport
 
-export {of, from, timer, interval, concat, merge, throwError, combineLatest, Observable}
+export {
+  of,
+  from,
+  timer,
+  interval,
+  concat,
+  merge,
+  throwError,
+  combineLatest,
+  Observable
+}
 export {
   map,
   filter,

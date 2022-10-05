@@ -3,7 +3,7 @@ import {navigate} from '../datastores/location'
 
 export function Link(props: React.ComponentProps<'a'>) {
   const onClick = React.useCallback(
-    event => {
+    (event) => {
       if (props.onClick) {
         props.onClick(event)
       }

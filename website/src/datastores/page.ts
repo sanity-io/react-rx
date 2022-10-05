@@ -5,7 +5,7 @@ import {Observable} from 'rxjs'
 
 export const page$: Observable<Page> = location$.pipe(
   map(
-    location =>
-      pages.find(page => page.route === location.pathname) || NOT_FOUND
+    (location) =>
+      pages.find((page) => page.route === location.pathname) || NOT_FOUND
   )
 )

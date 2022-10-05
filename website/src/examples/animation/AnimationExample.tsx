@@ -47,7 +47,10 @@ const AnimationExample = rxComponent(() => {
         <SelectWrapperLabel>Easing function:</SelectWrapperLabel>
         <SelectWrapper>
           {Object.keys(EASINGS).map((easingName) => (
-            <label key={easingName} className={easingName === currentEasing ? 'selected' : ''}>
+            <label
+              key={easingName}
+              className={easingName === currentEasing ? 'selected' : ''}
+            >
               <input
                 tabIndex={0}
                 type="checkbox"

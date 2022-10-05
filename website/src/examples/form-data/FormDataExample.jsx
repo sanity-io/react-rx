@@ -21,7 +21,7 @@ const {withLatestFrom} = operators
 
 const STORAGE_KEY = '__form-submit-example__'
 
-const save = formData =>
+const save = (formData) =>
   timer(100 + Math.round(Math.random() * 1000)).pipe(
     concatMap(() => storage.set(STORAGE_KEY, formData))
   )
@@ -40,31 +40,31 @@ const FormDataExample = rxComponent(() => {
   const formData$ = concat(
     storage.get(STORAGE_KEY, {title: '', description: ''}),
     onChange$.pipe(
-      map(event => event.target),
-      map(target => ({
+      map((event) => event.target),
+      map((target) => ({
         [target.name]: target.value
       }))
     )
   ).pipe(scan((formData, update) => ({...formData, ...update}), {}))
 
   const submitState$ = onSubmit$.pipe(
-    tap(event => event.preventDefault()),
+    tap((event) => event.preventDefault()),
     withLatestFrom(formData$),
     map(([event, formData]) => formData),
-    concatMap(formData =>
+    concatMap((formData) =>
       save(formData).pipe(
-        map(res => ({status: 'saved', result: res})),
+        map((res) => ({status: 'saved', result: res})),
         startWith(INITIAL_SUBMIT_STATE)
       )
     )
   )
 
   return merge(
-    formData$.pipe(map(formData => ({formData}))),
-    submitState$.pipe(map(submitState => ({submitState})))
+    formData$.pipe(map((formData) => ({formData}))),
+    submitState$.pipe(map((submitState) => ({submitState})))
   ).pipe(
     scan((prev, curr) => ({...prev, ...curr}), INITIAL_PROPS),
-    map(props => (
+    map((props) => (
       <Form onSubmit={onSubmit}>
         <div>
           <label>

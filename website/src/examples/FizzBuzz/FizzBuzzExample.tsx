@@ -10,8 +10,8 @@ import {
 
 const FizzBuzzExample = rxComponent(
   timer(0, 500).pipe(
-    map(n => n + 1),
-    map(n => {
+    map((n) => n + 1),
+    map((n) => {
       const divBy3 = n % 3 === 0
       const divBy5 = n % 5 === 0
       const divBy3And5 = divBy3 && divBy5

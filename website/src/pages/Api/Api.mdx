@@ -18,8 +18,8 @@ function component<Props>(
 ```ts
 import * as ReactRx from 'react-rx'
 
-export const MyComponent = ReactRx.component(props$ =>
-  props$.pipe(map(props => <div>...</div>))
+export const MyComponent = ReactRx.component((props$) =>
+  props$.pipe(map((props) => <div>...</div>))
 )
 ```
 
@@ -45,7 +45,7 @@ import * as ReactRx from 'react-rx'
 
 const MyInputWrapper = ReactRx.forwardRef((props$, ref) =>
   props$.pipe(
-    map(props => (
+    map((props) => (
       <input
         ref={ref}
         type="text"

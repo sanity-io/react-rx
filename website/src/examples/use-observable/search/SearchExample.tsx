@@ -55,24 +55,25 @@ function SearchExample() {
       <div>
         The more characters you type, the faster the results will appear
       </div>
-      {useMemoObservable(() =>
-        of(keyword).pipe(
-          debounceTime(200),
-          distinctUntilChanged(),
-          filter((v) => v !== ''),
-          switchMap((kw: string) => search(kw)),
-          map((result: SearchResult) => (
-            <>
-              <h1>Searched for {result.keyword}</h1>
-              <div>Got {result.hits.length} hits</div>
-              <ul>
-                {result.hits.map((hit, i) => (
-                  <li key={i}>{hit.title}</li>
-                ))}
-              </ul>
-            </>
-          ))
-        ),
+      {useMemoObservable(
+        () =>
+          of(keyword).pipe(
+            debounceTime(200),
+            distinctUntilChanged(),
+            filter((v) => v !== ''),
+            switchMap((kw: string) => search(kw)),
+            map((result: SearchResult) => (
+              <>
+                <h1>Searched for {result.keyword}</h1>
+                <div>Got {result.hits.length} hits</div>
+                <ul>
+                  {result.hits.map((hit, i) => (
+                    <li key={i}>{hit.title}</li>
+                  ))}
+                </ul>
+              </>
+            ))
+          ),
         [keyword]
       )}
     </>

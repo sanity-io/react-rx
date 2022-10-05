@@ -12,9 +12,9 @@ export type Size = keyof typeof SIZES
 export const media = {
   between(smallKey: Size, largeKey: Size, excludeLarge = false) {
     if (excludeLarge) {
-      return `@media (min-width: ${
-        SIZES[smallKey].min
-      }px) and (max-width: ${SIZES[largeKey].min - 1}px)`
+      return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${
+        SIZES[largeKey].min - 1
+      }px)`
     } else {
       if (SIZES[largeKey].max === Infinity) {
         return `@media (min-width: ${SIZES[smallKey].min}px)`

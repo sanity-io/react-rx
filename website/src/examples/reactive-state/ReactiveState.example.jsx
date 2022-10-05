@@ -14,11 +14,11 @@ const ReactiveStateExample = rxComponent(() => {
   const [delay$, setDelay] = state(100)
 
   return delay$.pipe(
-    switchMap(delay =>
+    switchMap((delay) =>
       timer(500, delay).pipe(
-        map(n => `Count: ${n}`),
+        map((n) => `Count: ${n}`),
         startWith('Starting counter…'),
-        map(label => (
+        map((label) => (
           <>
             Counter interval (ms):{' '}
             <input
@@ -26,7 +26,7 @@ const ReactiveStateExample = rxComponent(() => {
               min={0}
               max={1000}
               step={100}
-              onChange={e => setDelay(Number(e.currentTarget.value))}
+              onChange={(e) => setDelay(Number(e.currentTarget.value))}
             />
             {delay}
             <div>{label}</div>

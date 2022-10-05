@@ -22,11 +22,11 @@ const EventHandlersExample = rxComponent(() => {
   const [mouseMoves$, onMouseMove] = handler<React.MouseEvent>()
 
   const mousePosition$ = mouseMoves$.pipe(
-    map(event => ({x: event.clientX, y: event.clientY})),
+    map((event) => ({x: event.clientX, y: event.clientY})),
     startWith(null)
   )
   return mousePosition$.pipe(
-    map(position => (
+    map((position) => (
       <div style={STYLE} onMouseMove={onMouseMove}>
         <div style={{width: '100%'}}>
           {position ? (

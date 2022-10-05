@@ -9,12 +9,12 @@ import {
 
 const {distinctUntilChanged} = operators
 
-const FetchComponent = rxComponent(props$ =>
+const FetchComponent = rxComponent((props$) =>
   props$.pipe(
-    map(props => props.url),
+    map((props) => props.url),
     distinctUntilChanged(),
-    switchMap(url => fetch(url).then(response => response.text())),
-    map(responseText => <div>The result was: {responseText}</div>)
+    switchMap((url) => fetch(url).then((response) => response.text())),
+    map((responseText) => <div>The result was: {responseText}</div>)
   )
 )
 
@@ -25,7 +25,7 @@ function FetchExample() {
   return (
     <div>
       <p>
-        {URLS.map(url => (
+        {URLS.map((url) => (
           <button key={url} onClick={() => setCurrentUrl(url)}>
             {url}
           </button>

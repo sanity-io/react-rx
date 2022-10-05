@@ -11,46 +11,44 @@ export interface CodeMirrorModeProps {
   className?: string
 }
 
-export const CodeMirrorMode = rxComponent<CodeMirrorModeProps>(
-  (props$) => {
-    return props$.pipe(
-      switchMap((props) =>
-        runMode(props.children, props.mode).pipe(
-          toArray(),
-          map((lines, i) => (
-            <Code
-              key={`line-${i}`}
-              className={`cm-s-custom${
-                props.className ? ` ${props.className}` : ''
-              }`}
-            >
-              {lines.map((line, lineNo) => (
-                <div
-                  key={`line-${i}-${lineNo}`}
-                  className={`cm-line${
-                    (props.highlighted || []).includes(lineNo + 1)
-                      ? ' CodeMirror-selected'
-                      : ''
-                  }`}
-                >
-                  {line.map((token, i) =>
-                    token.style ? (
-                      <span key={i} className={`cm-${token.style}`}>
-                        {token.token}
-                      </span>
-                    ) : (
-                      token.token
-                    )
-                  )}
-                </div>
-              ))}
-            </Code>
-          ))
-        )
+export const CodeMirrorMode = rxComponent<CodeMirrorModeProps>((props$) => {
+  return props$.pipe(
+    switchMap((props) =>
+      runMode(props.children, props.mode).pipe(
+        toArray(),
+        map((lines, i) => (
+          <Code
+            key={`line-${i}`}
+            className={`cm-s-custom${
+              props.className ? ` ${props.className}` : ''
+            }`}
+          >
+            {lines.map((line, lineNo) => (
+              <div
+                key={`line-${i}-${lineNo}`}
+                className={`cm-line${
+                  (props.highlighted || []).includes(lineNo + 1)
+                    ? ' CodeMirror-selected'
+                    : ''
+                }`}
+              >
+                {line.map((token, i) =>
+                  token.style ? (
+                    <span key={i} className={`cm-${token.style}`}>
+                      {token.token}
+                    </span>
+                  ) : (
+                    token.token
+                  )
+                )}
+              </div>
+            ))}
+          </Code>
+        ))
       )
     )
-  }
-)
+  )
+})
 
 const Code = styled.div`
   font-size: 0.8em;

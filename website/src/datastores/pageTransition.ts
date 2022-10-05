@@ -46,13 +46,13 @@ const transitionStart = (page: Page): TransitionStart => ({
   component: null
 })
 
-const transitionEnd = (page: Page) => (
-  component: React.ComponentType<any>
-): TransitionEnd => ({
-  type: 'transitionEnd',
-  page,
-  component
-})
+const transitionEnd =
+  (page: Page) =>
+  (component: React.ComponentType<any>): TransitionEnd => ({
+    type: 'transitionEnd',
+    page,
+    component
+  })
 
 const INITIAL_TRANSITION_STATE: TransitionState = {
   isTransitioning: true,
@@ -63,7 +63,7 @@ const INITIAL_TRANSITION_STATE: TransitionState = {
 }
 
 export const pageTransition$: Observable<TransitionState> = page$.pipe(
-  switchMap(page =>
+  switchMap((page) =>
     concat(
       of(transitionStart(page)),
       from(page.load()).pipe(map(transitionEnd(page)))

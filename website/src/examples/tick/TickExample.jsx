@@ -12,23 +12,23 @@ import {
 
 const {distinctUntilChanged, sampleTime} = operators
 
-const Ticker = rxComponent(props$ =>
+const Ticker = rxComponent((props$) =>
   props$.pipe(
-    map(props => props.tick),
+    map((props) => props.tick),
     distinctUntilChanged(),
-    switchMap(tick => timer(300).pipe(mapTo(tick))),
+    switchMap((tick) => timer(300).pipe(mapTo(tick))),
     startWith(0),
-    map(tick => `Delayed tick: ${tick}`)
+    map((tick) => `Delayed tick: ${tick}`)
   )
 )
 
-const TickerWithSubTick = rxComponent(props$ =>
+const TickerWithSubTick = rxComponent((props$) =>
   props$.pipe(
-    map(props => props.tick),
+    map((props) => props.tick),
     distinctUntilChanged(),
-    switchMap(tick => timer(0, 10).pipe(map(subtick => ({tick, subtick})))),
+    switchMap((tick) => timer(0, 10).pipe(map((subtick) => ({tick, subtick})))),
     sampleTime(20),
-    map(props => (
+    map((props) => (
       <div>
         {props.tick}:{props.subtick}
       </div>
@@ -38,7 +38,7 @@ const TickerWithSubTick = rxComponent(props$ =>
 
 const TickExample = rxComponent(
   timer(0, 1000).pipe(
-    map(tick => (
+    map((tick) => (
       <>
         <div>Tick: {tick}</div>
         <Ticker tick={tick} />

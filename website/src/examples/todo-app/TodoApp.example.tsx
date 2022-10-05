@@ -29,16 +29,16 @@ const TodoApp = rxComponent(() => {
   const [onSubmit$, handleSubmit] = handler<FormEvent<HTMLFormElement>>()
 
   const text$ = onInput$.pipe(
-    map(e => e.currentTarget.value),
+    map((e) => e.currentTarget.value),
     startWith('')
   )
 
   const items$ = onSubmit$.pipe(
-    tap(e => e.preventDefault()),
+    tap((e) => e.preventDefault()),
     withLatestFrom(text$),
     map(([_, text]) => text),
-    filter(text => text.length > 0),
-    map(text => ({text, id: Date.now()})),
+    filter((text) => text.length > 0),
+    map((text) => ({text, id: Date.now()})),
     scan((items: TodoItem[], item) => items.concat(item), []),
     startWith([])
   )
@@ -67,7 +67,7 @@ interface ListProps {
 function TodoList(props: ListProps) {
   return (
     <ul>
-      {props.items.map(item => (
+      {props.items.map((item) => (
         <li key={item.id}>{item.text}</li>
       ))}
     </ul>

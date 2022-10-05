@@ -37,14 +37,14 @@ const INITIAL_COMPONENT = () => (
   </>
 )
 
-export const LoadPage = rxComponent<Props>(props$ => {
+export const LoadPage = rxComponent<Props>((props$) => {
   return props$.pipe(
-    map(props => props.page),
-    switchMap(page =>
+    map((props) => props.page),
+    switchMap((page) =>
       concat(
         of({title: page.title, isLoading: true, component: INITIAL_COMPONENT}),
         from(page.load()).pipe(
-          map(component => ({
+          map((component) => ({
             isLoading: false,
             title: page.title,
             component

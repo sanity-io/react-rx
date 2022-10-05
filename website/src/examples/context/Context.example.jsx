@@ -6,7 +6,7 @@ import {
   context,
   state
 } from '../_utils/globalScope'
-import { tap } from "rxjs/operators";
+import {tap} from 'rxjs/operators'
 //@endimport
 
 const ModeContext = React.createContext({

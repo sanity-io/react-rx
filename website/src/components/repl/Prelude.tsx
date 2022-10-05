@@ -39,7 +39,7 @@ export const Prelude = (props: Props) => {
   const [isOpen, setOpen] = React.useState(false)
   return (
     <Details>
-      <Summary onClick={() => setOpen(current => !current)}>
+      <Summary onClick={() => setOpen((current) => !current)}>
         {isOpen ? 'hide prelude' : 'show prelude'}
       </Summary>
       <StyledCodeMirrorMode mode={props.mode}>

@@ -41,13 +41,12 @@ const LinkWrapper = styled.div`
   padding: 0.5em 1.2em 0.5em 0;
 `
 
-const omitProps = <T extends React.ComponentType>(
-  Component: T,
-  omitProps: string[]
-) => (props: React.ComponentProps<T>) => {
-  const omitted: any = omit(props, omitProps)
-  return <Component {...omitted} />
-}
+const omitProps =
+  <T extends React.ComponentType>(Component: T, omitProps: string[]) =>
+  (props: React.ComponentProps<T>) => {
+    const omitted: any = omit(props, omitProps)
+    return <Component {...omitted} />
+  }
 
 const PageLink = styled(omitProps(Link, ['isActive', 'isTransitioningTo']))<{
   isActive: boolean

@@ -11,9 +11,8 @@ const numberReactElement$ = justNumbers$.pipe(
   map((num) => <div>The number is {num}!</div>)
 )
 
-const [onSpeedChange$, onSpeedChange] = observableCallback<
-  React.SyntheticEvent<HTMLInputElement>
->()
+const [onSpeedChange$, onSpeedChange] =
+  observableCallback<React.SyntheticEvent<HTMLInputElement>>()
 
 const speed$: Observable<number> = onSpeedChange$.pipe(
   map((event) => Number(event.currentTarget.value)),

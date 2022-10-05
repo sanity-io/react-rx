@@ -46,10 +46,7 @@ const COMMON_PRELUDE = `import {rxComponent, observeEvent, observeContext, obser
 }`
 
 const stripImports = (str: string) => {
-  return str
-    .split('//@endimport')
-    .slice(-1)[0]
-    .trim()
+  return str.split('//@endimport').slice(-1)[0].trim()
 }
 
 const CODEMIRROR_MODE = {
@@ -83,21 +80,21 @@ const Header = styled.div`
 const BORDER_RADIUS = 0.5
 const Column = styled.div<{type: 'editor' | 'result'}>`
   @media (min-width: 1280px) {
-    border-radius: ${props =>
+    border-radius: ${(props) =>
       props.type === 'editor'
         ? `${BORDER_RADIUS}em 0 0 ${BORDER_RADIUS}em`
         : `0 ${BORDER_RADIUS}em ${BORDER_RADIUS}em 0`};
-    padding: ${props =>
+    padding: ${(props) =>
       props.type === 'editor' ? '0 1px 0.5em 0' : '0 0 0.5em 1px'};
   }
   @media (max-width: 1279px) {
-    border-radius: ${props =>
+    border-radius: ${(props) =>
       props.type === 'editor'
         ? `${BORDER_RADIUS}em ${BORDER_RADIUS}em 0 0`
         : `0 0 ${BORDER_RADIUS}em ${BORDER_RADIUS}em`};
-    padding: ${props => (props.type === 'editor' ? '0' : '0 0 0.5em 0')};
+    padding: ${(props) => (props.type === 'editor' ? '0' : '0 0 0.5em 0')};
   }
-  flex: 0 0 ${props => (props.type === 'editor' ? 60 : 40)}%;
+  flex: 0 0 ${(props) => (props.type === 'editor' ? 60 : 40)}%;
   background: #282c34;
 `
 
@@ -133,8 +130,8 @@ export function CodeBlock(props: Props) {
             ) : (
               <EvalCode
                 code={transformed}
-                evalWith={src => evalRender(src, props.scope)}
-                renderError={error => (
+                evalWith={(src) => evalRender(src, props.scope)}
+                renderError={(error) => (
                   <ShowError title="Runtime error">{error.message}</ShowError>
                 )}
               />

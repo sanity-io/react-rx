@@ -24,7 +24,7 @@ function expandRange(rangeStr: string) {
   if (rangeStr.includes('-')) {
     const numRange = rangeStr
       .split('-')
-      .map(n => Number(n))
+      .map((n) => Number(n))
       .sort()
     return range(numRange[numRange.length - 1], numRange[0])
   }

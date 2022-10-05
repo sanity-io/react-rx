@@ -28,7 +28,7 @@ const ErrorsExample = rxComponent(() => {
   )
 
   return merge(timer$, errors$).pipe(
-    map(n => ({number: n})),
+    map((n) => ({number: n})),
     catchError((error, caught$) => {
       return merge(
         of({error}),
@@ -38,7 +38,7 @@ const ErrorsExample = rxComponent(() => {
         )
       )
     }),
-    map(props => (
+    map((props) => (
       <div>
         {props.error ? (
           props.retrying ? (

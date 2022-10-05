@@ -54,12 +54,12 @@ export const components = {
   }
 }
 
-const hash$ = location$.pipe(map(location => location.hash))
+const hash$ = location$.pipe(map((location) => location.hash))
 
 const BookmarkedLink = rxComponent<{
   href: string
   children: React.ReactNode
-}>(props$ =>
+}>((props$) =>
   combineLatest([props$, hash$]).pipe(
     map(([props, hash]) => (
       <a href={props.href} className={hash === props.href ? 'selected' : ''}>

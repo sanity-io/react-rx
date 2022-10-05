@@ -5,12 +5,12 @@ import styled from 'styled-components'
 import {ReactLogo} from './React'
 
 const StyledRxJSLogo = styled(RxJSLogo)`
-  width: ${props => props.width};
+  width: ${(props) => props.width};
   opacity: 0.7;
   position: absolute;
 `
 const StyledReactLogo = styled(ReactLogo)`
-  width: ${props => props.width};
+  width: ${(props) => props.width};
   opacity: 0.7;
   position: absolute;
 `

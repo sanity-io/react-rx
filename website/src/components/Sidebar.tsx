@@ -44,9 +44,9 @@ const SidebarWrapper = styled.div<{isOpen: boolean}>`
   }
   ${media.lessThan('large')} {
     border-radius: 0 0.5em 0.5em 0;
-    box-shadow: ${props =>
+    box-shadow: ${(props) =>
       props.isOpen ? `0 4px 10px 0 ${COLORS.shadow}` : '0'};
-    background-color: ${props =>
+    background-color: ${(props) =>
       props.isOpen ? '#eff0f3' : COLORS.header.background};
   }
 `
@@ -75,9 +75,9 @@ export const Sidebar = (props: {
         active={isOpen}
         marginLeft="0"
         marginTop="0"
-        onClick={() => setOpen(isOpen => !isOpen)}
+        onClick={() => setOpen((isOpen) => !isOpen)}
       />
-      <SidebarContent onClick={e => setOpen(false)} isOpen={isOpen}>
+      <SidebarContent onClick={(e) => setOpen(false)} isOpen={isOpen}>
         <SidebarContentInner>
           <h4>{props.heading}</h4>
           {props.children}

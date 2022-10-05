@@ -18,7 +18,7 @@ export function runMode(
   modespec: ModeSpec | null,
   options?: {state?: any; tabSize: number}
 ): Observable<Token[]> {
-  return new Observable(subscriber => {
+  return new Observable((subscriber) => {
     const mode: Mode<any> = CodeMirror.getMode(CodeMirror.defaults, modespec)
     const lines = CodeMirror.splitLines(source)
     const state = (options && options.state) || CodeMirror.startState(mode)

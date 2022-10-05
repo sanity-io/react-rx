@@ -6,7 +6,7 @@ import * as React from 'react'
 
 export const ExamplesPage = rxComponent(
   location$.pipe(
-    map(location => (
+    map((location) => (
       <Examples selectedExampleName={location.hash?.substring(1)} />
     ))
   )

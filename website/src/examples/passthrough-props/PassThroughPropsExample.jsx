@@ -19,7 +19,7 @@ const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(
   share()
 )
 
-const TimeDistance = rxComponent(props$ =>
+const TimeDistance = rxComponent((props$) =>
   combineLatest([currentTime$, props$]).pipe(
     map(([currentTime, ownerProps]) =>
       formatDistance(ownerProps.time, currentTime, {
