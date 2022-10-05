@@ -3,15 +3,23 @@
   "extends": ["github>sanity-io/renovate-presets//ecosystem/auto"],
   "packageRules": [
     {
-      "packageNames": ["react-rx"],
-      "rangeStrategy": "pin",
-      "automerge": true,
-      "semanticCommitType": "chore",
-      "schedule": ["at any time"]
-    },
-    {
       "matchFiles": ["website/package.json"],
-      "extends": [":semanticCommitTypeAll(chore)"]
+      "extends": [":semanticCommitTypeAll(chore)"],
+      "groupName": "website dependencies",
+      "separateMajorMinor": false,
+      "groupSlug": "website",
+      "packageRules": [
+        {
+          "matchPackagePatterns": [
+            "*"
+          ],
+          "groupName": "website dependencies",
+          "groupSlug": "website"
+        }
+      ],
+      "lockFileMaintenance": {
+        "enabled": false
+      }
     }
   ]
 }
