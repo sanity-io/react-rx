@@ -1,6 +1,5 @@
 import {BehaviorSubject, Observable} from 'rxjs'
-import {useCallback, useRef} from 'react'
-import {useIsomorphicEffect} from './useIsomorphicEffect'
+import {useCallback, useEffect, useRef} from 'react'
 import {distinctUntilChanged} from 'rxjs/operators'
 
 /**
@@ -33,7 +32,7 @@ export function useAsObservable<T, K = T>(
 
   const [observable] = ref.current
 
-  useIsomorphicEffect(() => {
+  useEffect(() => {
     if (!ref.current) {
       return
     }
@@ -41,11 +40,22 @@ export function useAsObservable<T, K = T>(
     subject.next(value)
   }, [value, ref])
 
-  useIsomorphicEffect(() => {
+  const shouldRestoreSubscriptionRef = useRef(false)
+  useEffect(() => {
+    if (shouldRestoreSubscriptionRef.current) {
+      if (!ref.current) {
+        ref.current = setup()
+      }
+      shouldRestoreSubscriptionRef.current = false
+    }
+
     return () => {
       if (!ref.current) {
         return
       }
+      // React StrictMode will call effects as `setup + teardown + setup` thus we can't trust this callback as "react is about to unmount"
+      // Tracking this ref lets us set the subscription back up on the next `setup` call if needed, and if it really did unmounted then all is well
+      shouldRestoreSubscriptionRef.current = true
       const [, subject] = ref.current
       subject.complete()
       ref.current = undefined
