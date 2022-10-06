@@ -64,12 +64,12 @@
     "clean": "rimraf dist",
     "dev": "cd website && npm run dev",
     "prepublishOnly": "npm run clean && npm run build",
-    "postpublish": "npm run clean",
     "watch": "run-p \"build:* -- --watch\"",
     "test": "jest",
     "lint": "eslint --cache ."
   },
   "dependencies": {
+    "@sanity/semantic-release-preset": "^2.0.1",
     "observable-callback": "^1.0.1",
     "use-sync-external-store": "^1.2.0"
   },
