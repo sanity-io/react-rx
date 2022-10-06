@@ -37,11 +37,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run prepublishOnly
-      - uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
+      - run: npm run -w react-rx-website build
         if: github.event.inputs.test != 'false'
-        with:
-          name: pkg-dist
-          path: dist/
 
   test:
     needs: build
@@ -69,24 +66,8 @@ jobs:
       - run: npm install
       - run: npm test
 
-  website:
-    needs: build
-    if: github.event.inputs.test != 'false'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
-      - uses: actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b # tag=v3
-        with:
-          node-version: lts/*
-          cache: npm
-      - run: npm install
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3
-        with:
-          name: pkg-dist
-      - run: npm run -w react-rx-website build
-
   release:
-    needs: [test, website]
+    needs: test
     if: always() && github.event.inputs.release == 'true' && needs.test.result != 'failure' && needs.test.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
