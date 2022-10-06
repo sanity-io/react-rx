@@ -3,6 +3,11 @@
   "extends": ["github>sanity-io/renovate-presets//ecosystem/auto"],
   "packageRules": [
     {
+      "description": "There's a problem with the typings if upgrading to 4.8, until that's resolved pause renovate from creating PRs prompting to update TS",
+      "packageNames": ["typescript"],
+      "allowedVersions": "<=4.7"
+    },
+    {
       "matchFiles": ["website/package.json"],
       "extends": [":semanticCommitTypeAll(chore)"],
       "groupName": "website dependencies",
@@ -18,6 +23,21 @@
       "lockFileMaintenance": {
         "enabled": false
       }
+    },
+    {
+      "description": "This and the rest of the package ruls are for deps that we can't upgrade to without migrating through breaking changes. These rules tells renovate to not create PRs for them, for now",
+      "packageNames": ["webpack"],
+      "allowedVersions": "<=4"
+    },
+    {
+      "packageNames": [
+        "clean-webpack-plugin",
+        "css-loader",
+        "tsconfig-paths",
+        "webpack-cli",
+        "webpack-dev-server"
+      ],
+      "allowedVersions": "<=3"
     }
   ]
 }
