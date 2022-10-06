@@ -23,6 +23,21 @@
       "allowedVersions": "<=8"
     },
     {
+      "description": "Recent versions of babel pulls in @ampproject/remapping in @babel/core, creating ESM errors when trying to build in webpack",
+      "packageNames": [
+        "@babel/core",
+        "@babel/generator",
+        "@babel/plugin-proposal-class-properties",
+        "@babel/plugin-proposal-optional-chaining",
+        "@babel/plugin-transform-typescript",
+        "@babel/preset-env",
+        "@babel/preset-react",
+        "@babel/preset-typescript",
+        "@babel/standalone"
+      ],
+      "allowedVersions": "<=7.16"
+    },
+    {
       "packageNames": ["ts-loader", "rxjs"],
       "allowedVersions": "<=7"
     },
@@ -51,6 +66,16 @@
     {
       "packageNames": ["remark-emoji"],
       "allowedVersions": "<=2"
+    },
+    {
+      "packageNames": [
+        "@mdx-js/loader",
+        "@mdx-js/mdx",
+        "@mdx-js/react",
+        "babel-plugin-styled-components",
+        "style-loader"
+      ],
+      "allowedVersions": "<=1"
     },
     {
       "packageNames": [
