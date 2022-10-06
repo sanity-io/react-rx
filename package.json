@@ -113,7 +113,7 @@
     "@mdx-js/loader": "1.6.22",
     "@mdx-js/mdx": "1.6.22",
     "@mdx-js/react": "1.6.22",
-    "@types/codemirror": "0.0.96",
+    "@types/codemirror": "0.0.109",
     "@types/history": "4.7.6",
     "@types/mdx-js__react": "1.5.5",
     "@webhotelier/webpack-fast-refresh": "5.0.1",
