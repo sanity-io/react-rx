@@ -13,18 +13,29 @@
       "ignorePresets": ["github>sanity-io/renovate-presets//ecosystem/group-update-types"],
       "groupName": "website dependencies",
       "groupSlug": "website",
-      "matchPackagePatterns": [
-        "*"
-      ],
-      "matchUpdateTypes": [
-        "major",
-        "minor",
-        "patch"
-      ]
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "separateMajorMinor": false
     },
     {
       "description": "This and the rest of the package ruls are for deps that we can't upgrade to without migrating through breaking changes. These rules tells renovate to not create PRs for them, for now",
-      "packageNames": ["webpack"],
+      "packageNames": ["ts-node"],
+      "allowedVersions": "<=8"
+    },
+    {
+      "packageNames": ["ts-loader", "rxjs"],
+      "allowedVersions": "<=7"
+    },
+    {
+      "packageNames": ["copy-webpack-plugin", "remark-slug", "rxjs"],
+      "allowedVersions": "<=6"
+    },
+    {
+      "packageNames": ["codemirror", "history"],
+      "allowedVersions": "<=5"
+    },
+    {
+      "packageNames": ["webpack", "html-webpack-plugin"],
       "allowedVersions": "<=4"
     },
     {
@@ -36,6 +47,28 @@
         "webpack-dev-server"
       ],
       "allowedVersions": "<=3"
+    },
+    {
+      "packageNames": ["remark-emoji"],
+      "allowedVersions": "<=2"
+    },
+    {
+      "packageNames": [
+        "@mdx-js/loader",
+        "@mdx-js/mdx",
+        "@mdx-js/react",
+        "babel-plugin-styled-components",
+        "style-loader"
+      ],
+      "allowedVersions": "<=1"
+    },
+    {
+      "packageNames": ["react-refresh"],
+      "allowedVersions": "<=0.8"
+    },
+    {
+      "packageNames": ["@types/codemirror"],
+      "allowedVersions": "<=0.0"
     }
   ]
 }
