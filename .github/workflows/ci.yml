@@ -5,7 +5,7 @@ on:
   pull_request:
   # Build on commits pushed to branches without a PR if it's in the allowlist
   push:
-    branches: [main]
+    branches: [current]
   # https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow
   # https://github.com/sanity-io/semantic-release-preset/actions/workflows/ci.yml
   workflow_dispatch:
