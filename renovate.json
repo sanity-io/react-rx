@@ -67,6 +67,7 @@
         "@mdx-js/mdx",
         "@mdx-js/react",
         "babel-plugin-styled-components",
+        "html-loader",
         "style-loader"
       ],
       "allowedVersions": "<=1"
