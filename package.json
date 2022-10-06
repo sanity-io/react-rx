@@ -69,7 +69,7 @@
     "lint": "eslint --cache ."
   },
   "dependencies": {
-    "observable-callback": "^1.0.1",
+    "observable-callback": "^1.0.2",
     "use-sync-external-store": "^1.2.0"
   },
   "devDependencies": {
