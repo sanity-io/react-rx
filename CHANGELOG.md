@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.3](https://github.com/sanity-io/react-rx/compare/v2.1.2...v2.1.3) (2022-10-06)
+
+### Bug Fixes
+
+- mark deprecated APIs with TSDoc ([#24](https://github.com/sanity-io/react-rx/issues/24)) ([0f2f2bf](https://github.com/sanity-io/react-rx/commit/0f2f2bf66089e2a37450513bd472d7ba2b1b37e2))
+
 ## [2.1.2](https://github.com/sanity-io/react-rx/compare/v2.1.1...v2.1.2) (2022-10-06)
 
 ### Bug Fixes
