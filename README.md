@@ -1,3 +1,5 @@
+[![CI & Release](https://github.com/sanity-io/react-rx/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/sanity-io/react-rx/actions/workflows/ci.yml) [![npm version](https://img.shields.io/npm/v/react-rx.svg)](https://www.npmjs.com/package/react-rx)
+
 [![react-rx-some-smaller](https://user-images.githubusercontent.com/81981/194187624-9abd09da-bf03-4886-b512-78c1f22fc2de.png)](https://react-rx.dev/)
 
 > Hooks and utilities for combining React with RxJS Observables
@@ -20,3 +22,12 @@ Although they share a lot of similarities, and reactiveComponent is built on top
 - [Reactive components](https://react-rx.dev/guide#reactive-components)
 - [Observable hooks](https://react-rx.dev/guide#observable-hooks)
 - [Code examples](https://react-rx.dev/examples)
+
+---
+
+# Contributing and publishing new versions to npm
+
+Run the ["CI & Release" workflow](https://github.com/sanity-io/react-rx/actions/workflows/ci.yml).
+Make the default branch, `current`, should be preselected. Check "Release new version" and press "Run workflow'.
+
+Semantic release will only release on configured branches, so it is safe to run release on any branch.
