@@ -14,8 +14,7 @@
       "groupName": "website dependencies",
       "groupSlug": "website",
       "matchPackagePatterns": ["*"],
-      "matchUpdateTypes": ["major", "minor", "patch"],
-      "separateMajorMinor": false
+      "matchUpdateTypes": ["major", "minor", "patch"]
     },
     {
       "description": "This and the rest of the package ruls are for deps that we can't upgrade to without migrating through breaking changes. These rules tells renovate to not create PRs for them, for now",
