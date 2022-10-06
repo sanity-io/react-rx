@@ -12,17 +12,21 @@
     "url": "git+https://github.com/bjoerge/react-rx.git"
   },
   "license": "MIT",
-  "author": "Bjørge Næss <bjoerge@gmail.com>",
+  "author": "Sanity.io <hello@sanity.io>",
+  "contributors": [
+    "Bjørge Næss <bjoerge@gmail.com>",
+    "Cody Olsen <stipsan@gmail.com> (https://github.com/stipsan)"
+  ],
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/cjs/index.d.ts",
-  "workspaces": [
-    "website",
-    "."
-  ],
   "files": [
     "dist",
     "src"
+  ],
+  "workspaces": [
+    "website",
+    "."
   ],
   "scripts": {
     "build": "npm run build:es2015 && npm run build:esm && npm run build:cjs",
