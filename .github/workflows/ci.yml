@@ -35,7 +35,7 @@ jobs:
           node-version: lts/*
           cache: npm
       - run: npm ci
-      - run: npm run lint -- --ignore-pattern 'website/*'
+      - run: npx eslint . --ignore-pattern 'website/*'
       - run: npm run prepublishOnly
 
   test:

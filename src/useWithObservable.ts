@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import {Observable} from 'rxjs'
 import {useObservable} from './useObservable'
 import {useAsObservable} from './useAsObservable'

@@ -21,6 +21,6 @@ jobs:
           node-version: lts/*
           cache: npm
       - run: npm ci
-      - run: npm run lint website
+      - run: npx eslint website
       - run: npm run build
         working-directory: website

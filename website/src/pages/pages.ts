@@ -7,6 +7,7 @@ export interface Page {
   load: () => Promise<React.ComponentType<any>>
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 function get<T extends {}, K extends keyof T>(key: K): (res: T) => T[K] {
   return (res: T) => res[key]
 }

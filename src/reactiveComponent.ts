@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import {Observable} from 'rxjs'
 import {wrapDisplayName} from './displayName'
 import {useAsObservable} from './useAsObservable'
@@ -26,6 +27,7 @@ function fromComponent<Props>(component: Component<Props>): FunctionComponent<Pr
   return wrappedComponent
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 function fromObservable<Props>(input$: Observable<ReactNode>): FunctionComponent<{}> {
   return function ReactiveComponent() {
     return createElement(Fragment, null, useObservable<ReactNode>(input$))
@@ -47,6 +49,7 @@ type ForwardRefComponent<RefType, Props> = (
   ref: Ref<RefType>,
 ) => Observable<ReactNode>
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/ban-types
 export function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<RefType, Props>) {
   const wrappedComponent = reactForwardRef((props: Props, ref: Ref<RefType>) => {
     return createElement(
