@@ -7,6 +7,7 @@ import {distinctUntilChanged} from 'rxjs/operators'
  * Returns an observable representing updates to any React value (props, state or any other calculated value)
  * Note: the returned observable is the same instance throughout the component lifecycle
  * @param value
+ * @deprecated use an `of` operator and `useMemoObservable` instead for a faster, more robust and  siimpler solution
  */
 export function useAsObservable<T>(value: T): Observable<T>
 export function useAsObservable<T, K>(
