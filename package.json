@@ -33,11 +33,11 @@
   ],
   "homepage": "https://react-rx.dev",
   "bugs": {
-    "url": "https://github.com/bjoerge/react-rx/issues"
+    "url": "https://github.com/sanity-io/react-rx/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bjoerge/react-rx.git"
+    "url": "git+https://github.com/sanity-io/react-rx.git"
   },
   "license": "MIT",
   "author": "Sanity.io <hello@sanity.io>",
