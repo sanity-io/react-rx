@@ -13,7 +13,8 @@ module.exports = function createConfig(env) {
       filename: '[name]-[hash].js'
     },
     resolve: {
-      extensions: ['.tsx', '.ts', '.js']
+      extensions: ['.tsx', '.ts', '.js'],
+      mainFields: ['browser', 'main']
     },
     plugins: [
       new CleanWebpackPlugin(),
