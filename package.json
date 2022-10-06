@@ -20,6 +20,10 @@
     "website",
     "."
   ],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "npm run build:es2015 && npm run build:esm && npm run build:cjs",
     "build:es2015": "tsc --module es2015 --target es2015 --outDir dist/es2015",
