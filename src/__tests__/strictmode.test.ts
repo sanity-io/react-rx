@@ -39,11 +39,14 @@ test('Strict mode should trigger double mount effects and re-renders', async () 
 })
 
 test('Strict mode should unsubscribe the source observable on unmount', () => {
-  let subscribed = false
+  const subscribed: number[] = []
+  const unsubscribed: number[] = []
+  let nextId = 0
   const observable = new Observable(() => {
-    subscribed = true
+    const id = nextId++
+    subscribed.push(id)
     return () => {
-      subscribed = false
+      unsubscribed.push(id)
     }
   })
 
@@ -53,9 +56,9 @@ test('Strict mode should unsubscribe the source observable on unmount', () => {
   }
 
   const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
-  expect(subscribed).toBe(true)
+  expect(subscribed).toEqual([0, 1])
   rerender(createElement(StrictMode, null, createElement('div')))
-  expect(subscribed).toBe(false)
+  expect(unsubscribed).toEqual([0, 1])
 })
 
 test('useAsObservable should work in strict mode', async () => {
