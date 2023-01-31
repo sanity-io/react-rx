@@ -1,5 +1,5 @@
 import {BehaviorSubject, Observable, of} from 'rxjs'
-import {useObservable} from '../useObservable'
+import {useMemoObservable, useObservable} from '../useObservable'
 import {createElement, Fragment, StrictMode, useEffect} from 'react'
 import {act, render} from '@testing-library/react'
 import {useAsObservable} from '../useAsObservable'
@@ -59,6 +59,29 @@ test('Strict mode should unsubscribe the source observable on unmount', () => {
   expect(subscribed).toEqual([0, 1])
   rerender(createElement(StrictMode, null, createElement('div')))
   expect(unsubscribed).toEqual([0, 1])
+})
+
+test('useMemoObservable should unsubscribe the source observable on unmount', () => {
+  const subscribed: number[] = []
+  const unsubscribed: number[] = []
+  let nextId = 0
+  function ObservableComponent() {
+    useMemoObservable(() => {
+      return new Observable(() => {
+        const id = nextId++
+        subscribed.push(id)
+        return () => {
+          unsubscribed.push(id)
+        }
+      })
+    }, [])
+    return createElement(Fragment, null)
+  }
+
+  const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
+  expect(subscribed).toEqual([0, 1, 2])
+  rerender(createElement(StrictMode, null, createElement('div')))
+  expect(unsubscribed).toEqual([0, 1, 2])
 })
 
 test('useAsObservable should work in strict mode', async () => {
