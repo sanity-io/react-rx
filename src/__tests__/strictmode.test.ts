@@ -1,6 +1,7 @@
 import {act, render} from '@testing-library/react'
 import {createElement, Fragment, StrictMode, useEffect} from 'react'
 import {BehaviorSubject, Observable} from 'rxjs'
+import {expect, test} from 'vitest'
 
 import {useObservable} from '../useObservable'
 

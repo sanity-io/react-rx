@@ -71,7 +71,7 @@
     "dev": "cd website && npm run dev",
     "prepublishOnly": "npm run build",
     "watch": "npm run build -- --watch",
-    "test": "jest",
+    "test": "vitest run",
     "lint": "eslint --cache ."
   },
   "browserslist": "extends @sanity/browserslist-config",
@@ -85,7 +85,6 @@
     "@sanity/semantic-release-preset": "^4.1.8",
     "@testing-library/dom": "^10.1.0",
     "@testing-library/react": "^16.0.0",
-    "@types/jest": "^29.5.3",
     "@types/node": "^18.17.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -98,9 +97,6 @@
     "eslint-plugin-react-compiler": "0.0.0-experimental-51a85ea-20240601",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-simple-import-sort": "^12.1.0",
-    "jest": "^29.6.2",
-    "jest-environment-jsdom": "^29.6.2",
-    "jsdom": "^20.0.3",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.3.1",
     "react": "^18.3.1",
@@ -108,8 +104,8 @@
     "react-test-renderer": "^18.3.1",
     "rxjs": "^7.8.1",
     "semantic-release": "^24.0.0",
-    "ts-jest": "^29.1.1",
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+    "vitest": "^1.6.0"
   },
   "peerDependencies": {
     "react": "^18.3 || >=19.0.0-rc",
