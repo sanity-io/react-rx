@@ -3,6 +3,7 @@ import {useObservable} from '../useObservable'
 import {asyncScheduler, Observable, of, scheduled, Subject, timer} from 'rxjs'
 import {mapTo} from 'rxjs/operators'
 import {createElement, Fragment} from 'react'
+import {test, expect} from 'vitest'
 
 test('should subscribe immediately on component mount and unsubscribe on component unmount', () => {
   let subscribed = false

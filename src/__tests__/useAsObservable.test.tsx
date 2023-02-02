@@ -2,6 +2,7 @@ import {useAsObservable} from '../useAsObservable'
 import React from 'react'
 import {renderHook} from '@testing-library/react'
 import {Observable} from 'rxjs'
+import {test, expect} from 'vitest'
 
 test('the returned observable should receive a new value when component is rendered with a new value', () => {
   const receivedValues: string[] = []

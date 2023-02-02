@@ -3,6 +3,7 @@ import {useMemoObservable, useObservable} from '../useObservable'
 import {createElement, Fragment, StrictMode, useEffect} from 'react'
 import {act, render} from '@testing-library/react'
 import {useAsObservable} from '../useAsObservable'
+import {test, expect} from 'vitest'
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
