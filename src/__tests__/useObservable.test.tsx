@@ -2,6 +2,7 @@ import {act, render, renderHook} from '@testing-library/react'
 import {createElement, Fragment} from 'react'
 import {asyncScheduler, Observable, of, scheduled, Subject, timer} from 'rxjs'
 import {mapTo} from 'rxjs/operators'
+import {expect, test} from 'vitest'
 
 import {useObservable} from '../useObservable'
 
