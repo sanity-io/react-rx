@@ -16,16 +16,17 @@ test('Strict mode should trigger double mount effects and re-renders', async () 
   const returnedValues: unknown[] = []
   let mountCount = 0
   function ObservableComponent() {
+    const observedValue = useObservable(observable, 0)
     useEffect(() => {
       mountCount++
     }, [])
-    const observedValue = useObservable(observable)
     returnedValues.push(observedValue)
     return createElement(Fragment, null, observedValue)
   }
 
   const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
-  expect(mountCount).toEqual(2)
+
+  expect(mountCount).toBe(2)
 
   expect(returnedValues).toEqual([0, 0])
 
@@ -80,16 +81,16 @@ test('useMemoObservable should unsubscribe the source observable on unmount', ()
   }
 
   const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
-  expect(subscribed).toEqual([0, 1, 2])
+  expect(subscribed).toEqual([0, 1])
   rerender(createElement(StrictMode, null, createElement('div')))
-  expect(unsubscribed).toEqual([0, 1, 2])
+  expect(unsubscribed).toEqual([0, 1])
 })
 
 test('useAsObservable should work in strict mode', async () => {
   const returnedValues: unknown[] = []
   function ObservableComponent(props: {count: number}) {
     const count$ = useAsObservable(props.count)
-    const count = useObservable(count$)
+    const count = useObservable(count$, props.count)
     returnedValues.push(count)
     return createElement(Fragment, null, 'ok')
   }
