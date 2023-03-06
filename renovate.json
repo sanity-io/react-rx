@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>sanity-io/renovate-presets//ecosystem/auto"],
+  "extends": ["github>sanity-io/renovate-presets//ecosystem/auto", ":reviewer(team:ecosystem)"],
   "packageRules": [
     {
       "description": "There's a problem with the typings if upgrading to 4.8, until that's resolved pause renovate from creating PRs prompting to update TS",
