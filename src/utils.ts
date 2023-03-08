@@ -4,7 +4,7 @@ import {observableCallback} from 'observable-callback'
 import {startWith} from 'rxjs/operators'
 import {Dispatch, SetStateAction, useContext, useRef, useState, Context} from 'react'
 
-const createState = <T>(initialState: T) => observableCallback(startWith<T, T>(initialState))
+const createState = <T>(initialState: T) => observableCallback(startWith<T>(initialState))
 
 export function observeState<T>(
   initial: T | (() => T),
