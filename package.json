@@ -64,7 +64,7 @@
     "dev": "cd website && npm run dev",
     "prepublishOnly": "npm run clean && npm run build",
     "watch": "run-p \"build:* -- --watch\"",
-    "test": "vitest",
+    "test": "vitest run",
     "lint": "eslint --cache ."
   },
   "dependencies": {
