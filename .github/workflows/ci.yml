@@ -35,7 +35,7 @@ jobs:
           node-version: lts/*
           cache: npm
       - run: npm ci
-      - uses: EndBug/add-and-commit@d4d066316a2a85974a05efb42be78f897793c6d9 # tag=v9
+      - uses: EndBug/add-and-commit@b97a9fe893e2984b63d00feaee5922e16ab1cc1e # v9
         with:
           add: 'website/src/pages/Index/ReactRxReadme.md'
           message: 'chore(bot): sync README.md with ReactRxReadme.md'
