@@ -73,7 +73,7 @@
     "use-sync-external-store": "^1.2.0"
   },
   "devDependencies": {
-    "@sanity/semantic-release-preset": "^2.0.2",
+    "@sanity/semantic-release-preset": "^4.0.0",
     "@testing-library/dom": "^8.18.1",
     "@testing-library/react": "^13.4.0",
     "@types/jest": "^29.1.1",
