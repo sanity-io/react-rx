@@ -68,7 +68,7 @@ Sometimes your state comes as a function of an event triggered by the user. Let'
 import {useEvent, rxComponent} from 'react-rx'
 
 const MouseTracker = rxComponent(() => {
-  const [mouseMove$, onMouseMove] = event()
+  const [mouseMove$, handleMouseMove] = event()
 
   return mouseMove$.pipe(
     map((event) => (
