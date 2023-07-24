@@ -1,16 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>sanity-io/renovate-presets//ecosystem/auto", ":reviewer(team:ecosystem)"],
+  "extends": [
+    "github>sanity-io/renovate-config",
+    ":reviewer(team:ecosystem)"
+  ],
   "packageRules": [
     {
       "description": "There's a problem with the typings if upgrading to 4.8, until that's resolved pause renovate from creating PRs prompting to update TS",
-      "packageNames": ["typescript"],
+      "matchPackageNames": ["typescript"],
       "allowedVersions": "<=4.7"
     },
     {
-      "matchFiles": ["website/package.json"],
+      "matchFileNames": ["website/package.json"],
       "extends": [":semanticCommitTypeAll(chore)"],
-      "ignorePresets": ["github>sanity-io/renovate-presets//ecosystem/group-update-types"],
+      "ignorePresets": [
+        "github>sanity-io/renovate-config:group-recommended"
+      ],
       "groupName": "website dependencies",
       "groupSlug": "website",
       "matchPackagePatterns": ["*"],
@@ -18,27 +23,27 @@
     },
     {
       "description": "This and the rest of the package ruls are for deps that we can't upgrade to without migrating through breaking changes. These rules tells renovate to not create PRs for them, for now",
-      "packageNames": ["ts-node"],
+      "matchPackageNames": ["ts-node"],
       "allowedVersions": "<=8"
     },
     {
-      "packageNames": ["ts-loader", "rxjs"],
+      "matchPackageNames": ["ts-loader", "rxjs"],
       "allowedVersions": "<=7"
     },
     {
-      "packageNames": ["copy-webpack-plugin", "remark-slug", "rxjs"],
+      "matchPackageNames": ["copy-webpack-plugin", "remark-slug", "rxjs"],
       "allowedVersions": "<=6"
     },
     {
-      "packageNames": ["codemirror", "history"],
+      "matchPackageNames": ["codemirror", "history"],
       "allowedVersions": "<=5"
     },
     {
-      "packageNames": ["webpack", "html-webpack-plugin"],
+      "matchPackageNames": ["webpack", "html-webpack-plugin"],
       "allowedVersions": "<=4"
     },
     {
-      "packageNames": [
+      "matchPackageNames": [
         "clean-webpack-plugin",
         "css-loader",
         "tsconfig-paths",
@@ -48,11 +53,11 @@
       "allowedVersions": "<=3"
     },
     {
-      "packageNames": ["remark-emoji"],
+      "matchPackageNames": ["remark-emoji"],
       "allowedVersions": "<=2"
     },
     {
-      "packageNames": [
+      "matchPackageNames": [
         "@mdx-js/loader",
         "@mdx-js/mdx",
         "@mdx-js/react",
@@ -62,7 +67,7 @@
       "allowedVersions": "<=1"
     },
     {
-      "packageNames": [
+      "matchPackageNames": [
         "@mdx-js/loader",
         "@mdx-js/mdx",
         "@mdx-js/react",
@@ -73,11 +78,11 @@
       "allowedVersions": "<=1"
     },
     {
-      "packageNames": ["react-refresh"],
+      "matchPackageNames": ["react-refresh"],
       "allowedVersions": "<=0.8"
     },
     {
-      "packageNames": ["@types/codemirror"],
+      "matchPackageNames": ["@types/codemirror"],
       "allowedVersions": "<=0.0"
     }
   ]
