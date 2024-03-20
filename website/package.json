@@ -24,7 +24,7 @@
     "@mdx-js/react": "^1.6.22",
     "@types/babel__core": "^7.1.19",
     "@types/codemirror": "0.0.109",
-    "@types/history": "^4.7.11",
+    "@types/history": "^5.0.0",
     "@types/lodash": "^4.14.186",
     "@types/mdx-js__react": "^1.5.5",
     "@types/node": "^18.8.2",
