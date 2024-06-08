@@ -277,10 +277,7 @@ function useWithObservable<T, K = T>(
 
 const createState = <T,>(initialState: T) => observableCallback(startWith<T, T>(initialState))
 
-export function observeState<T>(
-  initial: T | (() => T),
-): [Observable<T>, Dispatch<SetStateAction<T>>]
-export function observeState<T>(
+function observeState<T>(
   initial?: T | (() => T),
 ): [Observable<T | undefined>, Dispatch<SetStateAction<T | undefined>>] {
   // eslint-disable-next-line react-hooks/rules-of-hooks
