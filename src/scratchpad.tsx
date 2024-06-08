@@ -69,7 +69,7 @@ type ForwardRefComponent<RefType, Props> = (
 ) => Observable<ReactNode>
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/ban-types
-export function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<RefType, Props>) {
+function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<RefType, Props>) {
   const wrappedComponent = reactForwardRef((props: Props, ref: Ref<RefType>) => {
     return createElement(
       Fragment,
