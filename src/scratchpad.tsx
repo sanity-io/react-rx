@@ -286,11 +286,7 @@ function observeState<T>(
   return [useAsObservable(value), update]
 }
 
-export function observeCallback<T>(): [Observable<T>, (arg: T) => void]
-export function observeCallback<T, K>(
-  operator: OperatorFunction<T, K>,
-): [Observable<K>, (arg: T) => void]
-export function observeCallback<T, K>(
+function observeCallback<T, K>(
   operator?: OperatorFunction<T, K>,
 ): [Observable<T | K>, (arg: T) => void] {
   // eslint-disable-next-line react-hooks/rules-of-hooks
