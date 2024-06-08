@@ -347,8 +347,3 @@ function createWithObservable<T>(): ObservableComponent<T> {
     ),
   )
 }
-
-/**
- * @deprecated Use the useObservable hook instead
- */
-export const WithObservable = createWithObservable()
