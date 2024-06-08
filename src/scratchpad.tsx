@@ -302,7 +302,7 @@ function observeContext<T>(context: Context<T>): Observable<T> {
   return useAsObservable(useContext<T>(context))
 }
 
-export function observeElement<T>(): [Observable<T | null>, (el: T | null) => void] {
+function observeElement<T>(): [Observable<T | null>, (el: T | null) => void] {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const ref = useRef<[Observable<T | null>, (value: T | null) => void]>()
   if (!ref.current) {
