@@ -55,11 +55,9 @@ function fromObservable<Props>(input$: Observable<ReactNode>): FunctionComponent
   }
 }
 
-export function reactiveComponent<Props>(observable: Observable<Props>): FunctionComponent<Props>
-export function reactiveComponent<Props>(component: Component<Props>): FunctionComponent<Props>
-export function reactiveComponent<Props>(
-  observableOrComponent: Observable<ReactNode> | Component<Props>,
-) {
+function reactiveComponent<Props>(observable: Observable<Props>): FunctionComponent<Props>
+function reactiveComponent<Props>(component: Component<Props>): FunctionComponent<Props>
+function reactiveComponent<Props>(observableOrComponent: Observable<ReactNode> | Component<Props>) {
   return typeof observableOrComponent === 'function'
     ? fromComponent(observableOrComponent)
     : fromObservable(observableOrComponent)
@@ -89,6 +87,11 @@ export function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<R
  * Note: the returned observable is the same instance throughout the component lifecycle
  * @param value
  */
+function useAsObservable<T>(value: T): Observable<T>
+function useAsObservable<T, K>(
+  value: T,
+  operator: (input: Observable<T>) => Observable<K>,
+): Observable<K>
 function useAsObservable<T, K = T>(
   value: T,
   operator?: (input: Observable<T>) => Observable<K>,
@@ -266,6 +269,11 @@ export function useObservableCallback<T, U>(
  * Note: the returned observable is the same instance throughout the component lifecycle
  * @param value
  */
+function useWithObservable<T>(value: T): T | undefined
+function useWithObservable<T, K>(
+  value: T,
+  operator: (input: Observable<T>) => Observable<K>,
+): K | undefined
 function useWithObservable<T, K = T>(
   value: T,
   operator?: (input: Observable<T>) => Observable<K>,
@@ -277,6 +285,7 @@ function useWithObservable<T, K = T>(
 
 const createState = <T,>(initialState: T) => observableCallback(startWith<T, T>(initialState))
 
+function observeState<T>(initial: T | (() => T)): [Observable<T>, Dispatch<SetStateAction<T>>]
 function observeState<T>(
   initial?: T | (() => T),
 ): [Observable<T | undefined>, Dispatch<SetStateAction<T | undefined>>] {
@@ -286,6 +295,8 @@ function observeState<T>(
   return [useAsObservable(value), update]
 }
 
+function observeCallback<T>(): [Observable<T>, (arg: T) => void]
+function observeCallback<T, K>(operator: OperatorFunction<T, K>): [Observable<K>, (arg: T) => void]
 function observeCallback<T, K>(
   operator?: OperatorFunction<T, K>,
 ): [Observable<T | K>, (arg: T) => void] {
