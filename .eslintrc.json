@@ -6,11 +6,14 @@
   "parser": "@typescript-eslint/parser",
   "extends": ["plugin:@typescript-eslint/recommended", "prettier"],
   "rules": {
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
     "prettier/prettier": "error",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-var-requires": "off",
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "error",
+    "react-compiler/react-compiler": "error"
   },
-  "plugins": ["@typescript-eslint", "prettier", "react", "react-hooks"]
+  "plugins": ["@typescript-eslint", "simple-import-sort", "prettier", "react", "react-hooks", "react-compiler"]
 }
