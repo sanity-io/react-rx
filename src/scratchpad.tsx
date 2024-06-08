@@ -304,7 +304,7 @@ export function observeCallback<T, K>(
   return ref.current
 }
 
-export function observeContext<T>(context: Context<T>): Observable<T> {
+function observeContext<T>(context: Context<T>): Observable<T> {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   return useAsObservable(useContext<T>(context))
 }
