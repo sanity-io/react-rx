@@ -1,8 +1,7 @@
 import {observableCallback} from 'observable-callback'
-import {DependencyList, useCallback, useEffect, useMemo, useRef} from 'react'
+import {DependencyList, useCallback, useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
 import {Observable, Subscription} from 'rxjs'
 import {shareReplay, tap} from 'rxjs/operators'
-import {useSyncExternalStore} from 'use-sync-external-store/shim'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
   return typeof value === 'function' ? value() : value
