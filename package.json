@@ -104,7 +104,7 @@
   },
   "peerDependencies": {
     "react": "^18.3",
-    "rxjs": "^6.5 || ^7"
+    "rxjs": "^7"
   },
   "es2015": "dist/es2015/index.js"
 }
