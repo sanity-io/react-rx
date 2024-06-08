@@ -1,5 +1,4 @@
-import {observableCallback} from 'observable-callback'
-import {DependencyList, useCallback, useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
+import {useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
 import {Observable, Subscription} from 'rxjs'
 import {shareReplay, tap} from 'rxjs/operators'
 
@@ -75,50 +74,4 @@ export function useObservable<T>(observable: Observable<T>, initialValue?: T | (
   }, [observable])
 
   return useSyncExternalStore(subscribe, getSnapshot)
-}
-
-export function useMemoObservable<T>(
-  observableOrFactory: Observable<T> | (() => Observable<T>),
-  deps: DependencyList,
-): T | undefined
-export function useMemoObservable<T>(
-  observableOrFactory: Observable<T> | (() => Observable<T>),
-  deps: DependencyList,
-  initialValue: T | (() => T),
-): T
-export function useMemoObservable<T>(
-  observableOrFactory: Observable<T> | (() => Observable<T>),
-  deps: DependencyList,
-  initialValue?: T | (() => T),
-) {
-  return useObservable(
-    useMemo(() => getValue(observableOrFactory), deps),
-    initialValue,
-  )
-}
-
-const EMPTY_DEPS: DependencyList = []
-
-export function useObservableCallback<T, U>(
-  fn: (arg: Observable<T>) => Observable<U>,
-  dependencies: DependencyList = EMPTY_DEPS,
-): (arg: T) => void {
-  const callbackRef = useRef<[Observable<T>, (val: T) => void]>()
-
-  if (!callbackRef.current) {
-    callbackRef.current = observableCallback<T>()
-  }
-
-  const [calls$, call] = callbackRef.current
-
-  const callback = useCallback(fn, dependencies)
-
-  useEffect(() => {
-    const subscription = calls$.pipe(callback).subscribe()
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [calls$, call, callback])
-
-  return call
 }
