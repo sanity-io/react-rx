@@ -90,12 +90,7 @@ export function forwardRef<RefType, Props = {}>(component: ForwardRefComponent<R
  * @param value
  * @deprecated use an `of` operator and `useMemoObservable` instead for a faster, more robust and  siimpler solution
  */
-export function useAsObservable<T>(value: T): Observable<T>
-export function useAsObservable<T, K>(
-  value: T,
-  operator: (input: Observable<T>) => Observable<K>,
-): Observable<K>
-export function useAsObservable<T, K = T>(
+function useAsObservable<T, K = T>(
   value: T,
   operator?: (input: Observable<T>) => Observable<K>,
 ): Observable<T | K> {
