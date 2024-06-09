@@ -1,9 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>sanity-io/renovate-config",
-    ":reviewer(team:ecosystem)"
-  ],
+  "extends": ["github>sanity-io/renovate-config", ":reviewer(team:ecosystem)"],
   "packageRules": [
     {
       "description": "There's a problem with the typings if upgrading to 4.8, until that's resolved pause renovate from creating PRs prompting to update TS",
@@ -13,9 +10,7 @@
     {
       "matchFileNames": ["website/package.json"],
       "extends": [":semanticCommitTypeAll(chore)"],
-      "ignorePresets": [
-        "github>sanity-io/renovate-config:group-recommended"
-      ],
+      "ignorePresets": ["github>sanity-io/renovate-config:group-recommended"],
       "groupName": "website dependencies",
       "groupSlug": "website",
       "matchPackagePatterns": ["*"],

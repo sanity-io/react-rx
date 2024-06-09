@@ -20,7 +20,13 @@ const Summary = styled.summary`
   margin: 1px 0 0 0;
   text-transform: uppercase;
   padding: 0.4em 0.9em;
-  font-family: source-code-pro, Menlo, Monaco, Consolas, Courier New, monospace;
+  font-family:
+    source-code-pro,
+    Menlo,
+    Monaco,
+    Consolas,
+    Courier New,
+    monospace;
   -webkit-font-smoothing: antialiased;
   outline: none;
 `

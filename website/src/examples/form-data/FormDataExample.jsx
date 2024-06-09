@@ -92,8 +92,8 @@ const FormDataExample = rxComponent(() => {
             {props.submitState.status === 'saving'
               ? 'Saving…'
               : props.submitState.status === 'saved'
-              ? 'Saved!'
-              : 'Save'}
+                ? 'Saved!'
+                : 'Save'}
           </button>
         </div>
       </Form>

@@ -59,7 +59,13 @@ const Code = styled.div`
   white-space: pre;
   overflow: auto;
   padding: 0.9rem;
-  font-family: source-code-pro, Menlo, Monaco, Consolas, Courier New, monospace;
+  font-family:
+    source-code-pro,
+    Menlo,
+    Monaco,
+    Consolas,
+    Courier New,
+    monospace;
   -webkit-font-smoothing: antialiased;
   line-height: 1.4em;
 `
