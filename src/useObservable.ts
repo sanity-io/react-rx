@@ -13,6 +13,7 @@ interface CacheRecord<T> {
 
 const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
 
+/** @public */
 export function useObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
   initialValue?: UnboxObservable<ObservableType> | (() => UnboxObservable<ObservableType>),
@@ -64,4 +65,5 @@ export function useObservable<ObservableType extends Observable<any>>(
   return useSyncExternalStore<UnboxObservable<ObservableType>>(store.subscribe, store.getSnapshot)
 }
 
-type UnboxObservable<T> = T extends Observable<infer U> ? U : never
+/** @internal */
+export type UnboxObservable<T> = T extends Observable<infer U> ? U : never

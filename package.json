@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "3.0.0-4",
+  "version": "3.0.0-5",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -46,9 +46,18 @@
     "Cody Olsen <stipsan@gmail.com> (https://github.com/stipsan)"
   ],
   "sideEffects": false,
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/cjs/index.d.ts",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -58,22 +67,20 @@
     "."
   ],
   "scripts": {
-    "build": "npm run build:es2015 && npm run build:esm && npm run build:cjs",
-    "build:es2015": "tsc --module es2015 --target es2015 --outDir dist/es2015",
-    "build:esm": "tsc --module es2015 --target es5 --outDir dist/esm",
-    "build:cjs": "tsc --module commonjs --target es5 --outDir dist/cjs",
-    "clean": "rimraf dist",
+    "build": "pkg build --strict --clean --check",
     "dev": "cd website && npm run dev",
-    "prepublishOnly": "npm run clean && npm run build",
-    "watch": "run-p \"build:* -- --watch\"",
+    "prepublishOnly": "npm run build",
+    "watch": "npm run build -- --watch",
     "test": "jest",
     "lint": "eslint --cache ."
   },
+  "browserslist": "extends @sanity/browserslist-config",
   "prettier": "@sanity/prettier-config",
   "dependencies": {
     "observable-callback": "^1.0.3"
   },
   "devDependencies": {
+    "@sanity/pkg-utils": "^6.9.2",
     "@sanity/prettier-config": "^1.0.2",
     "@sanity/semantic-release-preset": "^2.0.5",
     "@testing-library/dom": "^10.1.0",
@@ -99,7 +106,6 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-test-renderer": "^18.3.1",
-    "rimraf": "^3.0.2",
     "rxjs": "^7.8.1",
     "ts-jest": "^29.1.1",
     "typescript": "5.4.5"
@@ -107,6 +113,5 @@
   "peerDependencies": {
     "react": "^18.3 || >=19.0.0-rc",
     "rxjs": "^7"
-  },
-  "es2015": "dist/es2015/index.js"
+  }
 }
