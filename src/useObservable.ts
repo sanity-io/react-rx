@@ -29,10 +29,10 @@ function getOrCreateStore<T>(inputObservable: Observable<T>, initialValue: T) {
   return cache.get(inputObservable)!
 }
 
-export function useObservable<T>(observable: Observable<T>): T | undefined
-export function useObservable<T>(observable: Observable<T>, initialValue: T): T
-export function useObservable<T>(observable: Observable<T>, initialValue: () => T): T
-export function useObservable<T>(observable: Observable<T>, initialValue?: T | (() => T)) {
+export function useObservable<ObservableType extends Observable<any>>(
+  observable: ObservableType,
+  initialValue?: UnboxObservable<ObservableType> | (() => UnboxObservable<ObservableType>),
+): UnboxObservable<ObservableType> {
   /**
    * Store the initialValue in a ref, as we don't want a changed `initialValue` to trigger a re-subscription.
    * But we also don't want the initialValue to be stale if the observable changes.
@@ -47,7 +47,7 @@ export function useObservable<T>(observable: Observable<T>, initialValue?: T | (
   }, [initialValue])
 
   const [getSnapshot, subscribe] = useMemo<
-    [() => T, Parameters<typeof useSyncExternalStore>[0]]
+    [() => UnboxObservable<ObservableType>, Parameters<typeof useSyncExternalStore>[0]]
   >(() => {
     const store = getOrCreateStore(observable, initialValueRef.current)
     if (store.subscription.closed) {
@@ -86,5 +86,7 @@ export function useObservable<T>(observable: Observable<T>, initialValue?: T | (
     }
   }, [observable])
 
-  return useSyncExternalStore(subscribe, getSnapshot)
+  return useSyncExternalStore<UnboxObservable<ObservableType>>(subscribe, getSnapshot)
 }
+
+type UnboxObservable<T> = T extends Observable<infer U> ? U : never
