@@ -3,6 +3,6 @@
   "branches": [
     "current",
     {"name": "crx-749", "prerelease": true},
-    {"name: "v2", "range": "2.x", "channel": "2.x" }
+    {"name": "v2", "range": "2.x", "channel": "2.x" }
   ]
 }
