@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "3.0.0-2",
+  "version": "3.0.0-3",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -74,8 +74,8 @@
   },
   "devDependencies": {
     "@sanity/semantic-release-preset": "^2.0.5",
-    "@testing-library/dom": "^8.20.1",
-    "@testing-library/react": "^13.4.0",
+    "@testing-library/dom": "^10.1.0",
+    "@testing-library/react": "^16.0.0",
     "@types/jest": "^29.5.3",
     "@types/node": "^18.17.5",
     "@types/react": "^18.3.3",
