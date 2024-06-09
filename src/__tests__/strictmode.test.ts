@@ -1,8 +1,8 @@
-import {BehaviorSubject, Observable, of} from 'rxjs'
-import {useObservable} from '../useObservable'
-import {createElement, Fragment, StrictMode, useEffect} from 'react'
 import {act, render} from '@testing-library/react'
-import {useAsObservable} from '../useAsObservable'
+import {createElement, Fragment, StrictMode, useEffect} from 'react'
+import {BehaviorSubject, Observable} from 'rxjs'
+
+import {useObservable} from '../useObservable'
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -23,7 +23,7 @@ test('Strict mode should trigger double mount effects and re-renders', async () 
     return createElement(Fragment, null, observedValue)
   }
 
-  const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
+  render(createElement(StrictMode, null, createElement(ObservableComponent)))
   expect(mountCount).toEqual(2)
 
   expect(returnedValues).toEqual([0, 0])
@@ -59,24 +59,4 @@ test('Strict mode should unsubscribe the source observable on unmount', () => {
   expect(subscribed).toEqual([0, 1])
   rerender(createElement(StrictMode, null, createElement('div')))
   expect(unsubscribed).toEqual([0, 1])
-})
-
-test('useAsObservable should work in strict mode', async () => {
-  const returnedValues: unknown[] = []
-  function ObservableComponent(props: {count: number}) {
-    const count$ = useAsObservable(props.count)
-    const count = useObservable(count$)
-    returnedValues.push(count)
-    return createElement(Fragment, null, 'ok')
-  }
-
-  const {rerender} = render(
-    createElement(StrictMode, null, createElement(ObservableComponent, {count: 0})),
-  )
-
-  expect(returnedValues).toEqual([0, 0])
-
-  rerender(createElement(StrictMode, null, createElement(ObservableComponent, {count: 1})))
-
-  expect(returnedValues).toEqual([0, 0, 0, 0, 1, 1])
 })

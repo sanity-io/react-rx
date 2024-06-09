@@ -33,10 +33,23 @@ export function useObservable<T>(observable: Observable<T>): T | undefined
 export function useObservable<T>(observable: Observable<T>, initialValue: T): T
 export function useObservable<T>(observable: Observable<T>, initialValue: () => T): T
 export function useObservable<T>(observable: Observable<T>, initialValue?: T | (() => T)) {
+  /**
+   * Store the initialValue in a ref, as we don't want a changed `initialValue` to trigger a re-subscription.
+   * But we also don't want the initialValue to be stale if the observable changes.
+   */
+  const initialValueRef = useRef(getValue(initialValue))
+
+  /**
+   * Ensures that the initialValue is always up-to-date in case the observable changes.
+   */
+  useEffect(() => {
+    initialValueRef.current = getValue(initialValue)
+  }, [initialValue])
+
   const [getSnapshot, subscribe] = useMemo<
     [() => T, Parameters<typeof useSyncExternalStore>[0]]
   >(() => {
-    const store = getOrCreateStore(observable, getValue(initialValue))
+    const store = getOrCreateStore(observable, initialValueRef.current)
     if (store.subscription.closed) {
       store.subscription = store.observable.subscribe()
     }
@@ -57,7 +70,7 @@ export function useObservable<T>(observable: Observable<T>, initialValue?: T | (
 
   const shouldRestoreSubscriptionRef = useRef(false)
   useEffect(() => {
-    const store = getOrCreateStore(observable, getValue(initialValue))
+    const store = getOrCreateStore(observable, initialValueRef.current)
     if (shouldRestoreSubscriptionRef.current) {
       if (store.subscription.closed) {
         store.subscription = store.observable.subscribe()
