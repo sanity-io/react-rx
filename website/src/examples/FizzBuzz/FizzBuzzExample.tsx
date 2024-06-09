@@ -18,10 +18,10 @@ const FizzBuzzExample = rxComponent(
       return divBy3And5
         ? 'Fizz Buzz'
         : divBy3
-        ? 'Fizz'
-        : divBy5
-        ? 'Buzz'
-        : String(n)
+          ? 'Fizz'
+          : divBy5
+            ? 'Buzz'
+            : String(n)
     }),
     // map((seq: string[], curr) => seq.concat(curr), []),
     map((n, i) => (

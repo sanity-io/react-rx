@@ -4,7 +4,7 @@ import {BehaviorSubject, Observable} from 'rxjs'
 
 import {useObservable} from '../useObservable'
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // NOTE: Jest runs NODE_ENV=test by default, which enables development flags for React
 

@@ -37,7 +37,7 @@ export function useObservable<ObservableType extends Observable<any>>(
       }
       entry.observable = observable.pipe(
         shareReplay({refCount: true, bufferSize: 1}),
-        tap(value => (entry.snapshot = value)),
+        tap((value) => (entry.snapshot = value)),
       )
 
       // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
