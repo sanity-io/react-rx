@@ -1,4 +1,4 @@
 {
   "extends": "@sanity/semantic-release-preset",
-  "branches": ["current"]
+  "branches": ["current",{"name": "crx-749", "prerelease": true}]
 }
