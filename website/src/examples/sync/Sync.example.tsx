@@ -1,4 +1,5 @@
 import * as React from 'react'
+
 import {from, ReactDOM, rxComponent} from '../_utils/globalScope'
 //@endimport
 

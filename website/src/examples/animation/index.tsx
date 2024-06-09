@@ -1,6 +1,7 @@
-import {Example} from '../../pages/Examples/Examples'
-import styled from 'styled-components'
 import bezier from 'bezier-easing'
+import styled from 'styled-components'
+
+import {Example} from '../../pages/Examples/Examples'
 
 const fs = require('fs')
 

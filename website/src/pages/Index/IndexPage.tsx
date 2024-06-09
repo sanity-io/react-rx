@@ -1,11 +1,12 @@
-import * as React from 'react'
-import {Header} from '../../components/Header'
 import {MDXProvider} from '@mdx-js/react'
-import ReactRxReadme from './ReactRxReadme.md'
-import {components} from '../../mdx-components'
-import {ReactRxLogo} from '../../components/logos/ReactRxLogo'
+import * as React from 'react'
 import styled from 'styled-components'
+
+import {Header} from '../../components/Header'
+import {ReactRxLogo} from '../../components/logos/ReactRxLogo'
+import {components} from '../../mdx-components'
 import {COLORS} from '../../theme'
+import ReactRxReadme from './ReactRxReadme.md'
 
 const Content = styled.div`
   margin-top: 5em;

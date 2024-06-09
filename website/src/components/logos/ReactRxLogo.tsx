@@ -1,8 +1,9 @@
 import * as React from 'react'
 import {CSSProperties} from 'react'
-import {RxJSLogo} from './RxJs'
 import styled from 'styled-components'
+
 import {ReactLogo} from './React'
+import {RxJSLogo} from './RxJs'
 
 const StyledRxJSLogo = styled(RxJSLogo)`
   width: ${(props) => props.width};

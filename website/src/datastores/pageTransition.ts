@@ -1,3 +1,5 @@
+import * as React from 'react'
+import {concat, from, Observable, of} from 'rxjs'
 import {
   map,
   publishReplay,
@@ -7,10 +9,9 @@ import {
   switchMap,
   tap
 } from 'rxjs/operators'
-import {concat, from, Observable, of} from 'rxjs'
-import * as React from 'react'
-import {page$} from './page'
+
 import {Page} from '../pages/pages'
+import {page$} from './page'
 
 interface PageTransition {
   title: string

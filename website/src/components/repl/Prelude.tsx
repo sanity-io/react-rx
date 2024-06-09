@@ -1,5 +1,6 @@
 import * as React from 'react'
 import styled from 'styled-components'
+
 import {CodeMirrorMode} from './CodeMirrorMode'
 
 const Details = styled.details`

@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
+import bezier from 'bezier-easing'
+import styled from 'styled-components'
+
 import {
   map,
   React,
   ReactDOM,
   rxComponent,
+  state,
   switchMap,
-  timer,
-  state
+  timer
 } from '../_utils/globalScope'
-import styled from 'styled-components'
-import bezier from 'bezier-easing'
 //@endimport
 
 const BALL_SIZE = 30

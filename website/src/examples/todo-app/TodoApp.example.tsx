@@ -1,7 +1,10 @@
 import {ChangeEvent, FormEvent} from 'react'
+import styled from 'styled-components'
+
 import {
   combineLatest,
   filter,
+  handler,
   map,
   mapTo,
   merge,
@@ -11,10 +14,8 @@ import {
   rxComponent,
   scan,
   startWith,
-  tap,
-  handler
+  tap
 } from '../_utils/globalScope'
-import styled from 'styled-components'
 //@endimport
 
 const {withLatestFrom} = operators

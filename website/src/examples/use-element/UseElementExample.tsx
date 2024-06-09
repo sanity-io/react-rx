@@ -1,6 +1,6 @@
 import {
-  map,
   elementRef,
+  map,
   operators,
   React,
   ReactDOM,

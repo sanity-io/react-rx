@@ -1,18 +1,20 @@
 import * as React from 'react'
+
 import {navigate} from '../datastores/location'
 
 export function Link(props: React.ComponentProps<'a'>) {
-  const onClick = React.useCallback(
-    (event) => {
-      if (props.onClick) {
-        props.onClick(event)
+  const {href, onClick} = props
+  const handleClick = React.useCallback(
+    (event: any) => {
+      if (onClick) {
+        onClick(event)
       }
       event.preventDefault()
-      if (props.href) {
-        navigate(props.href)
+      if (href) {
+        navigate(href)
       }
     },
-    [props.href, props.onClick]
+    [href, onClick]
   )
-  return <a {...props} onClick={onClick} />
+  return <a {...props} onClick={handleClick} />
 }

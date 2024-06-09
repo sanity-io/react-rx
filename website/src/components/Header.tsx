@@ -1,15 +1,15 @@
-import {Link} from './Link'
-import * as React from 'react'
-import styled from 'styled-components'
-import {rxComponent} from 'react-rx'
-import {pages} from '../pages/pages'
-
-import {map} from 'rxjs/operators'
-import {GithubLogo} from './logos/Github'
-import {COLORS} from '../theme'
-import {ReactRxLogo} from './logos/ReactRxLogo'
-import {pageTransition$} from '../datastores/pageTransition'
 import {omit} from 'lodash'
+import * as React from 'react'
+import {rxComponent} from 'react-rx'
+import {map} from 'rxjs/operators'
+import styled from 'styled-components'
+
+import {pageTransition$} from '../datastores/pageTransition'
+import {pages} from '../pages/pages'
+import {COLORS} from '../theme'
+import {Link} from './Link'
+import {GithubLogo} from './logos/Github'
+import {ReactRxLogo} from './logos/ReactRxLogo'
 
 const StyledHeader = styled.header`
   z-index: 2000;

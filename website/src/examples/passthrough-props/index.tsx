@@ -1,5 +1,6 @@
-import {Example} from '../../pages/Examples/Examples'
 import {formatDistance} from 'date-fns'
+
+import {Example} from '../../pages/Examples/Examples'
 
 const fs = require('fs')
 

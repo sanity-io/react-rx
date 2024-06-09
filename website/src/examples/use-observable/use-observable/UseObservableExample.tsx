@@ -1,8 +1,9 @@
+import {observableCallback} from 'observable-callback'
 import * as React from 'react'
 import {Observable, of, timer} from 'rxjs'
-import {ReactDOM, useMemoObservable} from '../../_utils/globalScope'
-import {observableCallback} from 'observable-callback'
 import {map, startWith, switchMap} from 'rxjs/operators'
+
+import {ReactDOM, useMemoObservable} from '../../_utils/globalScope'
 //@endimport
 
 const justNumbers$ = timer(0, 500)

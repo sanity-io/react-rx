@@ -1,15 +1,16 @@
+import {Observable} from 'rxjs'
+
 import {
+  filter,
   map,
-  React,
-  ReactDOM,
-  timer,
-  useMemoObservable,
   of,
   operators,
-  filter,
-  switchMap
+  React,
+  ReactDOM,
+  switchMap,
+  timer,
+  useMemoObservable
 } from '../../_utils/globalScope'
-import {Observable} from 'rxjs'
 //@endimport
 
 const {distinctUntilChanged, debounceTime} = operators

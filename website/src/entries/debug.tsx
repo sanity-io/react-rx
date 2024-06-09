@@ -1,8 +1,9 @@
 import './main.css'
+
 import * as React from 'react'
-import {useObservable, useAsObservable} from 'react-rx'
 import {Fragment, useState} from 'react'
 import {createRoot} from 'react-dom/client'
+import {useAsObservable, useObservable} from 'react-rx'
 
 function Test(props: {count: number}) {
   const value = useObservable(useAsObservable(props.count))

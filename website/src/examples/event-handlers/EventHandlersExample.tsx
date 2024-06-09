@@ -1,10 +1,10 @@
 import {
+  handler,
   map,
   React,
   ReactDOM,
   rxComponent,
-  startWith,
-  handler
+  startWith
 } from '../_utils/globalScope'
 //@endimport
 

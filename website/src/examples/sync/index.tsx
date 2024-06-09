@@ -1,6 +1,6 @@
-import {Example} from '../../pages/Examples/Examples'
-
 import {readFileSync} from 'fs'
+
+import {Example} from '../../pages/Examples/Examples'
 
 export const SyncExample: Example = {
   id: 'sync-render',
