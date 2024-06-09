@@ -1,8 +1,9 @@
 import {act, render, renderHook} from '@testing-library/react'
-import {useObservable} from '../useObservable'
+import {createElement, Fragment} from 'react'
 import {asyncScheduler, Observable, of, scheduled, Subject, timer} from 'rxjs'
 import {mapTo} from 'rxjs/operators'
-import {createElement, Fragment} from 'react'
+
+import {useObservable} from '../useObservable'
 
 test('should subscribe immediately on component mount and unsubscribe on component unmount', () => {
   let subscribed = false

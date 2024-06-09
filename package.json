@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "2.1.3",
+  "version": "3.0.0-1",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -45,6 +45,7 @@
     "Bjørge Næss <bjoerge@gmail.com>",
     "Cody Olsen <stipsan@gmail.com> (https://github.com/stipsan)"
   ],
+  "sideEffects": false,
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/cjs/index.d.ts",
