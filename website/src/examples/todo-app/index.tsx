@@ -1,6 +1,7 @@
+import styled from 'styled-components'
+
 import {Example} from '../../pages/Examples/Examples'
 import storage from './storage'
-import styled from 'styled-components'
 
 const fs = require('fs')
 

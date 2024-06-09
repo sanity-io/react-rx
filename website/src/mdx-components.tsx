@@ -1,13 +1,13 @@
-import {CodeMirrorMode} from './components/repl/CodeMirrorMode'
-
 import * as React from 'react'
-import styled from 'styled-components'
 import {rxComponent} from 'react-rx'
-import {map} from 'rxjs/operators'
 import {combineLatest} from 'rxjs'
+import {map} from 'rxjs/operators'
+import styled from 'styled-components'
+
+import {CodeMirrorMode} from './components/repl/CodeMirrorMode'
+import {ModeSpec} from './components/repl/runMode'
 import {location$} from './datastores/location'
 import {parseCodeFenceHeader} from './utils/parseCodeFenceHeader'
-import {ModeSpec} from './components/repl/runMode'
 
 const ModeWrapper = styled.div`
   color: #fff;

@@ -1,7 +1,8 @@
+import * as React from 'react'
 import {rxComponent} from 'react-rx'
 import {map, switchMap, toArray} from 'rxjs/operators'
-import * as React from 'react'
 import styled from 'styled-components'
+
 import {runMode} from './runMode'
 
 export interface CodeMirrorModeProps {

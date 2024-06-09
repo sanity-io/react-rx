@@ -1,7 +1,8 @@
-import styled from 'styled-components'
-import {COLORS, media} from '../theme'
 import * as React from 'react'
 import Burger from 'react-css-burger'
+import styled from 'styled-components'
+
+import {COLORS, media} from '../theme'
 
 const SidebarContentInner = styled.div`
   ${media.greaterThan('large')} {

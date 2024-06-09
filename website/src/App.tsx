@@ -1,9 +1,10 @@
 import * as React from 'react'
-import {createGlobalStyle} from 'styled-components'
 import {rxComponent} from 'react-rx'
 import {map} from 'rxjs/operators'
-import {COLORS, media} from './theme'
+import {createGlobalStyle} from 'styled-components'
+
 import {pageTransition$} from './datastores/pageTransition'
+import {COLORS, media} from './theme'
 
 const GlobalStyle = createGlobalStyle`
   body {

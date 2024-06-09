@@ -12,44 +12,43 @@ const {startWith, catchError, take} = operators
 //@endimport
 
 export {
-  of,
-  from,
-  timer,
-  interval,
-  concat,
-  merge,
-  throwError,
   combineLatest,
-  Observable
+  concat,
+  from,
+  interval,
+  merge,
+  Observable,
+  of,
+  throwError,
+  timer
 }
 export {
-  map,
-  filter,
-  reduce,
-  scan,
+  catchError,
   concatMap,
-  tap,
+  filter,
+  map,
   mapTo,
   mergeMap,
+  reduce,
+  scan,
   startWith,
-  take,
   switchMap,
-  catchError
+  take,
+  tap
 }
 
 export {React, ReactDOM}
-export {RxJS, operators}
-
-export {
-  useObservable,
-  useMemoObservable,
-  rxComponent,
-  context,
-  handler,
-  state,
-  elementRef,
-  forwardRef,
-  useAsObservable
-} from 'react-rx'
+export {operators, RxJS}
 
 export {observableCallback} from 'observable-callback'
+export {
+  context,
+  elementRef,
+  forwardRef,
+  handler,
+  rxComponent,
+  state,
+  useAsObservable,
+  useMemoObservable,
+  useObservable
+} from 'react-rx'

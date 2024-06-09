@@ -1,7 +1,7 @@
-import * as babel from '@babel/standalone'
-import transformTs from '@babel/plugin-transform-typescript'
-import transformJsx from '@babel/plugin-transform-react-jsx'
 import optionalChaining from '@babel/plugin-proposal-optional-chaining'
+import transformJsx from '@babel/plugin-transform-react-jsx'
+import transformTs from '@babel/plugin-transform-typescript'
+import * as babel from '@babel/standalone'
 
 interface Options {
   filename?: string

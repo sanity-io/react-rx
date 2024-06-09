@@ -1,6 +1,7 @@
 import {Mode} from 'codemirror'
-import CodeMirror from './codemirror-lib'
 import {Observable} from 'rxjs'
+
+import CodeMirror from './codemirror-lib'
 
 interface Token {
   style: string | null

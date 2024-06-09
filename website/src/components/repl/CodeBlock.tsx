@@ -1,15 +1,16 @@
+import './codemirror-lib'
+
 import * as React from 'react'
+import styled from 'styled-components'
 
 import * as globalScope from '../../examples/_utils/globalScope'
 import {Checkerboard} from './Checkerboard'
-import {ShowError} from './ShowError'
 import {CodeMirror} from './CodeMirror'
 import {compile} from './compile/babel'
 import {evalReactDomRender} from './eval/evalReactDomRender'
-import {Prelude} from './Prelude'
 import {EvalCode} from './EvalCode'
-import './codemirror-lib'
-import styled from 'styled-components'
+import {Prelude} from './Prelude'
+import {ShowError} from './ShowError'
 
 const fs = require('fs')
 

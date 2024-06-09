@@ -1,3 +1,6 @@
+import {observableCallback} from 'observable-callback'
+import {CSSProperties} from 'react'
+
 import {
   map,
   of,
@@ -6,9 +9,6 @@ import {
   rxComponent,
   scan
 } from '../_utils/globalScope'
-
-import {observableCallback} from 'observable-callback'
-import {CSSProperties} from 'react'
 //@endimport
 
 const CONTAINER: CSSProperties = {

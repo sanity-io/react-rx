@@ -1,10 +1,11 @@
-import {rxComponent} from 'react-rx'
-import {map, scan, switchMap} from 'rxjs/operators'
-import {Page} from '../pages/pages'
-import {concat, from, of} from 'rxjs'
 import * as React from 'react'
-import {Header} from './Header'
+import {rxComponent} from 'react-rx'
+import {concat, from, of} from 'rxjs'
+import {map, scan, switchMap} from 'rxjs/operators'
+
+import {Page} from '../pages/pages'
 import {Container, Content} from '../pages/styles'
+import {Header} from './Header'
 
 interface Props {
   page: Page

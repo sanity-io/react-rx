@@ -1,3 +1,5 @@
+import {combineLatest, timer} from 'rxjs'
+
 import {
   forwardRef,
   map,
@@ -6,7 +8,6 @@ import {
   rxComponent,
   useAsObservable
 } from '../_utils/globalScope'
-import {combineLatest, timer} from 'rxjs'
 //@endimport
 
 const ticks$ = timer(0, 1000)

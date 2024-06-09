@@ -1,7 +1,8 @@
-import {map} from 'rxjs/operators'
-import {location$} from './location'
-import {NOT_FOUND, Page, pages} from '../pages/pages'
 import {Observable} from 'rxjs'
+import {map} from 'rxjs/operators'
+
+import {NOT_FOUND, Page, pages} from '../pages/pages'
+import {location$} from './location'
 
 export const page$: Observable<Page> = location$.pipe(
   map(

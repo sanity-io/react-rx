@@ -1,5 +1,5 @@
-import styled from 'styled-components'
 import {Controlled} from 'react-codemirror2'
+import styled from 'styled-components'
 
 const SCROLLBAR_BG_COLOR = '#1f222a'
 const SCROLLBAR_THUMB_COLOR = '#575757'
