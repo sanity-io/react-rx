@@ -1,8 +1,10 @@
 import type {Metadata} from 'next'
 import {headers} from 'next/headers'
 
-import {GlobalStyle} from './GlobalStyle'
-import {StyledComponentsRegistry} from './registry'
+import {GlobalStyle} from '@/app/GlobalStyle'
+import {StyledComponentsRegistry} from '@/app/registry'
+import {Container} from '@/app/styles'
+import {Header} from '@/components/Header'
 
 const defaultTitle = 'ReactRx'
 
@@ -22,7 +24,8 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       <body data-scheme={scheme}>
         <StyledComponentsRegistry>
           <GlobalStyle />
-          {children}
+          <Header />
+          <Container>{children}</Container>
         </StyledComponentsRegistry>
       </body>
     </html>

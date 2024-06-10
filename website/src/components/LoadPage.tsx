@@ -1,3 +1,5 @@
+'use client'
+
 import * as React from 'react'
 import {rxComponent} from 'react-rx'
 import {concat, from, of} from 'rxjs'

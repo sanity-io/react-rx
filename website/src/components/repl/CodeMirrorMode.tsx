@@ -1,7 +1,7 @@
-import * as React from 'react'
-import {rxComponent} from 'react-rx'
+'use client'
+
 import {map, switchMap, toArray} from 'rxjs/operators'
-import styled from 'styled-components'
+import {styled} from 'styled-components'
 
 import {runMode} from './runMode'
 

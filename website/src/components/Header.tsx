@@ -1,15 +1,42 @@
-import {omit} from 'lodash'
-import * as React from 'react'
-import {rxComponent} from 'react-rx'
-import {map} from 'rxjs/operators'
-import styled from 'styled-components'
+'use client'
 
-import {pageTransition$} from '../datastores/pageTransition'
-import {pages} from '../_pages/pages'
-import {COLORS} from '../theme'
-import {Link} from './Link'
+import Link from 'next/link'
+import {usePathname} from 'next/navigation'
+import {styled} from 'styled-components'
+
+import {COLORS} from '@/theme'
+
 import {GithubLogo} from './logos/Github'
 import {ReactRxLogo} from './logos/ReactRxLogo'
+
+const pages = [
+  {title: 'Guide', href: '/guide'},
+  {title: 'API', href: '/api'},
+  {title: 'Examples', href: '/examples'},
+] as const satisfies {title: string; href: string}[]
+
+export function Header() {
+  const pathname = usePathname()
+  return (
+    <StyledHeader>
+      <HeaderInner>
+        <Logo />
+        {pages.map((page) => {
+          return (
+            <LinkWrapper key={page.href}>
+              <PageLink href={page.href} $isActive={page.href.startsWith(pathname)}>
+                {page.title}
+              </PageLink>
+            </LinkWrapper>
+          )
+        })}
+        <a href="https://github.com/sanity-io/react-rx">
+          <GithubLogo style={{color: '#fff'}} height="25" width="25" />
+        </a>
+      </HeaderInner>
+    </StyledHeader>
+  )
+}
 
 const StyledHeader = styled.header`
   z-index: 2000;
@@ -41,28 +68,6 @@ const LinkWrapper = styled.div`
   padding: 0.5em 1.2em 0.5em 0;
 `
 
-const omitProps =
-  <T extends React.ComponentType>(Component: T, omitProps: string[]) =>
-  (props: React.ComponentProps<T>) => {
-    const omitted: any = omit(props, omitProps)
-    return <Component {...omitted} />
-  }
-
-const PageLink = styled(omitProps(Link, ['isActive', 'isTransitioningTo']))<{
-  isActive: boolean
-  isTransitioningTo: boolean
-}>`
-  display: block;
-  color: ${COLORS.text};
-  font-size: 1em;
-  &:link,
-  &:visited {
-    color: ${COLORS.text};
-    text-decoration: ${(props) => (props.isActive || props.isTransitioningTo) && `underline`};
-    text-decoration-style: ${(props) => props.isTransitioningTo && `wavy`};
-  }
-`
-
 const LogoWrapper = styled.div`
   font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande',
     sans-serif;
@@ -82,34 +87,15 @@ const Logo = () => (
   </LogoWrapper>
 )
 
-export const Header = rxComponent((page$) =>
-  pageTransition$.pipe(
-    map((transitionState) => (
-      <StyledHeader>
-        <HeaderInner>
-          <Logo />
-          {pages
-            .filter((page) => page.id !== 'home')
-            .map((page) => {
-              return (
-                <LinkWrapper key={page.id}>
-                  <PageLink
-                    href={page.route}
-                    isTransitioningTo={
-                      transitionState.isTransitioning && transitionState.next === page
-                    }
-                    isActive={transitionState.current === page}
-                  >
-                    {page.title}
-                  </PageLink>
-                </LinkWrapper>
-              )
-            })}
-          <a href="https://github.com/sanity-io/react-rx">
-            <GithubLogo style={{color: '#fff'}} height="25" width="25" />
-          </a>
-        </HeaderInner>
-      </StyledHeader>
-    )),
-  ),
-)
+const PageLink = styled(Link)<{
+  $isActive: boolean
+}>`
+  display: block;
+  color: ${COLORS.text};
+  font-size: 1em;
+  &:link,
+  &:visited {
+    color: ${COLORS.text};
+    text-decoration: ${(props) => props.$isActive && `underline`};
+  }
+`

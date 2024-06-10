@@ -1,3 +1,5 @@
+'use client'
+
 import {Mode} from 'codemirror'
 import {Observable} from 'rxjs'
 

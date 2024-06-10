@@ -1,24 +1,10 @@
-import * as React from 'react'
-import {rxComponent} from 'react-rx'
-import {combineLatest} from 'rxjs'
-import {map} from 'rxjs/operators'
-import styled from 'styled-components'
+import type {MDXComponents} from 'mdx/types'
+
+import {InlineCode, ModeWrapper} from '@/mdx-components.styled'
 
 import {CodeMirrorMode} from './components/repl/CodeMirrorMode'
 import {ModeSpec} from './components/repl/runMode'
-import {location$} from './datastores/location'
 import {parseCodeFenceHeader} from './utils/parseCodeFenceHeader'
-
-const ModeWrapper = styled.div`
-  color: #fff;
-`
-
-const InlineCode = styled.code`
-  font-size: 0.9em;
-  background-color: #e4e4e4;
-  padding: 1px 4px;
-  border-radius: 2px;
-`
 
 const CODEMIRROR_TSX_MODE: ModeSpec = {
   name: 'jsx',
@@ -27,10 +13,6 @@ const CODEMIRROR_TSX_MODE: ModeSpec = {
 
 const TSX_MODE_TYPES = ['js', 'jsx', 'tsx', 'ts']
 
-interface InlineCodeProps {
-  children: string
-}
-
 interface CodeProps {
   children: string
   className: 'language-js' | 'language-jsx' | 'language-tsx'
@@ -38,8 +20,12 @@ interface CodeProps {
 
 export const components = {
   inlineCode: InlineCode,
+  /*
   code: (props: CodeProps) => {
-    const [lang, range] = parseCodeFenceHeader(props.className.replace(/^language-/, ''))
+    const {className = ''} = props
+    const [lang, range] = className
+      ? parseCodeFenceHeader(className.replace(/^language-/, ''))
+      : [null, []]
     const mode = lang && TSX_MODE_TYPES.includes(lang) ? CODEMIRROR_TSX_MODE : null
     return (
       <ModeWrapper>
@@ -49,23 +35,13 @@ export const components = {
       </ModeWrapper>
     )
   },
+  // */
 }
 
-const hash$ = location$.pipe(map((location) => location.hash))
-
-const BookmarkedLink = rxComponent<{
-  href: string
-  children: React.ReactNode
-}>((props$) =>
-  combineLatest([props$, hash$]).pipe(
-    map(([props, hash]) => (
-      <a href={props.href} className={hash === props.href ? 'selected' : ''}>
-        {props.children}
-      </a>
-    )),
-  ),
-)
-
-export const tocComponents = {
-  a: BookmarkedLink,
+export function useMDXComponents(_components: MDXComponents): MDXComponents {
+  console.log('components:', _components)
+  return {
+    ...components,
+    ..._components,
+  }
 }

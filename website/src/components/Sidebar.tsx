@@ -1,3 +1,5 @@
+'use client'
+
 import * as React from 'react'
 import Burger from 'react-css-burger'
 import styled from 'styled-components'

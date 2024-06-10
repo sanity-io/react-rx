@@ -1,5 +1,3 @@
-import * as React from 'react'
-
 export const GithubLogo = (props: React.ComponentProps<'svg'>) => (
   <svg {...props} viewBox="0 0 496 512" fill="currentColor">
     <path
