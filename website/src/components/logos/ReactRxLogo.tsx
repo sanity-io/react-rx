@@ -86,7 +86,7 @@ export function ReactRxLogo(props: {className?: string; style?: CSSProperties; s
           >
             <g
               stroke="#61dafb"
-              stroke-width="1"
+              strokeWidth="1"
               fill="none"
               style={{
                 stroke: '#dbdbdb',
@@ -100,7 +100,7 @@ export function ReactRxLogo(props: {className?: string; style?: CSSProperties; s
             </g>
             <g
               stroke="#61dafb"
-              stroke-width="1"
+              strokeWidth="1"
               fill="none"
               style={{
                 mixBlendMode: 'color-burn',
@@ -113,7 +113,7 @@ export function ReactRxLogo(props: {className?: string; style?: CSSProperties; s
             </g>
             <g
               stroke="#61dafb"
-              stroke-width="1"
+              strokeWidth="1"
               fill="none"
               style={{
                 mixBlendMode: 'color-burn',
