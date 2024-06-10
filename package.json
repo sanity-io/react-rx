@@ -15,6 +15,7 @@
     "pipe",
     "react",
     "react18",
+    "react19",
     "reactive",
     "realtime",
     "rx",
@@ -28,7 +29,6 @@
     "sync",
     "typesafe",
     "typescript",
-    "use-sync-external-store",
     "use"
   ],
   "homepage": "https://react-rx.dev",
