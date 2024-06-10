@@ -71,7 +71,7 @@
     "dev": "pnpm --filter 'react-rx-website' dev",
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
-    "test": "vitest run",
+    "test": "vitest run --typecheck",
     "watch": "pnpm build -- --watch"
   },
   "browserslist": "extends @sanity/browserslist-config",
