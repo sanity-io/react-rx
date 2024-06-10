@@ -5,7 +5,7 @@
   "scripts": {
     "build": "NODE_ENV=production webpack --mode=production --config webpack/config.js",
     "dev": "npm start",
-    "postinstall": "cp ../README.md src/pages/Index/ReactRxReadme.md",
+    "postinstall": "cp ../README.md src/pages/Index/ReactRxReadme.md && cd .. && pnpm build",
     "start": "webpack-dev-server --config webpack/config.js",
     "watch": "webpack -w --config webpack/config.js"
   },
