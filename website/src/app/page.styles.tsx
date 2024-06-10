@@ -4,9 +4,7 @@ import {styled} from 'styled-components'
 
 import {COLORS} from '@/theme'
 
-export const Content = styled.div`
-  margin-top: 5em;
-`
+export const Content = styled.div``
 export const ContentInner = styled.div`
   padding: 1em 1em;
 `

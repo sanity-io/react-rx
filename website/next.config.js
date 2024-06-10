@@ -1,15 +1,3 @@
-const emoji = require('remark-emoji')
-const slug = require('remark-slug')
-
-/** @type {import('@next/mdx').NextMDXOptions} */
-const mdxConfig = {
-  extension: /\.mdx?$/,
-  options: {
-    remarkPlugins: [emoji, slug],
-  },
-}
-const withMDX = require('@next/mdx')(mdxConfig)
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compiler: {
@@ -18,7 +6,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   productionBrowserSourceMaps: true,
   transpilePackages: ['react-rx'],
   webpack(config) {
@@ -51,4 +38,4 @@ const nextConfig = {
   },
 }
 
-module.exports = withMDX(nextConfig)
+module.exports = nextConfig

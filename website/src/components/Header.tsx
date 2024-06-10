@@ -40,7 +40,7 @@ export function Header() {
 
 const StyledHeader = styled.header`
   z-index: 2000;
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
