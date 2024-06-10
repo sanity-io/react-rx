@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
-import type {Observable, Subscription} from 'rxjs'
+import type {Observable, ObservedValueOf, Subscription} from 'rxjs'
 import {shareReplay, tap} from 'rxjs/operators'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
@@ -16,24 +16,24 @@ const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
 /** @public */
 export function useObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
-  initialValue?: UnboxObservable<ObservableType> | (() => UnboxObservable<ObservableType>),
-): UnboxObservable<ObservableType> {
+  initialValue?: ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
+): ObservedValueOf<ObservableType> {
   /**
    * Store the initialValue in a ref, as we don't want a changed `initialValue` to trigger a re-subscription.
    * But we also don't want the initialValue to be stale if the observable changes.
    */
-  const initialValueRef = useRef(getValue(initialValue) as UnboxObservable<ObservableType>)
+  const initialValueRef = useRef(getValue(initialValue) as ObservedValueOf<ObservableType>)
 
   /**
    * Ensures that the initialValue is always up-to-date in case the observable changes.
    */
   useEffect(() => {
-    initialValueRef.current = getValue(initialValue) as UnboxObservable<ObservableType>
+    initialValueRef.current = getValue(initialValue) as ObservedValueOf<ObservableType>
   }, [initialValue])
 
   const store = useMemo(() => {
     if (!cache.has(observable)) {
-      const entry: Partial<CacheRecord<UnboxObservable<ObservableType>>> = {
+      const entry: Partial<CacheRecord<ObservedValueOf<ObservableType>>> = {
         snapshot: initialValueRef.current,
       }
       entry.observable = observable.pipe(
@@ -44,7 +44,7 @@ export function useObservable<ObservableType extends Observable<any>>(
       // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
       entry.subscription = entry.observable.subscribe()
 
-      cache.set(observable, entry as CacheRecord<UnboxObservable<ObservableType>>)
+      cache.set(observable, entry as CacheRecord<ObservedValueOf<ObservableType>>)
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const instance = cache.get(observable)!
@@ -62,8 +62,5 @@ export function useObservable<ObservableType extends Observable<any>>(
     }
   }, [observable])
 
-  return useSyncExternalStore<UnboxObservable<ObservableType>>(store.subscribe, store.getSnapshot)
+  return useSyncExternalStore<ObservedValueOf<ObservableType>>(store.subscribe, store.getSnapshot)
 }
-
-/** @internal */
-export type UnboxObservable<T> = T extends Observable<infer U> ? U : never
