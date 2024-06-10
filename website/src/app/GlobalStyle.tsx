@@ -1,12 +1,10 @@
-import * as React from 'react'
-import {rxComponent} from 'react-rx'
-import {map} from 'rxjs/operators'
+'use client'
+
 import {createGlobalStyle} from 'styled-components'
 
-import {pageTransition$} from './datastores/pageTransition'
-import {COLORS, media} from './theme'
+import {COLORS, media} from '@/theme'
 
-const GlobalStyle = createGlobalStyle`
+export const GlobalStyle = createGlobalStyle`
   body {
     ${media.between('xsmall', 'small')} {
       font-size: 12px;
@@ -50,16 +48,3 @@ const GlobalStyle = createGlobalStyle`
     text-decoration: none;
   }
 `
-
-export const App = rxComponent(
-  pageTransition$.pipe(
-    map((transition) => {
-      return (
-        <>
-          <GlobalStyle />
-          {transition.component ? <transition.component /> : <div>Loading…</div>}
-        </>
-      )
-    }),
-  ),
-)
