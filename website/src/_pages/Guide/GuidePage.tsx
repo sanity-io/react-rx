@@ -3,18 +3,19 @@ import * as React from 'react'
 
 import {Header} from '../../components/Header'
 import {Sidebar} from '../../components/Sidebar'
-import {components, tocComponents} from '../../mdx-components'
+import {components} from '../../mdx-components'
 import {Container, Content} from '../styles'
-import MDXContent, {Toc} from './Guide.mdx'
+import MDXContent from './Guide.mdx'
 
 export const GuidePage = () => (
   <>
     <Header />
     <Container>
       <Sidebar heading="Guide">
-        <MDXProvider components={tocComponents}>
-          <Toc />
-        </MDXProvider>
+        {/* <MDXProvider components={tocComponents}> */}
+        {/* <Toc /> */}
+        TOC
+        {/* </MDXProvider> */}
       </Sidebar>
       <Content>
         <MDXProvider components={components}>
