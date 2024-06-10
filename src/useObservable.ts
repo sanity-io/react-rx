@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
-import type {Observable, ObservedValueOf, Subscription} from 'rxjs'
+import {catchError, EMPTY, type Observable, type ObservedValueOf, type Subscription} from 'rxjs'
 import {shareReplay, tap} from 'rxjs/operators'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
@@ -9,6 +9,7 @@ interface CacheRecord<T> {
   subscription: Subscription
   observable: Observable<T>
   snapshot: T
+  error?: unknown
 }
 
 const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
@@ -52,7 +53,15 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
       }
       entry.observable = observable.pipe(
         shareReplay({refCount: true, bufferSize: 1}),
-        tap((value) => (entry.snapshot = value)),
+        tap({
+          next: (value) => {
+            entry.snapshot = value
+            entry.error = undefined
+          },
+          error: (error: unknown) => (entry.error = error),
+        }),
+        // ignore errors in the observable, as they get thrown during the getSnapshot phase later
+        catchError(() => EMPTY),
       )
 
       // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
@@ -70,9 +79,16 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
       subscribe: (onStoreChange: () => void) => {
         const subscription = instance.observable.subscribe(onStoreChange)
         instance.subscription.unsubscribe()
-        return () => subscription.unsubscribe()
+        return () => {
+          subscription.unsubscribe()
+        }
       },
-      getSnapshot: () => instance.snapshot,
+      getSnapshot: () => {
+        if (instance.error) {
+          throw instance.error
+        }
+        return instance.snapshot
+      },
     }
   }, [observable])
 
