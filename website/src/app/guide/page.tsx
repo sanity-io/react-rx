@@ -1,16 +1,23 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
+import type {Metadata} from 'next'
 
-import {Suspense} from 'react'
+import {Sidebar} from '@/components/Sidebar'
+import {compileTocMDX} from '@/utils/compileTocMDX'
+import {readFile} from '@/utils/readFile'
 
-import Report from './Report'
+import {Content} from '../styles'
+
+const title = 'Guide'
+
+export const metadata = {title} satisfies Metadata
 
 export default async function GuidePage() {
-  const MDXContent = await fs.readFile(path.join(process.cwd(), 'src/app/guide/pages.mdx'), 'utf-8')
+  const MDXContent = await readFile('guide/pages.md')
+  const {content, toc} = await compileTocMDX(MDXContent)
 
   return (
-    <Suspense>
-      <Report mdx={MDXContent} />
-    </Suspense>
+    <>
+      <Sidebar heading={title}>{toc}</Sidebar>
+      <Content>{content}</Content>
+    </>
   )
 }

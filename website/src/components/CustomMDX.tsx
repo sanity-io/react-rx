@@ -7,5 +7,13 @@ const components = {
 }
 
 export function CustomMDX(props: React.ComponentProps<typeof MDXRemote>) {
-  return <MDXRemote {...props} components={{...components, ...(props.components || {})}} />
+  return (
+    <MDXRemote
+      {...props}
+      options={{
+        mdxOptions: {},
+      }}
+      components={{...components, ...(props.components || {})}}
+    />
+  )
 }

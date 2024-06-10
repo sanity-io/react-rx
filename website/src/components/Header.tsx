@@ -24,7 +24,10 @@ export function Header() {
         {pages.map((page) => {
           return (
             <LinkWrapper key={page.href}>
-              <PageLink href={page.href} $isActive={page.href.startsWith(pathname)}>
+              <PageLink
+                href={page.href}
+                $isActive={pathname !== '/' && page.href.startsWith(pathname)}
+              >
                 {page.title}
               </PageLink>
             </LinkWrapper>

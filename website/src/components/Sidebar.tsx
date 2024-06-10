@@ -1,8 +1,11 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import * as React from 'react'
-import Burger from 'react-css-burger'
-import styled from 'styled-components'
+import type BurgerComponent from 'react-css-burger'
+import {styled} from 'styled-components'
+
+const Burger = dynamic<BurgerComponent>(() => import('react-css-burger'), {ssr: false})
 
 import {COLORS, media} from '../theme'
 
@@ -32,7 +35,7 @@ const SidebarContentInner = styled.div`
   }
 `
 
-const SidebarWrapper = styled.div<{isOpen: boolean}>`
+const SidebarWrapper = styled.div<{$isOpen: boolean}>`
   ${media.lessThan('large')} {
     position: fixed;
     left: 0;
@@ -47,17 +50,17 @@ const SidebarWrapper = styled.div<{isOpen: boolean}>`
   }
   ${media.lessThan('large')} {
     border-radius: 0 0.5em 0.5em 0;
-    box-shadow: ${(props) => (props.isOpen ? `0 4px 10px 0 ${COLORS.shadow}` : '0')};
-    background-color: ${(props) => (props.isOpen ? '#eff0f3' : COLORS.header.background)};
+    box-shadow: ${(props) => (props.$isOpen ? `0 4px 10px 0 ${COLORS.shadow}` : '0')};
+    background-color: ${(props) => (props.$isOpen ? '#eff0f3' : COLORS.header.background)};
   }
 `
-const SidebarContent = styled.div<{isOpen: boolean}>`
+const SidebarContent = styled.div<{$isOpen: boolean}>`
   padding: 2em 0 0 1em;
   width: 250px;
   max-height: calc(100vh - 12em);
 
   ${media.lessThan('large')} {
-    display: ${(props: any) => (props.isOpen ? '' : 'none')};
+    display: ${(props: any) => (props.$isOpen ? '' : 'none')};
   }
   ${media.greaterThan('large')} {
     width: 230px;
@@ -67,7 +70,7 @@ const SidebarContent = styled.div<{isOpen: boolean}>`
 export const Sidebar = (props: {heading: string; children: React.ReactNode}) => {
   const [isOpen, setOpen] = React.useState(false)
   return (
-    <SidebarWrapper isOpen={isOpen}>
+    <SidebarWrapper $isOpen={isOpen}>
       <Burger
         scale={0.6}
         active={isOpen}
@@ -75,7 +78,7 @@ export const Sidebar = (props: {heading: string; children: React.ReactNode}) => 
         marginTop="0"
         onClick={() => setOpen((isOpen) => !isOpen)}
       />
-      <SidebarContent onClick={(e) => setOpen(false)} isOpen={isOpen}>
+      <SidebarContent onClick={(e) => setOpen(false)} $isOpen={isOpen}>
         <SidebarContentInner>
           <h4>{props.heading}</h4>
           {props.children}
