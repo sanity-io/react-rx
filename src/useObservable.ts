@@ -16,8 +16,22 @@ const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
 /** @public */
 export function useObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
-  initialValue?: ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
-): ObservedValueOf<ObservableType> {
+  initialValue: ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
+): ObservedValueOf<ObservableType>
+/** @public */
+export function useObservable<ObservableType extends Observable<any>>(
+  observable: ObservableType,
+): undefined | ObservedValueOf<ObservableType>
+/** @public */
+export function useObservable<ObservableType extends Observable<any>, InitialValue>(
+  observable: ObservableType,
+  initialValue: InitialValue,
+): InitialValue | ObservedValueOf<ObservableType>
+/** @public */
+export function useObservable<ObservableType extends Observable<any>, InitialValue>(
+  observable: ObservableType,
+  initialValue?: InitialValue | (() => InitialValue),
+): InitialValue | ObservedValueOf<ObservableType> {
   /**
    * Store the initialValue in a ref, as we don't want a changed `initialValue` to trigger a re-subscription.
    * But we also don't want the initialValue to be stale if the observable changes.
