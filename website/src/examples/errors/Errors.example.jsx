@@ -1,6 +1,7 @@
 import {
   catchError,
   concat,
+  handler,
   map,
   merge,
   of,
@@ -11,7 +12,6 @@ import {
   take,
   throwError,
   timer,
-  handler,
 } from '../_utils/globalScope'
 //@endimport
 

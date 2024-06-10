@@ -1,5 +1,6 @@
-import {combineLatest, map, React, ReactDOM, rxComponent, take, timer} from '../_utils/globalScope'
 import {formatDistance} from 'date-fns'
+
+import {combineLatest, map, React, ReactDOM, rxComponent, take, timer} from '../_utils/globalScope'
 //@endimport
 
 const {share} = operators

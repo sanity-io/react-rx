@@ -4,9 +4,9 @@ import {
   ReactDOM,
   rxComponent,
   startWith,
+  state,
   switchMap,
   timer,
-  state,
 } from '../_utils/globalScope'
 //@endimport
 

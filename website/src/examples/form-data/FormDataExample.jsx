@@ -1,6 +1,7 @@
 import {
   concat,
   concatMap,
+  handler,
   map,
   merge,
   React,
@@ -10,11 +11,10 @@ import {
   startWith,
   tap,
   timer,
-  handler,
 } from 'examples/_utils/globalScope'
+import styled from 'styled-components'
 
 import storage from './storage'
-import styled from 'styled-components'
 //@endimport
 
 const {withLatestFrom} = operators
