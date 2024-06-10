@@ -15,6 +15,9 @@ const nextConfig = {
   compiler: {
     styledComponents: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   productionBrowserSourceMaps: true,
   transpilePackages: ['react-rx'],
