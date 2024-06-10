@@ -1,7 +1,7 @@
 import {act, render, renderHook} from '@testing-library/react'
 import {createElement, Fragment} from 'react'
 import {asyncScheduler, Observable, of, scheduled, Subject, timer} from 'rxjs'
-import {mapTo} from 'rxjs/operators'
+import {map} from 'rxjs/operators'
 import {expect, test} from 'vitest'
 
 import {useObservable} from '../useObservable'
@@ -43,7 +43,7 @@ test('should only subscribe once when given same observable on re-renders', () =
 })
 
 test('should not return undefined during render if initial value is given', () => {
-  const observable = timer(100).pipe(mapTo('emitted value'))
+  const observable = timer(100).pipe(map(() => 'emitted value'))
 
   const returnedValues: unknown[] = []
   function ObservableComponent() {
