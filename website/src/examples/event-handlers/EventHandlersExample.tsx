@@ -1,11 +1,4 @@
-import {
-  handler,
-  map,
-  React,
-  ReactDOM,
-  rxComponent,
-  startWith
-} from '../_utils/globalScope'
+import {handler, map, React, ReactDOM, rxComponent, startWith} from '../_utils/globalScope'
 //@endimport
 
 const STYLE: React.CSSProperties = {
@@ -15,7 +8,7 @@ const STYLE: React.CSSProperties = {
   height: 150,
   width: 150,
   border: '1px dashed',
-  padding: '1em'
+  padding: '1em',
 }
 
 const EventHandlersExample = rxComponent(() => {
@@ -23,7 +16,7 @@ const EventHandlersExample = rxComponent(() => {
 
   const mousePosition$ = mouseMoves$.pipe(
     map((event) => ({x: event.clientX, y: event.clientY})),
-    startWith(null)
+    startWith(null),
   )
   return mousePosition$.pipe(
     map((position) => (
@@ -38,11 +31,8 @@ const EventHandlersExample = rxComponent(() => {
           )}
         </div>
       </div>
-    ))
+    )),
   )
 })
 
-ReactDOM.render(
-  <EventHandlersExample />,
-  document.getElementById('event-handlers-example')
-)
+ReactDOM.render(<EventHandlersExample />, document.getElementById('event-handlers-example'))

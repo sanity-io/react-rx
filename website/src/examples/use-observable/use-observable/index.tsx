@@ -1,9 +1,9 @@
-import {Example} from '../../../pages/Examples/Examples'
+import {Example} from '../../../_pages/Examples/Examples'
 
 const fs = require('fs')
 
 export const UseObservableExample: Example = {
   id: 'use-observable',
   title: 'Use observable',
-  source: fs.readFileSync(`${__dirname}/UseObservableExample.tsx`, 'utf-8')
+  source: fs.readFileSync(`${__dirname}/UseObservableExample.tsx`, 'utf-8'),
 }

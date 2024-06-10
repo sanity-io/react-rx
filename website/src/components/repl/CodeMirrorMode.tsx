@@ -20,17 +20,13 @@ export const CodeMirrorMode = rxComponent<CodeMirrorModeProps>((props$) => {
         map((lines, i) => (
           <Code
             key={`line-${i}`}
-            className={`cm-s-custom${
-              props.className ? ` ${props.className}` : ''
-            }`}
+            className={`cm-s-custom${props.className ? ` ${props.className}` : ''}`}
           >
             {lines.map((line, lineNo) => (
               <div
                 key={`line-${i}-${lineNo}`}
                 className={`cm-line${
-                  (props.highlighted || []).includes(lineNo + 1)
-                    ? ' CodeMirror-selected'
-                    : ''
+                  (props.highlighted || []).includes(lineNo + 1) ? ' CodeMirror-selected' : ''
                 }`}
               >
                 {line.map((token, i) =>
@@ -40,14 +36,14 @@ export const CodeMirrorMode = rxComponent<CodeMirrorModeProps>((props$) => {
                     </span>
                   ) : (
                     token.token
-                  )
+                  ),
                 )}
               </div>
             ))}
           </Code>
-        ))
-      )
-    )
+        )),
+      ),
+    ),
   )
 })
 

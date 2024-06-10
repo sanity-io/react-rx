@@ -6,7 +6,7 @@ import {
   rxComponent,
   startWith,
   switchMap,
-  timer
+  timer,
 } from '../_utils/globalScope'
 //@endimport
 
@@ -18,8 +18,8 @@ const Ticker = rxComponent((props$) =>
     distinctUntilChanged(),
     switchMap((tick) => timer(300).pipe(mapTo(tick))),
     startWith(0),
-    map((tick) => `Delayed tick: ${tick}`)
-  )
+    map((tick) => `Delayed tick: ${tick}`),
+  ),
 )
 
 const TickerWithSubTick = rxComponent((props$) =>
@@ -32,8 +32,8 @@ const TickerWithSubTick = rxComponent((props$) =>
       <div>
         {props.tick}:{props.subtick}
       </div>
-    ))
-  )
+    )),
+  ),
 )
 
 const TickExample = rxComponent(
@@ -44,8 +44,8 @@ const TickExample = rxComponent(
         <Ticker tick={tick} />
         <TickerWithSubTick tick={tick} />
       </>
-    ))
-  )
+    )),
+  ),
 )
 
 ReactDOM.render(<TickExample />, document.getElementById('ticker-example'))

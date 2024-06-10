@@ -36,7 +36,7 @@ const tryCompile = (code: string, filename: string) => {
 const evalRender = (code: string, scope: Scope = {}) => {
   return evalReactDomRender(code, {
     ...scope,
-    ...globalScope
+    ...globalScope,
   })
 }
 
@@ -52,14 +52,14 @@ const stripImports = (str: string) => {
 
 const CODEMIRROR_MODE = {
   name: 'jsx',
-  base: {name: 'javascript', typescript: true}
+  base: {name: 'javascript', typescript: true},
 }
 
 const CODEMIRROR_OPTIONS = {
   theme: 'custom',
   smartIndent: false,
   tabSize: 2,
-  mode: CODEMIRROR_MODE
+  mode: CODEMIRROR_MODE,
 }
 
 const StyledWrapper = styled.div`
@@ -85,8 +85,7 @@ const Column = styled.div<{type: 'editor' | 'result'}>`
       props.type === 'editor'
         ? `${BORDER_RADIUS}em 0 0 ${BORDER_RADIUS}em`
         : `0 ${BORDER_RADIUS}em ${BORDER_RADIUS}em 0`};
-    padding: ${(props) =>
-      props.type === 'editor' ? '0 1px 0.5em 0' : '0 0 0.5em 1px'};
+    padding: ${(props) => (props.type === 'editor' ? '0 1px 0.5em 0' : '0 0 0.5em 1px')};
   }
   @media (max-width: 1279px) {
     border-radius: ${(props) =>
@@ -125,9 +124,7 @@ export function CodeBlock(props: Props) {
         <Checkerboard>
           <div style={{padding: '2em'}}>
             {compileError ? (
-              <ShowError title="Compile error">
-                {compileError.message}
-              </ShowError>
+              <ShowError title="Compile error">{compileError.message}</ShowError>
             ) : (
               <EvalCode
                 code={transformed}

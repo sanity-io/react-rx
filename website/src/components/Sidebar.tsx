@@ -45,10 +45,8 @@ const SidebarWrapper = styled.div<{isOpen: boolean}>`
   }
   ${media.lessThan('large')} {
     border-radius: 0 0.5em 0.5em 0;
-    box-shadow: ${(props) =>
-      props.isOpen ? `0 4px 10px 0 ${COLORS.shadow}` : '0'};
-    background-color: ${(props) =>
-      props.isOpen ? '#eff0f3' : COLORS.header.background};
+    box-shadow: ${(props) => (props.isOpen ? `0 4px 10px 0 ${COLORS.shadow}` : '0')};
+    background-color: ${(props) => (props.isOpen ? '#eff0f3' : COLORS.header.background)};
   }
 `
 const SidebarContent = styled.div<{isOpen: boolean}>`
@@ -64,10 +62,7 @@ const SidebarContent = styled.div<{isOpen: boolean}>`
   }
 `
 
-export const Sidebar = (props: {
-  heading: string
-  children: React.ReactNode
-}) => {
+export const Sidebar = (props: {heading: string; children: React.ReactNode}) => {
   const [isOpen, setOpen] = React.useState(false)
   return (
     <SidebarWrapper isOpen={isOpen}>

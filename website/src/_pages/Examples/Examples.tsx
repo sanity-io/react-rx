@@ -54,7 +54,7 @@ const rxComponentExamples: Example[] = [
   ForwardRefExample,
   PassThroughPropsExample,
   TickExample,
-  FizzBuzzExample
+  FizzBuzzExample,
 ]
 
 const useObservableExamples: Example[] = [UseObservableExample, SearchExample]
@@ -63,8 +63,7 @@ const allExamples = rxComponentExamples.concat(useObservableExamples)
 
 export function Examples(props: {selectedExampleName: string}) {
   const {selectedExampleName} = props
-  const selectedExample =
-    allExamples.find((ex) => ex.id === selectedExampleName) || allExamples[0]
+  const selectedExample = allExamples.find((ex) => ex.id === selectedExampleName) || allExamples[0]
 
   return (
     <>

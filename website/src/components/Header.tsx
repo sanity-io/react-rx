@@ -5,7 +5,7 @@ import {map} from 'rxjs/operators'
 import styled from 'styled-components'
 
 import {pageTransition$} from '../datastores/pageTransition'
-import {pages} from '../pages/pages'
+import {pages} from '../_pages/pages'
 import {COLORS} from '../theme'
 import {Link} from './Link'
 import {GithubLogo} from './logos/Github'
@@ -58,15 +58,14 @@ const PageLink = styled(omitProps(Link, ['isActive', 'isTransitioningTo']))<{
   &:link,
   &:visited {
     color: ${COLORS.text};
-    text-decoration: ${(props) =>
-      (props.isActive || props.isTransitioningTo) && `underline`};
+    text-decoration: ${(props) => (props.isActive || props.isTransitioningTo) && `underline`};
     text-decoration-style: ${(props) => props.isTransitioningTo && `wavy`};
   }
 `
 
 const LogoWrapper = styled.div`
-  font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica,
-    Arial, 'Lucida Grande', sans-serif;
+  font-family: Roboto, 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   font-weight: bold;
   font-size: 1.3em;
@@ -97,8 +96,7 @@ export const Header = rxComponent((page$) =>
                   <PageLink
                     href={page.route}
                     isTransitioningTo={
-                      transitionState.isTransitioning &&
-                      transitionState.next === page
+                      transitionState.isTransitioning && transitionState.next === page
                     }
                     isActive={transitionState.current === page}
                   >
@@ -112,6 +110,6 @@ export const Header = rxComponent((page$) =>
           </a>
         </HeaderInner>
       </StyledHeader>
-    ))
-  )
+    )),
+  ),
 )

@@ -15,7 +15,7 @@ module.exports = async function MdxTocLoader(src) {
 
   const mdxConfig = {
     skipExport: true,
-    remarkPlugins: [emoji, slug]
+    remarkPlugins: [emoji, slug],
   }
 
   const tocResult = toc(src, {slugify})

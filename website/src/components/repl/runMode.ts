@@ -17,7 +17,7 @@ export interface ModeSpec {
 export function runMode(
   source: string,
   modespec: ModeSpec | null,
-  options?: {state?: any; tabSize: number}
+  options?: {state?: any; tabSize: number},
 ): Observable<Token[]> {
   return new Observable((subscriber) => {
     const mode: Mode<any> = CodeMirror.getMode(CodeMirror.defaults, modespec)

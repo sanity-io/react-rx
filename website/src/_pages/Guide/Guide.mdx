@@ -19,8 +19,8 @@ import * as ReactRx from 'react-rx'
 const Fetch = ReactRx.component((props$) =>
   props$.pipe(
     switchMap((props) => fetch(props.url).then((response) => response.text())),
-    map((responseText) => <>Response is {responseText}</>)
-  )
+    map((responseText) => <>Response is {responseText}</>),
+  ),
 )
 
 // Usage
@@ -33,7 +33,7 @@ Instead of a _function_, `rxComponent` can also take an `Observable` as argument
 import * as ReactRx from 'react-rx'
 
 const Counter = ReactRx.component(
-  timer(0, 100).pipe(map((counter) => <>The number is {counter}</>))
+  timer(0, 100).pipe(map((counter) => <>The number is {counter}</>)),
 )
 
 ReactDOM.render(<Counter />, container)
@@ -217,7 +217,7 @@ function MyComponent(props) {
 
   const count$ = speed$.pipe(
     switchMap((speed) => timer(0, 1000 / speed)),
-    scan((count) => count + 1, 0)
+    scan((count) => count + 1, 0),
   )
 
   const currentSpeed = useObservable(speed$)
@@ -255,19 +255,13 @@ const ShowSliderValue = () => {
     onSliderChange$.pipe(
       map((event) => event.currentTarget.value),
       map((value) => Number(value)),
-      startWith(1)
-    )
+      startWith(1),
+    ),
   )
 
   return (
     <>
-      <input
-        type="range"
-        value={sliderValue}
-        min={1}
-        max={10}
-        onChange={onSliderChange}
-      />
+      <input type="range" value={sliderValue} min={1} max={10} onChange={onSliderChange} />
       <div>Value is: {sliderValue}</div>
     </>
   )

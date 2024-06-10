@@ -1,9 +1,9 @@
-import {Example} from '../../pages/Examples/Examples'
+import {Example} from '../../_pages/Examples/Examples'
 
 const fs = require('fs')
 
 export const ContextExample: Example = {
   id: 'react-context',
   title: 'React context',
-  source: fs.readFileSync(`${__dirname}/Context.example.jsx`, 'utf-8')
+  source: fs.readFileSync(`${__dirname}/Context.example.jsx`, 'utf-8'),
 }

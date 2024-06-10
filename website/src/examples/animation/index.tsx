@@ -1,7 +1,7 @@
 import bezier from 'bezier-easing'
 import styled from 'styled-components'
 
-import {Example} from '../../pages/Examples/Examples'
+import {Example} from '../../_pages/Examples/Examples'
 
 const fs = require('fs')
 
@@ -12,5 +12,5 @@ export const AnimationExample: Example = {
 import bezier from 'bezier-easing'
 `,
   scope: {bezier, styled},
-  source: fs.readFileSync(`${__dirname}/AnimationExample.tsx`, 'utf-8')
+  source: fs.readFileSync(`${__dirname}/AnimationExample.tsx`, 'utf-8'),
 }

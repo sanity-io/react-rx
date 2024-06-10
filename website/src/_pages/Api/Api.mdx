@@ -5,12 +5,8 @@
 **Signature**
 
 ```ts
-function component<Props>(
-  observable: Observable<Props>
-): React.FunctionComponent<{}>
-function component<Props>(
-  component: Component<Props>
-): React.FunctionComponent<Props>
+function component<Props>(observable: Observable<Props>): React.FunctionComponent<{}>
+function component<Props>(component: Component<Props>): React.FunctionComponent<Props>
 ```
 
 **Usage**
@@ -33,8 +29,8 @@ The `React.forwardRef()` equivalent for a Reactive component.
 function forwardRef<Props, Ref>(
   component: (
     input$: Observable<Props>,
-    ref: React.RefObject<Ref>
-  ) => React.FunctionComponent<Props>
+    ref: React.RefObject<Ref>,
+  ) => React.FunctionComponent<Props>,
 )
 ```
 
@@ -45,15 +41,8 @@ import * as ReactRx from 'react-rx'
 
 const MyInputWrapper = ReactRx.forwardRef((props$, ref) =>
   props$.pipe(
-    map((props) => (
-      <input
-        ref={ref}
-        type="text"
-        value={props.value}
-        onChange={props.onChange}
-      />
-    ))
-  )
+    map((props) => <input ref={ref} type="text" value={props.value} onChange={props.onChange} />),
+  ),
 )
 ```
 
@@ -66,10 +55,10 @@ Equivalent to `React.useState()` with the only difference that instead of the st
 ```ts
 function useState<T = undefined>(): [
   Observable<T | undefined>,
-  React.Dispatch<React.SetStateAction<T | undefined>>
+  React.Dispatch<React.SetStateAction<T | undefined>>,
 ]
 function useState<T>(
-  initial: T | (() => T)
+  initial: T | (() => T),
 ): [Observable<T>, React.Dispatch<React.SetStateAction<T>>]
 ```
 
@@ -90,10 +79,7 @@ This has no React API equivalent, but creates a `[Observable<Event>, (Event) => 
 **Signature**
 
 ```ts
-function useObservableEvent<Event>(): [
-  Observable<Event>,
-  (event: Event) => void
-]
+function useObservableEvent<Event>(): [Observable<Event>, (event: Event) => void]
 ```
 
 ## toObservable()

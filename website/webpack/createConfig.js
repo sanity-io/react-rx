@@ -10,11 +10,11 @@ module.exports = function createConfig(env) {
     entry: './src/entries/main.tsx',
     output: {
       path: path.resolve(__dirname, '..', 'public'),
-      filename: '[name]-[hash].js'
+      filename: '[name]-[hash].js',
     },
     resolve: {
       extensions: ['.tsx', '.ts', '.js'],
-      mainFields: ['browser', 'main']
+      mainFields: ['browser', 'main'],
     },
     plugins: [
       new CleanWebpackPlugin(),
@@ -22,48 +22,48 @@ module.exports = function createConfig(env) {
       new CopyPlugin({
         patterns: ['a', 'b'].map((n) => ({
           from: `src/examples/fetch/${n}.txt`,
-          to: `${n}.txt`
-        }))
+          to: `${n}.txt`,
+        })),
       }),
       new HtmlWebpackPlugin({
         template: 'src/index.html',
-        inject: true
-      })
+        inject: true,
+      }),
     ].filter(Boolean),
     node: {
       global: true,
       fs: 'empty',
       __filename: 'mock',
-      __dirname: 'mock'
+      __dirname: 'mock',
     },
     module: {
       rules: [
         {
           test: /\.([tj])sx?$/,
           use: 'babel-loader',
-          exclude: /node_modules/
+          exclude: /node_modules/,
         },
         {
           test: /\.mdx?$/,
-          use: ['babel-loader', path.resolve(__dirname, './mdx-toc-loader.js')]
+          use: ['babel-loader', path.resolve(__dirname, './mdx-toc-loader.js')],
         },
         {
           test: /\.html$/,
-          use: 'html-loader'
+          use: 'html-loader',
         },
         {
           test: /\.css$/i,
-          use: ['style-loader', 'css-loader']
-        }
-      ]
+          use: ['style-loader', 'css-loader'],
+        },
+      ],
     },
     ...(env === 'development' && {
       devServer: {
         port: 3000,
         host: '0.0.0.0',
         historyApiFallback: true,
-        disableHostCheck: true
-      }
+        disableHostCheck: true,
+      },
     }),
     devtool: env === 'development' ? 'source-map' : false,
     ...(env === 'production' && {
@@ -81,16 +81,16 @@ module.exports = function createConfig(env) {
           cacheGroups: {
             defaultVendors: {
               test: /[\\/]node_modules[\\/]/,
-              priority: -10
+              priority: -10,
             },
             default: {
               minChunks: 2,
               priority: -20,
-              reuseExistingChunk: true
-            }
-          }
-        }
-      }
-    })
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      },
+    }),
   }
 }

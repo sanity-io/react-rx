@@ -1,12 +1,4 @@
-import {
-  combineLatest,
-  map,
-  React,
-  ReactDOM,
-  rxComponent,
-  take,
-  timer
-} from '../_utils/globalScope'
+import {combineLatest, map, React, ReactDOM, rxComponent, take, timer} from '../_utils/globalScope'
 import {formatDistance} from 'date-fns'
 //@endimport
 
@@ -16,17 +8,17 @@ const UPDATE_INTERVAL = 1000
 const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(
   take(10),
   map(() => new Date()),
-  share()
+  share(),
 )
 
 const TimeDistance = rxComponent((props$) =>
   combineLatest([currentTime$, props$]).pipe(
     map(([currentTime, ownerProps]) =>
       formatDistance(ownerProps.time, currentTime, {
-        includeSeconds: ownerProps.includeSeconds
-      })
-    )
-  )
+        includeSeconds: ownerProps.includeSeconds,
+      }),
+    ),
+  ),
 )
 
 const NOW = new Date()
@@ -51,7 +43,4 @@ const PassThroughPropsExample = () => (
   </>
 )
 
-ReactDOM.render(
-  <PassThroughPropsExample />,
-  document.getElementById('pass-through-props-example')
-)
+ReactDOM.render(<PassThroughPropsExample />, document.getElementById('pass-through-props-example'))

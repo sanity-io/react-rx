@@ -1,14 +1,7 @@
 import {observableCallback} from 'observable-callback'
 import {CSSProperties} from 'react'
 
-import {
-  map,
-  of,
-  React,
-  ReactDOM,
-  rxComponent,
-  scan
-} from '../_utils/globalScope'
+import {map, of, React, ReactDOM, rxComponent, scan} from '../_utils/globalScope'
 //@endimport
 
 const CONTAINER: CSSProperties = {
@@ -17,7 +10,7 @@ const CONTAINER: CSSProperties = {
   position: 'relative',
   height: 200,
   width: 200,
-  textAlign: 'center'
+  textAlign: 'center',
 }
 
 const BADGE: CSSProperties = {
@@ -25,14 +18,14 @@ const BADGE: CSSProperties = {
   backgroundColor: 'red',
   padding: 4,
   height: 26,
-  width: 26
+  width: 26,
 }
 
 const [clicks$, click] = observableCallback()
 const clickCount$ = clicks$.pipe(scan((count) => count + 1, 0))
 
 const ClickCountBadge = rxComponent(
-  clickCount$.pipe(map((clicks) => <span style={BADGE}>{clicks}</span>))
+  clickCount$.pipe(map((clicks) => <span style={BADGE}>{clicks}</span>)),
 )
 
 const Clicker = rxComponent(of(<button onClick={click}>CLICK ME!</button>))

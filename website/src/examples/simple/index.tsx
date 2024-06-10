@@ -1,9 +1,9 @@
-import {Example} from '../../pages/Examples/Examples'
+import {Example} from '../../_pages/Examples/Examples'
 
 const fs = require('fs')
 
 export const SimpleExample: Example = {
   id: 'stateful-component',
   title: 'A stateful component',
-  source: fs.readFileSync(`${__dirname}/Counter.example.tsx`, 'utf-8')
+  source: fs.readFileSync(`${__dirname}/Counter.example.tsx`, 'utf-8'),
 }

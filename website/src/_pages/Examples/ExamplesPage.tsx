@@ -6,9 +6,5 @@ import {location$} from '../../datastores/location'
 import {Examples} from './Examples'
 
 export const ExamplesPage = rxComponent(
-  location$.pipe(
-    map((location) => (
-      <Examples selectedExampleName={location.hash?.substring(1)} />
-    ))
-  )
+  location$.pipe(map((location) => <Examples selectedExampleName={location.hash?.substring(1)} />)),
 )

@@ -2,15 +2,7 @@
 import bezier from 'bezier-easing'
 import styled from 'styled-components'
 
-import {
-  map,
-  React,
-  ReactDOM,
-  rxComponent,
-  state,
-  switchMap,
-  timer
-} from '../_utils/globalScope'
+import {map, React, ReactDOM, rxComponent, state, switchMap, timer} from '../_utils/globalScope'
 //@endimport
 
 const BALL_SIZE = 30
@@ -34,9 +26,9 @@ const AnimationExample = rxComponent(() => {
         map((n) => (n > MAX_TOP ? MAX_TOP * 2 - n : n)),
         map((linearTop): [number, EasingName] => [
           EASINGS[easing](linearTop / MAX_TOP) * MAX_TOP,
-          easing
-        ])
-      )
+          easing,
+        ]),
+      ),
     ),
     map(([top, currentEasing]) => (
       <>
@@ -48,10 +40,7 @@ const AnimationExample = rxComponent(() => {
         <SelectWrapperLabel>Easing function:</SelectWrapperLabel>
         <SelectWrapper>
           {Object.keys(EASINGS).map((easingName) => (
-            <label
-              key={easingName}
-              className={easingName === currentEasing ? 'selected' : ''}
-            >
+            <label key={easingName} className={easingName === currentEasing ? 'selected' : ''}>
               <input
                 tabIndex={0}
                 type="checkbox"
@@ -64,14 +53,11 @@ const AnimationExample = rxComponent(() => {
           ))}
         </SelectWrapper>
       </>
-    ))
+    )),
   )
 })
 
-ReactDOM.render(
-  <AnimationExample />,
-  document.getElementById('animation-example')
-)
+ReactDOM.render(<AnimationExample />, document.getElementById('animation-example'))
 
 // --- easing definitions and stylings
 const EASINGS = {
@@ -100,7 +86,7 @@ const EASINGS = {
   easeInBack: bezier(0.6, -0.28, 0.735, 0.045),
   easeOutBack: bezier(0.175, 0.885, 0.32, 1.275),
   easeInOutBack: bezier(0.68, -0.55, 0.265, 1.55),
-  easeLinear: (n: number) => n
+  easeLinear: (n: number) => n,
 }
 
 const BoxWrapper = styled.div`

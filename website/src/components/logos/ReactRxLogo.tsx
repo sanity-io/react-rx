@@ -16,11 +16,7 @@ const StyledReactLogo = styled(ReactLogo)`
   position: absolute;
 `
 
-export function ReactRxLogo(props: {
-  className?: string
-  style?: CSSProperties
-  size: string
-}) {
+export function ReactRxLogo(props: {className?: string; style?: CSSProperties; size: string}) {
   return (
     <div
       className={props.className}
@@ -30,7 +26,7 @@ export function ReactRxLogo(props: {
         position: 'relative',
         width: props.size,
         height: props.size,
-        ...props.style
+        ...props.style,
       }}
     >
       <StyledReactLogo width={props.size} height={props.size} />

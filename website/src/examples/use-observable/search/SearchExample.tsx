@@ -9,7 +9,7 @@ import {
   ReactDOM,
   switchMap,
   timer,
-  useMemoObservable
+  useMemoObservable,
 } from '../../_utils/globalScope'
 //@endimport
 
@@ -38,7 +38,7 @@ const search = (keyword: string): Observable<SearchResult> => {
   const delay = Math.max(1, Math.round(10 - keyword.length))
   return timer(delay * 200).pipe(
     map(() => range(delay).map((_, i) => ({title: `Hit #${i}`}))),
-    map((hits) => ({keyword, hits}))
+    map((hits) => ({keyword, hits})),
   )
 }
 
@@ -53,9 +53,7 @@ function SearchExample() {
         placeholder="Type a keyword to search"
         onChange={(event) => setKeyword(event.target.value)}
       />
-      <div>
-        The more characters you type, the faster the results will appear
-      </div>
+      <div>The more characters you type, the faster the results will appear</div>
       {useMemoObservable(
         () =>
           of(keyword).pipe(
@@ -73,9 +71,9 @@ function SearchExample() {
                   ))}
                 </ul>
               </>
-            ))
+            )),
           ),
-        [keyword]
+        [keyword],
       )}
     </>
   )

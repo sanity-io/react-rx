@@ -14,7 +14,7 @@ import {
   rxComponent,
   scan,
   startWith,
-  tap
+  tap,
 } from '../_utils/globalScope'
 //@endimport
 
@@ -31,7 +31,7 @@ const TodoApp = rxComponent(() => {
 
   const text$ = onInput$.pipe(
     map((e) => e.currentTarget.value),
-    startWith('')
+    startWith(''),
   )
 
   const items$ = onSubmit$.pipe(
@@ -41,7 +41,7 @@ const TodoApp = rxComponent(() => {
     filter((text) => text.length > 0),
     map((text) => ({text, id: Date.now()})),
     scan((items: TodoItem[], item) => items.concat(item), []),
-    startWith([])
+    startWith([]),
   )
 
   const inputValue$ = merge(text$, onSubmit$.pipe(mapTo('')))
@@ -57,7 +57,7 @@ const TodoApp = rxComponent(() => {
           <button>Add #{items.length + 1}</button>
         </form>
       </Wrapper>
-    ))
+    )),
   )
 })
 

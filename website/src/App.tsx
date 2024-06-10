@@ -57,13 +57,9 @@ export const App = rxComponent(
       return (
         <>
           <GlobalStyle />
-          {transition.component ? (
-            <transition.component />
-          ) : (
-            <div>Loading…</div>
-          )}
+          {transition.component ? <transition.component /> : <div>Loading…</div>}
         </>
       )
-    })
-  )
+    }),
+  ),
 )

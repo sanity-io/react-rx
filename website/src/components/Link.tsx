@@ -14,7 +14,7 @@ export function Link(props: React.ComponentProps<'a'>) {
         navigate(href)
       }
     },
-    [href, onClick]
+    [href, onClick],
   )
   return <a {...props} onClick={handleClick} />
 }

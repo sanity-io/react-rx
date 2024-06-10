@@ -11,7 +11,7 @@ import {
   take,
   throwError,
   timer,
-  handler
+  handler,
 } from '../_utils/globalScope'
 //@endimport
 
@@ -24,7 +24,7 @@ const ErrorsExample = rxComponent(() => {
   const [onError$, onError] = handler()
 
   const errors$ = onError$.pipe(
-    mergeMapTo(throwError(new Error("You clicked the button, didn't you!?")))
+    mergeMapTo(throwError(new Error("You clicked the button, didn't you!?"))),
   )
 
   return merge(timer$, errors$).pipe(
@@ -32,10 +32,7 @@ const ErrorsExample = rxComponent(() => {
     catchError((error, caught$) => {
       return merge(
         of({error}),
-        onRetry$.pipe(
-          take(1),
-          switchMapTo(concat(of({error, retrying: true}), caught$))
-        )
+        onRetry$.pipe(take(1), switchMapTo(concat(of({error, retrying: true}), caught$))),
       )
     }),
     map((props) => (
@@ -62,7 +59,7 @@ const ErrorsExample = rxComponent(() => {
           </>
         )}
       </div>
-    ))
+    )),
   )
 })
 

@@ -3,8 +3,8 @@ import {rxComponent} from 'react-rx'
 import {concat, from, of} from 'rxjs'
 import {map, scan, switchMap} from 'rxjs/operators'
 
-import {Page} from '../pages/pages'
-import {Container, Content} from '../pages/styles'
+import {Page} from '../_pages/pages'
+import {Container, Content} from '../_pages/styles'
 import {Header} from './Header'
 
 interface Props {
@@ -48,14 +48,14 @@ export const LoadPage = rxComponent<Props>((props$) => {
           map((component) => ({
             isLoading: false,
             title: page.title,
-            component
-          }))
-        )
-      )
+            component,
+          })),
+        ),
+      ),
     ),
     scan((prev, next) => ({...prev, ...next})),
     map(({isLoading, title, component}) => (
       <PageWrapper title={title} component={component} isLoading={isLoading} />
-    ))
+    )),
   )
 })

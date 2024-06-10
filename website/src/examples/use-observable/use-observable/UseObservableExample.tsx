@@ -8,16 +8,13 @@ import {ReactDOM, useMemoObservable} from '../../_utils/globalScope'
 
 const justNumbers$ = timer(0, 500)
 
-const numberReactElement$ = justNumbers$.pipe(
-  map((num) => <div>The number is {num}!</div>)
-)
+const numberReactElement$ = justNumbers$.pipe(map((num) => <div>The number is {num}!</div>))
 
-const [onSpeedChange$, onSpeedChange] =
-  observableCallback<React.SyntheticEvent<HTMLInputElement>>()
+const [onSpeedChange$, onSpeedChange] = observableCallback<React.SyntheticEvent<HTMLInputElement>>()
 
 const speed$: Observable<number> = onSpeedChange$.pipe(
   map((event) => Number(event.currentTarget.value)),
-  startWith(1000)
+  startWith(1000),
 )
 
 const UseObservableExample = () => (
@@ -29,9 +26,9 @@ const UseObservableExample = () => (
     {useMemoObservable(
       timer(0, 100).pipe(
         startWith(2),
-        map((num) => <>The number is {num}</>)
+        map((num) => <>The number is {num}</>),
       ),
-      []
+      [],
     )}
 
     <h2>Nested</h2>
@@ -41,30 +38,19 @@ const UseObservableExample = () => (
         speed$.pipe(
           switchMap(
             (speed: number): Observable<[number, number]> =>
-              timer(0, speed).pipe(
-                map((update): [number, number] => [speed, update])
-              )
+              timer(0, speed).pipe(map((update): [number, number] => [speed, update])),
           ),
           map(([speed, update]: [number, number]) => (
             <>
               Update interval:
-              <input
-                type="number"
-                value={speed}
-                onChange={onSpeedChange}
-                step={200}
-                min={0}
-              />
+              <input type="number" value={speed} onChange={onSpeedChange} step={200} min={0} />
               <div>Update {update}</div>
             </>
-          ))
+          )),
         ),
-      []
+      [],
     )}
   </>
 )
 
-ReactDOM.render(
-  <UseObservableExample />,
-  document.getElementById('use-observable-example')
-)
+ReactDOM.render(<UseObservableExample />, document.getElementById('use-observable-example'))

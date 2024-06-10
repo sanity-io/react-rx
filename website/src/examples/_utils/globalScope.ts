@@ -11,17 +11,7 @@ const {concatMap, mergeMap, switchMap, mapTo} = operators
 const {startWith, catchError, take} = operators
 //@endimport
 
-export {
-  combineLatest,
-  concat,
-  from,
-  interval,
-  merge,
-  Observable,
-  of,
-  throwError,
-  timer
-}
+export {combineLatest, concat, from, interval, merge, Observable, of, throwError, timer}
 export {
   catchError,
   concatMap,
@@ -34,7 +24,7 @@ export {
   startWith,
   switchMap,
   take,
-  tap
+  tap,
 }
 
 export {React, ReactDOM}
@@ -50,5 +40,5 @@ export {
   state,
   useAsObservable,
   useMemoObservable,
-  useObservable
+  useObservable,
 } from 'react-rx'

@@ -5,7 +5,7 @@ import {
   React,
   ReactDOM,
   rxComponent,
-  timer
+  timer,
 } from '../_utils/globalScope'
 
 //@endimport
@@ -14,7 +14,7 @@ const {withLatestFrom} = operators
 
 const STYLE: React.CSSProperties = {
   textAlign: 'center',
-  border: '1px dashed'
+  border: '1px dashed',
 }
 
 const SPEED = 2
@@ -25,7 +25,7 @@ const UseElementExample = rxComponent(() => {
 
   const count$ = timer(0, 16).pipe(
     map((n) => n % 400),
-    map((n) => (n > 200 ? -1 : 1))
+    map((n) => (n > 200 ? -1 : 1)),
   )
 
   return count$.pipe(
@@ -40,11 +40,9 @@ const UseElementExample = rxComponent(() => {
             style={{
               ...STYLE,
               backgroundColor: Tag == 'article' ? '#335186' : '#90441a',
-              borderRadius:
-                unpx(element?.style.borderRadius || '20px') +
-                direction * SPEED * -0.1,
+              borderRadius: unpx(element?.style.borderRadius || '20px') + direction * SPEED * -0.1,
               height: (element?.clientHeight || 0) + direction * SPEED,
-              width: (element?.clientWidth || 0) + direction * SPEED
+              width: (element?.clientWidth || 0) + direction * SPEED,
             }}
           >
             <div
@@ -52,7 +50,7 @@ const UseElementExample = rxComponent(() => {
                 ...(element && {fontSize: element.clientHeight / 5}),
                 width: '100%',
                 height: '100%',
-                lineHeight: '500%'
+                lineHeight: '500%',
               }}
             >
               {`<${Tag}>`}
@@ -60,11 +58,8 @@ const UseElementExample = rxComponent(() => {
           </Tag>
         </div>
       )
-    })
+    }),
   )
 })
 
-ReactDOM.render(
-  <UseElementExample />,
-  document.getElementById('use-element-example')
-)
+ReactDOM.render(<UseElementExample />, document.getElementById('use-element-example'))

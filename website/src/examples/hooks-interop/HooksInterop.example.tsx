@@ -1,13 +1,6 @@
 import {combineLatest, timer} from 'rxjs'
 
-import {
-  forwardRef,
-  map,
-  React,
-  ReactDOM,
-  rxComponent,
-  useAsObservable
-} from '../_utils/globalScope'
+import {forwardRef, map, React, ReactDOM, rxComponent, useAsObservable} from '../_utils/globalScope'
 //@endimport
 
 const ticks$ = timer(0, 1000)
@@ -29,15 +22,10 @@ const HooksInteropExample = rxComponent(() => {
     map(([clickCount, tickNumber]) => (
       <>
         Tick: {tickNumber}
-        <button onClick={inc}>
-          This button has been clicked {clickCount} times
-        </button>
+        <button onClick={inc}>This button has been clicked {clickCount} times</button>
       </>
-    ))
+    )),
   )
 })
 
-ReactDOM.render(
-  <HooksInteropExample />,
-  document.getElementById('forward-ref-example')
-)
+ReactDOM.render(<HooksInteropExample />, document.getElementById('forward-ref-example'))

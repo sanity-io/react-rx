@@ -6,7 +6,7 @@ import {
   startWith,
   switchMap,
   timer,
-  state
+  state,
 } from '../_utils/globalScope'
 //@endimport
 
@@ -31,13 +31,10 @@ const ReactiveStateExample = rxComponent(() => {
             {delay}
             <div>{label}</div>
           </>
-        ))
-      )
-    )
+        )),
+      ),
+    ),
   )
 })
 
-ReactDOM.render(
-  <ReactiveStateExample />,
-  document.getElementById('use-state-example')
-)
+ReactDOM.render(<ReactiveStateExample />, document.getElementById('use-state-example'))

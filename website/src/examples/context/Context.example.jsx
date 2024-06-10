@@ -1,17 +1,10 @@
-import {
-  map,
-  React,
-  ReactDOM,
-  rxComponent,
-  context,
-  state
-} from '../_utils/globalScope'
+import {map, React, ReactDOM, rxComponent, context, state} from '../_utils/globalScope'
 import {tap} from 'rxjs/operators'
 //@endimport
 
 const ModeContext = React.createContext({
   current: 'light',
-  set: (nextMode) => {}
+  set: (nextMode) => {},
 })
 
 const observeMode = () => context(ModeContext).pipe(map(({current}) => current))
@@ -32,7 +25,7 @@ const ModeSwitch = rxComponent(() => {
           Change to {next}
         </button>
       )
-    })
+    }),
   )
 })
 
@@ -46,7 +39,7 @@ const App = rxComponent(() => {
         <h2>Using {mode} mode</h2>
         <ModeSwitch />
       </div>
-    ))
+    )),
   )
 })
 
@@ -60,7 +53,7 @@ const ContextExample = rxComponent(() => {
           <App />
         </ModeContext.Provider>
       </>
-    ))
+    )),
   )
 })
 

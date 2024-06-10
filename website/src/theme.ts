@@ -4,7 +4,7 @@ const SIZES = {
   medium: {min: 780, max: 979},
   large: {min: 980, max: 1279},
   xlarge: {min: 1280, max: 1339},
-  xxlarge: {min: 1340, max: Infinity}
+  xxlarge: {min: 1340, max: Infinity},
 }
 
 export type Size = keyof typeof SIZES
@@ -42,7 +42,7 @@ export const media = {
     } else {
       return media.between(key, key)
     }
-  }
+  },
 }
 
 const PRIMARY = '#d9376e'
@@ -50,12 +50,12 @@ const LIGHT = '#eff0f3'
 export const COLORS = {
   header: {
     background: PRIMARY,
-    text: LIGHT
+    text: LIGHT,
   },
   background: LIGHT,
   text: '#2a2a2a',
   link: PRIMARY,
   secondary: '#ff8e3c',
   tertiary: '#ff8e3c',
-  shadow: '#444'
+  shadow: '#444',
 }

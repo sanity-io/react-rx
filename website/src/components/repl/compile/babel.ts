@@ -15,7 +15,7 @@ export function compile(code: string, options: Options = {}) {
       ...(options.plugins || []),
       optionalChaining,
       [transformTs, {allExtensions: true, isTSX: true}],
-      transformJsx
-    ]
+      transformJsx,
+    ],
   })
 }

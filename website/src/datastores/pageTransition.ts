@@ -1,16 +1,8 @@
 import * as React from 'react'
 import {concat, from, Observable, of} from 'rxjs'
-import {
-  map,
-  publishReplay,
-  refCount,
-  scan,
-  skip,
-  switchMap,
-  tap
-} from 'rxjs/operators'
+import {map, publishReplay, refCount, scan, skip, switchMap, tap} from 'rxjs/operators'
 
-import {Page} from '../pages/pages'
+import {Page} from '../_pages/pages'
 import {page$} from './page'
 
 interface PageTransition {
@@ -44,7 +36,7 @@ interface TransitionState {
 const transitionStart = (page: Page): TransitionStart => ({
   type: 'transitionStart',
   page,
-  component: null
+  component: null,
 })
 
 const transitionEnd =
@@ -52,7 +44,7 @@ const transitionEnd =
   (component: React.ComponentType<any>): TransitionEnd => ({
     type: 'transitionEnd',
     page,
-    component
+    component,
   })
 
 const INITIAL_TRANSITION_STATE: TransitionState = {
@@ -60,39 +52,30 @@ const INITIAL_TRANSITION_STATE: TransitionState = {
   component: null,
   next: null,
   current: null,
-  prev: null
+  prev: null,
 }
 
 export const pageTransition$: Observable<TransitionState> = page$.pipe(
   switchMap((page) =>
-    concat(
-      of(transitionStart(page)),
-      from(page.load()).pipe(map(transitionEnd(page)))
-    )
+    concat(of(transitionStart(page)), from(page.load()).pipe(map(transitionEnd(page)))),
   ),
-  scan(
-    (
-      acc: TransitionState,
-      event: TransitionStart | TransitionEnd
-    ): TransitionState => {
-      return event.type === 'transitionStart'
-        ? {
-            isTransitioning: true,
-            component: acc.component,
-            prev: acc.next || acc.current,
-            current: acc.current || null,
-            next: event.page
-          }
-        : {
-            isTransitioning: false,
-            component: event.component,
-            current: acc.next,
-            next: null,
-            prev: acc.current
-          }
-    },
-    INITIAL_TRANSITION_STATE
-  ),
+  scan((acc: TransitionState, event: TransitionStart | TransitionEnd): TransitionState => {
+    return event.type === 'transitionStart'
+      ? {
+          isTransitioning: true,
+          component: acc.component,
+          prev: acc.next || acc.current,
+          current: acc.current || null,
+          next: event.page,
+        }
+      : {
+          isTransitioning: false,
+          component: event.component,
+          current: acc.next,
+          next: null,
+          prev: acc.current,
+        }
+  }, INITIAL_TRANSITION_STATE),
   publishReplay(1),
-  refCount()
+  refCount(),
 )

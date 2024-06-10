@@ -1,11 +1,7 @@
 import * as React from 'react'
 
 export const RxJSLogo = (props: React.ComponentProps<'svg'>) => (
-  <svg
-    {...props}
-    viewBox="12.1 8.4 262.8 272.2"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg {...props} viewBox="12.1 8.4 262.8 272.2" xmlns="http://www.w3.org/2000/svg">
     <linearGradient
       id="a"
       gradientUnits="userSpaceOnUse"

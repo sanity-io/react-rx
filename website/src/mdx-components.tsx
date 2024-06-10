@@ -22,7 +22,7 @@ const InlineCode = styled.code`
 
 const CODEMIRROR_TSX_MODE: ModeSpec = {
   name: 'jsx',
-  base: {name: 'javascript', typescript: true}
+  base: {name: 'javascript', typescript: true},
 }
 
 const TSX_MODE_TYPES = ['js', 'jsx', 'tsx', 'ts']
@@ -39,11 +39,8 @@ interface CodeProps {
 export const components = {
   inlineCode: InlineCode,
   code: (props: CodeProps) => {
-    const [lang, range] = parseCodeFenceHeader(
-      props.className.replace(/^language-/, '')
-    )
-    const mode =
-      lang && TSX_MODE_TYPES.includes(lang) ? CODEMIRROR_TSX_MODE : null
+    const [lang, range] = parseCodeFenceHeader(props.className.replace(/^language-/, ''))
+    const mode = lang && TSX_MODE_TYPES.includes(lang) ? CODEMIRROR_TSX_MODE : null
     return (
       <ModeWrapper>
         <CodeMirrorMode highlighted={range} mode={mode}>
@@ -51,7 +48,7 @@ export const components = {
         </CodeMirrorMode>
       </ModeWrapper>
     )
-  }
+  },
 }
 
 const hash$ = location$.pipe(map((location) => location.hash))
@@ -65,10 +62,10 @@ const BookmarkedLink = rxComponent<{
       <a href={props.href} className={hash === props.href ? 'selected' : ''}>
         {props.children}
       </a>
-    ))
-  )
+    )),
+  ),
 )
 
 export const tocComponents = {
-  a: BookmarkedLink
+  a: BookmarkedLink,
 }
