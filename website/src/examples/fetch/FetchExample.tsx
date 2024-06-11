@@ -21,10 +21,7 @@ const FetchComponent = rxComponent((props$) =>
   ),
 )
 
-const VERCEL_URL =
-  'https://react-rx-git-move-to-next.sanity.build'
-const origin = new URL(VERCEL_URL)
-
+const origin = new URL('http://localhost:3000')
 const URLS = [
   new URL('/fetch/a.txt', origin),
   new URL('/fetch/b.txt', origin),

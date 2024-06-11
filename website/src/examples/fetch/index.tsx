@@ -7,11 +7,14 @@ export default function Example() {
     <Sandpack
       files={{
         '/App.tsx': App.replace(
-          'https://react-rx-git-move-to-next.sanity.build',
+          'http://localhost:3000',
           process.env
             .NEXT_PUBLIC_VERCEL_BRANCH_URL
             ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}`
-            : 'http://localhost:3000',
+            : process.env.NODE_ENV ===
+                'development'
+              ? 'http://localhost:3000'
+              : 'https://react-rx-git-move-to-next.sanity.build',
         ),
       }}
       useOldReactRx
