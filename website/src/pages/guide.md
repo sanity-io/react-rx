@@ -52,7 +52,7 @@ This creates an event handler that can be used to create an observable from even
 Here's an example of a component that displays the current value from a range input:
 
 ```tsx
-imprt {useState} from 'react'
+import {useState} from 'react'
 import {useObservableEvent} from 'react-rx'
 import {filter, map, tap} from 'rxjs/operators'
 
