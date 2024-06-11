@@ -1,5 +1,5 @@
 import {Sandpack} from '@codesandbox/sandpack-react'
-import {githubLight, atomDark} from '@codesandbox/sandpack-themes'
+import {atomDark, githubLight} from '@codesandbox/sandpack-themes'
 import {useTheme} from 'nextra-theme-docs'
 import {type ComponentProps, useMemo} from 'react'
 
