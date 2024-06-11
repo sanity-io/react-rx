@@ -1,9 +1,14 @@
-import {Example} from '../../pages/Examples/Examples'
+import Sandpack from '@/components/Sandpack'
 
-const fs = require('fs')
+import App from './Errors.example.tsx?raw'
 
-export const ErrorsExample: Example = {
-  id: 'errors',
-  title: 'Errors',
-  source: fs.readFileSync(`${__dirname}/Errors.example.jsx`, 'utf-8')
+export default function Example() {
+  return (
+    <Sandpack
+      files={{
+        '/App.tsx': App,
+      }}
+      useOldReactRx
+    />
+  )
 }

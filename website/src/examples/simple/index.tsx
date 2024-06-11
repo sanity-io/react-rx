@@ -1,9 +1,13 @@
-import {Example} from '../../pages/Examples/Examples'
+import Sandpack from '@/components/Sandpack'
 
-const fs = require('fs')
+import App from './Counter.example.tsx?raw'
 
-export const SimpleExample: Example = {
-  id: 'stateful-component',
-  title: 'A stateful component',
-  source: fs.readFileSync(`${__dirname}/Counter.example.tsx`, 'utf-8')
+export default function Example() {
+  return (
+    <Sandpack
+      files={{
+        '/App.tsx': App,
+      }}
+    />
+  )
 }

@@ -1,17 +1,10 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import bezier from 'bezier-easing'
-import styled from 'styled-components'
-
-import {
-  map,
-  React,
-  ReactDOM,
-  rxComponent,
-  state,
-  switchMap,
-  timer
-} from '../_utils/globalScope'
-//@endimport
+import * as React from 'react'
+import {createRoot} from 'react-dom/client'
+import {rxComponent, state} from 'react-rx-old'
+import {timer} from 'rxjs'
+import {map, switchMap} from 'rxjs/operators'
+import {styled} from 'styled-components'
 
 const BALL_SIZE = 30
 const BOX_SIZE = 300
@@ -26,52 +19,69 @@ function easeCustom(n: number) {
 type EasingName = keyof typeof EASINGS
 
 const AnimationExample = rxComponent(() => {
-  const [easing$, setEasing] = state<EasingName>('easeCustom')
+  const [easing$, setEasing] =
+    state<EasingName>('easeCustom')
   return easing$.pipe(
     switchMap((easing: EasingName) =>
       timer(0, 16).pipe(
         map((n) => (n % MAX_TOP) * 2),
-        map((n) => (n > MAX_TOP ? MAX_TOP * 2 - n : n)),
+        map((n) =>
+          n > MAX_TOP ? MAX_TOP * 2 - n : n,
+        ),
         map((linearTop): [number, EasingName] => [
-          EASINGS[easing](linearTop / MAX_TOP) * MAX_TOP,
-          easing
-        ])
-      )
+          EASINGS[easing](linearTop / MAX_TOP) *
+            MAX_TOP,
+          easing,
+        ]),
+      ),
     ),
     map(([top, currentEasing]) => (
       <>
+        <SelectWrapperLabel>
+          Easing function:
+        </SelectWrapperLabel>
+        <SelectWrapper>
+          {Object.keys(EASINGS).map(
+            (easingName) => (
+              <label
+                key={easingName}
+                className={
+                  easingName === currentEasing
+                    ? 'selected'
+                    : ''
+                }
+              >
+                <input
+                  tabIndex={0}
+                  type="checkbox"
+                  checked={
+                    easingName === currentEasing
+                  }
+                  key={easingName}
+                  onChange={() =>
+                    setEasing(
+                      easingName as EasingName,
+                    )
+                  }
+                />
+                {easingName.substring(4)}
+              </label>
+            ),
+          )}
+        </SelectWrapper>
         <BoxWrapper>
           <Box>
-            <Ball style={{top}} />
+            <Ball
+              style={{
+                top,
+              }}
+            />
           </Box>
         </BoxWrapper>
-        <SelectWrapperLabel>Easing function:</SelectWrapperLabel>
-        <SelectWrapper>
-          {Object.keys(EASINGS).map((easingName) => (
-            <label
-              key={easingName}
-              className={easingName === currentEasing ? 'selected' : ''}
-            >
-              <input
-                tabIndex={0}
-                type="checkbox"
-                checked={easingName === currentEasing}
-                key={easingName}
-                onChange={() => setEasing(easingName as EasingName)}
-              />
-              {easingName.substring(4)}
-            </label>
-          ))}
-        </SelectWrapper>
       </>
-    ))
+    )),
   )
 })
-
-ReactDOM.render(
-  <AnimationExample />,
-  document.getElementById('animation-example')
-)
 
 // --- easing definitions and stylings
 const EASINGS = {
@@ -81,7 +91,12 @@ const EASINGS = {
   easeInOutSine: bezier(0.445, 0.05, 0.55, 0.95),
   easeInQuad: bezier(0.55, 0.085, 0.68, 0.53),
   easeOutQuad: bezier(0.25, 0.46, 0.45, 0.94),
-  easeInOutQuad: bezier(0.455, 0.03, 0.515, 0.955),
+  easeInOutQuad: bezier(
+    0.455,
+    0.03,
+    0.515,
+    0.955,
+  ),
   easeInCubic: bezier(0.55, 0.055, 0.675, 0.19),
   easeOutCubic: bezier(0.215, 0.61, 0.355, 1),
   easeInOutCubic: bezier(0.645, 0.045, 0.355, 1),
@@ -100,7 +115,7 @@ const EASINGS = {
   easeInBack: bezier(0.6, -0.28, 0.735, 0.045),
   easeOutBack: bezier(0.175, 0.885, 0.32, 1.275),
   easeInOutBack: bezier(0.68, -0.55, 0.265, 1.55),
-  easeLinear: (n: number) => n
+  easeLinear: (n: number) => n,
 }
 
 const BoxWrapper = styled.div`
@@ -154,3 +169,21 @@ const SelectWrapper = styled.div`
     color: #333;
   }
 `
+
+export default function App() {
+  /**
+   * Uses a `createRoot` workaround as legacy `rxComponent` APIs are not fully supported in Strict Mode
+   */
+  React.useEffect(() => {
+    const root = createRoot(
+      document.getElementById(
+        'animation-example',
+      )!,
+    )
+    root.render(<AnimationExample />)
+    return () => {
+      root.unmount()
+    }
+  }, [])
+  return <div id="animation-example" />
+}
