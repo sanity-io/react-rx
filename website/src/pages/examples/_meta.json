@@ -1,6 +1,5 @@
 {
-  "hello-world": "A simple component",
-  "simple": "A stateful component",
+  "simple": "Simple",
   "reactive-state": "Reactive component state",
   "todo-app": "An Application",
   "animation": "Animation",
