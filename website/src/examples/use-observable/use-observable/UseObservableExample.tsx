@@ -1,9 +1,9 @@
 import {observableCallback} from 'observable-callback'
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import type {SyntheticEvent} from 'react'
 import {useMemoObservable} from 'react-rx-old'
 import {Observable, of, timer} from 'rxjs'
 import {
+  map,
   startWith,
   switchMap,
 } from 'rxjs/operators'
@@ -16,7 +16,7 @@ const numberReactElement$ = justNumbers$.pipe(
 
 const [onSpeedChange$, onSpeedChange] =
   observableCallback<
-    React.SyntheticEvent<HTMLInputElement>
+    SyntheticEvent<HTMLInputElement>
   >()
 
 const speed$: Observable<number> =
