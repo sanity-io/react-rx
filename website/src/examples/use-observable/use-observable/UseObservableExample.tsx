@@ -1,7 +1,11 @@
 import {observableCallback} from 'observable-callback'
 import type {SyntheticEvent} from 'react'
 import {useMemoObservable} from 'react-rx-old'
-import {Observable, of, timer} from 'rxjs'
+import {
+  Observable,
+  of,
+  timer,
+} from 'rxjs'
 import {
   map,
   startWith,
@@ -10,9 +14,12 @@ import {
 
 const justNumbers$ = timer(0, 500)
 
-const numberReactElement$ = justNumbers$.pipe(
-  map((num) => <div>The number is {num}!</div>),
-)
+const numberReactElement$ =
+  justNumbers$.pipe(
+    map((num) => (
+      <div>The number is {num}!</div>
+    )),
+  )
 
 const [onSpeedChange$, onSpeedChange] =
   observableCallback<
@@ -29,30 +36,37 @@ const speed$: Observable<number> =
 
 const UseObservableExample = () => (
   <>
-    <h2>An observable of react elements</h2>
+    <h2>
+      An observable of react elements
+    </h2>
     {useMemoObservable(
       of(<div>HELLO SYNC</div>),
       [],
     )}
     {useMemoObservable(
-      numberReactElement$.pipe(startWith(2)),
+      numberReactElement$.pipe(
+        startWith(2),
+      ),
       [],
     )}
     <h2>
-      An observable with child as render func
+      An observable with child as render
+      func
     </h2>
     {useMemoObservable(
       timer(0, 100).pipe(
         startWith(2),
-        map((num) => <>The number is {num}</>),
+        map((num) => (
+          <>The number is {num}</>
+        )),
       ),
       [],
     )}
 
     <h2>Nested</h2>
     <p>
-      You can adjust the update speed by changing
-      update interval below
+      You can adjust the update speed by
+      changing update interval below
     </p>
     {useMemoObservable(
       () =>
@@ -60,13 +74,17 @@ const UseObservableExample = () => (
           switchMap(
             (
               speed: number,
-            ): Observable<[number, number]> =>
+            ): Observable<
+              [number, number]
+            > =>
               timer(0, speed).pipe(
                 map(
-                  (update): [number, number] => [
-                    speed,
+                  (
                     update,
-                  ],
+                  ): [
+                    number,
+                    number,
+                  ] => [speed, update],
                 ),
               ),
           ),
@@ -80,11 +98,15 @@ const UseObservableExample = () => (
                 <input
                   type="number"
                   value={speed}
-                  onChange={onSpeedChange}
+                  onChange={
+                    onSpeedChange
+                  }
                   step={200}
                   min={0}
                 />
-                <div>Update {update}</div>
+                <div>
+                  Update {update}
+                </div>
               </>
             ),
           ),

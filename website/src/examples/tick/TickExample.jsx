@@ -12,10 +12,16 @@ const {
   Observable,
 } = RxJS
 
-const {map, filter, reduce, scan, tap} = operators
-const {concatMap, mergeMap, switchMap, mapTo} =
+const {map, filter, reduce, scan, tap} =
   operators
-const {startWith, catchError, take} = operators
+const {
+  concatMap,
+  mergeMap,
+  switchMap,
+  mapTo,
+} = operators
+const {startWith, catchError, take} =
+  operators
 //@endimport
 
 import {observableCallback} from 'observable-callback'
@@ -31,8 +37,10 @@ import {
   useObservable,
 } from 'react-rx-old'
 
-const {distinctUntilChanged, sampleTime} =
-  operators
+const {
+  distinctUntilChanged,
+  sampleTime,
+} = operators
 
 const Ticker = rxComponent((props$) =>
   props$.pipe(
@@ -42,29 +50,32 @@ const Ticker = rxComponent((props$) =>
       timer(300).pipe(mapTo(tick)),
     ),
     startWith(0),
-    map((tick) => `Delayed tick: ${tick}`),
+    map(
+      (tick) => `Delayed tick: ${tick}`,
+    ),
   ),
 )
 
-const TickerWithSubTick = rxComponent((props$) =>
-  props$.pipe(
-    map((props) => props.tick),
-    distinctUntilChanged(),
-    switchMap((tick) =>
-      timer(0, 10).pipe(
-        map((subtick) => ({
-          tick,
-          subtick,
-        })),
+const TickerWithSubTick = rxComponent(
+  (props$) =>
+    props$.pipe(
+      map((props) => props.tick),
+      distinctUntilChanged(),
+      switchMap((tick) =>
+        timer(0, 10).pipe(
+          map((subtick) => ({
+            tick,
+            subtick,
+          })),
+        ),
       ),
+      sampleTime(20),
+      map((props) => (
+        <div>
+          {props.tick}:{props.subtick}
+        </div>
+      )),
     ),
-    sampleTime(20),
-    map((props) => (
-      <div>
-        {props.tick}:{props.subtick}
-      </div>
-    )),
-  ),
 )
 
 const TickExample = rxComponent(
@@ -73,7 +84,9 @@ const TickExample = rxComponent(
       <>
         <div>Tick: {tick}</div>
         <Ticker tick={tick} />
-        <TickerWithSubTick tick={tick} />
+        <TickerWithSubTick
+          tick={tick}
+        />
       </>
     )),
   ),

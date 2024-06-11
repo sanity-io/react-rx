@@ -7,6 +7,7 @@ export default function App() {
     () => timer(0, 1000),
     [],
   )
-  const seconds = useObservable(observable)
+  const seconds =
+    useObservable(observable)
   return <>Seconds: {seconds}</>
 }

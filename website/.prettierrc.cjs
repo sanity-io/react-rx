@@ -13,7 +13,7 @@ module.exports = {
       ],
       options: {
         // Because the split view in Sandpack makes the space narrow we format the code accordingly
-        printWidth: 50,
+        printWidth: 40,
         tabWidth: 2,
         singleQuote: true,
         quoteProps: 'consistent',

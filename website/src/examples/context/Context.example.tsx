@@ -36,7 +36,9 @@ const ModeSwitch = rxComponent(() => {
   return modeCtx$.pipe(
     map(({current, set}) => {
       const next =
-        current === 'light' ? 'dark' : 'light'
+        current === 'light'
+          ? 'dark'
+          : 'light'
       return (
         <button
           onClick={() => set(next)}
@@ -68,23 +70,26 @@ const App = rxComponent(() => {
   )
 })
 
-const ContextExample = rxComponent(() => {
-  const [mode$, setMode] = state('light')
+const ContextExample = rxComponent(
+  () => {
+    const [mode$, setMode] =
+      state('light')
 
-  return mode$.pipe(
-    map((mode) => (
-      <>
-        <ModeContext.Provider
-          value={{
-            current: mode,
-            set: setMode,
-          }}
-        >
-          <App />
-        </ModeContext.Provider>
-      </>
-    )),
-  )
-})
+    return mode$.pipe(
+      map((mode) => (
+        <>
+          <ModeContext.Provider
+            value={{
+              current: mode,
+              set: setMode,
+            }}
+          >
+            <App />
+          </ModeContext.Provider>
+        </>
+      )),
+    )
+  },
+)
 
 export default ContextExample
