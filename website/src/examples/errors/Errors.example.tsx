@@ -1,37 +1,18 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-import * as RxJS from 'rxjs'
-import * as operators from 'rxjs/operators'
-
-const {of, from, concat, merge} = RxJS
-const {
-  timer,
-  interval,
-  throwError,
-  combineLatest,
-  Observable,
-} = RxJS
-
-const {map, filter, reduce, scan, tap} = operators
-const {concatMap, mergeMap, switchMap, mapTo} =
-  operators
-const {startWith, catchError, take} = operators
-//@endimport
-
-import {observableCallback} from 'observable-callback'
+import {handler, rxComponent} from 'react-rx-old'
 import {
-  context,
-  elementRef,
-  forwardRef,
-  handler,
-  rxComponent,
-  state,
-  useAsObservable,
-  useMemoObservable,
-  useObservable,
-} from 'react-rx-old'
-
-const {mergeMapTo, switchMapTo} = operators
+  concat,
+  merge,
+  of,
+  throwError,
+  timer,
+} from 'rxjs'
+import {
+  catchError,
+  map,
+  mergeMapTo,
+  switchMapTo,
+  take,
+} from 'rxjs/operators'
 
 const timer$ = timer(0, 1000)
 
@@ -70,7 +51,7 @@ const ErrorsExample = rxComponent(() => {
         ),
       )
     }),
-    map((props) => (
+    map((props: any) => (
       <div>
         {props.error ? (
           props.retrying ? (
@@ -110,7 +91,4 @@ const ErrorsExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(
-  <ErrorsExample />,
-  document.getElementById('errors-example'),
-)
+export default ErrorsExample

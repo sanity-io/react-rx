@@ -1,6 +1,6 @@
 import Sandpack from '@/components/Sandpack'
 
-import App from './AnimationExample.tsx?raw'
+import App from './TickExample.jsx?raw'
 
 export default function Example() {
   return (
@@ -9,10 +9,6 @@ export default function Example() {
         '/App.tsx': App,
       }}
       useOldReactRx
-      dependencies={{
-        'bezier-easing': 'latest',
-        'styled-components': 'latest',
-      }}
     />
   )
 }

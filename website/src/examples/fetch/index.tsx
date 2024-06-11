@@ -1,12 +1,20 @@
-import {Example} from '../../_pages/Examples/Examples'
+import Sandpack from '@/components/Sandpack'
 
-const fs = require('fs')
+import App from './FetchExample.tsx?raw'
 
-export const FetchExample: Example = {
-  id: 'fetch',
-  title: 'Fetch',
-  source: fs.readFileSync(
-    `${__dirname}/FetchExample.jsx`,
-    'utf-8',
-  ),
+export default function Example() {
+  return (
+    <Sandpack
+      files={{
+        '/App.tsx': App.replace(
+          'process.env.NEXT_PUBLIC_VERCEL_URL',
+          JSON.stringify(
+            process.env.NEXT_PUBLIC_VERCEL_URL ||
+              '',
+          ),
+        ),
+      }}
+      useOldReactRx
+    />
+  )
 }

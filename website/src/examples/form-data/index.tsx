@@ -1,16 +1,14 @@
-import styled from 'styled-components'
+import Sandpack from '@/components/Sandpack'
 
-import {Example} from '../../_pages/Examples/Examples'
-import storage from './storage'
+import App from './FormDataExample.jsx?raw'
 
-const fs = require('fs')
-
-export const FormDataExample: Example = {
-  id: 'form-data',
-  title: 'Form data',
-  scope: {storage, styled},
-  source: fs.readFileSync(
-    `${__dirname}/FormDataExample.jsx`,
-    'utf-8',
-  ),
+export default function Example() {
+  return (
+    <Sandpack
+      files={{
+        '/App.tsx': App,
+      }}
+      useOldReactRx
+    />
+  )
 }

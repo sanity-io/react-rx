@@ -8,12 +8,9 @@ export default function Example() {
       files={{
         '/App.tsx': App,
       }}
+      useOldReactRx
       dependencies={{
         'styled-components': 'latest',
-        /**
-          * Temporary, needed for legacy `rxComponent` APIs
-         */
-        'react-rx-old': 'npm:react-rx@2.1.3',
       }}
     />
   )

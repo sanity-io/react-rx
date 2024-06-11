@@ -1,16 +1,34 @@
 import {Sandpack} from '@codesandbox/sandpack-react'
 import {githubLight} from '@codesandbox/sandpack-themes'
-import type {ComponentProps} from 'react'
+import {type ComponentProps, useMemo} from 'react'
 
 import reactRxRaw from '../../../dist/index.js?raw'
 import reactRxPackageJson from '../../../package.json'
+import websitePackageJson from '../../package.json'
+
+const {dependencies: websiteDependencies} = websitePackageJson
 
 export default function SandpackComponent({
   files = {},
-  dependencies = {},
+  dependencies = null,
+  useOldReactRx = false,
 }: Pick<ComponentProps<typeof Sandpack>, 'files'> & {
-  dependencies?: Record<string, string>
+  dependencies?: Partial<Record<keyof typeof websiteDependencies, 'latest'>> | null
+  /**
+   * Temporary, needed for legacy `rxComponent` APIs
+   */
+  useOldReactRx?: boolean
 }) {
+  const extraDependencies = useMemo(() => {
+    const result = {}
+    if (!dependencies) return result
+    for (const [name] of Object.entries(dependencies)) {
+      if (websiteDependencies[name]) {
+        result[name] = websiteDependencies[name]
+      }
+    }
+    return result
+  }, [dependencies])
   return (
     <Sandpack
       template="vite-react-ts"
@@ -48,10 +66,12 @@ export default function SandpackComponent({
           ...(process.env.NODE_ENV === 'development'
             ? {}
             : {'react-rx': reactRxPackageJson.version}),
-
           ...reactRxPackageJson.dependencies,
           rxjs: reactRxPackageJson.peerDependencies.rxjs,
-          ...dependencies,
+          ...extraDependencies,
+          ...(useOldReactRx
+            ? {'react-rx-old': websitePackageJson.dependencies['react-rx-old']}
+            : {}),
         },
       }}
     />

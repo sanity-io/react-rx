@@ -77,9 +77,4 @@ const EventHandlersExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(
-  <EventHandlersExample />,
-  document.getElementById(
-    'event-handlers-example',
-  ),
-)
+export default EventHandlersExample

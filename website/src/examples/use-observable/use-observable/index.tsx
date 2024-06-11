@@ -1,12 +1,14 @@
-import {Example} from '../../../_pages/Examples/Examples'
+import Sandpack from '@/components/Sandpack'
 
-const fs = require('fs')
+import App from './UseObservableExample.tsx?raw'
 
-export const UseObservableExample: Example = {
-  id: 'use-observable',
-  title: 'Use observable',
-  source: fs.readFileSync(
-    `${__dirname}/UseObservableExample.tsx`,
-    'utf-8',
-  ),
+export default function Example() {
+  return (
+    <Sandpack
+      files={{
+        '/App.tsx': App,
+      }}
+      useOldReactRx
+    />
+  )
 }

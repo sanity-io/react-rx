@@ -45,6 +45,11 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // matching all API routes
+        source: '/fetch/:path*',
+        headers: [{key: 'Access-Control-Allow-Origin', value: '*'}],
+      },
     ]
   },
 }

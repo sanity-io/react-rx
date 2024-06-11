@@ -1,38 +1,12 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-import * as RxJS from 'rxjs'
-import {tap} from 'rxjs/operators'
-import * as operators from 'rxjs/operators'
-
-const {of, from, concat, merge} = RxJS
-const {
-  timer,
-  interval,
-  throwError,
-  combineLatest,
-  Observable,
-} = RxJS
-
-const {map, filter, reduce, scan, tap} = operators
-const {concatMap, mergeMap, switchMap, mapTo} =
-  operators
-const {startWith, catchError, take} = operators
-//@endimport
-
-import {observableCallback} from 'observable-callback'
+import {createContext} from 'react'
 import {
   context,
-  elementRef,
-  forwardRef,
-  handler,
   rxComponent,
   state,
-  useAsObservable,
-  useMemoObservable,
-  useObservable,
 } from 'react-rx-old'
+import {map, tap} from 'rxjs/operators'
 
-const ModeContext = React.createContext({
+const ModeContext = createContext({
   current: 'light',
   set: (nextMode) => {},
 })
@@ -113,7 +87,4 @@ const ContextExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(
-  <ContextExample />,
-  document.getElementById('context-example'),
-)
+export default ContextExample

@@ -1,12 +1,14 @@
-import {Example} from '../../_pages/Examples/Examples'
+import Sandpack from '@/components/Sandpack'
 
-const fs = require('fs')
+import App from './EventHandlersExample.tsx?raw'
 
-export const EventHandlersExample: Example = {
-  id: 'event-handlers',
-  title: 'Event handlers',
-  source: fs.readFileSync(
-    `${__dirname}/EventHandlersExample.tsx`,
-    'utf-8',
-  ),
+export default function Example() {
+  return (
+    <Sandpack
+      files={{
+        '/App.tsx': App,
+      }}
+      useOldReactRx
+    />
+  )
 }

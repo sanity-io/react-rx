@@ -1,12 +1,14 @@
-import {Example} from '../../_pages/Examples/Examples'
+import Sandpack from '@/components/Sandpack'
 
-const fs = require('fs')
+import App from './Context.example.tsx?raw'
 
-export const ContextExample: Example = {
-  id: 'react-context',
-  title: 'React context',
-  source: fs.readFileSync(
-    `${__dirname}/Context.example.jsx`,
-    'utf-8',
-  ),
+export default function Example() {
+  return (
+    <Sandpack
+      files={{
+        '/App.tsx': App,
+      }}
+      useOldReactRx
+    />
+  )
 }

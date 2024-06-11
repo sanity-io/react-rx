@@ -1,6 +1,6 @@
 import Sandpack from '@/components/Sandpack'
 
-import App from './ReactiveState.example.jsx?raw'
+import App from './ReactiveStateExample.tsx?raw'
 
 export default function Example() {
   return (
@@ -8,6 +8,7 @@ export default function Example() {
       files={{
         '/App.tsx': App,
       }}
+      useOldReactRx
     />
   )
 }
