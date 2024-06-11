@@ -50,12 +50,8 @@ export default function SandpackComponent({
             : {'react-rx': reactRxPackageJson.version}),
 
           ...reactRxPackageJson.dependencies,
-          'rxjs': reactRxPackageJson.peerDependencies.rxjs,
+          rxjs: reactRxPackageJson.peerDependencies.rxjs,
           ...dependencies,
-          /**
-           * Temporary, needed for legacy examples
-           */
-          'react-rx-old': 'npm:react-rx@2.1.3',
         },
       }}
     />

@@ -1,40 +1,16 @@
 import {ChangeEvent, FormEvent} from 'react'
-import {styled} from 'styled-components'
-
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-import * as RxJS from 'rxjs'
-import * as operators from 'rxjs/operators'
-
-const {of, from, concat, merge} = RxJS
-const {
-  timer,
-  interval,
-  throwError,
-  combineLatest,
-  Observable,
-} = RxJS
-
-const {map, filter, reduce, scan, tap} = operators
-const {concatMap, mergeMap, switchMap, mapTo} =
-  operators
-const {startWith, catchError, take} = operators
-//@endimport
-
-import {observableCallback} from 'observable-callback'
+import {handler, rxComponent} from 'react-rx-old'
+import {combineLatest, merge} from 'rxjs'
 import {
-  context,
-  elementRef,
-  forwardRef,
-  handler,
-  rxComponent,
-  state,
-  useAsObservable,
-  useMemoObservable,
-  useObservable,
-} from 'react-rx-old'
-
-const {withLatestFrom} = operators
+  filter,
+  map,
+  mapTo,
+  scan,
+  startWith,
+  tap,
+  withLatestFrom,
+} from 'rxjs/operators'
+import {styled} from 'styled-components'
 
 interface TodoItem {
   id: number
@@ -112,11 +88,6 @@ function TodoList(props: ListProps) {
   )
 }
 
-ReactDOM.render(
-  <TodoApp />,
-  document.getElementById('todo-app-example'),
-)
-
 const Wrapper = styled.div`
   label {
     display: block;
@@ -127,3 +98,7 @@ const Wrapper = styled.div`
     padding: 5px;
   }
 `
+
+export default function App() {
+  return <TodoApp />
+}
