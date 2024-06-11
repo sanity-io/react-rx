@@ -1,7 +1,5 @@
 const sanityConfig = require('@sanity/prettier-config')
 
-console.log(sanityConfig)
-
 module.exports = {
   ...sanityConfig,
   overrides: [

@@ -1,14 +1,36 @@
+import * as React from 'react'
+import * as ReactDOM from 'react-dom'
+import * as RxJS from 'rxjs'
 import {tap} from 'rxjs/operators'
+import * as operators from 'rxjs/operators'
 
+const {of, from, concat, merge} = RxJS
+const {
+  timer,
+  interval,
+  throwError,
+  combineLatest,
+  Observable,
+} = RxJS
+
+const {map, filter, reduce, scan, tap} = operators
+const {concatMap, mergeMap, switchMap, mapTo} =
+  operators
+const {startWith, catchError, take} = operators
+//@endimport
+
+import {observableCallback} from 'observable-callback'
 import {
   context,
-  map,
-  React,
-  ReactDOM,
+  elementRef,
+  forwardRef,
+  handler,
   rxComponent,
   state,
-} from '../_utils/globalScope'
-//@endimport
+  useAsObservable,
+  useMemoObservable,
+  useObservable,
+} from 'react-rx-old'
 
 const ModeContext = React.createContext({
   current: 'light',

@@ -1,15 +1,12 @@
 import Sandpack from '@/components/Sandpack'
 
-import App from './TodoApp.example.tsx?raw'
+import App from './ReactiveState.example.jsx?raw'
 
 export default function Example() {
   return (
     <Sandpack
       files={{
         '/App.tsx': App,
-      }}
-      dependencies={{
-        'styled-components': 'latest',
       }}
     />
   )

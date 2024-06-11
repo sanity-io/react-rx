@@ -2,8 +2,8 @@ import {Sandpack} from '@codesandbox/sandpack-react'
 import {githubLight} from '@codesandbox/sandpack-themes'
 import type {ComponentProps} from 'react'
 
-import reactRxRaw from '../../../../dist/index.js?raw'
-import reactRxPackageJson from '../../../../package.json'
+import reactRxRaw from '../../../dist/index.js?raw'
+import reactRxPackageJson from '../../../package.json'
 
 export default function SandpackComponent({
   files = {},
@@ -50,8 +50,12 @@ export default function SandpackComponent({
             : {'react-rx': reactRxPackageJson.version}),
 
           ...reactRxPackageJson.dependencies,
-          rxjs: reactRxPackageJson.peerDependencies.rxjs,
+          'rxjs': reactRxPackageJson.peerDependencies.rxjs,
           ...dependencies,
+          /**
+           * Temporary, needed for legacy examples
+           */
+          'react-rx-old': 'npm:react-rx@2.1.3',
         },
       }}
     />

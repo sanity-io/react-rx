@@ -1,17 +1,38 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import bezier from 'bezier-easing'
 import styled from 'styled-components'
+import * as React from 'react'
+import * as ReactDOM from 'react-dom'
+import * as RxJS from 'rxjs'
+import * as operators from 'rxjs/operators'
 
+const {of, from, concat, merge} = RxJS
+const {
+  timer,
+  interval,
+  throwError,
+  combineLatest,
+  Observable,
+} = RxJS
+
+const {map, filter, reduce, scan, tap} = operators
+const {concatMap, mergeMap, switchMap, mapTo} =
+  operators
+const {startWith, catchError, take} = operators
+//@endimport
+
+import {observableCallback} from 'observable-callback'
 import {
-  map,
-  React,
-  ReactDOM,
+  context,
+  elementRef,
+  forwardRef,
+  handler,
   rxComponent,
   state,
-  switchMap,
-  timer,
-} from '../_utils/globalScope'
-//@endimport
+  useAsObservable,
+  useMemoObservable,
+  useObservable,
+} from 'react-rx-old'
 
 const BALL_SIZE = 30
 const BOX_SIZE = 300
