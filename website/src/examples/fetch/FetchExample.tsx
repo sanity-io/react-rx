@@ -21,10 +21,9 @@ const FetchComponent = rxComponent((props$) =>
   ),
 )
 
-const VERCEL_URL =
-  process.env.NEXT_PUBLIC_VERCEL_URL
+const VERCEL_URL = '__VERCEL__URL__'
 const origin = new URL(
-  VERCEL_URL
+  VERCEL_URL !== '__VERCEL__URL__'
     ? `https://${VERCEL_URL}`
     : 'http://localhost:3000',
 )

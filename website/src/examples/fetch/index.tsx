@@ -7,11 +7,9 @@ export default function Example() {
     <Sandpack
       files={{
         '/App.tsx': App.replace(
-          'process.env.NEXT_PUBLIC_VERCEL_URL',
-          JSON.stringify(
-            process.env.NEXT_PUBLIC_VERCEL_URL ||
-              '',
-          ),
+          '__VERCEL__URL__',
+          process.env.NEXT_PUBLIC_VERCEL_URL ||
+            '__VERCEL__URL__',
         ),
       }}
       useOldReactRx
