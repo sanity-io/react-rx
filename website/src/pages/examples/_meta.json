@@ -1,14 +1,9 @@
 {
   "simple": "Simple",
-  "reactive-state": "Reactive component state",
-  "todo-app": "An Application",
+  "counters": "Advanced counters",
+  "errors": "Error handling",
+  "todo-app": "Todo app",
   "animation": "Animation",
   "context": "React context",
-  "errors": "Errors",
-  "event-handlers": "Event handlers",
-  "fetch": "Fetch",
-  "sync": "Sync rendering",
-  "form-data": "Form data",
-  "tick": "Ticker",
-  "fizz-buzz": "Fizz Buzz"
+  "sync": "Sync rendering"
 }
