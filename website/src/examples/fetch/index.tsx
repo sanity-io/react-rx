@@ -7,9 +7,11 @@ export default function Example() {
     <Sandpack
       files={{
         '/App.tsx': App.replace(
-          '__VERCEL__URL__',
-          process.env.NEXT_PUBLIC_VERCEL_URL ||
-            '__VERCEL__URL__',
+          'https://react-rx-git-move-to-next.sanity.build',
+          process.env
+            .NEXT_PUBLIC_VERCEL_BRANCH_URL
+            ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}`
+            : 'http://localhost:3000',
         ),
       }}
       useOldReactRx
