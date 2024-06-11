@@ -12,10 +12,16 @@ const {
   Observable,
 } = RxJS
 
-const {map, filter, reduce, scan, tap} = operators
-const {concatMap, mergeMap, switchMap, mapTo} =
+const {map, filter, reduce, scan, tap} =
   operators
-const {startWith, catchError, take} = operators
+const {
+  concatMap,
+  mergeMap,
+  switchMap,
+  mapTo,
+} = operators
+const {startWith, catchError, take} =
+  operators
 //@endimport
 
 import {observableCallback} from 'observable-callback'
