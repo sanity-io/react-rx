@@ -14,7 +14,7 @@ export default function Example() {
             : process.env.NODE_ENV ===
                 'development'
               ? 'http://localhost:3000'
-              : 'https://react-rx-git-move-to-next.sanity.build',
+              : 'https://react-rx-git-crx-749.sanity.build',
         ),
       }}
       useOldReactRx
