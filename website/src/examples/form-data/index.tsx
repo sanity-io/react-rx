@@ -9,6 +9,9 @@ export default function Example() {
         '/App.tsx': App,
       }}
       useOldReactRx
+      dependencies={{
+        'styled-components': 'latest',
+      }}
     />
   )
 }
