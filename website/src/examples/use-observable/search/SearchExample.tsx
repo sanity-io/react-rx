@@ -12,16 +12,10 @@ const {
   combineLatest,
 } = RxJS
 
-const {map, filter, reduce, scan, tap} =
+const {map, filter, reduce, scan, tap} = operators
+const {concatMap, mergeMap, switchMap, mapTo} =
   operators
-const {
-  concatMap,
-  mergeMap,
-  switchMap,
-  mapTo,
-} = operators
-const {startWith, catchError, take} =
-  operators
+const {startWith, catchError, take} = operators
 //@endimport
 
 import {observableCallback} from 'observable-callback'
@@ -37,10 +31,8 @@ import {
   useObservable,
 } from 'react-rx-old'
 
-const {
-  distinctUntilChanged,
-  debounceTime,
-} = operators
+const {distinctUntilChanged, debounceTime} =
+  operators
 
 interface SearchResult {
   keyword: string
@@ -82,8 +74,7 @@ const search = (
 }
 
 function SearchExample() {
-  const [keyword, setKeyword] =
-    React.useState('')
+  const [keyword, setKeyword] = React.useState('')
   return (
     <>
       <input
@@ -98,9 +89,8 @@ function SearchExample() {
         }
       />
       <div>
-        The more characters you type,
-        the faster the results will
-        appear
+        The more characters you type, the faster
+        the results will appear
       </div>
       {useMemoObservable(
         () =>
@@ -108,35 +98,22 @@ function SearchExample() {
             debounceTime(200),
             distinctUntilChanged(),
             filter((v) => v !== ''),
-            switchMap((kw: string) =>
-              search(kw),
-            ),
-            map(
-              (
-                result: SearchResult,
-              ) => (
-                <>
-                  <h1>
-                    Searched for{' '}
-                    {result.keyword}
-                  </h1>
-                  <div>
-                    Got{' '}
-                    {result.hits.length}{' '}
-                    hits
-                  </div>
-                  <ul>
-                    {result.hits.map(
-                      (hit, i) => (
-                        <li key={i}>
-                          {hit.title}
-                        </li>
-                      ),
-                    )}
-                  </ul>
-                </>
-              ),
-            ),
+            switchMap((kw: string) => search(kw)),
+            map((result: SearchResult) => (
+              <>
+                <h1>
+                  Searched for {result.keyword}
+                </h1>
+                <div>
+                  Got {result.hits.length} hits
+                </div>
+                <ul>
+                  {result.hits.map((hit, i) => (
+                    <li key={i}>{hit.title}</li>
+                  ))}
+                </ul>
+              </>
+            )),
           ),
         [keyword],
       )}

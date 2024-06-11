@@ -1,14 +1,10 @@
 import {useMemo, useState} from 'react'
 import {useObservable} from 'react-rx'
 import {timer} from 'rxjs'
-import {
-  map,
-  startWith,
-} from 'rxjs/operators'
+import {map, startWith} from 'rxjs/operators'
 
 export default function App() {
-  const [delay, setDelay] =
-    useState(100)
+  const [delay, setDelay] = useState(100)
   const observable = useMemo(
     () =>
       timer(500, delay).pipe(
@@ -18,8 +14,7 @@ export default function App() {
     [delay],
   )
 
-  const label =
-    useObservable(observable)
+  const label = useObservable(observable)
   return (
     <>
       Counter interval (ms):{' '}
@@ -29,11 +24,7 @@ export default function App() {
         max={1000}
         step={100}
         onChange={(e) =>
-          setDelay(
-            Number(
-              e.currentTarget.value,
-            ),
-          )
+          setDelay(Number(e.currentTarget.value))
         }
       />
       {delay}

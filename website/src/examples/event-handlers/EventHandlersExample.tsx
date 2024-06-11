@@ -12,16 +12,10 @@ const {
   Observable,
 } = RxJS
 
-const {map, filter, reduce, scan, tap} =
+const {map, filter, reduce, scan, tap} = operators
+const {concatMap, mergeMap, switchMap, mapTo} =
   operators
-const {
-  concatMap,
-  mergeMap,
-  switchMap,
-  mapTo,
-} = operators
-const {startWith, catchError, take} =
-  operators
+const {startWith, catchError, take} = operators
 //@endimport
 
 import {observableCallback} from 'observable-callback'
@@ -47,43 +41,40 @@ const STYLE: React.CSSProperties = {
   padding: '1em',
 }
 
-const EventHandlersExample =
-  rxComponent(() => {
-    const [mouseMoves$, onMouseMove] =
-      handler<React.MouseEvent>()
+const EventHandlersExample = rxComponent(() => {
+  const [mouseMoves$, onMouseMove] =
+    handler<React.MouseEvent>()
 
-    const mousePosition$ =
-      mouseMoves$.pipe(
-        map((event) => ({
-          x: event.clientX,
-          y: event.clientY,
-        })),
-        startWith(null),
-      )
-    return mousePosition$.pipe(
-      map((position) => (
+  const mousePosition$ = mouseMoves$.pipe(
+    map((event) => ({
+      x: event.clientX,
+      y: event.clientY,
+    })),
+    startWith(null),
+  )
+  return mousePosition$.pipe(
+    map((position) => (
+      <div
+        style={STYLE}
+        onMouseMove={onMouseMove}
+      >
         <div
-          style={STYLE}
-          onMouseMove={onMouseMove}
+          style={{
+            width: '100%',
+          }}
         >
-          <div
-            style={{
-              width: '100%',
-            }}
-          >
-            {position ? (
-              <>
-                Cursor position: X:
-                {position.x}, Y:{' '}
-                {position.y}
-              </>
-            ) : (
-              <>Move mouse here</>
-            )}
-          </div>
+          {position ? (
+            <>
+              Cursor position: X:
+              {position.x}, Y: {position.y}
+            </>
+          ) : (
+            <>Move mouse here</>
+          )}
         </div>
-      )),
-    )
-  })
+      </div>
+    )),
+  )
+})
 
 export default EventHandlersExample

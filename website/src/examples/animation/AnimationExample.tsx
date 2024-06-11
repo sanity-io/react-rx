@@ -1,15 +1,9 @@
 import bezier from 'bezier-easing'
 import * as React from 'react'
 import {createRoot} from 'react-dom/client'
-import {
-  rxComponent,
-  state,
-} from 'react-rx-old'
+import {rxComponent, state} from 'react-rx-old'
 import {timer} from 'rxjs'
-import {
-  map,
-  switchMap,
-} from 'rxjs/operators'
+import {map, switchMap} from 'rxjs/operators'
 import {styled} from 'styled-components'
 
 const BALL_SIZE = 30
@@ -24,221 +18,103 @@ function easeCustom(n: number) {
 
 type EasingName = keyof typeof EASINGS
 
-const AnimationExample = rxComponent(
-  () => {
-    const [easing$, setEasing] =
-      state<EasingName>('easeCustom')
-    return easing$.pipe(
-      switchMap((easing: EasingName) =>
-        timer(0, 16).pipe(
-          map((n) => (n % MAX_TOP) * 2),
-          map((n) =>
-            n > MAX_TOP
-              ? MAX_TOP * 2 - n
-              : n,
-          ),
-          map(
-            (
-              linearTop,
-            ): [number, EasingName] => [
-              EASINGS[easing](
-                linearTop / MAX_TOP,
-              ) * MAX_TOP,
-              easing,
-            ],
-          ),
+const AnimationExample = rxComponent(() => {
+  const [easing$, setEasing] =
+    state<EasingName>('easeCustom')
+  return easing$.pipe(
+    switchMap((easing: EasingName) =>
+      timer(0, 16).pipe(
+        map((n) => (n % MAX_TOP) * 2),
+        map((n) =>
+          n > MAX_TOP ? MAX_TOP * 2 - n : n,
         ),
+        map((linearTop): [number, EasingName] => [
+          EASINGS[easing](linearTop / MAX_TOP) *
+            MAX_TOP,
+          easing,
+        ]),
       ),
-      map(([top, currentEasing]) => (
-        <>
-          <SelectWrapperLabel>
-            Easing function:
-          </SelectWrapperLabel>
-          <SelectWrapper>
-            {Object.keys(EASINGS).map(
-              (easingName) => (
-                <label
-                  key={easingName}
-                  className={
-                    easingName ===
-                    currentEasing
-                      ? 'selected'
-                      : ''
+    ),
+    map(([top, currentEasing]) => (
+      <>
+        <SelectWrapperLabel>
+          Easing function:
+        </SelectWrapperLabel>
+        <SelectWrapper>
+          {Object.keys(EASINGS).map(
+            (easingName) => (
+              <label
+                key={easingName}
+                className={
+                  easingName === currentEasing
+                    ? 'selected'
+                    : ''
+                }
+              >
+                <input
+                  tabIndex={0}
+                  type="checkbox"
+                  checked={
+                    easingName === currentEasing
                   }
-                >
-                  <input
-                    tabIndex={0}
-                    type="checkbox"
-                    checked={
-                      easingName ===
-                      currentEasing
-                    }
-                    key={easingName}
-                    onChange={() =>
-                      setEasing(
-                        easingName as EasingName,
-                      )
-                    }
-                  />
-                  {easingName.substring(
-                    4,
-                  )}
-                </label>
-              ),
-            )}
-          </SelectWrapper>
-          <BoxWrapper>
-            <Box>
-              <Ball
-                style={{
-                  top,
-                }}
-              />
-            </Box>
-          </BoxWrapper>
-        </>
-      )),
-    )
-  },
-)
+                  key={easingName}
+                  onChange={() =>
+                    setEasing(
+                      easingName as EasingName,
+                    )
+                  }
+                />
+                {easingName.substring(4)}
+              </label>
+            ),
+          )}
+        </SelectWrapper>
+        <BoxWrapper>
+          <Box>
+            <Ball
+              style={{
+                top,
+              }}
+            />
+          </Box>
+        </BoxWrapper>
+      </>
+    )),
+  )
+})
 
 // --- easing definitions and stylings
 const EASINGS = {
   easeCustom: easeCustom,
-  easeInSine: bezier(
-    0.47,
-    0,
-    0.745,
-    0.715,
-  ),
-  easeOutSine: bezier(
-    0.39,
-    0.575,
-    0.565,
-    1,
-  ),
-  easeInOutSine: bezier(
-    0.445,
-    0.05,
-    0.55,
-    0.95,
-  ),
-  easeInQuad: bezier(
-    0.55,
-    0.085,
-    0.68,
-    0.53,
-  ),
-  easeOutQuad: bezier(
-    0.25,
-    0.46,
-    0.45,
-    0.94,
-  ),
+  easeInSine: bezier(0.47, 0, 0.745, 0.715),
+  easeOutSine: bezier(0.39, 0.575, 0.565, 1),
+  easeInOutSine: bezier(0.445, 0.05, 0.55, 0.95),
+  easeInQuad: bezier(0.55, 0.085, 0.68, 0.53),
+  easeOutQuad: bezier(0.25, 0.46, 0.45, 0.94),
   easeInOutQuad: bezier(
     0.455,
     0.03,
     0.515,
     0.955,
   ),
-  easeInCubic: bezier(
-    0.55,
-    0.055,
-    0.675,
-    0.19,
-  ),
-  easeOutCubic: bezier(
-    0.215,
-    0.61,
-    0.355,
-    1,
-  ),
-  easeInOutCubic: bezier(
-    0.645,
-    0.045,
-    0.355,
-    1,
-  ),
-  easeInQuart: bezier(
-    0.895,
-    0.03,
-    0.685,
-    0.22,
-  ),
-  easeOutQuart: bezier(
-    0.165,
-    0.84,
-    0.44,
-    1,
-  ),
-  easeInOutQuart: bezier(
-    0.77,
-    0,
-    0.175,
-    1,
-  ),
-  easeInQuint: bezier(
-    0.755,
-    0.05,
-    0.855,
-    0.06,
-  ),
-  easeOutQuint: bezier(
-    0.23,
-    1,
-    0.32,
-    1,
-  ),
-  easeInOutQuint: bezier(
-    0.86,
-    0,
-    0.07,
-    1,
-  ),
-  easeInExpo: bezier(
-    0.95,
-    0.05,
-    0.795,
-    0.035,
-  ),
+  easeInCubic: bezier(0.55, 0.055, 0.675, 0.19),
+  easeOutCubic: bezier(0.215, 0.61, 0.355, 1),
+  easeInOutCubic: bezier(0.645, 0.045, 0.355, 1),
+  easeInQuart: bezier(0.895, 0.03, 0.685, 0.22),
+  easeOutQuart: bezier(0.165, 0.84, 0.44, 1),
+  easeInOutQuart: bezier(0.77, 0, 0.175, 1),
+  easeInQuint: bezier(0.755, 0.05, 0.855, 0.06),
+  easeOutQuint: bezier(0.23, 1, 0.32, 1),
+  easeInOutQuint: bezier(0.86, 0, 0.07, 1),
+  easeInExpo: bezier(0.95, 0.05, 0.795, 0.035),
   easeOutExpo: bezier(0.19, 1, 0.22, 1),
   easeInOutExpo: bezier(1, 0, 0, 1),
-  easeInCirc: bezier(
-    0.6,
-    0.04,
-    0.98,
-    0.335,
-  ),
-  easeOutCirc: bezier(
-    0.075,
-    0.82,
-    0.165,
-    1,
-  ),
-  easeInOutCirc: bezier(
-    0.785,
-    0.135,
-    0.15,
-    0.86,
-  ),
-  easeInBack: bezier(
-    0.6,
-    -0.28,
-    0.735,
-    0.045,
-  ),
-  easeOutBack: bezier(
-    0.175,
-    0.885,
-    0.32,
-    1.275,
-  ),
-  easeInOutBack: bezier(
-    0.68,
-    -0.55,
-    0.265,
-    1.55,
-  ),
+  easeInCirc: bezier(0.6, 0.04, 0.98, 0.335),
+  easeOutCirc: bezier(0.075, 0.82, 0.165, 1),
+  easeInOutCirc: bezier(0.785, 0.135, 0.15, 0.86),
+  easeInBack: bezier(0.6, -0.28, 0.735, 0.045),
+  easeOutBack: bezier(0.175, 0.885, 0.32, 1.275),
+  easeInOutBack: bezier(0.68, -0.55, 0.265, 1.55),
   easeLinear: (n: number) => n,
 }
 
@@ -260,8 +136,7 @@ const Ball = styled.div`
   background-color: #901a3b;
   width: ${BALL_SIZE}px;
   height: ${BALL_SIZE}px;
-  left: ${BOX_SIZE / 2 -
-  BALL_SIZE / 2}px;
+  left: ${BOX_SIZE / 2 - BALL_SIZE / 2}px;
 `
 
 const SelectWrapperLabel = styled.h2`

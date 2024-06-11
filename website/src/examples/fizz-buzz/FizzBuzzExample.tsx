@@ -12,16 +12,10 @@ const {
   Observable,
 } = RxJS
 
-const {map, filter, reduce, scan, tap} =
+const {map, filter, reduce, scan, tap} = operators
+const {concatMap, mergeMap, switchMap, mapTo} =
   operators
-const {
-  concatMap,
-  mergeMap,
-  switchMap,
-  mapTo,
-} = operators
-const {startWith, catchError, take} =
-  operators
+const {startWith, catchError, take} = operators
 //@endimport
 
 import {observableCallback} from 'observable-callback'
@@ -43,8 +37,7 @@ const FizzBuzzExample = rxComponent(
     map((n) => {
       const divBy3 = n % 3 === 0
       const divBy5 = n % 5 === 0
-      const divBy3And5 =
-        divBy3 && divBy5
+      const divBy3And5 = divBy3 && divBy5
       return divBy3And5
         ? 'Fizz Buzz'
         : divBy3
