@@ -19,6 +19,11 @@ export default {
   project: {
     link: 'https://github.com/sanity-io/react-rx',
   },
+  head: (
+    <>
+      <link rel="icon" href="/icon.svg" type="image/svg+xml" sizes="any" />
+    </>
+  ),
   docsRepositoryBase: 'https://github.com/sanity-io/react-rx/tree/current/website',
   useNextSeoProps() {
     const {asPath} = useRouter()

@@ -1,6 +1,14 @@
-# Observable Hooks
+# Getting Started
 
-## useObservable()
+## Installation
+
+```sh npm2yarn
+npm i react-rx rxjs
+```
+
+## Observable Hooks
+
+### useObservable()
 
 Use observables in React components with the `useObservable` hook.
 
@@ -25,8 +33,8 @@ The `initialValue` argument is optional. If its omitted, the value returned from
 
 ```tsx
 import {useMemo} from 'react'
-import {of} from 'rxjs'
 import {useObservable} from 'react-rx'
+import {of} from 'rxjs'
 
 // This component will never render "Hello mars!" since the observable emits "world" synchronously.
 function MyComponent(props) {
@@ -37,15 +45,16 @@ function MyComponent(props) {
 }
 ```
 
-## useObservableEvent()
+### useObservableEvent()
 
 This creates an event handler that can be used to create an observable from events.
 
 Here's an example of a component that displays the current value from a range input:
 
 ```tsx
-import {filter, map, tap} from 'rxjs/operators'
+imprt {useState} from 'react'
 import {useObservableEvent} from 'react-rx'
+import {filter, map, tap} from 'rxjs/operators'
 
 const ShowSliderValue = () => {
   const [value, setValue] = useState(0)
