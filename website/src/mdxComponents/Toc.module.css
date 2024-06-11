@@ -1,0 +1,92 @@
+.toc-container {
+  grid-template-rows: auto 1fr;
+  transition: grid-template-rows 0.5s ease-out;
+}
+
+.toc-container.close {
+  display: grid;
+  grid-template-rows: auto 0fr;
+  transition: grid-template-rows 0.5s ease-out;
+}
+
+.toc-title {
+  user-select: none;
+  cursor: pointer;
+}
+
+.toc-list {
+  overflow: hidden;
+
+  font-size: 1em;
+  max-width: fit-content;
+}
+
+.toc-list li {
+  padding: 0.1em 0;
+  margin: 0.3em 0;
+
+  list-style: none;
+}
+
+.toc-list li.tight {
+  margin: 0.05em 0;
+}
+
+.toc-list li.h1indent {
+  margin-left: 0;
+}
+
+.toc-list li.h2indent {
+  margin-left: 0;
+}
+
+.toc-list li.h3indent {
+  margin-left: 1em;
+}
+
+.toc-list li.h4indent {
+  margin-left: 2em;
+}
+
+.toc-list li.h5indent {
+  margin-left: 3em;
+}
+
+.toc-list li.h6indent {
+  margin-left: 4em;
+}
+
+/* first and last li when mobile */
+
+.toc-list li:first-child {
+  padding-top: 0.6em;
+}
+
+.toc-list li:last-child {
+  padding-bottom: 0.6em;
+}
+
+.toc-list a {
+  text-decoration: none;
+  color: rgb(3, 35, 3);
+}
+
+.toc-list a:hover {
+  text-decoration: underline;
+}
+
+.toc-list span.numbering {
+  margin-right: 0.5rem;
+  color: rgb(91, 6, 128);
+}
+
+.toc-list span.href {
+  display: none;
+}
+
+.toc-list a:hover span.href {
+  display: inline-block;
+  color: gray;
+  font-size: 80%;
+  margin-left: 1rem;
+}
