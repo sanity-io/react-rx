@@ -1,7 +1,14 @@
 import {observableCallback} from 'observable-callback'
 import {CSSProperties} from 'react'
 
-import {map, of, React, ReactDOM, rxComponent, scan} from '../_utils/globalScope'
+import {
+  map,
+  of,
+  React,
+  ReactDOM,
+  rxComponent,
+  scan,
+} from '../_utils/globalScope'
 //@endimport
 
 const CONTAINER: CSSProperties = {
@@ -22,31 +29,66 @@ const BADGE: CSSProperties = {
 }
 
 const [clicks$, click] = observableCallback()
-const clickCount$ = clicks$.pipe(scan((count) => count + 1, 0))
-
-const ClickCountBadge = rxComponent(
-  clickCount$.pipe(map((clicks) => <span style={BADGE}>{clicks}</span>)),
+const clickCount$ = clicks$.pipe(
+  scan((count) => count + 1, 0),
 )
 
-const Clicker = rxComponent(of(<button onClick={click}>CLICK ME!</button>))
+const ClickCountBadge = rxComponent(
+  clickCount$.pipe(
+    map((clicks) => (
+      <span style={BADGE}>{clicks}</span>
+    )),
+  ),
+)
+
+const Clicker = rxComponent(
+  of(<button onClick={click}>CLICK ME!</button>),
+)
 
 const Example = (
   <div style={CONTAINER}>
-    <div style={{position: 'absolute', top: 0, left: 0}}>
+    <div
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+      }}
+    >
       <ClickCountBadge />
     </div>
-    <div style={{position: 'absolute', top: 0, right: 0}}>
+    <div
+      style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+      }}
+    >
       <ClickCountBadge />
     </div>
     <div style={{width: '100%'}}>
       <Clicker />
     </div>
-    <div style={{position: 'absolute', bottom: 0, left: 0}}>
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+      }}
+    >
       <ClickCountBadge />
     </div>
-    <div style={{position: 'absolute', bottom: 0, right: 0}}>
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+      }}
+    >
       <ClickCountBadge />
     </div>
   </div>
 )
-ReactDOM.render(Example, document.getElementById('shared-state-example'))
+ReactDOM.render(
+  Example,
+  document.getElementById('shared-state-example'),
+)

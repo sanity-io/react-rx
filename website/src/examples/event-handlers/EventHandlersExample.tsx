@@ -1,4 +1,11 @@
-import {handler, map, React, ReactDOM, rxComponent, startWith} from '../_utils/globalScope'
+import {
+  handler,
+  map,
+  React,
+  ReactDOM,
+  rxComponent,
+  startWith,
+} from '../_utils/globalScope'
 //@endimport
 
 const STYLE: React.CSSProperties = {
@@ -12,19 +19,31 @@ const STYLE: React.CSSProperties = {
 }
 
 const EventHandlersExample = rxComponent(() => {
-  const [mouseMoves$, onMouseMove] = handler<React.MouseEvent>()
+  const [mouseMoves$, onMouseMove] =
+    handler<React.MouseEvent>()
 
   const mousePosition$ = mouseMoves$.pipe(
-    map((event) => ({x: event.clientX, y: event.clientY})),
+    map((event) => ({
+      x: event.clientX,
+      y: event.clientY,
+    })),
     startWith(null),
   )
   return mousePosition$.pipe(
     map((position) => (
-      <div style={STYLE} onMouseMove={onMouseMove}>
-        <div style={{width: '100%'}}>
+      <div
+        style={STYLE}
+        onMouseMove={onMouseMove}
+      >
+        <div
+          style={{
+            width: '100%',
+          }}
+        >
           {position ? (
             <>
-              Cursor position: X:{position.x}, Y: {position.y}
+              Cursor position: X:
+              {position.x}, Y: {position.y}
             </>
           ) : (
             <>Move mouse here</>
@@ -35,4 +54,9 @@ const EventHandlersExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(<EventHandlersExample />, document.getElementById('event-handlers-example'))
+ReactDOM.render(
+  <EventHandlersExample />,
+  document.getElementById(
+    'event-handlers-example',
+  ),
+)

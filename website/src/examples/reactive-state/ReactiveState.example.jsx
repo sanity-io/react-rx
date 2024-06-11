@@ -26,7 +26,11 @@ const ReactiveStateExample = rxComponent(() => {
               min={0}
               max={1000}
               step={100}
-              onChange={(e) => setDelay(Number(e.currentTarget.value))}
+              onChange={(e) =>
+                setDelay(
+                  Number(e.currentTarget.value),
+                )
+              }
             />
             {delay}
             <div>{label}</div>
@@ -37,4 +41,7 @@ const ReactiveStateExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(<ReactiveStateExample />, document.getElementById('use-state-example'))
+ReactDOM.render(
+  <ReactiveStateExample />,
+  document.getElementById('use-state-example'),
+)

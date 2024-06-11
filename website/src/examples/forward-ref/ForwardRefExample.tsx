@@ -1,15 +1,30 @@
-import {forwardRef, map, React, ReactDOM, rxComponent, state} from '../_utils/globalScope'
+import {
+  forwardRef,
+  map,
+  React,
+  ReactDOM,
+  rxComponent,
+  state,
+} from '../_utils/globalScope'
 //@endimport
 
 const CustomInput = forwardRef((props$, ref) => {
   return props$.pipe(
-    map((props) => <input ref={ref} type="text" value={props.value} onChange={props.onChange} />),
+    map((props) => (
+      <input
+        ref={ref}
+        type="text"
+        value={props.value}
+        onChange={props.onChange}
+      />
+    )),
   )
 })
 
 const ForwardRefExample = rxComponent(() => {
   const [value$, setValue] = state('hello world')
-  const inputRef = React.useRef<HTMLInputElement>(null)
+  const inputRef =
+    React.useRef<HTMLInputElement>(null)
 
   return value$.pipe(
     map((value) => (
@@ -26,7 +41,9 @@ const ForwardRefExample = rxComponent(() => {
             ref={inputRef}
             value={value}
             onChange={() => {
-              setValue(inputRef.current?.value || '')
+              setValue(
+                inputRef.current?.value || '',
+              )
             }}
           />
         </div>
@@ -35,4 +52,7 @@ const ForwardRefExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(<ForwardRefExample />, document.getElementById('forward-ref-example'))
+ReactDOM.render(
+  <ForwardRefExample />,
+  document.getElementById('forward-ref-example'),
+)

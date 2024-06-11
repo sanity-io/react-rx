@@ -18,10 +18,12 @@ const STYLE: React.CSSProperties = {
 }
 
 const SPEED = 2
-const unpx = (v: string) => Number(v.replace(/px$/, ''))
+const unpx = (v: string) =>
+  Number(v.replace(/px$/, ''))
 
 const UseElementExample = rxComponent(() => {
-  const [element$, ref] = elementRef<HTMLElement>()
+  const [element$, ref] =
+    elementRef<HTMLElement>()
 
   const count$ = timer(0, 16).pipe(
     map((n) => n % 400),
@@ -31,23 +33,45 @@ const UseElementExample = rxComponent(() => {
   return count$.pipe(
     withLatestFrom(element$),
     map(([direction, element]) => {
-      const Tag = direction === 1 ? 'section' : 'article'
+      const Tag =
+        direction === 1 ? 'section' : 'article'
       return (
-        <div style={{height: '20em', display: 'flex', alignItems: 'center'}}>
+        <div
+          style={{
+            height: '20em',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
           <Tag
             // this connects the element$ observable to the actual element
             ref={ref}
             style={{
               ...STYLE,
-              backgroundColor: Tag == 'article' ? '#335186' : '#90441a',
-              borderRadius: unpx(element?.style.borderRadius || '20px') + direction * SPEED * -0.1,
-              height: (element?.clientHeight || 0) + direction * SPEED,
-              width: (element?.clientWidth || 0) + direction * SPEED,
+              backgroundColor:
+                Tag == 'article'
+                  ? '#335186'
+                  : '#90441a',
+              borderRadius:
+                unpx(
+                  element?.style.borderRadius ||
+                    '20px',
+                ) +
+                direction * SPEED * -0.1,
+              height:
+                (element?.clientHeight || 0) +
+                direction * SPEED,
+              width:
+                (element?.clientWidth || 0) +
+                direction * SPEED,
             }}
           >
             <div
               style={{
-                ...(element && {fontSize: element.clientHeight / 5}),
+                ...(element && {
+                  fontSize:
+                    element.clientHeight / 5,
+                }),
                 width: '100%',
                 height: '100%',
                 lineHeight: '500%',
@@ -62,4 +86,7 @@ const UseElementExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(<UseElementExample />, document.getElementById('use-element-example'))
+ReactDOM.render(
+  <UseElementExample />,
+  document.getElementById('use-element-example'),
+)

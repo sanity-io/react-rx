@@ -1,12 +1,23 @@
 import {formatDistance} from 'date-fns'
 
-import {combineLatest, map, React, ReactDOM, rxComponent, take, timer} from '../_utils/globalScope'
+import {
+  combineLatest,
+  map,
+  React,
+  ReactDOM,
+  rxComponent,
+  take,
+  timer,
+} from '../_utils/globalScope'
 //@endimport
 
 const {share} = operators
 
 const UPDATE_INTERVAL = 1000
-const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(
+const currentTime$ = timer(
+  0,
+  UPDATE_INTERVAL,
+).pipe(
   take(10),
   map(() => new Date()),
   share(),
@@ -15,9 +26,14 @@ const currentTime$ = timer(0, UPDATE_INTERVAL).pipe(
 const TimeDistance = rxComponent((props$) =>
   combineLatest([currentTime$, props$]).pipe(
     map(([currentTime, ownerProps]) =>
-      formatDistance(ownerProps.time, currentTime, {
-        includeSeconds: ownerProps.includeSeconds,
-      }),
+      formatDistance(
+        ownerProps.time,
+        currentTime,
+        {
+          includeSeconds:
+            ownerProps.includeSeconds,
+        },
+      ),
     ),
   ),
 )
@@ -30,10 +46,14 @@ const PassThroughPropsExample = () => (
     </h2>
     With synchronized updates
     <p>
-      Page loaded <TimeDistance time={NOW} includeSeconds /> ago
+      Page loaded{' '}
+      <TimeDistance time={NOW} includeSeconds />{' '}
+      ago
     </p>
     <p>
-      Page loaded <TimeDistance time={NOW} includeSeconds /> ago
+      Page loaded{' '}
+      <TimeDistance time={NOW} includeSeconds />{' '}
+      ago
     </p>
     <h2>
       Without <code>includeSeconds</code>
@@ -44,4 +64,9 @@ const PassThroughPropsExample = () => (
   </>
 )
 
-ReactDOM.render(<PassThroughPropsExample />, document.getElementById('pass-through-props-example'))
+ReactDOM.render(
+  <PassThroughPropsExample />,
+  document.getElementById(
+    'pass-through-props-example',
+  ),
+)

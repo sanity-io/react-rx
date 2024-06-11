@@ -12,5 +12,8 @@ export const AnimationExample: Example = {
 import bezier from 'bezier-easing'
 `,
   scope: {bezier, styled},
-  source: fs.readFileSync(`${__dirname}/AnimationExample.tsx`, 'utf-8'),
+  source: fs.readFileSync(
+    `${__dirname}/AnimationExample.tsx`,
+    'utf-8',
+  ),
 }

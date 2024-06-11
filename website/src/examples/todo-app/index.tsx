@@ -9,5 +9,8 @@ export const TodoAppExample: Example = {
   id: 'todo-app',
   title: 'An Application',
   scope: {storage, styled},
-  source: fs.readFileSync(`${__dirname}/TodoApp.example.tsx`, 'utf-8'),
+  source: fs.readFileSync(
+    `${__dirname}/TodoApp.example.tsx`,
+    'utf-8',
+  ),
 }

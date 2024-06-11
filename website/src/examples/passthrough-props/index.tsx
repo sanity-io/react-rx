@@ -8,5 +8,8 @@ export const PassThroughPropsExample: Example = {
   id: 'pass-through-props',
   title: 'Pass through props',
   scope: {formatDistance},
-  source: fs.readFileSync(`${__dirname}/PassThroughPropsExample.jsx`, 'utf-8'),
+  source: fs.readFileSync(
+    `${__dirname}/PassThroughPropsExample.jsx`,
+    'utf-8',
+  ),
 }

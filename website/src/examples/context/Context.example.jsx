@@ -1,6 +1,13 @@
 import {tap} from 'rxjs/operators'
 
-import {context, map, React, ReactDOM, rxComponent, state} from '../_utils/globalScope'
+import {
+  context,
+  map,
+  React,
+  ReactDOM,
+  rxComponent,
+  state,
+} from '../_utils/globalScope'
 //@endimport
 
 const ModeContext = React.createContext({
@@ -8,21 +15,37 @@ const ModeContext = React.createContext({
   set: (nextMode) => {},
 })
 
-const observeMode = () => context(ModeContext).pipe(map(({current}) => current))
+const observeMode = () =>
+  context(ModeContext).pipe(
+    map(({current}) => current),
+  )
 
-const LIGHT = {backgroundColor: '#eee', color: '#333'}
-const DARK = {backgroundColor: '#222', color: '#eee'}
+const LIGHT = {
+  backgroundColor: '#eee',
+  color: '#333',
+}
+const DARK = {
+  backgroundColor: '#222',
+  color: '#eee',
+}
 
-const MODE = {light: LIGHT, dark: DARK}
+const MODE = {
+  light: LIGHT,
+  dark: DARK,
+}
 
 const ModeSwitch = rxComponent(() => {
   const modeCtx$ = context(ModeContext)
 
   return modeCtx$.pipe(
     map(({current, set}) => {
-      const next = current === 'light' ? 'dark' : 'light'
+      const next =
+        current === 'light' ? 'dark' : 'light'
       return (
-        <button onClick={() => set(next)} style={MODE[current]}>
+        <button
+          onClick={() => set(next)}
+          style={MODE[current]}
+        >
           Change to {next}
         </button>
       )
@@ -36,7 +59,12 @@ const App = rxComponent(() => {
   return mode$.pipe(
     tap(console.log),
     map((mode) => (
-      <div style={{...MODE[mode], padding: '1em'}}>
+      <div
+        style={{
+          ...MODE[mode],
+          padding: '1em',
+        }}
+      >
         <h2>Using {mode} mode</h2>
         <ModeSwitch />
       </div>
@@ -50,7 +78,12 @@ const ContextExample = rxComponent(() => {
   return mode$.pipe(
     map((mode) => (
       <>
-        <ModeContext.Provider value={{current: mode, set: setMode}}>
+        <ModeContext.Provider
+          value={{
+            current: mode,
+            set: setMode,
+          }}
+        >
           <App />
         </ModeContext.Provider>
       </>
@@ -58,4 +91,7 @@ const ContextExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(<ContextExample />, document.getElementById('context-example'))
+ReactDOM.render(
+  <ContextExample />,
+  document.getElementById('context-example'),
+)

@@ -13,7 +13,8 @@ import {
 } from '../../_utils/globalScope'
 //@endimport
 
-const {distinctUntilChanged, debounceTime} = operators
+const {distinctUntilChanged, debounceTime} =
+  operators
 
 interface SearchResult {
   keyword: string
@@ -34,11 +35,23 @@ const range = (len: number) => {
 
 // A search function that takes longer time to complete for shorter keywords
 // e.g. a keyword of one character takes 9 seconds while a keyword of 9 characters takes 1 second
-const search = (keyword: string): Observable<SearchResult> => {
-  const delay = Math.max(1, Math.round(10 - keyword.length))
+const search = (
+  keyword: string,
+): Observable<SearchResult> => {
+  const delay = Math.max(
+    1,
+    Math.round(10 - keyword.length),
+  )
   return timer(delay * 200).pipe(
-    map(() => range(delay).map((_, i) => ({title: `Hit #${i}`}))),
-    map((hits) => ({keyword, hits})),
+    map(() =>
+      range(delay).map((_, i) => ({
+        title: `Hit #${i}`,
+      })),
+    ),
+    map((hits) => ({
+      keyword,
+      hits,
+    })),
   )
 }
 
@@ -48,12 +61,19 @@ function SearchExample() {
     <>
       <input
         type="search"
-        style={{width: '100%'}}
+        style={{
+          width: '100%',
+        }}
         value={keyword}
         placeholder="Type a keyword to search"
-        onChange={(event) => setKeyword(event.target.value)}
+        onChange={(event) =>
+          setKeyword(event.target.value)
+        }
       />
-      <div>The more characters you type, the faster the results will appear</div>
+      <div>
+        The more characters you type, the faster
+        the results will appear
+      </div>
       {useMemoObservable(
         () =>
           of(keyword).pipe(
@@ -63,8 +83,12 @@ function SearchExample() {
             switchMap((kw: string) => search(kw)),
             map((result: SearchResult) => (
               <>
-                <h1>Searched for {result.keyword}</h1>
-                <div>Got {result.hits.length} hits</div>
+                <h1>
+                  Searched for {result.keyword}
+                </h1>
+                <div>
+                  Got {result.hits.length} hits
+                </div>
                 <ul>
                   {result.hits.map((hit, i) => (
                     <li key={i}>{hit.title}</li>
@@ -79,4 +103,7 @@ function SearchExample() {
   )
 }
 
-ReactDOM.render(<SearchExample />, document.getElementById('search-example'))
+ReactDOM.render(
+  <SearchExample />,
+  document.getElementById('search-example'),
+)
