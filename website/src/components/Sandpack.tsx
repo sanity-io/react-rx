@@ -1,5 +1,6 @@
 import {Sandpack} from '@codesandbox/sandpack-react'
-import {githubLight} from '@codesandbox/sandpack-themes'
+import {githubLight, atomDark} from '@codesandbox/sandpack-themes'
+import {useTheme} from 'nextra-theme-docs'
 import {type ComponentProps, useMemo} from 'react'
 
 import reactRxRaw from '../../../dist/index.js?raw'
@@ -19,6 +20,7 @@ export default function SandpackComponent({
    */
   useOldReactRx?: boolean
 }) {
+  const {resolvedTheme} = useTheme()
   const extraDependencies = useMemo(() => {
     const result = {}
     if (!dependencies) return result
@@ -32,7 +34,7 @@ export default function SandpackComponent({
   return (
     <Sandpack
       template="vite-react-ts"
-      theme={githubLight}
+      theme={resolvedTheme === 'dark' ? atomDark : githubLight}
       files={{
         ...(files as any),
         /**
