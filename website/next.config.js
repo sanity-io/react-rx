@@ -19,6 +19,11 @@ const nextConfig = {
       ...config.resolve.alias,
       'react-rx': require.resolve('../src/index.ts'),
     }
+    config.module.rules.push({
+      test: /\.(js|ts)x?$/,
+      resourceQuery: /raw/,
+      use: 'raw-loader',
+    })
     return config
   },
   async headers() {

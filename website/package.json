@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "predev": "cd .. && pnpm build",
     "dev": "next",
     "format": "prettier --cache --write .",
     "lint": "next lint",
     "start": "next start"
   },
-  "prettier": "@sanity/prettier-config",
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.14.2",
+    "@codesandbox/sandpack-themes": "^2.0.21",
     "@types/node": "^18.8.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -21,6 +22,7 @@
     "nextra": "^2.13.4",
     "nextra-theme-docs": "^2.13.4",
     "observable-callback": "^1.0.2",
+    "raw-loader": "^4.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-rx": "workspace:*",
