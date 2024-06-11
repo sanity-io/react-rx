@@ -6,35 +6,29 @@ import {
   switchMap,
 } from 'rxjs/operators'
 
-const FetchComponent = rxComponent(
-  (props$) =>
-    props$.pipe(
-      map((props: any) => props.url),
-      distinctUntilChanged(),
-      switchMap((url) =>
-        fetch(url).then((response) =>
-          response.text(),
-        ),
+const FetchComponent = rxComponent((props$) =>
+  props$.pipe(
+    map((props: any) => props.url),
+    distinctUntilChanged(),
+    switchMap((url) =>
+      fetch(url).then((response) =>
+        response.text(),
       ),
-      map((responseText) => (
-        <div>
-          The result was: {responseText}
-        </div>
-      )),
     ),
+    map((responseText) => (
+      <div>The result was: {responseText}</div>
+    )),
+  ),
 )
 
-const origin = new URL(
-  'http://localhost:3000',
-)
+const origin = new URL('http://localhost:3000')
 const URLS = [
   new URL('/fetch/a.txt', origin),
   new URL('/fetch/b.txt', origin),
 ]
 
 function FetchExample() {
-  const [currentUrl, setCurrentUrl] =
-    useState('')
+  const [currentUrl, setCurrentUrl] = useState('')
   return (
     <div>
       <p>
@@ -42,9 +36,7 @@ function FetchExample() {
           <button
             key={url.toString()}
             onClick={() =>
-              setCurrentUrl(
-                url.toString(),
-              )
+              setCurrentUrl(url.toString())
             }
           >
             {url.pathname}
@@ -52,9 +44,7 @@ function FetchExample() {
         ))}
       </p>
       {currentUrl ? (
-        <FetchComponent
-          url={currentUrl}
-        />
+        <FetchComponent url={currentUrl} />
       ) : (
         <>Click on url to fetch</>
       )}

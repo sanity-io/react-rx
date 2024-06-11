@@ -1,15 +1,6 @@
-import {
-  ChangeEvent,
-  FormEvent,
-} from 'react'
-import {
-  handler,
-  rxComponent,
-} from 'react-rx-old'
-import {
-  combineLatest,
-  merge,
-} from 'rxjs'
+import {ChangeEvent, FormEvent} from 'react'
+import {handler, rxComponent} from 'react-rx-old'
+import {combineLatest, merge} from 'rxjs'
 import {
   filter,
   map,
@@ -28,13 +19,9 @@ interface TodoItem {
 
 const TodoApp = rxComponent(() => {
   const [onInput$, handleInput] =
-    handler<
-      ChangeEvent<HTMLInputElement>
-    >()
+    handler<ChangeEvent<HTMLInputElement>>()
   const [onSubmit$, handleSubmit] =
-    handler<
-      FormEvent<HTMLFormElement>
-    >()
+    handler<FormEvent<HTMLFormElement>>()
 
   const text$ = onInput$.pipe(
     map((e) => e.currentTarget.value),
@@ -80,9 +67,7 @@ const TodoApp = rxComponent(() => {
             onChange={handleInput}
             value={text}
           />
-          <button>
-            Add #{items.length + 1}
-          </button>
+          <button>Add #{items.length + 1}</button>
         </form>
       </Wrapper>
     )),
@@ -97,9 +82,7 @@ function TodoList(props: ListProps) {
   return (
     <ul>
       {props.items.map((item) => (
-        <li key={item.id}>
-          {item.text}
-        </li>
+        <li key={item.id}>{item.text}</li>
       ))}
     </ul>
   )
