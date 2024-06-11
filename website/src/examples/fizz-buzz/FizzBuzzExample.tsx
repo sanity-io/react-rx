@@ -56,7 +56,4 @@ const FizzBuzzExample = rxComponent(
   ),
 )
 
-ReactDOM.render(
-  <FizzBuzzExample />,
-  document.getElementById('fizz-buzz-example'),
-)
+export default FizzBuzzExample

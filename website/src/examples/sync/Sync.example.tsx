@@ -41,7 +41,4 @@ const Sync = rxComponent(
   ]),
 )
 
-ReactDOM.render(
-  <Sync />,
-  document.getElementById('counter-example'),
-)
+export default Sync

@@ -79,7 +79,4 @@ const TickExample = rxComponent(
   ),
 )
 
-ReactDOM.render(
-  <TickExample />,
-  document.getElementById('ticker-example'),
-)
+export default TickExample

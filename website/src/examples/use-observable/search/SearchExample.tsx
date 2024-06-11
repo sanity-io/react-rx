@@ -1,7 +1,6 @@
-import {Observable} from 'rxjs'
-
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
+import {Observable} from 'rxjs'
 import * as RxJS from 'rxjs'
 import * as operators from 'rxjs/operators'
 
@@ -11,7 +10,6 @@ const {
   interval,
   throwError,
   combineLatest,
-  Observable,
 } = RxJS
 
 const {map, filter, reduce, scan, tap} = operators
@@ -123,7 +121,4 @@ function SearchExample() {
   )
 }
 
-ReactDOM.render(
-  <SearchExample />,
-  document.getElementById('search-example'),
-)
+export default SearchExample

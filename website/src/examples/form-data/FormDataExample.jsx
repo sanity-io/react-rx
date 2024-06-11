@@ -163,10 +163,7 @@ const FormDataExample = rxComponent(() => {
   )
 })
 
-ReactDOM.render(
-  <FormDataExample />,
-  document.getElementById('formdata-example'),
-)
+export default FormDataExample
 
 const Form = styled.form`
   label {
