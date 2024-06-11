@@ -92,5 +92,9 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
     }
   }, [observable])
 
-  return useSyncExternalStore<ObservedValueOf<ObservableType>>(store.subscribe, store.getSnapshot)
+  return useSyncExternalStore<ObservedValueOf<ObservableType>>(
+    store.subscribe,
+    store.getSnapshot,
+    typeof initialValueRef.current === 'undefined' ? undefined : () => initialValueRef.current,
+  )
 }
