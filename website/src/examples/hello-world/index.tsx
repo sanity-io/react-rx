@@ -1,9 +1,13 @@
-import {Example} from '../../pages/Examples/Examples'
+import Sandpack from '@/components/Sandpack'
 
-const fs = require('fs')
+import App from './HelloWorldExample.tsx?raw'
 
-export const HelloWorldExample: Example = {
-  id: 'hello-world',
-  title: 'A simple component',
-  source: fs.readFileSync(`${__dirname}/HelloWorld.example.jsx`, 'utf-8')
+export default function Example() {
+  return (
+    <Sandpack
+      files={{
+        '/App.tsx': App,
+      }}
+    />
+  )
 }

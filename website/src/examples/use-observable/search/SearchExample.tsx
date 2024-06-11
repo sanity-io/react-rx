@@ -1,19 +1,38 @@
+import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import {Observable} from 'rxjs'
+import * as RxJS from 'rxjs'
+import * as operators from 'rxjs/operators'
 
-import {
-  filter,
-  map,
-  of,
-  operators,
-  React,
-  ReactDOM,
-  switchMap,
+const {of, from, concat, merge} = RxJS
+const {
   timer,
-  useMemoObservable
-} from '../../_utils/globalScope'
+  interval,
+  throwError,
+  combineLatest,
+} = RxJS
+
+const {map, filter, reduce, scan, tap} = operators
+const {concatMap, mergeMap, switchMap, mapTo} =
+  operators
+const {startWith, catchError, take} = operators
 //@endimport
 
-const {distinctUntilChanged, debounceTime} = operators
+import {observableCallback} from 'observable-callback'
+import {
+  context,
+  elementRef,
+  forwardRef,
+  handler,
+  rxComponent,
+  state,
+  useAsObservable,
+  useMemoObservable,
+  useObservable,
+} from 'react-rx-old'
+
+const {distinctUntilChanged, debounceTime} =
+  operators
 
 interface SearchResult {
   keyword: string
@@ -34,11 +53,23 @@ const range = (len: number) => {
 
 // A search function that takes longer time to complete for shorter keywords
 // e.g. a keyword of one character takes 9 seconds while a keyword of 9 characters takes 1 second
-const search = (keyword: string): Observable<SearchResult> => {
-  const delay = Math.max(1, Math.round(10 - keyword.length))
+const search = (
+  keyword: string,
+): Observable<SearchResult> => {
+  const delay = Math.max(
+    1,
+    Math.round(10 - keyword.length),
+  )
   return timer(delay * 200).pipe(
-    map(() => range(delay).map((_, i) => ({title: `Hit #${i}`}))),
-    map((hits) => ({keyword, hits}))
+    map(() =>
+      range(delay).map((_, i) => ({
+        title: `Hit #${i}`,
+      })),
+    ),
+    map((hits) => ({
+      keyword,
+      hits,
+    })),
   )
 }
 
@@ -48,13 +79,18 @@ function SearchExample() {
     <>
       <input
         type="search"
-        style={{width: '100%'}}
+        style={{
+          width: '100%',
+        }}
         value={keyword}
         placeholder="Type a keyword to search"
-        onChange={(event) => setKeyword(event.target.value)}
+        onChange={(event) =>
+          setKeyword(event.target.value)
+        }
       />
       <div>
-        The more characters you type, the faster the results will appear
+        The more characters you type, the faster
+        the results will appear
       </div>
       {useMemoObservable(
         () =>
@@ -65,20 +101,24 @@ function SearchExample() {
             switchMap((kw: string) => search(kw)),
             map((result: SearchResult) => (
               <>
-                <h1>Searched for {result.keyword}</h1>
-                <div>Got {result.hits.length} hits</div>
+                <h1>
+                  Searched for {result.keyword}
+                </h1>
+                <div>
+                  Got {result.hits.length} hits
+                </div>
                 <ul>
                   {result.hits.map((hit, i) => (
                     <li key={i}>{hit.title}</li>
                   ))}
                 </ul>
               </>
-            ))
+            )),
           ),
-        [keyword]
+        [keyword],
       )}
     </>
   )
 }
 
-ReactDOM.render(<SearchExample />, document.getElementById('search-example'))
+export default SearchExample

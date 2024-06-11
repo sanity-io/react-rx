@@ -69,6 +69,7 @@
   "scripts": {
     "build": "pkg build --strict --clean --check",
     "dev": "pnpm --filter 'react-rx-website' dev",
+    "format": "prettier --cache --write .",
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
     "test": "vitest run --typecheck",

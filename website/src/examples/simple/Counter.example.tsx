@@ -1,8 +1,12 @@
-import {map, React, ReactDOM, rxComponent, timer} from '../_utils/globalScope'
-//@endimport
+import {useMemo} from 'react'
+import {useObservable} from 'react-rx'
+import {timer} from 'rxjs'
 
-const Counter = rxComponent(
-  timer(0, 1000).pipe(map((seconds) => <>Seconds: {seconds}</>))
-)
-
-ReactDOM.render(<Counter />, document.getElementById('counter-example'))
+export default function App() {
+  const observable = useMemo(
+    () => timer(0, 1000),
+    [],
+  )
+  const seconds = useObservable(observable)
+  return <>Seconds: {seconds}</>
+}
