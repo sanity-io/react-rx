@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
-import {catchError, EMPTY, type Observable, type ObservedValueOf, type Subscription} from 'rxjs'
+import {type Observable, type ObservedValueOf, type Subscription} from 'rxjs'
 import {shareReplay, tap} from 'rxjs/operators'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
@@ -60,8 +60,6 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
           },
           error: (error: unknown) => (entry.error = error),
         }),
-        // ignore errors in the observable, as they get thrown during the getSnapshot phase later
-        catchError(() => EMPTY),
       )
 
       // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
@@ -77,7 +75,10 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 
     return {
       subscribe: (onStoreChange: () => void) => {
-        const subscription = instance.observable.subscribe(onStoreChange)
+        const subscription = instance.observable.subscribe({
+          next: onStoreChange,
+          error: onStoreChange,
+        })
         instance.subscription.unsubscribe()
         return () => {
           subscription.unsubscribe()
