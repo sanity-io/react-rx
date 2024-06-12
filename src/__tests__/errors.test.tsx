@@ -1,4 +1,4 @@
-import {act, render} from '@testing-library/react'
+import {render} from '@testing-library/react'
 import React from 'react'
 import {mergeMap, of, Subject, throwError} from 'rxjs'
 import {expect, test, vitest} from 'vitest'
@@ -28,10 +28,8 @@ test('errors emitted by the observable should be thrown during the react render 
     </div>
   `)
 
-  act(() => {
-    // Note that the error is thrown later, during the render phase
-    subject.next({error: true, message: 'Boom'})
-  })
+  // Note that the error is thrown later, during the render phase
+  subject.next({error: true, message: 'Boom'})
 
   const consoleErrorSpy = vitest.spyOn(globalThis.console, 'error').mockImplementation(() => {
     // silence console.error()'s
