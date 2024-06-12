@@ -94,6 +94,7 @@ const Wrapper = styled.div`
     margin-top: 10px;
   }
   input {
+    box-sizing: border-box;
     width: 100%;
     padding: 5px;
   }

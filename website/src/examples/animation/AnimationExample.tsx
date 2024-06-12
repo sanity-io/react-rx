@@ -1,5 +1,5 @@
 import bezier from 'bezier-easing'
-import * as React from 'react'
+import {useEffect} from 'react'
 import {createRoot} from 'react-dom/client'
 import {rxComponent, state} from 'react-rx-old'
 import {timer} from 'rxjs'
@@ -174,7 +174,7 @@ export default function App() {
   /**
    * Uses a `createRoot` workaround as legacy `rxComponent` APIs are not fully supported in Strict Mode
    */
-  React.useEffect(() => {
+  useEffect(() => {
     const root = createRoot(
       document.getElementById(
         'animation-example',

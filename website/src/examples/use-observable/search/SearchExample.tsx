@@ -1,38 +1,14 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
+import {useState} from 'react'
+import {useMemoObservable} from 'react-rx-old'
 import {Observable} from 'rxjs'
-import * as RxJS from 'rxjs'
-import * as operators from 'rxjs/operators'
-
-const {of, from, concat, merge} = RxJS
-const {
-  timer,
-  interval,
-  throwError,
-  combineLatest,
-} = RxJS
-
-const {map, filter, reduce, scan, tap} = operators
-const {concatMap, mergeMap, switchMap, mapTo} =
-  operators
-const {startWith, catchError, take} = operators
-//@endimport
-
-import {observableCallback} from 'observable-callback'
+import {of, timer} from 'rxjs'
 import {
-  context,
-  elementRef,
-  forwardRef,
-  handler,
-  rxComponent,
-  state,
-  useAsObservable,
-  useMemoObservable,
-  useObservable,
-} from 'react-rx-old'
-
-const {distinctUntilChanged, debounceTime} =
-  operators
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  map,
+  switchMap,
+} from 'rxjs/operators'
 
 interface SearchResult {
   keyword: string
@@ -74,7 +50,7 @@ const search = (
 }
 
 function SearchExample() {
-  const [keyword, setKeyword] = React.useState('')
+  const [keyword, setKeyword] = useState('')
   return (
     <>
       <input
