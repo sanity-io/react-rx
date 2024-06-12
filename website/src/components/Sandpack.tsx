@@ -36,7 +36,7 @@ export default function SandpackComponent({
     <Sandpack
       template="vite-react-ts"
       options={{
-        editorHeight: '75vh',
+        editorHeight: '60vh',
         editorWidthPercentage: 66,
         showConsoleButton: true,
         showInlineErrors: true,
