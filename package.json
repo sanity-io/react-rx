@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "3.0.0-7",
+  "version": "3.0.0",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
