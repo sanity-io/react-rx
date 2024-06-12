@@ -1,5 +1,13 @@
 import {useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
-import {catchError, type Observable, type ObservedValueOf, of, share, type Subscription} from 'rxjs'
+import {
+  catchError,
+  finalize,
+  type Observable,
+  type ObservedValueOf,
+  of,
+  share,
+  type Subscription,
+} from 'rxjs'
 import {map, tap} from 'rxjs/operators'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
@@ -62,7 +70,9 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
         // Note: any value or error emitted by the provided observable will be mapped to the cache entry's mutable state
         // and the observable is thereafter only used as a notifier to call `onStoreChange`, hence the `void` return type.
         map((value) => void value),
-        share({resetOnRefCountZero: true}),
+        // Ensure that the cache entry is deleted when the observable completes or errors.
+        finalize(() => cache.delete(observable)),
+        share(),
       )
 
       // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
