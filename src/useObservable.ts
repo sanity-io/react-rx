@@ -1,13 +1,14 @@
 import {useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
-import {type Observable, type ObservedValueOf, type Subscription} from 'rxjs'
-import {shareReplay, tap} from 'rxjs/operators'
+import {catchError, type Observable, type ObservedValueOf, of, share, type Subscription} from 'rxjs'
+import {map, tap} from 'rxjs/operators'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
   return typeof value === 'function' ? value() : value
 }
+
 interface CacheRecord<T> {
   subscription: Subscription
-  observable: Observable<T>
+  observable: Observable<void>
   snapshot: T
   error?: unknown
 }
@@ -52,14 +53,16 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
         snapshot: initialValueRef.current,
       }
       entry.observable = observable.pipe(
-        shareReplay({refCount: true, bufferSize: 1}),
-        tap({
-          next: (value) => {
-            entry.snapshot = value
-            entry.error = undefined
-          },
-          error: (error: unknown) => (entry.error = error),
+        map((value) => ({snapshot: value, error: undefined})),
+        catchError((error) => of({snapshot: undefined, error})),
+        tap(({snapshot, error}) => {
+          entry.snapshot = snapshot
+          entry.error = error
         }),
+        // Note: any value or error emitted by the provided observable will be mapped to the cache entry's mutable state
+        // and the observable is thereafter only used as a notifier to call `onStoreChange`, hence the `void` return type.
+        map((value) => void value),
+        share({resetOnRefCountZero: true}),
       )
 
       // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
@@ -75,10 +78,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 
     return {
       subscribe: (onStoreChange: () => void) => {
-        const subscription = instance.observable.subscribe({
-          next: onStoreChange,
-          error: onStoreChange,
-        })
+        const subscription = instance.observable.subscribe(onStoreChange)
         instance.subscription.unsubscribe()
         return () => {
           subscription.unsubscribe()
