@@ -4,7 +4,7 @@ import {timer} from 'rxjs'
 import {map, startWith} from 'rxjs/operators'
 
 export default function App() {
-  const [delay, setDelay] = useState(100)
+  const [delay, setDelay] = useState(500)
   const observable = useMemo(
     () =>
       timer(500, delay).pipe(
@@ -23,6 +23,7 @@ export default function App() {
         min={0}
         max={1000}
         step={100}
+        value={delay}
         onChange={(e) =>
           setDelay(Number(e.currentTarget.value))
         }
