@@ -1,6 +1,6 @@
 import {act, render, renderHook} from '@testing-library/react'
 import {createElement, Fragment} from 'react'
-import {asyncScheduler, Observable, of, scheduled, Subject, timer} from 'rxjs'
+import {asyncScheduler, Observable, of, ReplaySubject, scheduled, share, Subject, timer} from 'rxjs'
 import {map} from 'rxjs/operators'
 import {expect, test} from 'vitest'
 
@@ -101,6 +101,90 @@ test('should have passed initialValue as initial value from delayed observables'
   )
   expect(result.current).toBe('initial')
   unmount()
+})
+
+test('should rerender with initial value if component unmounts and then remounts', () => {
+  const values$ = new Subject<string>()
+  const firstHook = renderHook(() => useObservable(values$, 'initial'))
+
+  expect(firstHook.result.current).toBe('initial')
+
+  act(() => values$.next('something'))
+  expect(firstHook.result.current).toBe('something')
+
+  firstHook.unmount()
+
+  const nextHook = renderHook(() => useObservable(values$, 'initial2'))
+
+  expect(nextHook.result.current).toBe('initial2')
+})
+
+test('should share the observable between each concurrent subscribing hook', () => {
+  let subscribeCount = 0
+  const observable = new Observable<number>((subscriber) => {
+    subscriber.next(subscribeCount++)
+  })
+  const firstHook = renderHook(() => useObservable(observable))
+  expect(firstHook.result.current).toBe(0)
+  const secondHook = renderHook(() => useObservable(observable))
+  expect(secondHook.result.current).toBe(0)
+  firstHook.unmount()
+  secondHook.unmount()
+
+  const thirdHook = renderHook(() => useObservable(observable))
+  expect(thirdHook.result.current).toBe(1)
+  thirdHook.unmount()
+})
+
+test('should restart any completed observable on mount', () => {
+  let subscribeCount = 0
+  let unsubscribeCount = 0
+
+  type Notification<T> =
+    | {kind: 'next'; value: T}
+    | {kind: 'error'; error: Error}
+    | {kind: 'complete'}
+
+  const notifications$ = new Subject<Notification<string>>()
+
+  const observable = new Observable<string>((subscriber) => {
+    subscribeCount++
+    const subscription = notifications$.subscribe((notification) => {
+      if (notification.kind === 'next') {
+        subscriber.next(notification.value)
+      } else if (notification.kind === 'error') {
+        subscriber.error(notification.error)
+      } else if (notification.kind === 'complete') {
+        subscriber.complete()
+      }
+    })
+    return () => {
+      unsubscribeCount++
+      subscription.unsubscribe()
+    }
+  }).pipe(share({connector: () => new ReplaySubject(1)}))
+
+  const firstHook = renderHook(() => useObservable(observable, 'initial'))
+  expect(firstHook.result.current).toBe('initial')
+
+  act(() => notifications$.next({kind: 'next', value: 'something'}))
+  expect(firstHook.result.current).toBe('something')
+  act(() => notifications$.next({kind: 'complete'}))
+  expect(firstHook.result.current).toBe('something')
+  act(() => notifications$.next({kind: 'next', value: 'after complete'}))
+  expect(firstHook.result.current).toBe('something')
+
+  expect(subscribeCount).toBe(1)
+  expect(unsubscribeCount).toBe(1)
+
+  firstHook.unmount()
+
+  const secondHook = renderHook(() => useObservable(observable))
+  expect(secondHook.result.current).toBe(undefined)
+  expect(subscribeCount).toBe(2)
+  expect(unsubscribeCount).toBe(1)
+  secondHook.unmount()
+  expect(unsubscribeCount).toBe(2)
 })
 
 test('should update with values from observables', () => {
