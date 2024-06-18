@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "3.0.0",
+  "version": "3.0.1-canary.2",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -50,6 +50,10 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
+      "react-compiler": {
+        "source": "./src/index.ts",
+        "default": "./dist/index.compiled.js"
+      },
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     },
@@ -61,10 +65,6 @@
   "files": [
     "dist",
     "src"
-  ],
-  "workspaces": [
-    "website",
-    "."
   ],
   "scripts": {
     "build": "pkg build --strict --clean --check",
@@ -81,7 +81,7 @@
     "observable-callback": "^1.0.3"
   },
   "devDependencies": {
-    "@sanity/pkg-utils": "^6.9.3",
+    "@sanity/pkg-utils": "^6.10.0",
     "@sanity/prettier-config": "^1.0.2",
     "@sanity/semantic-release-preset": "^4.1.8",
     "@testing-library/dom": "^10.1.0",
