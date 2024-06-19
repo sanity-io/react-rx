@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.0](https://github.com/sanity-io/react-rx/compare/v3.0.0...v3.1.0) (2024-06-19)
+
+### Features
+
+- add experimental react-compiler condition ([#95](https://github.com/sanity-io/react-rx/issues/95)) ([5592c31](https://github.com/sanity-io/react-rx/commit/5592c311e8acf57209894a64baba11fa8bc49729))
+
 ## [3.0.0](https://github.com/sanity-io/react-rx/compare/v2.1.3...v3.0.0) (2024-06-12)
 
 ### ⚠ BREAKING CHANGES
