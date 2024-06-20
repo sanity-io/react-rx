@@ -50,10 +50,6 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "react-compiler": {
-        "source": "./src/index.ts",
-        "default": "./dist/index.compiled.js"
-      },
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     },
