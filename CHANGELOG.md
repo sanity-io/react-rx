@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.1](https://github.com/sanity-io/react-rx/compare/v3.1.0...v3.1.1) (2024-06-20)
+
+### Bug Fixes
+
+- remove react-compiler export condition ([#97](https://github.com/sanity-io/react-rx/issues/97)) ([3f32aca](https://github.com/sanity-io/react-rx/commit/3f32acad706dbf47329cf4ab6f5053b274901bee))
+
 ## [3.1.0](https://github.com/sanity-io/react-rx/compare/v3.0.0...v3.1.0) (2024-06-19)
 
 ### Features
