@@ -22,11 +22,11 @@ importers:
         specifier: ^4.1.8
         version: 4.1.8(semantic-release@24.0.0(typescript@5.4.5))
       '@testing-library/dom':
-        specifier: ^10.1.0
-        version: 10.1.0
+        specifier: ^10.3.1
+        version: 10.3.1
       '@testing-library/react':
         specifier: ^16.0.0
-        version: 16.0.0(@testing-library/dom@10.1.0)(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 16.0.0(@testing-library/dom@10.3.1)(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@types/node':
         specifier: ^18.17.5
         version: 18.19.36
@@ -1306,8 +1306,8 @@ packages:
   '@tanstack/virtual-core@3.5.1':
     resolution: {integrity: sha512-046+AUSiDru/V9pajE1du8WayvBKeCvJ2NmKPy/mR8/SbKKrqmSbj7LJBfXE+nSq4f5TBXvnCzu0kcYebI9WdQ==}
 
-  '@testing-library/dom@10.1.0':
-    resolution: {integrity: sha512-wdsYKy5zupPyLCW2Je5DLHSxSfbIp6h80WoHOQc+RPtmPGA52O9x5MJEkv92Sjonpq+poOAtUKhh1kBGAXBrNA==}
+  '@testing-library/dom@10.3.1':
+    resolution: {integrity: sha512-q/WL+vlXMpC0uXDyfsMtc1rmotzLV8Y0gq6q1gfrrDjQeHoeLrqHbxdPvPNAh1i+xuJl7+BezywcXArz7vLqKQ==}
     engines: {node: '>=18'}
 
   '@testing-library/react@16.0.0':
@@ -6657,7 +6657,7 @@ snapshots:
 
   '@tanstack/virtual-core@3.5.1': {}
 
-  '@testing-library/dom@10.1.0':
+  '@testing-library/dom@10.3.1':
     dependencies:
       '@babel/code-frame': 7.24.7
       '@babel/runtime': 7.24.7
@@ -6668,10 +6668,10 @@ snapshots:
       lz-string: 1.5.0
       pretty-format: 27.5.1
 
-  '@testing-library/react@16.0.0(@testing-library/dom@10.1.0)(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@testing-library/react@16.0.0(@testing-library/dom@10.3.1)(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@babel/runtime': 7.24.7
-      '@testing-library/dom': 10.1.0
+      '@testing-library/dom': 10.3.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     optionalDependencies:
