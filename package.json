@@ -74,7 +74,8 @@
   "browserslist": "extends @sanity/browserslist-config",
   "prettier": "@sanity/prettier-config",
   "dependencies": {
-    "observable-callback": "^1.0.3"
+    "observable-callback": "^1.0.3",
+    "use-effect-event": "^1.0.2"
   },
   "devDependencies": {
     "@sanity/pkg-utils": "^6.10.2",
