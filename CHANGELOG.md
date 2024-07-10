@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.2](https://github.com/sanity-io/react-rx/compare/v3.1.1...v3.1.2) (2024-07-10)
+
+### Bug Fixes
+
+- use `use-effect-event` ([#106](https://github.com/sanity-io/react-rx/issues/106)) ([ec8df18](https://github.com/sanity-io/react-rx/commit/ec8df1838f5dba8a6f9df98ad5a080b269c64593))
+
 ## [3.1.1](https://github.com/sanity-io/react-rx/compare/v3.1.0...v3.1.1) (2024-06-20)
 
 ### Bug Fixes
