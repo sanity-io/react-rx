@@ -11,6 +11,11 @@
     {
       "matchPackageNames": ["react-rx-old"],
       "enabled": false
+    },
+    {
+      "matchPackageNames": ["observable-callback", "use-effect-event"],
+      "rangeStrategy": "bump",
+      "semanticCommitType": "fix"
     }
   ]
 }
