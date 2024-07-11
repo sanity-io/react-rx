@@ -5,16 +5,16 @@ import {useEffectEvent} from 'use-effect-event'
 
 /** @public */
 export function useObservableEvent<T, U>(
-  fn: (arg: Observable<T>) => Observable<U>,
+  handleEvent: (arg: Observable<T>) => Observable<U>,
 ): (arg: T) => void {
   const [[calls$, call]] = useState(() => observableCallback<T>())
 
-  const callback = useEffectEvent(fn)
+  const onEvent = useEffectEvent((observable: Observable<T>) => handleEvent(observable))
 
   useEffect(() => {
-    const subscription = calls$.pipe(callback).subscribe()
+    const subscription = calls$.pipe((observable) => onEvent(observable)).subscribe()
     return () => subscription.unsubscribe()
-  }, [callback, calls$])
+  }, [calls$, onEvent])
 
   return call
 }
