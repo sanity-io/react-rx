@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.3](https://github.com/sanity-io/react-rx/compare/v3.1.2...v3.1.3) (2024-07-11)
+
+### Bug Fixes
+
+- use proper closures ([#107](https://github.com/sanity-io/react-rx/issues/107)) ([5e14944](https://github.com/sanity-io/react-rx/commit/5e149442c0b61e088f103b3f3f35e271e7d9bad0))
+
 ## [3.1.2](https://github.com/sanity-io/react-rx/compare/v3.1.1...v3.1.2) (2024-07-10)
 
 ### Bug Fixes
