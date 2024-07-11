@@ -78,7 +78,7 @@
     "use-effect-event": "^1.0.2"
   },
   "devDependencies": {
-    "@sanity/pkg-utils": "^6.10.2",
+    "@sanity/pkg-utils": "^6.10.3",
     "@sanity/prettier-config": "^1.0.2",
     "@sanity/semantic-release-preset": "^5.0.0",
     "@testing-library/dom": "^10.3.1",
