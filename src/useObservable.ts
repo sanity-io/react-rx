@@ -1,12 +1,13 @@
 import {useEffect, useMemo, useRef, useSyncExternalStore} from 'react'
 import {
+  asapScheduler,
   catchError,
   finalize,
   type Observable,
   type ObservedValueOf,
   of,
   share,
-  type Subscription,
+  timer,
 } from 'rxjs'
 import {map, tap} from 'rxjs/operators'
 
@@ -15,7 +16,6 @@ function getValue<T>(value: T): T extends () => infer U ? U : T {
 }
 
 interface CacheRecord<T> {
-  subscription: Subscription
   observable: Observable<void>
   snapshot: T
   error?: unknown
@@ -72,24 +72,21 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
         map((value) => void value),
         // Ensure that the cache entry is deleted when the observable completes or errors.
         finalize(() => cache.delete(observable)),
-        share(),
+        share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
       )
 
       // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
-      entry.subscription = entry.observable.subscribe()
+      const subscription = entry.observable.subscribe()
+      subscription.unsubscribe()
 
       cache.set(observable, entry as CacheRecord<ObservedValueOf<ObservableType>>)
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const instance = cache.get(observable)!
-    if (instance.subscription.closed) {
-      instance.subscription = instance.observable.subscribe()
-    }
 
     return {
       subscribe: (onStoreChange: () => void) => {
         const subscription = instance.observable.subscribe(onStoreChange)
-        instance.subscription.unsubscribe()
         return () => {
           subscription.unsubscribe()
         }

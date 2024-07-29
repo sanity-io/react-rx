@@ -39,7 +39,7 @@ test('Strict mode should trigger double mount effects and re-renders', async () 
   expect(mountCount).toEqual(2)
 })
 
-test('Strict mode should unsubscribe the source observable on unmount', () => {
+test('Strict mode should unsubscribe the source observable on unmount', async () => {
   const subscribed: number[] = []
   const unsubscribed: number[] = []
   let nextId = 0
@@ -57,12 +57,13 @@ test('Strict mode should unsubscribe the source observable on unmount', () => {
   }
 
   const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
-  expect(subscribed).toEqual([0, 1])
+  expect(subscribed).toEqual([0])
   rerender(createElement(StrictMode, null, createElement('div')))
-  expect(unsubscribed).toEqual([0, 1])
+  await Promise.resolve()
+  expect(unsubscribed).toEqual([0])
 })
 
-test('Strict mode should unsubscribe the source observable on unmount if its created in a useMemo', () => {
+test('Strict mode should unsubscribe the source observable on unmount if its created in a useMemo', async () => {
   let subscriberCount: number = 0
   const getObservable = () =>
     new Observable(() => {
@@ -81,5 +82,6 @@ test('Strict mode should unsubscribe the source observable on unmount if its cre
   const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
   expect(subscriberCount, 'Subscriber count should be 2').toBe(2)
   rerender(createElement(StrictMode, null, createElement('div')))
+  await Promise.resolve()
   expect(subscriberCount, 'Subscriber count should be 0').toBe(0)
 })
