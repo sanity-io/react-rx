@@ -6,7 +6,7 @@ import {expect, test} from 'vitest'
 
 import {useObservable} from '../useObservable'
 
-test('should subscribe immediately on component mount and unsubscribe on component unmount', () => {
+test('should subscribe immediately on component mount and unsubscribe on component unmount', async () => {
   let subscribed = false
   const observable = new Observable(() => {
     subscribed = true
@@ -21,10 +21,11 @@ test('should subscribe immediately on component mount and unsubscribe on compone
   expect(subscribed).toBe(true)
 
   unmount()
+  await Promise.resolve()
   expect(subscribed).toBe(false)
 })
 
-test('should only subscribe once when given same observable on re-renders', () => {
+test('should only subscribe once when given same observable on re-renders', async () => {
   let subscriptionCount = 0
   const observable = new Observable(() => {
     subscriptionCount++
@@ -37,6 +38,7 @@ test('should only subscribe once when given same observable on re-renders', () =
   rerender()
   expect(subscriptionCount).toBe(1)
   unmount()
+  await Promise.resolve()
 
   renderHook(() => useObservable(observable))
   expect(subscriptionCount).toBe(2)
@@ -103,7 +105,7 @@ test('should have passed initialValue as initial value from delayed observables'
   unmount()
 })
 
-test('should rerender with initial value if component unmounts and then remounts', () => {
+test('should rerender with initial value if component unmounts and then remounts', async () => {
   const values$ = new Subject<string>()
   const firstHook = renderHook(() => useObservable(values$, 'initial'))
 
@@ -113,13 +115,14 @@ test('should rerender with initial value if component unmounts and then remounts
   expect(firstHook.result.current).toBe('something')
 
   firstHook.unmount()
+  await Promise.resolve()
 
   const nextHook = renderHook(() => useObservable(values$, 'initial2'))
 
   expect(nextHook.result.current).toBe('initial2')
 })
 
-test('should share the observable between each concurrent subscribing hook', () => {
+test('should share the observable between each concurrent subscribing hook', async () => {
   let subscribeCount = 0
   const observable = new Observable<number>((subscriber) => {
     subscriber.next(subscribeCount++)
@@ -130,13 +133,14 @@ test('should share the observable between each concurrent subscribing hook', () 
   expect(secondHook.result.current).toBe(0)
   firstHook.unmount()
   secondHook.unmount()
+  await Promise.resolve()
 
   const thirdHook = renderHook(() => useObservable(observable))
   expect(thirdHook.result.current).toBe(1)
   thirdHook.unmount()
 })
 
-test('should restart any completed observable on mount', () => {
+test('should restart any completed observable on mount', async () => {
   let subscribeCount = 0
   let unsubscribeCount = 0
 
@@ -178,12 +182,15 @@ test('should restart any completed observable on mount', () => {
   expect(unsubscribeCount).toBe(1)
 
   firstHook.unmount()
+  await Promise.resolve()
 
   const secondHook = renderHook(() => useObservable(observable))
   expect(secondHook.result.current).toBe(undefined)
   expect(subscribeCount).toBe(2)
   expect(unsubscribeCount).toBe(1)
   secondHook.unmount()
+  await Promise.resolve()
+
   expect(unsubscribeCount).toBe(2)
 })
 

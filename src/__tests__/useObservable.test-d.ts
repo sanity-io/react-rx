@@ -22,6 +22,6 @@ test('useObservable with initial value if a different type returns a union of th
   const observable = of('foo')
 
   expectTypeOf(useObservable(observable, 1)).toEqualTypeOf<string | number>()
-
+  expectTypeOf(useObservable(observable, () => 1)).toEqualTypeOf<string | number>()
   expectTypeOf(useObservable(observable, 'foo')).toEqualTypeOf<string>()
 })
