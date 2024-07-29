@@ -5,6 +5,17 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.0](https://github.com/sanity-io/react-rx/compare/v3.1.3...v4.0.0) (2024-07-29)
+
+### ⚠ BREAKING CHANGES
+
+- **useObservable:** This should normally not cause any problems, but given that it introduces a change in behavior wrt. timing of observable unsubscription, it can potentially cause race conditions in rare cases, especially if side-effects are performed in response to observable emissions.
+  The modifications required to make the test suite pass should be a good indication of the breaking nature of these changes, although the tests suites are in the majority of cases asserting internal behavior.
+
+### Bug Fixes
+
+- **useObservable:** eagerly subscribe with delayed refcount expiry ([#115](https://github.com/sanity-io/react-rx/issues/115)) ([d81d5af](https://github.com/sanity-io/react-rx/commit/d81d5af9b7fc6af85cdebfac3d53096b058c991d))
+
 ## [3.1.3](https://github.com/sanity-io/react-rx/compare/v3.1.2...v3.1.3) (2024-07-11)
 
 ### Bug Fixes
