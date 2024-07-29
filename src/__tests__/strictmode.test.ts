@@ -1,5 +1,5 @@
 import {act, render} from '@testing-library/react'
-import {createElement, Fragment, StrictMode, useEffect} from 'react'
+import {createElement, Fragment, StrictMode, useEffect, useMemo} from 'react'
 import {BehaviorSubject, Observable} from 'rxjs'
 import {expect, test} from 'vitest'
 
@@ -60,4 +60,26 @@ test('Strict mode should unsubscribe the source observable on unmount', () => {
   expect(subscribed).toEqual([0, 1])
   rerender(createElement(StrictMode, null, createElement('div')))
   expect(unsubscribed).toEqual([0, 1])
+})
+
+test('Strict mode should unsubscribe the source observable on unmount if its created in a useMemo', () => {
+  let subscriberCount: number = 0
+  const getObservable = () =>
+    new Observable(() => {
+      subscriberCount++
+      return () => {
+        subscriberCount--
+      }
+    })
+
+  function ObservableComponent() {
+    const memoObservable = useMemo(() => getObservable(), [])
+    useObservable(memoObservable)
+    return createElement(Fragment, null)
+  }
+
+  const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
+  expect(subscriberCount, 'Subscriber count should be 2').toBe(2)
+  rerender(createElement(StrictMode, null, createElement('div')))
+  expect(subscriberCount, 'Subscriber count should be 0').toBe(0)
 })
