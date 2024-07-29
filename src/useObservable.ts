@@ -35,7 +35,7 @@ export function useObservable<ObservableType extends Observable<any>>(
 /** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
-  initialValue: InitialValue,
+  initialValue: InitialValue | (() => InitialValue),
 ): InitialValue | ObservedValueOf<ObservableType>
 /** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
