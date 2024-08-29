@@ -40,10 +40,10 @@ importers:
         specifier: ^18.3.0
         version: 18.3.0
       '@typescript-eslint/eslint-plugin':
-        specifier: ^7.17.0
+        specifier: ^7.18.0
         version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.0)(typescript@5.5.3))(eslint@8.57.0)(typescript@5.5.3)
       '@typescript-eslint/parser':
-        specifier: ^7.17.0
+        specifier: ^7.18.0
         version: 7.18.0(eslint@8.57.0)(typescript@5.5.3)
       eslint:
         specifier: ^8.57.0
@@ -58,8 +58,8 @@ importers:
         specifier: ^7.35.0
         version: 7.35.0(eslint@8.57.0)
       eslint-plugin-react-compiler:
-        specifier: 0.0.0-experimental-9ed098e-20240725
-        version: 0.0.0-experimental-9ed098e-20240725(eslint@8.57.0)
+        specifier: 0.0.0-experimental-f8a5409-20240829
+        version: 0.0.0-experimental-f8a5409-20240829(eslint@8.57.0)
       eslint-plugin-react-hooks:
         specifier: ^4.6.2
         version: 4.6.2(eslint@8.57.0)
@@ -2438,8 +2438,8 @@ packages:
       eslint-config-prettier:
         optional: true
 
-  eslint-plugin-react-compiler@0.0.0-experimental-9ed098e-20240725:
-    resolution: {integrity: sha512-Xv2iD8kU6R4Wdjdh1WhdP8UnSqSV+/XcadxwBCmMr836fQUoXGuw/uVGc01v9opZs9SwKzo+8My6ayVCgAinPA==}
+  eslint-plugin-react-compiler@0.0.0-experimental-f8a5409-20240829:
+    resolution: {integrity: sha512-Z76Rz5ga9uE+d8C4L6oMAqCh02d3I6sg/Va6J8UX6tsqarcGV2d+AH3V9mxkMIIRy/HSEKuPsYPgGfFqFfoqTQ==}
     engines: {node: ^14.17.0 || ^16.0.0 || >= 18.0.0}
     peerDependencies:
       eslint: '>=7'
@@ -7915,7 +7915,7 @@ snapshots:
       '@types/eslint': 9.6.0
       eslint-config-prettier: 9.1.0(eslint@8.57.0)
 
-  eslint-plugin-react-compiler@0.0.0-experimental-9ed098e-20240725(eslint@8.57.0):
+  eslint-plugin-react-compiler@0.0.0-experimental-f8a5409-20240829(eslint@8.57.0):
     dependencies:
       '@babel/core': 7.25.2
       '@babel/parser': 7.25.3
