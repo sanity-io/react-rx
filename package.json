@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@sanity/pkg-utils": "^6.10.11",
-    "@sanity/prettier-config": "^1.0.2",
+    "@sanity/prettier-config": "^1.0.3",
     "@sanity/semantic-release-preset": "^5.0.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.0.1",

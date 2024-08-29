@@ -19,7 +19,7 @@ importers:
         specifier: ^6.10.11
         version: 6.10.11(@types/node@18.19.47)(typescript@5.5.3)
       '@sanity/prettier-config':
-        specifier: ^1.0.2
+        specifier: ^1.0.3
         version: 1.0.3(prettier@3.3.3)
       '@sanity/semantic-release-preset':
         specifier: ^5.0.0
