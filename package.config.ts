@@ -9,4 +9,6 @@ export default defineConfig({
       'ae-internal-missing-underscore': 'off',
     },
   },
+  babel: {reactCompiler: true},
+  reactCompilerOptions: {target: '18'},
 })

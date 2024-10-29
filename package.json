@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "4.0.1",
+  "version": "4.1.0-canary.5",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -75,6 +75,7 @@
   "prettier": "@sanity/prettier-config",
   "dependencies": {
     "observable-callback": "^1.0.3",
+    "react-compiler-runtime": "19.0.0-beta-6fc168f-20241025",
     "use-effect-event": "^1.0.2"
   },
   "devDependencies": {
@@ -88,6 +89,8 @@
     "@types/react-dom": "^18.3.1",
     "@typescript-eslint/eslint-plugin": "^8.12.2",
     "@typescript-eslint/parser": "^8.12.2",
+    "@vitejs/plugin-react": "^4.3.3",
+    "babel-plugin-react-compiler": "beta",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
@@ -106,7 +109,7 @@
     "vitest": "^2.1.4"
   },
   "peerDependencies": {
-    "react": "^18.3 || >=19.0.0-rc",
+    "react": "^18.3 || >=19.0.0-0",
     "rxjs": "^7"
   },
   "packageManager": "pnpm@9.12.3"

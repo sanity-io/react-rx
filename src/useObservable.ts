@@ -1,4 +1,4 @@
-import {useMemo, useSyncExternalStore} from 'react'
+import {useCallback, useSyncExternalStore} from 'react'
 import {
   asapScheduler,
   catchError,
@@ -67,29 +67,26 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 
     cache.set(observable, entry as CacheRecord<ObservedValueOf<ObservableType>>)
   }
+  const instance = cache.get(observable)!
 
-  const store = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const instance = cache.get(observable)!
-    return {
-      subscribe: (onStoreChange: () => void) => {
-        const subscription = instance.observable.subscribe(onStoreChange)
-        return () => {
-          subscription.unsubscribe()
-        }
-      },
-      getSnapshot: () => {
-        if (instance.error) {
-          throw instance.error
-        }
-        return instance.snapshot
-      },
-    }
-  }, [observable])
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      const subscription = instance.observable.subscribe(onStoreChange)
+      return () => {
+        subscription.unsubscribe()
+      }
+    },
+    [instance.observable],
+  )
 
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(
-    store.subscribe,
-    store.getSnapshot,
+    subscribe,
+    () => {
+      if (instance.error) {
+        throw instance.error
+      }
+      return instance.snapshot
+    },
     typeof initialValue === 'undefined'
       ? undefined
       : () => getValue(initialValue) as ObservedValueOf<ObservableType>,
