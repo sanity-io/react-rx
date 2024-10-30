@@ -1,7 +1,10 @@
-import {useRouter} from 'next/router'
+import {useConfig} from 'nextra-theme-docs'
 
 import {ReactRxLogo} from '@/components/logos/ReactRxLogo'
 
+/**
+ * @type {import('nextra-theme-docs').DocsThemeConfig}
+ */
 export default {
   logo: (
     <span>
@@ -19,28 +22,23 @@ export default {
   project: {
     link: 'https://github.com/sanity-io/react-rx',
   },
-  head: (
-    <>
-      <link rel="icon" href="/icon.svg" type="image/svg+xml" sizes="any" />
-    </>
-  ),
-  docsRepositoryBase: 'https://github.com/sanity-io/react-rx/tree/current/website',
-  useNextSeoProps() {
-    const {asPath} = useRouter()
-    if (asPath !== '/') {
-      return {
-        titleTemplate: '%s – ReactRx',
-      }
-    }
-    return {
-      title: 'ReactRx',
-      titleTemplate: '%s',
-    }
+  head: function useHead() {
+    const config = useConfig()
+    const title = config.title === 'Index' ? 'ReactRx' : `${config.title} – ReactRx`
+    return (
+      <>
+        <title>{title}</title>
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" sizes="any" />
+      </>
+    )
   },
-  primaryHue: {dark: 304, light: 339.63},
-  primarySaturation: {dark: 41, light: 68.07},
+  docsRepositoryBase: 'https://github.com/sanity-io/react-rx/tree/current/website',
+  color: {
+    hue: {dark: 304, light: 339.63},
+    saturation: {dark: 41, light: 68.07},
+  },
   footer: {
-    text: (
+    content: (
       <span>
         MIT {new Date().getFullYear()} ©{' '}
         <a href="https://sanity.io" target="_blank">
@@ -50,5 +48,4 @@ export default {
       </span>
     ),
   },
-  // ... other theme options
 }
