@@ -9,7 +9,7 @@
       "semanticCommitType": "chore"
     },
     {
-      "matchPackageNames": ["react-rx-old"],
+      "matchPackageNames": ["react-rx-old", "react-rx"],
       "allowedVersions": "<=2.x"
     },
     {
