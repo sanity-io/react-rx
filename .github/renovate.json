@@ -10,7 +10,7 @@
     },
     {
       "matchPackageNames": ["react-rx-old"],
-      "enabled": false
+      "allowedVersions": "<=2.x"
     },
     {
       "matchPackageNames": ["observable-callback", "use-effect-event"],
