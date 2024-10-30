@@ -12,13 +12,8 @@ const {dependencies: websiteDependencies} = websitePackageJson
 export default function SandpackComponent({
   files = {},
   dependencies = null,
-  useOldReactRx = false,
 }: Pick<ComponentProps<typeof Sandpack>, 'files'> & {
   dependencies?: Partial<Record<keyof typeof websiteDependencies, 'latest'>> | null
-  /**
-   * Temporary, needed for legacy `rxComponent` APIs
-   */
-  useOldReactRx?: boolean
 }) {
   const {resolvedTheme} = useTheme()
   const extraDependencies = useMemo(() => {
@@ -80,9 +75,6 @@ export default function SandpackComponent({
           ...reactRxPackageJson.dependencies,
           rxjs: reactRxPackageJson.peerDependencies.rxjs,
           ...extraDependencies,
-          ...(useOldReactRx
-            ? {'react-rx-old': websitePackageJson.dependencies['react-rx-old']}
-            : {}),
         },
       }}
     />

@@ -1,6 +1,6 @@
 import Sandpack from '@/components/Sandpack'
 
-import App from './UseObservableExample.tsx?raw'
+import App from './SearchExample.tsx?raw'
 
 export default function Example() {
   return (
@@ -8,7 +8,6 @@ export default function Example() {
       files={{
         '/App.tsx': App,
       }}
-      useOldReactRx
     />
   )
 }

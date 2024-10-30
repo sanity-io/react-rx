@@ -1,14 +1,18 @@
-import {rxComponent} from 'react-rx-old'
+import {useObservable} from 'react-rx'
 import {from} from 'rxjs'
 
-const Sync = rxComponent(
-  from([
-    'This',
-    'will',
-    'only',
-    'render',
-    'once!',
-  ]),
-)
+const observable = from([
+  'This',
+  'will',
+  'only',
+  'render',
+  'once!',
+])
+
+function Sync() {
+  const message = useObservable(observable)
+
+  return <>{message}</>
+}
 
 export default Sync

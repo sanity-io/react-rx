@@ -1,6 +1,14 @@
-import {ChangeEvent, FormEvent} from 'react'
-import {handler, rxComponent} from 'react-rx-old'
-import {combineLatest, merge} from 'rxjs'
+import {
+  ChangeEvent,
+  FormEvent,
+  useMemo,
+  useState,
+} from 'react'
+import {
+  useObservable,
+  useObservableEvent,
+} from 'react-rx'
+import {Subject} from 'rxjs'
 import {
   filter,
   map,
@@ -17,62 +25,82 @@ interface TodoItem {
   text: string
 }
 
-const TodoApp = rxComponent(() => {
-  const [onInput$, handleInput] =
-    handler<ChangeEvent<HTMLInputElement>>()
-  const [onSubmit$, handleSubmit] =
-    handler<FormEvent<HTMLFormElement>>()
+const text$ = new Subject<string>()
+const submit$ = new Subject<
+  FormEvent<HTMLFormElement>
+>()
 
-  const text$ = onInput$.pipe(
-    map((e) => e.currentTarget.value),
-    startWith(''),
-  )
-
-  const items$ = onSubmit$.pipe(
-    tap((e) => e.preventDefault()),
-    withLatestFrom(text$),
-    map(([_, text]) => text),
-    filter((text) => text.length > 0),
-    map((text) => ({
-      text,
-      id: Date.now(),
-    })),
-    scan(
-      (items: TodoItem[], item) =>
-        items.concat(item),
-      [],
+function TodoApp() {
+  // Handle input changes
+  const handleInput = useObservableEvent<
+    ChangeEvent<HTMLInputElement>,
+    any
+  >((input$) =>
+    input$.pipe(
+      map(
+        (e: ChangeEvent<HTMLInputElement>) =>
+          e.currentTarget.value,
+      ),
+      tap((value) => text$.next(value)),
     ),
-    startWith([]),
   )
 
-  const inputValue$ = merge(
-    text$,
-    onSubmit$.pipe(mapTo('')),
+  // Handle form submissions
+  const handleSubmit = useObservableEvent<
+    FormEvent<HTMLFormElement>,
+    any
+  >((event$) =>
+    event$.pipe(
+      tap((e) => {
+        e.preventDefault()
+        submit$.next(e)
+        text$.next('')
+      }),
+    ),
   )
 
-  return combineLatest([
-    inputValue$,
-    items$,
-  ]).pipe(
-    map(([text, items]) => (
-      <Wrapper>
-        <h3>TODO</h3>
-        <TodoList items={items} />
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="new-todo">
-            What needs to be done?
-          </label>
-          <input
-            id="new-todo"
-            onChange={handleInput}
-            value={text}
-          />
-          <button>Add #{items.length + 1}</button>
-        </form>
-      </Wrapper>
-    )),
+  // Create items stream
+  const items$ = useMemo(
+    () =>
+      submit$.pipe(
+        withLatestFrom(text$),
+        map(([_, text]) => text),
+        filter((text) => text.length > 0),
+        map((text) => ({
+          text,
+          id: Date.now(),
+        })),
+        scan(
+          (items: TodoItem[], item) =>
+            items.concat(item),
+          [] as TodoItem[],
+        ),
+        startWith([]),
+      ),
+    [],
   )
-})
+
+  const text = useObservable(text$, '')
+  const items = useObservable(items$, [])
+
+  return (
+    <Wrapper>
+      <h3>TODO</h3>
+      <TodoList items={items} />
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="new-todo">
+          What needs to be done?
+        </label>
+        <input
+          id="new-todo"
+          onChange={handleInput}
+          value={text}
+        />
+        <button>Add #{items.length + 1}</button>
+      </form>
+    </Wrapper>
+  )
+}
 
 interface ListProps {
   items: TodoItem[]

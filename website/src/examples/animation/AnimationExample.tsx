@@ -1,87 +1,115 @@
 import bezier from 'bezier-easing'
-import {useEffect} from 'react'
-import {createRoot} from 'react-dom/client'
-import {rxComponent, state} from 'react-rx-old'
-import {timer} from 'rxjs'
-import {map, switchMap} from 'rxjs/operators'
+import {useMemo} from 'react'
+import {
+  useObservable,
+  useObservableEvent,
+} from 'react-rx'
+import {Subject, timer} from 'rxjs'
+import {
+  map,
+  startWith,
+  switchMap,
+  tap,
+} from 'rxjs/operators'
 import {styled} from 'styled-components'
 
 const BALL_SIZE = 30
 const BOX_SIZE = 300
-
 const MAX_TOP = BOX_SIZE - BALL_SIZE
 
+// Create subject for easing changes
+const easing$ = new Subject<EasingName>()
+
 function easeCustom(n: number) {
-  // implement your own easing function here by returning a number in the range of [0, 1]
   return n
 }
 
 type EasingName = keyof typeof EASINGS
 
-const AnimationExample = rxComponent(() => {
-  const [easing$, setEasing] =
-    state<EasingName>('easeCustom')
-  return easing$.pipe(
-    switchMap((easing: EasingName) =>
-      timer(0, 16).pipe(
-        map((n) => (n % MAX_TOP) * 2),
-        map((n) =>
-          n > MAX_TOP ? MAX_TOP * 2 - n : n,
-        ),
-        map((linearTop): [number, EasingName] => [
-          EASINGS[easing](linearTop / MAX_TOP) *
-            MAX_TOP,
-          easing,
-        ]),
-      ),
+function AnimationExample() {
+  // Handle easing changes
+  const handleEasingChange = useObservableEvent<
+    EasingName,
+    any
+  >((change$) =>
+    change$.pipe(
+      tap((easing) => easing$.next(easing)),
     ),
-    map(([top, currentEasing]) => (
-      <>
-        <SelectWrapperLabel>
-          Easing function:
-        </SelectWrapperLabel>
-        <SelectWrapper>
-          {Object.keys(EASINGS).map(
-            (easingName) => (
-              <label
-                key={easingName}
-                className={
-                  easingName === currentEasing
-                    ? 'selected'
-                    : ''
-                }
-              >
-                <input
-                  tabIndex={0}
-                  type="checkbox"
-                  checked={
-                    easingName === currentEasing
-                  }
-                  key={easingName}
-                  onChange={() =>
-                    setEasing(
-                      easingName as EasingName,
-                    )
-                  }
-                />
-                {easingName.substring(4)}
-              </label>
-            ),
-          )}
-        </SelectWrapper>
-        <BoxWrapper>
-          <Box>
-            <Ball
-              style={{
-                top,
-              }}
-            />
-          </Box>
-        </BoxWrapper>
-      </>
-    )),
   )
-})
+
+  // Create animation stream
+  const animation$ = useMemo(
+    () =>
+      easing$.pipe(
+        startWith('easeCustom' as EasingName),
+        switchMap((easing: EasingName) =>
+          timer(0, 16).pipe(
+            map((n) => (n % MAX_TOP) * 2),
+            map((n) =>
+              n > MAX_TOP ? MAX_TOP * 2 - n : n,
+            ),
+            map(
+              (linearTop) =>
+                [
+                  EASINGS[easing](
+                    linearTop / MAX_TOP,
+                  ) * MAX_TOP,
+                  easing,
+                ] as [number, EasingName],
+            ),
+          ),
+        ),
+      ),
+    [],
+  )
+
+  const [top, currentEasing] = useObservable(
+    animation$,
+    [0, 'easeCustom' as EasingName],
+  )
+
+  return (
+    <>
+      <SelectWrapperLabel>
+        Easing function:
+      </SelectWrapperLabel>
+      <SelectWrapper>
+        {Object.keys(EASINGS).map(
+          (easingName) => (
+            <label
+              key={easingName}
+              className={
+                easingName === currentEasing
+                  ? 'selected'
+                  : ''
+              }
+            >
+              <input
+                tabIndex={0}
+                type="checkbox"
+                checked={
+                  easingName === currentEasing
+                }
+                key={easingName}
+                onChange={() =>
+                  handleEasingChange(
+                    easingName as EasingName,
+                  )
+                }
+              />
+              {easingName.substring(4)}
+            </label>
+          ),
+        )}
+      </SelectWrapper>
+      <BoxWrapper>
+        <Box>
+          <Ball style={{top}} />
+        </Box>
+      </BoxWrapper>
+    </>
+  )
+}
 
 // --- easing definitions and stylings
 const EASINGS = {
@@ -171,19 +199,5 @@ const SelectWrapper = styled.div`
 `
 
 export default function App() {
-  /**
-   * Uses a `createRoot` workaround as legacy `rxComponent` APIs are not fully supported in Strict Mode
-   */
-  useEffect(() => {
-    const root = createRoot(
-      document.getElementById(
-        'animation-example',
-      )!,
-    )
-    root.render(<AnimationExample />)
-    return () => {
-      root.unmount()
-    }
-  }, [])
-  return <div id="animation-example" />
+  return <AnimationExample />
 }

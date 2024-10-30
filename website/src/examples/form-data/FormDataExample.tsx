@@ -1,7 +1,14 @@
-import {handler, rxComponent} from 'react-rx-old'
-import {concat, merge, timer} from 'rxjs'
 import {
-  concatMap,
+  ChangeEvent,
+  FormEvent,
+  useMemo,
+} from 'react'
+import {
+  useObservable,
+  useObservableEvent,
+} from 'react-rx'
+import {type Observable, Subject} from 'rxjs'
+import {
   map,
   scan,
   startWith,
@@ -14,131 +21,148 @@ import storage from './storage'
 
 const STORAGE_KEY = '__form-submit-example__'
 
-const save = (formData) =>
-  timer(
-    100 + Math.round(Math.random() * 1000),
-  ).pipe(
-    concatMap(() =>
-      storage.set(STORAGE_KEY, formData),
-    ),
-  )
+// Create subjects for form events
+const formData$ = new Subject<Partial<FormData>>()
+const submit$ = new Subject<
+  FormEvent<HTMLFormElement>
+>()
 
-const INITIAL_PROPS = {
-  submitState: {
-    status: 'unsaved',
-    result: null,
-  },
-  formData: {},
+interface FormData {
+  title: string
+  description: string
 }
 
-const INITIAL_SUBMIT_STATE = {
-  status: 'saving',
-  result: null,
-}
-
-const FormDataExample = rxComponent(() => {
-  const [onChange$, onChange] = handler()
-  const [onSubmit$, onSubmit] = handler()
-
-  const formData$ = concat(
-    storage.get(STORAGE_KEY, {
-      title: '',
-      description: '',
-    }),
-    onChange$.pipe(
-      map((event) => event.target),
-      map((target) => ({
-        [target.name]: target.value,
+function FormDataExample() {
+  // Handle input changes
+  const handleChange = useObservableEvent<
+    ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement
+    >,
+    any
+  >((change$) =>
+    change$.pipe(
+      map((event) => ({
+        [event.target.name]: event.target.value,
       })),
-    ),
-  ).pipe(
-    scan(
-      (formData, update) => ({
-        ...formData,
-        ...update,
-      }),
-      {},
+      tap((update) => formData$.next(update)),
     ),
   )
 
-  const submitState$ = onSubmit$.pipe(
-    tap((event) => event.preventDefault()),
-    withLatestFrom(formData$),
-    map(([event, formData]) => formData),
-    concatMap((formData) =>
-      save(formData).pipe(
-        map((res) => ({
-          status: 'saved',
-          result: res,
-        })),
-        startWith(INITIAL_SUBMIT_STATE),
+  // Handle form submissions
+  const handleSubmit = useObservableEvent<
+    FormEvent<HTMLFormElement>,
+    any
+  >((event$) =>
+    event$.pipe(
+      tap((e) => {
+        e.preventDefault()
+        submit$.next(e)
+      }),
+    ),
+  )
+
+  // Create form data stream
+  const data$ = useMemo(
+    () =>
+      formData$.pipe(
+        startWith(
+          storage.get(STORAGE_KEY, {
+            title: '',
+            description: '',
+          }),
+        ),
+        scan(
+          (data, update) => ({
+            ...data,
+            ...update,
+          }),
+          {} as FormData,
+        ),
       ),
-    ),
+    [],
   )
 
-  return merge(
-    formData$.pipe(
-      map((formData) => ({
-        formData,
-      })),
-    ),
-    submitState$.pipe(
-      map((submitState) => ({
-        submitState,
-      })),
-    ),
-  ).pipe(
-    scan(
-      (prev, curr) => ({
-        ...prev,
-        ...curr,
-      }),
-      INITIAL_PROPS,
-    ),
-    map((props) => (
-      <Form onSubmit={onSubmit}>
-        <div>
-          <label>
-            <strong>Title: </strong>
-            <input
-              type="text"
-              name="title"
-              value={props.formData.title}
-              onChange={onChange}
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            <strong>Description: </strong>
-            <textarea
-              name="description"
-              value={props.formData.description}
-              onChange={onChange}
-            />
-          </label>
-        </div>
-        <div>
-          <button
-            disabled={
-              props.submitState.status ===
-              'saving'
-            }
-          >
-            {props.submitState.status === 'saving'
-              ? 'Saving…'
-              : props.submitState.status ===
-                  'saved'
-                ? 'Saved!'
-                : 'Save'}
-          </button>
-        </div>
-      </Form>
-    )),
+  // Create submit state stream
+  const submitState$ = useMemo(
+    () =>
+      submit$.pipe(
+        withLatestFrom(data$),
+        map(([_, formData]) => formData),
+        map((formData) =>
+          storage.set(STORAGE_KEY, formData).pipe(
+            map(() => ({
+              status: 'saved' as const,
+              result: formData,
+            })),
+            startWith({
+              status: 'saving' as const,
+              result: null,
+            }),
+          ),
+        ),
+        startWith({
+          status: 'unsaved' as const,
+          result: null,
+        }),
+      ),
+    [data$],
   )
-})
 
-export default FormDataExample
+  const formData = useObservable(data$, {
+    title: '',
+    description: '',
+  })
+  const submitState = useObservable(
+    // @TODO investigate why this is necessary
+    submitState$ as unknown as Observable<{
+      status: 'saved' | 'saving' | 'unsaved'
+      result: FormData | null
+    }>,
+    {
+      status: 'unsaved' as const,
+      result: null,
+    },
+  )
+
+  return (
+    <Form onSubmit={handleSubmit}>
+      <div>
+        <label>
+          <strong>Title: </strong>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          <strong>Description: </strong>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+      <div>
+        <button
+          disabled={
+            submitState.status === 'saving'
+          }
+        >
+          {submitState.status === 'saving'
+            ? 'Saving…'
+            : submitState.status === 'saved'
+              ? 'Saved!'
+              : 'Save'}
+        </button>
+      </div>
+    </Form>
+  )
+}
 
 const Form = styled.form`
   label {
@@ -152,3 +176,5 @@ const Form = styled.form`
     padding: 5px;
   }
 `
+
+export default FormDataExample
