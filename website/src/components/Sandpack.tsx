@@ -65,6 +65,9 @@ export default function SandpackComponent({
       customSetup={{
         entry: '/App.tsx',
         dependencies: {
+          'react': 'rc',
+          'react-dom': 'rc',
+          'react-is': 'rc',
           /**
            * In production we should always use the package on npm, which supports canaries
            * while locally we use the build package
@@ -73,7 +76,7 @@ export default function SandpackComponent({
             ? {}
             : {'react-rx': reactRxPackageJson.version}),
           ...reactRxPackageJson.dependencies,
-          rxjs: reactRxPackageJson.peerDependencies.rxjs,
+          'rxjs': reactRxPackageJson.peerDependencies.rxjs,
           ...extraDependencies,
         },
       }}
