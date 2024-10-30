@@ -1,11 +1,12 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const withNextra = require('nextra')({
+import type {NextConfig} from 'next'
+import nextra from 'nextra'
+
+const withNextra = nextra({
   theme: 'nextra-theme-docs',
   themeConfig: './theme.config.jsx',
   defaultShowCopyCode: true,
 })
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   compiler: {
     styledComponents: true,
@@ -53,6 +54,6 @@ const nextConfig = {
       },
     ]
   },
-}
+} satisfies NextConfig
 
-module.exports = withNextra(nextConfig)
+export default withNextra(nextConfig)

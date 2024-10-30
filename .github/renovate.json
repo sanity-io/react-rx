@@ -9,10 +9,6 @@
       "semanticCommitType": "chore"
     },
     {
-      "matchPackageNames": ["react-rx-old", "react-rx"],
-      "allowedVersions": "<=2.x"
-    },
-    {
       "matchPackageNames": ["observable-callback", "use-effect-event"],
       "rangeStrategy": "bump",
       "semanticCommitType": "fix"

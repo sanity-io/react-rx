@@ -1,0 +1,9 @@
+export default {
+  'simple': 'Simple',
+  'counters': 'Advanced counters',
+  'errors': 'Error handling',
+  'todo-app': 'Todo app',
+  'animation': 'Animation',
+  'context': 'React context',
+  'sync': 'Sync rendering',
+}

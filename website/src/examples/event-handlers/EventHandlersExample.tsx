@@ -1,50 +1,58 @@
-import {handler, rxComponent} from 'react-rx-old'
-import {map, startWith} from 'rxjs/operators'
+import {MouseEvent, useMemo} from 'react'
+import {useObservable} from 'react-rx'
+import {Subject} from 'rxjs'
+import {map, startWith, tap} from 'rxjs/operators'
 
-const STYLE: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  textAlign: 'center',
-  height: 150,
-  width: 150,
-  border: '1px dashed',
-  padding: '1em',
-}
+// Create subject for mouse moves
+const mouseMove$ = new Subject<MouseEvent>()
 
-const EventHandlersExample = rxComponent(() => {
-  const [mouseMoves$, onMouseMove] =
-    handler<React.MouseEvent>()
-
-  const mousePosition$ = mouseMoves$.pipe(
-    map((event) => ({
-      x: event.clientX,
-      y: event.clientY,
-    })),
-    startWith(null),
+function EventHandlersExample() {
+  // Create mouse position stream
+  const position$ = useMemo(
+    () =>
+      mouseMove$.pipe(
+        map((event) => ({
+          x: event.clientX,
+          y: event.clientY,
+        })),
+        startWith(null),
+      ),
+    [],
   )
-  return mousePosition$.pipe(
-    map((position) => (
+
+  const position = useObservable(position$, null)
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        textAlign: 'center',
+        height: 150,
+        width: 150,
+        border: '1px dashed',
+        padding: '1em',
+      }}
+      onMouseMove={(event) =>
+        mouseMove$.next(event)
+      }
+    >
       <div
-        style={STYLE}
-        onMouseMove={onMouseMove}
+        style={{
+          width: '100%',
+        }}
       >
-        <div
-          style={{
-            width: '100%',
-          }}
-        >
-          {position ? (
-            <>
-              Cursor position: X:
-              {position.x}, Y: {position.y}
-            </>
-          ) : (
-            <>Move mouse here</>
-          )}
-        </div>
+        {position ? (
+          <>
+            Cursor position: X:
+            {position.x}, Y: {position.y}
+          </>
+        ) : (
+          <>Move mouse here</>
+        )}
       </div>
-    )),
+    </div>
   )
-})
+}
 
 export default EventHandlersExample

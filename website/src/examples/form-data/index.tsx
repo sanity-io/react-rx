@@ -10,7 +10,6 @@ export default function Example() {
         '/App.tsx': App,
         '/storage.ts': Storage,
       }}
-      useOldReactRx
       dependencies={{
         'styled-components': 'latest',
       }}

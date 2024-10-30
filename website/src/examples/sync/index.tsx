@@ -8,7 +8,6 @@ export default function Example() {
       files={{
         '/App.tsx': App,
       }}
-      useOldReactRx
     />
   )
 }

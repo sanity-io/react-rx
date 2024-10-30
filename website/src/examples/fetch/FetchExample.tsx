@@ -1,25 +1,18 @@
-import {useState} from 'react'
-import {rxComponent} from 'react-rx-old'
+import {useMemo} from 'react'
+import {
+  useObservable,
+  useObservableEvent,
+} from 'react-rx'
+import {Subject} from 'rxjs'
 import {
   distinctUntilChanged,
   map,
   switchMap,
+  tap,
 } from 'rxjs/operators'
 
-const FetchComponent = rxComponent((props$) =>
-  props$.pipe(
-    map((props: any) => props.url),
-    distinctUntilChanged(),
-    switchMap((url) =>
-      fetch(url).then((response) =>
-        response.text(),
-      ),
-    ),
-    map((responseText) => (
-      <div>The result was: {responseText}</div>
-    )),
-  ),
-)
+// Create subject for URL changes
+const url$ = new Subject<string>()
 
 const origin = new URL('http://localhost:3000')
 const URLS = [
@@ -28,7 +21,36 @@ const URLS = [
 ]
 
 function FetchExample() {
-  const [currentUrl, setCurrentUrl] = useState('')
+  // Handle URL selection
+  const handleUrlClick = useObservableEvent<
+    string,
+    any
+  >((click$) =>
+    click$.pipe(tap((url) => url$.next(url))),
+  )
+
+  // Create fetch response stream
+  const response$ = useMemo(
+    () =>
+      url$.pipe(
+        distinctUntilChanged(),
+        switchMap((url) =>
+          fetch(url).then((response) =>
+            response.text(),
+          ),
+        ),
+        map((responseText) => (
+          <div>
+            The result was: {responseText}
+          </div>
+        )),
+      ),
+    [],
+  )
+
+  const currentUrl = useObservable(url$, '')
+  const response = useObservable(response$)
+
   return (
     <div>
       <p>
@@ -36,7 +58,7 @@ function FetchExample() {
           <button
             key={url.toString()}
             onClick={() =>
-              setCurrentUrl(url.toString())
+              handleUrlClick(url.toString())
             }
           >
             {url.pathname}
@@ -44,7 +66,7 @@ function FetchExample() {
         ))}
       </p>
       {currentUrl ? (
-        <FetchComponent url={currentUrl} />
+        response
       ) : (
         <>Click on url to fetch</>
       )}
