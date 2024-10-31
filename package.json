@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "4.1.0-canary.5",
+  "version": "4.1.0",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
