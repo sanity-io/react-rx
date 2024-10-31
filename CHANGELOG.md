@@ -5,6 +5,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.0.1](https://github.com/sanity-io/react-rx/compare/v4.0.0...v4.0.1) (2024-10-31)
+
+### Bug Fixes
+
+- **deps:** Update website to v3 (major) ([#138](https://github.com/sanity-io/react-rx/issues/138)) ([ca280d1](https://github.com/sanity-io/react-rx/commit/ca280d1e04bfc68204dc343cef76649ac8a069e9))
+- refactor initial value to not need a useRef + useEffect loop ([#143](https://github.com/sanity-io/react-rx/issues/143)) ([adc60ea](https://github.com/sanity-io/react-rx/commit/adc60eab739e450ab46e22872e5c60748a0e0d26))
+
 ## [4.0.0](https://github.com/sanity-io/react-rx/compare/v3.1.3...v4.0.0) (2024-07-29)
 
 ### ⚠ BREAKING CHANGES
