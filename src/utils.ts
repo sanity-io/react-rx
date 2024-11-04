@@ -57,7 +57,11 @@ export function getOrCreateObservable<ObservableType extends Observable<any>>(
       // and the observable is thereafter only used as a notifier to call `onStoreChange`, hence the `void` return type.
       map((value) => void value),
       // Ensure that the cache entry is deleted when the observable completes or errors.
-      finalize(() => cache.delete(observable)),
+      finalize(() => {
+        cache.delete(observable)
+        snapshots.delete(observable)
+        errors.delete(observable)
+      }),
       share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
     )
 
@@ -78,6 +82,9 @@ export function getSnapshot<ObservableType extends Observable<any>>(
 ): ObservedValueOf<ObservableType> {
   if (errors.has(observable)) {
     throw errors.get(observable)
+  }
+  if (snapshots.has(observable)) {
+    return snapshots.get(observable) as ObservedValueOf<ObservableType>
   }
   return (
     (snapshots.get(observable) as ObservedValueOf<ObservableType>) ??
