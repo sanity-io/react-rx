@@ -15,9 +15,16 @@ function getValue<T>(value: T): T extends () => infer U ? U : T {
   return typeof value === 'function' ? value() : value
 }
 
+interface ObservableState<T> {
+  didEmit: boolean
+  snapshot?: T
+  error?: unknown
+}
+
 interface CacheRecord<T> {
   observable: Observable<void>
   state: {
+    didEmit: boolean
     snapshot?: T
     error?: unknown
   }
@@ -49,9 +56,8 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
     if (!cache.has(observable)) {
       // This separate object is used as a stable reference to the cache entry's snapshot and error.
       // It's used by the `getSnapshot` closure.
-      const state = {} as {
-        snapshot?: ObservedValueOf<ObservableType>
-        error?: unknown
+      const state: ObservableState<ObservedValueOf<ObservableType>> = {
+        didEmit: false,
       }
       const entry: CacheRecord<ObservedValueOf<ObservableType>> = {
         state,
@@ -59,6 +65,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
           map((value) => ({snapshot: value, error: undefined})),
           catchError((error) => of({snapshot: undefined, error})),
           tap(({snapshot, error}) => {
+            state.didEmit = true
             state.snapshot = snapshot
             state.error = error
           }),
@@ -73,9 +80,9 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
           if (state.error) {
             throw state.error
           }
-          return 'snapshot' in state
-            ? (state.snapshot as ObservedValueOf<ObservableType>)
-            : (getValue(initialValue) as ObservedValueOf<ObservableType>)
+          return (
+            state.didEmit ? state.snapshot : getValue(initialValue)
+          ) as ObservedValueOf<ObservableType>
         },
       }
 
@@ -83,7 +90,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
       const subscription = entry.observable.subscribe()
       subscription.unsubscribe()
 
-      cache.set(observable, entry as CacheRecord<ObservedValueOf<ObservableType>>)
+      cache.set(observable, entry)
     }
     return cache.get(observable)!
   }, [observable])
