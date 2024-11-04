@@ -75,7 +75,7 @@
   "prettier": "@sanity/prettier-config",
   "dependencies": {
     "observable-callback": "^1.0.3",
-    "react-compiler-runtime": "19.0.0-beta-6fc168f-20241025",
+    "react-compiler-runtime": "19.0.0-beta-9ee70a1-20241017",
     "use-effect-event": "^1.0.2"
   },
   "devDependencies": {
