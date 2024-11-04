@@ -208,6 +208,19 @@ test('should update with values from observables', () => {
   unmount()
 })
 
+test('should return undefined if observable emits undefined, also when given initial value', () => {
+  const values$ = new Subject<string | undefined>()
+  const {result, unmount} = renderHook(() => useObservable(values$, 'initial'))
+
+  expect(result.current).toBe('initial')
+
+  act(() => values$.next(undefined))
+
+  expect(result.current).toBe(undefined)
+
+  unmount()
+})
+
 test('should re-subscribe when receiving a new observable', () => {
   const first$ = new Subject<string>()
   const second$ = new Subject<string>()
