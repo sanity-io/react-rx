@@ -17,8 +17,11 @@ function getValue<T>(value: T): T extends () => infer U ? U : T {
 
 interface CacheRecord<T> {
   observable: Observable<void>
-  snapshot: T
-  error?: unknown
+  state: {
+    snapshot: T
+    error?: unknown
+  }
+  getSnapshot: (initialValue: unknown) => T
 }
 
 const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
@@ -43,25 +46,37 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   initialValue?: InitialValue | (() => InitialValue),
 ): InitialValue | ObservedValueOf<ObservableType> {
   if (!cache.has(observable)) {
-    const entry: Partial<CacheRecord<ObservedValueOf<ObservableType>>> = {
-      snapshot: getValue(initialValue) as ObservedValueOf<ObservableType>,
+    // This separate object is used as a stable reference to the cache entry's snapshot and error.
+    // It's used by the `getSnapshot` closure.
+    const state = {
+      snapshot: undefined as ObservedValueOf<ObservableType>,
+      error: undefined,
     }
-    entry.observable = observable.pipe(
-      map((value) => ({snapshot: value, error: undefined})),
-      catchError((error) => of({snapshot: undefined, error})),
-      tap(({snapshot, error}) => {
-        entry.snapshot = snapshot
-        entry.error = error
-      }),
-      // Note: any value or error emitted by the provided observable will be mapped to the cache entry's mutable state
-      // and the observable is thereafter only used as a notifier to call `onStoreChange`, hence the `void` return type.
-      map((value) => void value),
-      // Ensure that the cache entry is deleted when the observable completes or errors.
-      finalize(() => cache.delete(observable)),
-      share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
-    )
+    const entry: CacheRecord<ObservedValueOf<ObservableType>> = {
+      state,
+      observable: observable.pipe(
+        map((value) => ({snapshot: value, error: undefined})),
+        catchError((error) => of({snapshot: undefined, error})),
+        tap(({snapshot, error}) => {
+          state.snapshot = snapshot
+          state.error = error
+        }),
+        // Note: any value or error emitted by the provided observable will be mapped to the cache entry's mutable state
+        // and the observable is thereafter only used as a notifier to call `onStoreChange`, hence the `void` return type.
+        map((value) => void value),
+        // Ensure that the cache entry is deleted when the observable completes or errors.
+        finalize(() => cache.delete(observable)),
+        share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
+      ),
+      getSnapshot: (initialValue) => {
+        if (state.error) {
+          throw state.error
+        }
+        return state.snapshot ?? (getValue(initialValue) as ObservedValueOf<ObservableType>)
+      },
+    }
 
-    // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
+    // Eagerly subscribe to sync set `state.snapshot` to what the observable returns, and keep the observable alive until the component unmounts.
     const subscription = entry.observable.subscribe()
     subscription.unsubscribe()
 
@@ -82,10 +97,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
-      if (instance.error) {
-        throw instance.error
-      }
-      return instance.snapshot
+      return instance.getSnapshot(initialValue)
     },
     typeof initialValue === 'undefined'
       ? undefined
