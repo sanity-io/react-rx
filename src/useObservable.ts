@@ -1,32 +1,13 @@
-import {useCallback, useMemo, useSyncExternalStore} from 'react'
-import {
-  asapScheduler,
-  catchError,
-  finalize,
-  type Observable,
-  type ObservedValueOf,
-  of,
-  share,
-  timer,
-} from 'rxjs'
-import {map, tap} from 'rxjs/operators'
+import {useMemo, useSyncExternalStore} from 'react'
+import {type Observable, type ObservedValueOf} from 'rxjs'
 
-function getValue<T>(value: T): T extends () => infer U ? U : T {
-  return typeof value === 'function' ? value() : value
-}
-
-interface CacheRecord<T> {
-  observable: Observable<void>
-  snapshot: T
-  error?: unknown
-}
-
-const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
+import {getOrCreateObservable, getSnapshot, getValue} from './utils'
 
 /** @public */
 export function useObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
   initialValue: ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
+  debug?: boolean,
 ): ObservedValueOf<ObservableType>
 /** @public */
 export function useObservable<ObservableType extends Observable<any>>(
@@ -36,59 +17,58 @@ export function useObservable<ObservableType extends Observable<any>>(
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
   initialValue: InitialValue | (() => InitialValue),
+  debug?: boolean,
 ): InitialValue | ObservedValueOf<ObservableType>
 /** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
   initialValue?: InitialValue | (() => InitialValue),
+  debug?: boolean,
 ): InitialValue | ObservedValueOf<ObservableType> {
-  const instance = useMemo(() => {
-    if (!cache.has(observable)) {
-      const entry: Partial<CacheRecord<ObservedValueOf<ObservableType>>> = {
-        snapshot: getValue(initialValue) as ObservedValueOf<ObservableType>,
-      }
-      entry.observable = observable.pipe(
-        map((value) => ({snapshot: value, error: undefined})),
-        catchError((error) => of({snapshot: undefined, error})),
-        tap(({snapshot, error}) => {
-          entry.snapshot = snapshot
-          entry.error = error
-        }),
-        // Note: any value or error emitted by the provided observable will be mapped to the cache entry's mutable state
-        // and the observable is thereafter only used as a notifier to call `onStoreChange`, hence the `void` return type.
-        map((value) => void value),
-        // Ensure that the cache entry is deleted when the observable completes or errors.
-        finalize(() => cache.delete(observable)),
-        share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
-      )
+  const store = useMemo(() => {
+    const instance = getOrCreateObservable(
+      observable,
+      // initialValue as ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
+      debug,
+    )
 
-      // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
-      const subscription = entry.observable.subscribe()
-      subscription.unsubscribe()
-
-      cache.set(observable, entry as CacheRecord<ObservedValueOf<ObservableType>>)
+    return {
+      subscribe: (onStoreChange: () => void) => {
+        if (debug) {
+          console.log('subscribe', observable)
+        }
+        const subscription = instance.observable.subscribe(() => {
+          if (debug) {
+            console.log('onStoreChange', observable)
+          }
+          onStoreChange()
+        })
+        return () => {
+          if (debug) {
+            console.log('unsubscribe', observable)
+          }
+          subscription.unsubscribe()
+        }
+      },
+      // getSnapshot: () => {
+      //   if (debug) {
+      //     console.log('getSnapshot', instance.snapshot, instance.error)
+      //   }
+      //   if (instance.error) {
+      //     throw instance.error
+      //   }
+      //   return instance.snapshot
+      // },
     }
-    return cache.get(observable)!
-  }, [initialValue, observable])
-
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      const subscription = instance.observable.subscribe(onStoreChange)
-      return () => {
-        subscription.unsubscribe()
-      }
-    },
-    [instance.observable],
-  )
+  }, [debug, observable])
 
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(
-    subscribe,
-    () => {
-      if (instance.error) {
-        throw instance.error
-      }
-      return instance.snapshot
-    },
+    store.subscribe,
+    () =>
+      getSnapshot(
+        observable,
+        initialValue as ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
+      ),
     typeof initialValue === 'undefined'
       ? undefined
       : () => getValue(initialValue) as ObservedValueOf<ObservableType>,
