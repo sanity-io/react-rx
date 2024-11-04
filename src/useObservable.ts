@@ -1,4 +1,4 @@
-import {useCallback, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useSyncExternalStore} from 'react'
 import {
   asapScheduler,
   catchError,
@@ -42,32 +42,34 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   observable: ObservableType,
   initialValue?: InitialValue | (() => InitialValue),
 ): InitialValue | ObservedValueOf<ObservableType> {
-  if (!cache.has(observable)) {
-    const entry: Partial<CacheRecord<ObservedValueOf<ObservableType>>> = {
-      snapshot: getValue(initialValue) as ObservedValueOf<ObservableType>,
+  const instance = useMemo(() => {
+    if (!cache.has(observable)) {
+      const entry: Partial<CacheRecord<ObservedValueOf<ObservableType>>> = {
+        snapshot: getValue(initialValue) as ObservedValueOf<ObservableType>,
+      }
+      entry.observable = observable.pipe(
+        map((value) => ({snapshot: value, error: undefined})),
+        catchError((error) => of({snapshot: undefined, error})),
+        tap(({snapshot, error}) => {
+          entry.snapshot = snapshot
+          entry.error = error
+        }),
+        // Note: any value or error emitted by the provided observable will be mapped to the cache entry's mutable state
+        // and the observable is thereafter only used as a notifier to call `onStoreChange`, hence the `void` return type.
+        map((value) => void value),
+        // Ensure that the cache entry is deleted when the observable completes or errors.
+        finalize(() => cache.delete(observable)),
+        share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
+      )
+
+      // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
+      const subscription = entry.observable.subscribe()
+      subscription.unsubscribe()
+
+      cache.set(observable, entry as CacheRecord<ObservedValueOf<ObservableType>>)
     }
-    entry.observable = observable.pipe(
-      map((value) => ({snapshot: value, error: undefined})),
-      catchError((error) => of({snapshot: undefined, error})),
-      tap(({snapshot, error}) => {
-        entry.snapshot = snapshot
-        entry.error = error
-      }),
-      // Note: any value or error emitted by the provided observable will be mapped to the cache entry's mutable state
-      // and the observable is thereafter only used as a notifier to call `onStoreChange`, hence the `void` return type.
-      map((value) => void value),
-      // Ensure that the cache entry is deleted when the observable completes or errors.
-      finalize(() => cache.delete(observable)),
-      share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
-    )
-
-    // Eagerly subscribe to sync set `entry.currentValue` to what the observable returns, and keep the observable alive until the component unmounts.
-    const subscription = entry.observable.subscribe()
-    subscription.unsubscribe()
-
-    cache.set(observable, entry as CacheRecord<ObservedValueOf<ObservableType>>)
-  }
-  const instance = cache.get(observable)!
+    return cache.get(observable)!
+  }, [initialValue, observable])
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
