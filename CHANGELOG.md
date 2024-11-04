@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.2](https://github.com/sanity-io/react-rx/compare/v4.1.1...v4.1.2) (2024-11-04)
+
+### Bug Fixes
+
+- react strict mode race condition ([#150](https://github.com/sanity-io/react-rx/issues/150)) ([a29e520](https://github.com/sanity-io/react-rx/commit/a29e520e70b47a081863a0109914a564792f4761))
+
 ## [4.1.1](https://github.com/sanity-io/react-rx/compare/v4.1.0...v4.1.1) (2024-11-04)
 
 ### Bug Fixes
