@@ -1,5 +1,5 @@
 import {act, render, renderHook} from '@testing-library/react'
-import {createElement, Fragment} from 'react'
+import {createElement, Fragment, useMemo} from 'react'
 import {asyncScheduler, Observable, of, ReplaySubject, scheduled, share, Subject, timer} from 'rxjs'
 import {map} from 'rxjs/operators'
 import {expect, test} from 'vitest'
@@ -234,5 +234,55 @@ test('should re-subscribe when receiving a new observable', () => {
   act(() => first$.next('first 2'))
   expect(result.current).toBe('second 1')
 
+  unmount()
+})
+
+test('should return undefined if observable emits undefined, also when given initial value', () => {
+  const values$ = new Subject<string | undefined>()
+  const {result, unmount} = renderHook(() => useObservable(values$, 'initial'))
+
+  expect(result.current).toBe('initial')
+
+  act(() => values$.next(undefined))
+
+  expect(result.current).toBe(undefined)
+
+  unmount()
+})
+
+test('should return undefined if observable emits undefined, also when given initial value, and also when unsubscribe + resubscribe', () => {
+  const snapshots: (string | undefined)[] = []
+  const subject = new Subject<string | undefined>()
+
+  function ObservableComponent(props: {prefix: string}) {
+    // will create a new observable every time prefix changes
+    const observable = useMemo(
+      () => subject.pipe(map((v) => (typeof v === 'string' ? `${props.prefix}-${v}` : v))),
+      [props.prefix],
+    )
+    snapshots.push(useObservable(observable, 'initial'))
+    return createElement(Fragment, null)
+  }
+
+  const {unmount, rerender} = render(createElement(ObservableComponent, {prefix: 'first'}))
+  act(() => subject.next('foo'))
+  act(() => subject.next(undefined))
+  act(() => subject.next('bar'))
+
+  // now change the prefix
+  rerender(createElement(ObservableComponent, {prefix: 'second'}))
+  act(() => subject.next('foo again'))
+  act(() => subject.next(undefined))
+  act(() => subject.next('bar again'))
+  expect(snapshots).toEqual([
+    'initial',
+    'first-foo',
+    undefined,
+    'first-bar',
+    'initial',
+    'second-foo again',
+    undefined,
+    'second-bar again',
+  ])
   unmount()
 })
