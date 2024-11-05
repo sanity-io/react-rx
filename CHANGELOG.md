@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.3](https://github.com/sanity-io/react-rx/compare/v4.1.2...v4.1.3) (2024-11-05)
+
+### Bug Fixes
+
+- allow `undefined` as a snapshot value ([#151](https://github.com/sanity-io/react-rx/issues/151)) ([98167f4](https://github.com/sanity-io/react-rx/commit/98167f4590ac0451f7c3a8d4654649e5c8979ef0))
+
 ## [4.1.2](https://github.com/sanity-io/react-rx/compare/v4.1.1...v4.1.2) (2024-11-04)
 
 ### Bug Fixes
