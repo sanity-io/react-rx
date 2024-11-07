@@ -5,6 +5,6 @@ export default defineConfig({
     typecheck: {
       ignoreSourceErrors: true,
     },
-    environment: 'jsdom',
+    environment: 'happy-dom',
   },
 })
