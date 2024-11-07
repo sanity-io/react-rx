@@ -65,7 +65,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: corepack enable && pnpm --version
       - run: pnpm install
-      - run: pnpm test -- --retry=30
+      - run: pnpm test --retry=30
 
   release:
     permissions:
