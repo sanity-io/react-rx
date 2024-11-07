@@ -3,7 +3,7 @@ name: Prettier
 
 on:
   push:
-    branches: [current, crx-749, move-to-next]
+    branches: [current]
   workflow_dispatch:
 
 concurrency:
