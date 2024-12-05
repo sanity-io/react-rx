@@ -2,7 +2,7 @@ name: Maintain React Compiler
 
 on:
   schedule:
-    - cron: '0 0 * * 1-5' # Runs at midnight UTC every weekday (Monday to Friday)
+    - cron: "0 0 * * 1-5" # Runs at midnight UTC every weekday (Monday to Friday)
   workflow_dispatch:
 
 concurrency:
