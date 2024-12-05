@@ -73,7 +73,11 @@ export default function SandpackComponent({
             ? {}
             : {'react-rx': reactRxPackageJson.version}),
           ...reactRxPackageJson.dependencies,
-          rxjs: reactRxPackageJson.peerDependencies.rxjs,
+          'rxjs': reactRxPackageJson.peerDependencies.rxjs,
+          'react': reactRxPackageJson.devDependencies.react,
+          'react-dom': reactRxPackageJson.devDependencies['react-dom'],
+          '@types/react': reactRxPackageJson.devDependencies['@types/react'],
+          '@types/react-dom': reactRxPackageJson.devDependencies['@types/react-dom'],
           ...extraDependencies,
         },
       }}
