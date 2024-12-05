@@ -80,7 +80,7 @@ test('Strict mode should unsubscribe the source observable on unmount if its cre
   }
 
   const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
-  expect(subscriberCount, 'Subscriber count should be 2').toBe(2)
+  expect(subscriberCount, 'Subscriber count should be 1').toBe(1)
   rerender(createElement(StrictMode, null, createElement('div')))
   await Promise.resolve()
   expect(subscriberCount, 'Subscriber count should be 0').toBe(0)
