@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.10](https://github.com/sanity-io/react-rx/compare/v4.1.9...v4.1.10) (2024-12-19)
+
+### Bug Fixes
+
+- **deps:** update dependency @sanity/pkg-utils to ^6.12.2 ([#188](https://github.com/sanity-io/react-rx/issues/188)) ([6cbe41c](https://github.com/sanity-io/react-rx/commit/6cbe41cb19b5192641867c81abf1ea0055b65761))
+
 ## [4.1.9](https://github.com/sanity-io/react-rx/compare/v4.1.8...v4.1.9) (2024-12-16)
 
 ### Bug Fixes
