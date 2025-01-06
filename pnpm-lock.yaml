@@ -12,8 +12,8 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3(rxjs@7.8.1)
       react-compiler-runtime:
-        specifier: 19.0.0-beta-63e3235-20250105
-        version: 19.0.0-beta-63e3235-20250105(react@19.0.0)
+        specifier: 19.0.0-beta-55955c9-20241229
+        version: 19.0.0-beta-55955c9-20241229(react@19.0.0)
       use-effect-event:
         specifier: ^1.0.2
         version: 1.0.2(react@19.0.0)
@@ -4628,8 +4628,8 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  react-compiler-runtime@19.0.0-beta-63e3235-20250105:
-    resolution: {integrity: sha512-ojqSg+8uNvomQKpZT+iPgUPWc/ZqFLt9wnoVSNiwVtX51pZgbcgRJnekSYGv0XuyCXQuy4zCz1IaEW+UXjf/ZQ==}
+  react-compiler-runtime@19.0.0-beta-55955c9-20241229:
+    resolution: {integrity: sha512-I8niUyydqnPVMjqsOEfFwiRlWbndSjgwGhbm5GZuKev3b0HAcUAqAoHNIpp0XSHInlwfn4Zvtbva5TLupEOw+Q==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0 || ^0.0.0-experimental
 
@@ -11024,7 +11024,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  react-compiler-runtime@19.0.0-beta-63e3235-20250105(react@19.0.0):
+  react-compiler-runtime@19.0.0-beta-55955c9-20241229(react@19.0.0):
     dependencies:
       react: 19.0.0
 
