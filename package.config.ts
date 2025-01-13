@@ -11,4 +11,11 @@ export default defineConfig({
   },
   babel: {reactCompiler: true},
   reactCompilerOptions: {target: '18'},
+  rollup: {
+    output: {
+      banner: () => {
+        return `'use client';`
+      },
+    },
+  },
 })
