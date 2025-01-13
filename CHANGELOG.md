@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.15](https://github.com/sanity-io/react-rx/compare/v4.1.14...v4.1.15) (2025-01-13)
+
+### Bug Fixes
+
+- add `'use client'` directive ([03978e8](https://github.com/sanity-io/react-rx/commit/03978e808496b8402c421388f878049f080b9c20))
+
 ## [4.1.14](https://github.com/sanity-io/react-rx/compare/v4.1.13...v4.1.14) (2025-01-13)
 
 ### Bug Fixes
