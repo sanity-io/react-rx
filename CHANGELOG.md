@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.13](https://github.com/sanity-io/react-rx/compare/v4.1.12...v4.1.13) (2025-01-13)
+
+### Bug Fixes
+
+- **deps:** update React Compiler dependencies 🤖 ✨ ([#201](https://github.com/sanity-io/react-rx/issues/201)) ([c127c90](https://github.com/sanity-io/react-rx/commit/c127c90cf7df9068d44f3f0befef71b17a61bc36))
+
 ## [4.1.12](https://github.com/sanity-io/react-rx/compare/v4.1.11...v4.1.12) (2025-01-06)
 
 ### Bug Fixes
