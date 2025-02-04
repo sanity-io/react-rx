@@ -100,7 +100,7 @@ importers:
         specifier: 5.7.3
         version: 5.7.3
       vitest:
-        specifier: ^3.0.4
+        specifier: ^3.0.5
         version: 3.0.5(@types/debug@4.1.12)(@types/node@18.19.75)(jsdom@24.1.3)(terser@5.37.0)(yaml@2.7.0)
 
   website:
