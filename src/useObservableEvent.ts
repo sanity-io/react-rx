@@ -14,7 +14,7 @@ export function useObservableEvent<T, U>(
   useEffect(() => {
     const subscription = calls$.pipe((observable) => onEvent(observable)).subscribe()
     return () => subscription.unsubscribe()
-  }, [calls$, onEvent])
+  }, [calls$])
 
   return call
 }
