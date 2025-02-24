@@ -167,7 +167,7 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3(prettier@3.5.2)
       prettier:
-        specifier: ^3.5.1
+        specifier: ^3.5.2
         version: 3.5.2
 
 packages:
