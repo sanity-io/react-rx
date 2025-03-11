@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.1.24](https://github.com/sanity-io/react-rx/compare/v4.1.23...v4.1.24) (2025-03-11)
+
+### Bug Fixes
+
+- **deps:** downgrade `react-compiler-runtime` ([7830e45](https://github.com/sanity-io/react-rx/commit/7830e45583c62ecaa598dc8368999f0db4998274))
+
 ## [4.1.23](https://github.com/sanity-io/react-rx/compare/v4.1.22...v4.1.23) (2025-03-10)
 
 ### Bug Fixes
