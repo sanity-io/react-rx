@@ -87,7 +87,7 @@ function FormDataExample() {
     () =>
       submit$.pipe(
         withLatestFrom(data$),
-        map(([_, formData]) => formData),
+        map(([, formData]) => formData),
         map((formData) =>
           storage.set(STORAGE_KEY, formData).pipe(
             map(() => ({
