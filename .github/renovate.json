@@ -15,7 +15,7 @@
     },
     {
       "matchPackageNames": ["react-compiler-runtime"],
-      "followTag": "beta"
+      "followTag": "rc"
     }
   ]
 }

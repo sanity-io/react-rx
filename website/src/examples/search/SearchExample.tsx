@@ -8,9 +8,8 @@ import {
   useObservableEvent,
 } from 'react-rx'
 import {Observable, Subject} from 'rxjs'
-import {of, timer} from 'rxjs'
+import {timer} from 'rxjs'
 import {
-  debounceTime,
   distinctUntilChanged,
   filter,
   map,

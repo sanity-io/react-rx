@@ -6,7 +6,7 @@ const tryParse = <T>(
 ): T => {
   try {
     return JSON.parse(val)
-  } catch (err) {
+  } catch {
     return defaultValue
   }
 }

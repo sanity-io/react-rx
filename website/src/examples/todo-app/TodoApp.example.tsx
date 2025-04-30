@@ -2,7 +2,6 @@ import {
   ChangeEvent,
   FormEvent,
   useMemo,
-  useState,
 } from 'react'
 import {
   useObservable,
@@ -12,7 +11,6 @@ import {Subject} from 'rxjs'
 import {
   filter,
   map,
-  mapTo,
   scan,
   startWith,
   tap,
@@ -64,7 +62,7 @@ function TodoApp() {
     () =>
       submit$.pipe(
         withLatestFrom(text$),
-        map(([_, text]) => text),
+        map(([, text]) => text),
         filter((text) => text.length > 0),
         map((text) => ({
           text,
