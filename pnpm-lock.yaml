@@ -52,7 +52,7 @@ importers:
         specifier: ^4.3.4
         version: 4.3.4(vite@6.2.4(@types/node@18.19.86)(terser@5.39.0)(yaml@2.7.1))
       babel-plugin-react-compiler:
-        specifier: rc
+        specifier: 19.1.0-rc.1
         version: 19.1.0-rc.1
       eslint:
         specifier: ^9.22.0
@@ -64,7 +64,7 @@ importers:
         specifier: ^7.37.4
         version: 7.37.4(eslint@9.22.0)
       eslint-plugin-react-hooks:
-        specifier: experimental
+        specifier: 0.0.0-experimental-0038c501-20250429
         version: 0.0.0-experimental-0038c501-20250429(eslint@9.22.0)
       eslint-plugin-simple-import-sort:
         specifier: ^12.1.1
