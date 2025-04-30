@@ -16,6 +16,10 @@
     {
       "matchPackageNames": ["react-compiler-runtime"],
       "followTag": "rc"
+    },
+    {
+      "matchPackageNames": ["eslint-plugin-react-hooks"],
+      "followTag": "experimental"
     }
   ]
 }
