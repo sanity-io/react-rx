@@ -1,5 +1,6 @@
 import {act, render, renderHook} from '@testing-library/react'
-import {createElement, Fragment, useMemo} from 'react'
+import {useMemo} from 'react'
+import {renderToString} from 'react-dom/server'
 import {asyncScheduler, Observable, of, ReplaySubject, scheduled, share, Subject, timer} from 'rxjs'
 import {map} from 'rxjs/operators'
 import {expect, test} from 'vitest'
@@ -51,9 +52,9 @@ test('should not return undefined during render if initial value is given', () =
   function ObservableComponent() {
     const observedValue = useObservable(observable, 'initial value')
     returnedValues.push(observedValue)
-    return createElement(Fragment, null, observedValue)
+    return <>{observedValue}</>
   }
-  render(createElement(ObservableComponent))
+  render(<ObservableComponent />)
   expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
 })
 
@@ -64,9 +65,9 @@ test('should not return undefined during render if observable is sync', () => {
   function ObservableComponent() {
     const observedValue = useObservable(observable)
     returnedValues.push(observedValue)
-    return createElement(Fragment, null, observedValue)
+    return <>{observedValue}</>
   }
-  render(createElement(ObservableComponent))
+  render(<ObservableComponent />)
   expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
 })
 
@@ -77,9 +78,9 @@ test('should return undefined during first render if observable is async', () =>
   function ObservableComponent() {
     const observedValue = useObservable(observable)
     returnedValues.push(observedValue)
-    return createElement(Fragment, null, observedValue)
+    return <>{observedValue}</>
   }
-  render(createElement(ObservableComponent))
+  render(<ObservableComponent />)
   expect(returnedValues).toEqual(expect.arrayContaining([undefined]))
 })
 
@@ -261,16 +262,16 @@ test('should return undefined if observable emits undefined, also when given ini
       [props.prefix],
     )
     snapshots.push(useObservable(observable, 'initial'))
-    return createElement(Fragment, null)
+    return null
   }
 
-  const {unmount, rerender} = render(createElement(ObservableComponent, {prefix: 'first'}))
+  const {unmount, rerender} = render(<ObservableComponent prefix="first" />)
   act(() => subject.next('foo'))
   act(() => subject.next(undefined))
   act(() => subject.next('bar'))
 
   // now change the prefix
-  rerender(createElement(ObservableComponent, {prefix: 'second'}))
+  rerender(<ObservableComponent prefix="second" />)
   act(() => subject.next('foo again'))
   act(() => subject.next(undefined))
   act(() => subject.next('bar again'))
@@ -285,4 +286,26 @@ test('should return undefined if observable emits undefined, also when given ini
     'second-bar again',
   ])
   unmount()
+})
+
+test('should support SSR if an initial value is given', () => {
+  const observable = scheduled('async value', asyncScheduler)
+  function ObservableComponent() {
+    const observedValue = useObservable(observable, 'initial value')
+    return <>{observedValue}</>
+  }
+
+  expect(renderToString(<ObservableComponent />)).toBe('initial value')
+})
+
+test('should throw during SSR if no initial value is defined', () => {
+  const observable = scheduled('async value', asyncScheduler)
+  function ObservableComponent() {
+    const observedValue = useObservable(observable)
+    return <>{observedValue}</>
+  }
+
+  expect(() => renderToString(<ObservableComponent />)).toThrowErrorMatchingInlineSnapshot(
+    `[Error: Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering.]`,
+  )
 })

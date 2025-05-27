@@ -1,13 +1,11 @@
 import {act, render} from '@testing-library/react'
-import {createElement, Fragment, StrictMode, useEffect, useMemo} from 'react'
+import {useEffect, useMemo} from 'react'
 import {BehaviorSubject, Observable} from 'rxjs'
 import {expect, test} from 'vitest'
 
 import {useObservable} from '../useObservable'
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-// NOTE: Jest runs NODE_ENV=test by default, which enables development flags for React
 
 test('Strict mode should trigger double mount effects and re-renders', async () => {
   const subject = new BehaviorSubject(0)
@@ -21,10 +19,10 @@ test('Strict mode should trigger double mount effects and re-renders', async () 
     }, [])
     const observedValue = useObservable(observable)
     returnedValues.push(observedValue)
-    return createElement(Fragment, null, observedValue)
+    return <>{observedValue}</>
   }
 
-  render(createElement(StrictMode, null, createElement(ObservableComponent)))
+  render(<ObservableComponent />, {reactStrictMode: true})
   expect(mountCount).toEqual(2)
 
   expect(returnedValues).toEqual([0, 0])
@@ -53,12 +51,12 @@ test('Strict mode should unsubscribe the source observable on unmount', async ()
 
   function ObservableComponent() {
     useObservable(observable)
-    return createElement(Fragment, null)
+    return null
   }
 
-  const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
+  const {unmount} = render(<ObservableComponent />, {reactStrictMode: true})
   expect(subscribed).toEqual([0])
-  rerender(createElement(StrictMode, null, createElement('div')))
+  unmount()
   await Promise.resolve()
   expect(unsubscribed).toEqual([0])
 })
@@ -76,12 +74,12 @@ test('Strict mode should unsubscribe the source observable on unmount if its cre
   function ObservableComponent() {
     const memoObservable = useMemo(() => getObservable(), [])
     useObservable(memoObservable)
-    return createElement(Fragment, null)
+    return null
   }
 
-  const {rerender} = render(createElement(StrictMode, null, createElement(ObservableComponent)))
+  const {unmount} = render(<ObservableComponent />, {reactStrictMode: true})
   expect(subscriberCount, 'Subscriber count should be 1').toBe(1)
-  rerender(createElement(StrictMode, null, createElement('div')))
+  unmount()
   await Promise.resolve()
   expect(subscriberCount, 'Subscriber count should be 0').toBe(0)
 })

@@ -68,7 +68,7 @@
     "format": "prettier --cache --write .",
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
-    "test": "vitest run --typecheck --retry=30",
+    "test": "vitest run --typecheck",
     "watch": "pnpm build -- --watch"
   },
   "browserslist": "extends @sanity/browserslist-config",
