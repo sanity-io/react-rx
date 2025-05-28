@@ -1,5 +1,4 @@
 import {render} from '@testing-library/react'
-import React from 'react'
 import {mergeMap, of, Subject, throwError} from 'rxjs'
 import {expect, test} from 'vitest'
 
