@@ -15,8 +15,8 @@ importers:
         specifier: 19.1.0-rc.2
         version: 19.1.0-rc.2(react@19.1.0)
       use-effect-event:
-        specifier: ^2.0.0
-        version: 2.0.0(react@19.1.0)
+        specifier: ^2.0.1
+        version: 2.0.1(react@19.1.0)
     devDependencies:
       '@sanity/pkg-utils':
         specifier: ^7.2.2
@@ -5426,8 +5426,8 @@ packages:
   url-parse@1.5.10:
     resolution: {integrity: sha512-WypcfiRhfeUP9vvF0j6rw0J3hrWrw6iZv3+22h6iRMJ/8z1Tj6XfLP4DsUix5MhMPnXpiHDoKyoZ/bdCkwBCiQ==}
 
-  use-effect-event@2.0.0:
-    resolution: {integrity: sha512-CIRGe/RUfngbmivpY5F7rc0m7q0VYzqtQOcKJ19FPEeyf7tS44Zk+9tcDicP+z+d32+E2r+Zs7+20MHXa8JBUA==}
+  use-effect-event@2.0.1:
+    resolution: {integrity: sha512-76rGQGL83WpjyqrYNsQXA9U7y68HNfeGecBz7q8jvEGXucnh0oUedjxHuOmwVucv8kzpHOYx6OlrLAuQ66fvbg==}
     peerDependencies:
       react: ^18.3 || ^19.0.0-0
 
@@ -12039,7 +12039,7 @@ snapshots:
       querystringify: 2.2.0
       requires-port: 1.0.0
 
-  use-effect-event@2.0.0(react@19.1.0):
+  use-effect-event@2.0.1(react@19.1.0):
     dependencies:
       react: 19.1.0
 
