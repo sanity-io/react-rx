@@ -64,8 +64,8 @@ importers:
         specifier: ^7.37.5
         version: 7.37.5(eslint@9.29.0)
       eslint-plugin-react-hooks:
-        specifier: 0.0.0-experimental-12bc60f5-20250613
-        version: 0.0.0-experimental-12bc60f5-20250613(eslint@9.29.0)
+        specifier: 0.0.0-experimental-79d9aed7-20250620
+        version: 0.0.0-experimental-79d9aed7-20250620(eslint@9.29.0)
       eslint-plugin-simple-import-sort:
         specifier: ^12.1.1
         version: 12.1.1(eslint@9.29.0)
@@ -2843,8 +2843,8 @@ packages:
     peerDependencies:
       eslint: '>=7.0.0'
 
-  eslint-plugin-react-hooks@0.0.0-experimental-12bc60f5-20250613:
-    resolution: {integrity: sha512-CaHYj4VctRKFUy832egidoj6iZWE+1bQqs2YOeI7iVX63lC+KNt27dbx72tyOTl46HN9xH/aByKryZ+lmWv6iw==}
+  eslint-plugin-react-hooks@0.0.0-experimental-79d9aed7-20250620:
+    resolution: {integrity: sha512-ekS2mJOxG7n5xuAqDdSSF5yPy+TFE0MD7CxmUnQ4LY+heFBf5/JLsF6TmWQwkJgHB61TwQ0CmhAmmWvYAWlBvQ==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -8873,7 +8873,7 @@ snapshots:
     dependencies:
       eslint: 9.29.0
 
-  eslint-plugin-react-hooks@0.0.0-experimental-12bc60f5-20250613(eslint@9.29.0):
+  eslint-plugin-react-hooks@0.0.0-experimental-79d9aed7-20250620(eslint@9.29.0):
     dependencies:
       '@babel/core': 7.27.4
       '@babel/parser': 7.27.5
