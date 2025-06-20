@@ -94,7 +94,7 @@
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "0.0.0-experimental-12bc60f5-20250613",
+    "eslint-plugin-react-hooks": "0.0.0-experimental-79d9aed7-20250620",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "jsdom": "^24.1.0",
     "prettier": "^3.5.3",
