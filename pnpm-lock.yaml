@@ -18,6 +18,9 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(react@19.1.0)
     devDependencies:
+      '@sanity/browserslist-config':
+        specifier: ^1.0.5
+        version: 1.0.5
       '@sanity/pkg-utils':
         specifier: ^7.8.0
         version: 7.8.0(@types/babel__core@7.20.5)(@types/node@22.15.22)(babel-plugin-react-compiler@19.1.0-rc.3)(typescript@5.8.3)
@@ -1799,9 +1802,6 @@ packages:
 
   '@types/node@18.19.104':
     resolution: {integrity: sha512-mqjoYx1RjmN61vjnHWfiWzAlwvBKutoUdm+kYLPnjI5DCh8ZqofUhaTbT3WLl7bt3itR8DuCf8ShnxI0JvIC3g==}
-
-  '@types/node@18.19.123':
-    resolution: {integrity: sha512-K7DIaHnh0mzVxreCR9qwgNxp3MH9dltPNIEddW9MYUlcKAzm+3grKNSTe2vCJHI1FaLpvpL5JGJrz1UZDKYvDg==}
 
   '@types/node@22.15.22':
     resolution: {integrity: sha512-IZ8lyY8xikZwGTJ9tsmbE68+mZbx2tsR+WnN1ZJU/h5flim8xBxEbpDrouMQNkMeT4pYxyJOTkf7YyDcQaUvQw==}
@@ -7795,10 +7795,6 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
-  '@types/node@18.19.123':
-    dependencies:
-      undici-types: 5.26.5
-
   '@types/node@22.15.22':
     dependencies:
       undici-types: 6.21.0
@@ -10072,7 +10068,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 18.19.123
+      '@types/node': 22.15.22
       merge-stream: 2.0.0
       supports-color: 8.1.1
 

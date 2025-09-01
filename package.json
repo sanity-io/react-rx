@@ -79,6 +79,7 @@
     "use-effect-event": "^2.0.3"
   },
   "devDependencies": {
+    "@sanity/browserslist-config": "^1.0.5",
     "@sanity/pkg-utils": "^7.8.0",
     "@sanity/prettier-config": "^1.0.6",
     "@sanity/semantic-release-preset": "^5.0.0",
