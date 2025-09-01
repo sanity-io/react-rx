@@ -13,7 +13,7 @@
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",
     "@codesandbox/sandpack-themes": "^2.0.21",
-    "@types/node": "^18.8.2",
+    "@types/node": "^22.18.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "bezier-easing": "^2.1.0",
