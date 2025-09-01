@@ -12,14 +12,6 @@
       "matchPackageNames": ["observable-callback", "use-effect-event"],
       "rangeStrategy": "bump",
       "semanticCommitType": "fix"
-    },
-    {
-      "matchPackageNames": ["react-compiler-runtime"],
-      "followTag": "rc"
-    },
-    {
-      "matchPackageNames": ["eslint-plugin-react-hooks"],
-      "followTag": "experimental"
     }
   ]
 }
