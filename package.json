@@ -105,7 +105,7 @@
     "react-test-renderer": "^19.1.0",
     "rxjs": "^7.8.2",
     "semantic-release": "^24.2.7",
-    "typescript": "5.8.3",
+    "typescript": "5.9.2",
     "typescript-eslint": "^8.41.0",
     "vitest": "^3.2.4"
   },
