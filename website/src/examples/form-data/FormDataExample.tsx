@@ -1,7 +1,7 @@
 import {
   ChangeEvent,
   FormEvent,
-  useMemo,
+  useState,
 } from 'react'
 import {
   useObservable,
@@ -62,50 +62,46 @@ function FormDataExample() {
   )
 
   // Create form data stream
-  const data$ = useMemo(
-    () =>
-      formData$.pipe(
-        startWith(
-          storage.get(STORAGE_KEY, {
-            title: '',
-            description: '',
-          }),
-        ),
-        scan(
-          (data, update) => ({
-            ...data,
-            ...update,
-          }),
-          {} as FormData,
-        ),
+  const [data$] = useState(() =>
+    formData$.pipe(
+      startWith(
+        storage.get(STORAGE_KEY, {
+          title: '',
+          description: '',
+        }),
       ),
-    [],
+      scan(
+        (data, update) => ({
+          ...data,
+          ...update,
+        }),
+        {} as FormData,
+      ),
+    ),
   )
 
   // Create submit state stream
-  const submitState$ = useMemo(
-    () =>
-      submit$.pipe(
-        withLatestFrom(data$),
-        map(([, formData]) => formData),
-        map((formData) =>
-          storage.set(STORAGE_KEY, formData).pipe(
-            map(() => ({
-              status: 'saved' as const,
-              result: formData,
-            })),
-            startWith({
-              status: 'saving' as const,
-              result: null,
-            }),
-          ),
+  const [submitState$] = useState(() =>
+    submit$.pipe(
+      withLatestFrom(data$),
+      map(([, formData]) => formData),
+      map((formData) =>
+        storage.set(STORAGE_KEY, formData).pipe(
+          map(() => ({
+            status: 'saved' as const,
+            result: formData,
+          })),
+          startWith({
+            status: 'saving' as const,
+            result: null,
+          }),
         ),
-        startWith({
-          status: 'unsaved' as const,
-          result: null,
-        }),
       ),
-    [data$],
+      startWith({
+        status: 'unsaved' as const,
+        result: null,
+      }),
+    ),
   )
 
   const formData = useObservable(data$, {

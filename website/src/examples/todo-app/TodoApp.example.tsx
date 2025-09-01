@@ -27,6 +27,10 @@ const text$ = new Subject<string>()
 const submit$ = new Subject<
   FormEvent<HTMLFormElement>
 >()
+const textToItem = (text: string) => ({
+  text,
+  id: Date.now(),
+})
 
 function TodoApp() {
   // Handle input changes
@@ -64,10 +68,7 @@ function TodoApp() {
         withLatestFrom(text$),
         map(([, text]) => text),
         filter((text) => text.length > 0),
-        map((text) => ({
-          text,
-          id: Date.now(),
-        })),
+        map(textToItem),
         scan(
           (items: TodoItem[], item) =>
             items.concat(item),
