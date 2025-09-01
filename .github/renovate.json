@@ -14,7 +14,10 @@
       "semanticCommitType": "fix"
     },
     {
-      "matchPackageNames": ["eslint-plugin-react-hooks-with-use-effect-event", "eslint-plugin-react-hooks"],
+      "matchPackageNames": [
+        "eslint-plugin-react-hooks-with-use-effect-event",
+        "eslint-plugin-react-hooks"
+      ],
       "enabled": false
     }
   ]
