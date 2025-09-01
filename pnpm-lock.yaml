@@ -167,10 +167,10 @@ importers:
         version: 2.0.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
     devDependencies:
       '@sanity/prettier-config':
-        specifier: ^1.0.5
+        specifier: ^1.0.6
         version: 1.0.6(prettier@3.6.2)
       prettier:
-        specifier: ^3.5.3
+        specifier: ^3.6.2
         version: 3.6.2
 
 packages:

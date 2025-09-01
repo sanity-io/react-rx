@@ -32,7 +32,7 @@
     "use-error-boundary": "^2.0.6"
   },
   "devDependencies": {
-    "@sanity/prettier-config": "^1.0.5",
-    "prettier": "^3.5.3"
+    "@sanity/prettier-config": "^1.0.6",
+    "prettier": "^3.6.2"
   }
 }
