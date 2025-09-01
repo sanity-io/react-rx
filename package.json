@@ -75,7 +75,7 @@
   "prettier": "@sanity/prettier-config",
   "dependencies": {
     "observable-callback": "^1.0.3",
-    "react-compiler-runtime": "19.1.0-rc.2",
+    "react-compiler-runtime": "19.1.0-rc.3",
     "use-effect-event": "^2.0.3"
   },
   "devDependencies": {
@@ -90,11 +90,11 @@
     "@typescript-eslint/eslint-plugin": "^8.34.1",
     "@typescript-eslint/parser": "^8.34.1",
     "@vitejs/plugin-react": "^4.5.2",
-    "babel-plugin-react-compiler": "19.1.0-rc.2",
+    "babel-plugin-react-compiler": "19.1.0-rc.3",
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "0.0.0-experimental-79d9aed7-20250620",
+    "eslint-plugin-react-hooks": "0.0.0-experimental-aad7c664-20250829",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "jsdom": "^24.1.0",
     "prettier": "^3.5.3",
