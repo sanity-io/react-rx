@@ -12,6 +12,10 @@
       "matchPackageNames": ["observable-callback", "use-effect-event"],
       "rangeStrategy": "bump",
       "semanticCommitType": "fix"
+    },
+    {
+      "matchPackageNames": ["eslint-plugin-react-hooks-with-use-effect-event"],
+      "enabled": false
     }
   ]
 }
