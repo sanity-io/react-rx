@@ -79,8 +79,12 @@ function TodoApp() {
     [],
   )
 
-  const text = useObservable(text$, '')
-  const items = useObservable(items$, [])
+  const text = useObservable(text$, {
+    initialValue: '',
+  })
+  const items = useObservable(items$, {
+    initialValue: [],
+  })
 
   return (
     <Wrapper>

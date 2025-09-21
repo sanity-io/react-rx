@@ -10,7 +10,12 @@ A React hook that returns the current/latest value from an observable
 
 ```ts
 function useObservable<T>(observable$: Observable<T>): T | null
-function useObservable<T>(observable$: Observable<T>, initialValue: T): T
+function useObservable<T>(observable$: Observable<T>, options: UseObservableOptions<T>): T
+
+interface UseObservableOptions<T> {
+  disabled?: boolean
+  initialValue?: T
+}
 ```
 
 ## useObservableEvent()

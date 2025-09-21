@@ -94,7 +94,9 @@ function SearchExample() {
     [],
   )
 
-  const keyword = useObservable(keyword$, '')
+  const keyword = useObservable(keyword$, {
+    initialValue: '',
+  })
   const results = useObservable(results$)
   // Uses React Concurrent Rendering to defer rendering of results if the search query changes before the results are done rendering
   const deferredResults =

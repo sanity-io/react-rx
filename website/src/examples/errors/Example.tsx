@@ -30,10 +30,10 @@ export function Example() {
         ),
     [],
   )
-  const message = useObservable(
-    messages,
-    'You did not click the button for: ',
-  )
+  const message = useObservable(messages, {
+    initialValue:
+      'You did not click the button for: ',
+  })
 
   return (
     <>

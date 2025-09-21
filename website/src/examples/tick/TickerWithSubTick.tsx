@@ -8,7 +8,10 @@ import {
   switchMap,
 } from 'rxjs/operators'
 
-const initial = {tick: 0, subtick: 0} as const
+const initialValue = {
+  tick: 0,
+  subtick: 0,
+} as const
 
 export function TickerWithSubTick(props: {
   observable: Observable<number>
@@ -31,7 +34,9 @@ export function TickerWithSubTick(props: {
   )
   const {tick, subtick} = useObservable(
     observable,
-    initial,
+    {
+      initialValue,
+    },
   )
 
   return (

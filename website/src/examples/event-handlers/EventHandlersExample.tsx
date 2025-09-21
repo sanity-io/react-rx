@@ -20,7 +20,9 @@ function EventHandlersExample() {
     [],
   )
 
-  const position = useObservable(position$, null)
+  const position = useObservable(position$, {
+    initialValue: null,
+  })
 
   return (
     <div

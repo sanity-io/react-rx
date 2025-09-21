@@ -36,9 +36,15 @@ interface CacheRecord<T> {
 const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
 
 /** @public */
+export interface UseObservableOptions<TInitialValue> {
+  disabled?: boolean
+  initialValue?: TInitialValue | (() => TInitialValue)
+}
+
+/** @public */
 export function useObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
-  initialValue: ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
+  options: UseObservableOptions<ObservedValueOf<ObservableType>>,
 ): ObservedValueOf<ObservableType>
 /** @public */
 export function useObservable<ObservableType extends Observable<any>>(
@@ -47,13 +53,15 @@ export function useObservable<ObservableType extends Observable<any>>(
 /** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
-  initialValue: InitialValue | (() => InitialValue),
+  options: UseObservableOptions<InitialValue>,
 ): InitialValue | ObservedValueOf<ObservableType>
 /** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
-  initialValue?: InitialValue | (() => InitialValue),
+  options: UseObservableOptions<InitialValue> = {},
 ): InitialValue | ObservedValueOf<ObservableType> {
+  const {initialValue, disabled = false} = options
+
   const instance = useMemo(() => {
     if (!cache.has(observable)) {
       // This separate object is used as a stable reference to the cache entry's snapshot and error.
@@ -99,12 +107,16 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
+      if (disabled) {
+        return () => {}
+      }
+
       const subscription = instance.observable.subscribe(onStoreChange)
       return () => {
         subscription.unsubscribe()
       }
     },
-    [instance.observable],
+    [instance.observable, disabled],
   )
 
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(

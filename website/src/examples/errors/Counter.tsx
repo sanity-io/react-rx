@@ -7,6 +7,8 @@ export function Counter() {
     () => timer(0, 1000),
     [],
   )
-  const count = useObservable(observable, 0)
+  const count = useObservable(observable, {
+    initialValue: 0,
+  })
   return <>{count}s</>
 }
