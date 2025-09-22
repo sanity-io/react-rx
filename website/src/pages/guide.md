@@ -29,7 +29,7 @@ function MyComponent(props) {
 }
 ```
 
-The `initialValue` option is optional. If its omitted, the value returned from `useObservable` may be `null` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored:
+The `initialValue` argument is optional. If its omitted, the value returned from `useObservable` may be `null` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored:
 
 ```tsx
 import {useMemo} from 'react'
@@ -39,7 +39,7 @@ import {of} from 'rxjs'
 // This component will never render "Hello mars!" since the observable emits "world" synchronously.
 function MyComponent(props) {
   const observable = useMemo() => of('world'),[])
-  const planet = useObservable(observable, {initialValue: 'mars'})
+  const planet = useObservable(observable, 'mars')
 
   return <>Hello {planet}!</>
 }
@@ -55,7 +55,7 @@ import {of} from 'rxjs'
 // This component will never render "Hello world!" since the observable emits "world" asynchronously and the disabled option is true.
 function MyComponent(props) {
   const observable = useMemo() => of(),[])
-  const planet = useObservable(observable, {initialValue: 'mars', disabled: true})
+  const planet = useObservable(observable, 'mars', {disabled: true})
 
   useEffect(() => {
     observable.next('world')

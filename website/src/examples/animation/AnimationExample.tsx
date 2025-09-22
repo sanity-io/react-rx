@@ -65,12 +65,7 @@ function AnimationExample() {
 
   const [top, currentEasing] = useObservable(
     animation$,
-    {
-      initialValue: [
-        0,
-        'easeCustom' as EasingName,
-      ],
-    },
+    [0, 'easeCustom' as EasingName],
   )
 
   return (

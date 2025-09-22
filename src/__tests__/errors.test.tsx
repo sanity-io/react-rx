@@ -16,7 +16,7 @@ test('errors emitted by the observable should be thrown during the react render 
     )
 
   function ObservableComponent() {
-    return useObservable(messages, {initialValue: '☺️'})
+    return useObservable(messages, '☺️')
   }
 
   const {container, rerender} = render(<ObservableComponent />)

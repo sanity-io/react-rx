@@ -50,9 +50,7 @@ test('should not return undefined during render if initial value is given', () =
 
   const returnedValues: unknown[] = []
   function ObservableComponent() {
-    const observedValue = useObservable(observable, {
-      initialValue: 'initial value',
-    })
+    const observedValue = useObservable(observable, 'initial value')
     returnedValues.push(observedValue)
     return <>{observedValue}</>
   }
@@ -102,9 +100,7 @@ test('should have undefined as initial value from delayed observables', () => {
 
 test('should have passed initialValue as initial value from delayed observables', () => {
   const {result, unmount} = renderHook(() =>
-    useObservable(scheduled('something async', asyncScheduler), {
-      initialValue: 'initial',
-    }),
+    useObservable(scheduled('something async', asyncScheduler), 'initial'),
   )
   expect(result.current).toBe('initial')
   unmount()
@@ -112,11 +108,7 @@ test('should have passed initialValue as initial value from delayed observables'
 
 test('should rerender with initial value if component unmounts and then remounts', async () => {
   const values$ = new Subject<string>()
-  const firstHook = renderHook(() =>
-    useObservable(values$, {
-      initialValue: 'initial',
-    }),
-  )
+  const firstHook = renderHook(() => useObservable(values$, 'initial'))
 
   expect(firstHook.result.current).toBe('initial')
 
@@ -126,11 +118,7 @@ test('should rerender with initial value if component unmounts and then remounts
   firstHook.unmount()
   await Promise.resolve()
 
-  const nextHook = renderHook(() =>
-    useObservable(values$, {
-      initialValue: 'initial2',
-    }),
-  )
+  const nextHook = renderHook(() => useObservable(values$, 'initial2'))
 
   expect(nextHook.result.current).toBe('initial2')
 })
@@ -181,11 +169,7 @@ test('should restart any completed observable on mount', async () => {
     }
   }).pipe(share({connector: () => new ReplaySubject(1)}))
 
-  const firstHook = renderHook(() =>
-    useObservable(observable, {
-      initialValue: 'initial',
-    }),
-  )
+  const firstHook = renderHook(() => useObservable(observable, 'initial'))
   expect(firstHook.result.current).toBe('initial')
 
   act(() => notifications$.next({kind: 'next', value: 'something'}))
@@ -231,11 +215,7 @@ test('should re-subscribe when receiving a new observable', () => {
 
   let current$ = first$
 
-  const {result, rerender, unmount} = renderHook(() =>
-    useObservable(current$, {
-      initialValue: '!!initial!!',
-    }),
-  )
+  const {result, rerender, unmount} = renderHook(() => useObservable(current$, '!!initial!!'))
 
   act(() => first$.next('first 1'))
   expect(result.current).toBe('first 1')
@@ -260,11 +240,7 @@ test('should re-subscribe when receiving a new observable', () => {
 
 test('should return undefined if observable emits undefined, also when given initial value', () => {
   const values$ = new Subject<string | undefined>()
-  const {result, unmount} = renderHook(() =>
-    useObservable(values$, {
-      initialValue: 'initial',
-    }),
-  )
+  const {result, unmount} = renderHook(() => useObservable(values$, 'initial'))
 
   expect(result.current).toBe('initial')
 
@@ -285,11 +261,7 @@ test('should return undefined if observable emits undefined, also when given ini
       () => subject.pipe(map((v) => (typeof v === 'string' ? `${props.prefix}-${v}` : v))),
       [props.prefix],
     )
-    snapshots.push(
-      useObservable(observable, {
-        initialValue: 'initial',
-      }),
-    )
+    snapshots.push(useObservable(observable, 'initial'))
     return null
   }
 
@@ -319,9 +291,7 @@ test('should return undefined if observable emits undefined, also when given ini
 test('should support SSR if an initial value is given', () => {
   const observable = scheduled('async value', asyncScheduler)
   function ObservableComponent() {
-    const observedValue = useObservable(observable, {
-      initialValue: 'initial value',
-    })
+    const observedValue = useObservable(observable, 'initial value')
     return <>{observedValue}</>
   }
 
@@ -342,12 +312,7 @@ test('should throw during SSR if no initial value is defined', () => {
 
 test('should not subscribe if the disabled prop is present', () => {
   const values$ = new Subject<string | undefined>()
-  const {result, unmount} = renderHook(() =>
-    useObservable(values$, {
-      initialValue: 'initial',
-      disabled: true,
-    }),
-  )
+  const {result, unmount} = renderHook(() => useObservable(values$, 'initial', {disabled: true}))
 
   act(() => values$.next('something'))
   expect(result.current).toBe('initial')
@@ -357,12 +322,8 @@ test('should not subscribe if the disabled prop is present', () => {
 
 test('should return the last value instead of the initial value when the hook is disabled after running', () => {
   const values$ = new Subject<string | undefined>()
-  const {result, unmount, rerender} = renderHook<string | undefined, UseObservableOptions<string>>(
-    (props) =>
-      useObservable(values$, {
-        initialValue: 'initial',
-        ...props,
-      }),
+  const {result, unmount, rerender} = renderHook<string | undefined, UseObservableOptions>(
+    (props) => useObservable(values$, 'initial', props),
   )
   expect(result.current).toBe('initial')
   act(() => values$.next('something'))
@@ -375,6 +336,40 @@ test('should return the last value instead of the initial value when the hook is
   act(() => values$.next('something else'))
 
   expect(result.current).toBe('something')
+
+  unmount()
+})
+
+test('should return the actual value when the hook is disabled and then re-enabled', () => {
+  const values$ = new Subject<string | undefined>()
+  const {result, unmount, rerender} = renderHook<string | undefined, UseObservableOptions>(
+    (props) => useObservable(values$, 'initial', props),
+  )
+  expect(result.current).toBe('initial')
+  act(() => values$.next('something'))
+  expect(result.current).toBe('something')
+
+  rerender({
+    disabled: true,
+  })
+
+  act(() => values$.next('something else'))
+
+  expect(result.current).toBe('something')
+
+  act(() => values$.next('something again'))
+
+  expect(result.current).toBe('something')
+
+  rerender({
+    disabled: false,
+  })
+
+  expect(result.current).toBe('something again')
+
+  act(() => values$.next('something ending'))
+
+  expect(result.current).toBe('something ending')
 
   unmount()
 })

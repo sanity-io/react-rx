@@ -105,10 +105,8 @@ function FormDataExample() {
   )
 
   const formData = useObservable(data$, {
-    initialValue: {
-      title: '',
-      description: '',
-    },
+    title: '',
+    description: '',
   })
   const submitState = useObservable(
     // @TODO investigate why this is necessary
@@ -117,10 +115,8 @@ function FormDataExample() {
       result: FormData | null
     }>,
     {
-      initialValue: {
-        status: 'unsaved' as const,
-        result: null,
-      },
+      status: 'unsaved' as const,
+      result: null,
     },
   )
 

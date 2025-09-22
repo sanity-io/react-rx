@@ -36,15 +36,15 @@ interface CacheRecord<T> {
 const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
 
 /** @public */
-export interface UseObservableOptions<TInitialValue> {
+export interface UseObservableOptions {
   disabled?: boolean
-  initialValue?: TInitialValue | (() => TInitialValue)
 }
 
 /** @public */
 export function useObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
-  options: UseObservableOptions<ObservedValueOf<ObservableType>>,
+  initialValue: ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
+  options?: UseObservableOptions,
 ): ObservedValueOf<ObservableType>
 /** @public */
 export function useObservable<ObservableType extends Observable<any>>(
@@ -53,14 +53,16 @@ export function useObservable<ObservableType extends Observable<any>>(
 /** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
-  options: UseObservableOptions<InitialValue>,
+  initialValue: InitialValue | (() => InitialValue),
+  options?: UseObservableOptions,
 ): InitialValue | ObservedValueOf<ObservableType>
 /** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
-  options: UseObservableOptions<InitialValue> = {},
+  initialValue?: InitialValue | (() => InitialValue),
+  options: UseObservableOptions = {},
 ): InitialValue | ObservedValueOf<ObservableType> {
-  const {initialValue, disabled = false} = options
+  const {disabled = false} = options
 
   const instance = useMemo(() => {
     if (!cache.has(observable)) {

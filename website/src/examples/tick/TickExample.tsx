@@ -7,9 +7,7 @@ import {TickerWithSubTick} from './TickerWithSubTick'
 const observable = timer(0, 1000)
 
 export default function App() {
-  const tick = useObservable(observable, {
-    initialValue: 0,
-  })
+  const tick = useObservable(observable, 0)
 
   return (
     <>

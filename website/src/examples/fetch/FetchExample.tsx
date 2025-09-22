@@ -48,9 +48,7 @@ function FetchExample() {
     [],
   )
 
-  const currentUrl = useObservable(url$, {
-    initialValue: '',
-  })
+  const currentUrl = useObservable(url$, '')
   const response = useObservable(response$)
 
   return (

@@ -33,9 +33,10 @@ export const ContextProvider = memo(
 export function useModeValue() {
   const observable = useContext(Context)
 
-  return useObservable(observable, {
-    initialValue: 'light' satisfies Scheme,
-  })
+  return useObservable(
+    observable,
+    'light' satisfies Scheme,
+  )
 }
 
 export function useSetMode() {
