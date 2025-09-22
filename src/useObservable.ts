@@ -35,6 +35,8 @@ interface CacheRecord<T> {
 
 const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
 
+const EMPTY_OBJECT = {}
+
 /** @public */
 export interface UseObservableOptions {
   disabled?: boolean
@@ -60,7 +62,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
   initialValue?: InitialValue | (() => InitialValue),
-  options: UseObservableOptions = {},
+  options: UseObservableOptions = EMPTY_OBJECT,
 ): InitialValue | ObservedValueOf<ObservableType> {
   const {disabled = false} = options
 
