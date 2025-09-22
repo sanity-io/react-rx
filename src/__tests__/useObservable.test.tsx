@@ -358,9 +358,10 @@ test('should not subscribe if the disabled prop is present', () => {
 test('should return the last value instead of the initial value when the hook is disabled after running', () => {
   const values$ = new Subject<string | undefined>()
   const {result, unmount, rerender} = renderHook<string | undefined, UseObservableOptions<string>>(
-    () =>
+    (props) =>
       useObservable(values$, {
         initialValue: 'initial',
+        ...props,
       }),
   )
   expect(result.current).toBe('initial')
@@ -370,6 +371,8 @@ test('should return the last value instead of the initial value when the hook is
   rerender({
     disabled: true,
   })
+
+  act(() => values$.next('something else'))
 
   expect(result.current).toBe('something')
 
