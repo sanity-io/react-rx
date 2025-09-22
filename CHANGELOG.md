@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.0](https://github.com/sanity-io/react-rx/compare/v4.1.32...v4.2.0) (2025-09-22)
+
+### Features
+
+- add disabled option to useObservable ([#333](https://github.com/sanity-io/react-rx/issues/333)) ([a30621b](https://github.com/sanity-io/react-rx/commit/a30621b6744b4416488d142a7c50ddb315cef66f))
+
 ## [4.1.32](https://github.com/sanity-io/react-rx/compare/v4.1.31...v4.1.32) (2025-09-01)
 
 ### Bug Fixes
