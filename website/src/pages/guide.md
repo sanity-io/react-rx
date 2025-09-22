@@ -45,6 +45,26 @@ function MyComponent(props) {
 }
 ```
 
+The `disabled` option is optional. If its omitted, the hook will subscribe to the observable and return the current value. If its `true` initially, the hook will not subscribe to the observable and return the `initialValue` if provided. In the event that it has already subscribed it will then unsubscribe from the observable and return the last value it received.
+
+```tsx
+import {useMemo} from 'react'
+import {useObservable} from 'react-rx'
+import {of} from 'rxjs'
+
+// This component will never render "Hello world!" since the observable emits "world" asynchronously and the disabled option is true.
+function MyComponent(props) {
+  const observable = useMemo() => of(),[])
+  const planet = useObservable(observable, 'mars', {disabled: true})
+
+  useEffect(() => {
+    observable.next('world')
+  },[observable])
+
+  return <>Hello {planet}!</>
+}
+```
+
 ### useObservableEvent()
 
 This creates an event handler that can be used to create an observable from events.

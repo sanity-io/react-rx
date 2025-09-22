@@ -5,7 +5,7 @@ import {asyncScheduler, Observable, of, ReplaySubject, scheduled, share, Subject
 import {map} from 'rxjs/operators'
 import {expect, test} from 'vitest'
 
-import {useObservable} from '../useObservable'
+import {useObservable, type UseObservableOptions} from '../useObservable'
 
 test('should subscribe immediately on component mount and unsubscribe on component unmount', async () => {
   let subscribed = false
@@ -308,4 +308,68 @@ test('should throw during SSR if no initial value is defined', () => {
   expect(() => renderToString(<ObservableComponent />)).toThrowErrorMatchingInlineSnapshot(
     `[Error: Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering.]`,
   )
+})
+
+test('should not subscribe if the disabled prop is present', () => {
+  const values$ = new Subject<string | undefined>()
+  const {result, unmount} = renderHook(() => useObservable(values$, 'initial', {disabled: true}))
+
+  act(() => values$.next('something'))
+  expect(result.current).toBe('initial')
+
+  unmount()
+})
+
+test('should return the last value instead of the initial value when the hook is disabled after running', () => {
+  const values$ = new Subject<string | undefined>()
+  const {result, unmount, rerender} = renderHook<string | undefined, UseObservableOptions>(
+    (props) => useObservable(values$, 'initial', props),
+  )
+  expect(result.current).toBe('initial')
+  act(() => values$.next('something'))
+  expect(result.current).toBe('something')
+
+  rerender({
+    disabled: true,
+  })
+
+  act(() => values$.next('something else'))
+
+  expect(result.current).toBe('something')
+
+  unmount()
+})
+
+test('should return the actual value when the hook is disabled and then re-enabled', () => {
+  const values$ = new Subject<string | undefined>()
+  const {result, unmount, rerender} = renderHook<string | undefined, UseObservableOptions>(
+    (props) => useObservable(values$, 'initial', props),
+  )
+  expect(result.current).toBe('initial')
+  act(() => values$.next('something'))
+  expect(result.current).toBe('something')
+
+  rerender({
+    disabled: true,
+  })
+
+  act(() => values$.next('something else'))
+
+  expect(result.current).toBe('something')
+
+  act(() => values$.next('something again'))
+
+  expect(result.current).toBe('something')
+
+  rerender({
+    disabled: false,
+  })
+
+  expect(result.current).toBe('something again')
+
+  act(() => values$.next('something ending'))
+
+  expect(result.current).toBe('something ending')
+
+  unmount()
 })
