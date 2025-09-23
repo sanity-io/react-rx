@@ -5,6 +5,12 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [4.2.1](https://github.com/sanity-io/react-rx/compare/v4.2.0...v4.2.1) (2025-09-23)
+
+### Bug Fixes
+
+- slightly better memo ([#337](https://github.com/sanity-io/react-rx/issues/337)) ([f512043](https://github.com/sanity-io/react-rx/commit/f51204354622f93e623ba18110a4f540afd3720e))
+
 ## [4.2.0](https://github.com/sanity-io/react-rx/compare/v4.1.32...v4.2.0) (2025-09-22)
 
 ### Features
