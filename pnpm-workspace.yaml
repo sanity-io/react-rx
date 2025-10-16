@@ -1,2 +1,7 @@
 packages:
   - 'website'
+
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - '@sanity/*'
+  - 'use-effect-event'
