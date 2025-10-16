@@ -1,2 +1,9 @@
 packages:
   - 'website'
+
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - '@sanity/*'
+  - '@portabletext/*'
+  - 'use-effect-event'
+  - 'groq-js'
