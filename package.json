@@ -96,7 +96,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "6.0.0-rc.2",
-    "eslint-plugin-react-hooks-with-use-effect-event": "npm:eslint-plugin-react-hooks@0.0.0-experimental-d415fd3e-20250919",
+    "eslint-plugin-react-hooks-with-use-effect-event": "npm:eslint-plugin-react-hooks@0.0.0-experimental-58bdc0bb-20251019",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "jsdom": "^26.1.0",
     "prettier": "^3.6.2",
