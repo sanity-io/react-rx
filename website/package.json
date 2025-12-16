@@ -18,7 +18,7 @@
     "@types/react-dom": "^19.2.2",
     "bezier-easing": "^2.1.0",
     "date-fns": "^4.1.0",
-    "next": "^15.5.7",
+    "next": "^15.5.8",
     "nextra": "^3.3.1",
     "nextra-theme-docs": "^3.3.1",
     "observable-callback": "^1.0.3",
