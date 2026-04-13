@@ -5,3 +5,5 @@ minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - '@sanity/*'
   - 'use-effect-event'
+  # Renovate security update: next@15.5.15
+  - next@15.5.15
