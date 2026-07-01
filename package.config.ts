@@ -9,6 +9,10 @@ export default defineConfig({
       'ae-internal-missing-underscore': 'off',
     },
   },
+  strictOptions: {
+    // rxjs is intentionally a peer dependency so consumers bring their own rxjs instance
+    noRxjsPeerDependency: 'off',
+  },
   babel: {reactCompiler: true},
   reactCompilerOptions: {target: '18'},
   rollup: {
