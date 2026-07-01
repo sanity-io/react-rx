@@ -1,33 +1,53 @@
-[![CI & Release](https://github.com/sanity-io/react-rx/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/sanity-io/react-rx/actions/workflows/ci.yml) [![npm version](https://img.shields.io/npm/v/react-rx.svg)](https://www.npmjs.com/package/react-rx)
+[![CI](https://github.com/sanity-io/react-rx/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/sanity-io/react-rx/actions/workflows/ci.yml) [![npm version](https://img.shields.io/npm/v/react-rx.svg)](https://www.npmjs.com/package/react-rx)
 
-[![react-rx-some-smaller](https://user-images.githubusercontent.com/81981/194187624-9abd09da-bf03-4886-b512-78c1f22fc2de.png)](https://react-rx.dev/)
+# react-rx
 
 > Hooks and utilities for combining React with RxJS Observables
 
-Features:
+This is the monorepo for [`react-rx`](https://react-rx.dev). It is managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Changesets](https://github.com/changesets/changesets).
 
-- Works well with Observables emitting values synchronously. You don't pay the re-render-on-mount tax.
-- Lightweight. Implemented on top of a small React Hook based core.
-- Full TypeScript support.
+## Packages
 
-This package offers two slightly different utilities for working with RxJS and React:
+| Package                                | Description                                            |
+| -------------------------------------- | ------------------------------------------------------ |
+| [`react-rx`](./packages/react-rx)      | React + RxJS = <3 — the published npm package.         |
 
-- A set of utilities for creating _Reactive components_
-- A set of React hooks for using with observables with React
+## Apps
 
-Although they share a lot of similarities, and reactiveComponent is built on top of `useObservable` are not intended to be used together inside the same component as they represent two different programming styles.
+| App                       | Description                                       |
+| ------------------------- | ------------------------------------------------- |
+| [`website`](./website)    | The [react-rx.dev](https://react-rx.dev) website. |
 
----
+## Development
 
-- [Reactive components](https://react-rx.dev/guide#reactive-components)
-- [Observable hooks](https://react-rx.dev/guide#observable-hooks)
-- [Code examples](https://react-rx.dev/examples)
+Install dependencies from the repository root:
 
----
+```sh
+pnpm install
+```
 
-# Contributing and publishing new versions to npm
+Common scripts (run from the repository root):
 
-Run the ["CI & Release" workflow](https://github.com/sanity-io/react-rx/actions/workflows/ci.yml).
-Make the default branch, `current`, should be preselected. Check "Release new version" and press "Run workflow'.
+```sh
+pnpm build   # build the react-rx package
+pnpm test    # run the react-rx test suite
+pnpm lint    # lint the whole workspace
+pnpm format  # format the whole workspace with Prettier
+pnpm dev     # start the website locally
+```
 
-Semantic release will only release on configured branches, so it is safe to run release on any branch.
+## Releasing
+
+Releases are automated with [Changesets](https://github.com/changesets/changesets).
+
+1. Add a changeset describing your change:
+
+   ```sh
+   pnpm changeset
+   ```
+
+2. Commit the generated file in `.changeset/` together with your change and open a pull request.
+3. When the pull request is merged into `current`, the [`Release` workflow](./.github/workflows/release.yml) opens (or updates) a "Version Packages" pull request that bumps versions and updates changelogs.
+4. Merging the "Version Packages" pull request publishes the affected packages to npm using npm [Trusted Publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) — no npm tokens required.
+
+To register a brand new package for Trusted Publishing, run the [`Setup a new npm package with Trusted Publishing`](./.github/workflows/setup-trusted-publish.yml) workflow.
