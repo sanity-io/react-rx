@@ -58,15 +58,6 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "publishConfig": {
-    "exports": {
-      ".": {
-        "require": "./dist/index.cjs",
-        "default": "./dist/index.js"
-      },
-      "./package.json": "./package.json"
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -107,7 +98,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-simple-import-sort": "^13.0.0",
-    "jsdom": "^26.1.0",
+    "jsdom": "^29.1.1",
     "prettier": "^3.9.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -116,11 +107,20 @@
     "semantic-release": "^25.0.5",
     "typescript": "6.0.3",
     "typescript-eslint": "^8.62.1",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.9"
   },
   "peerDependencies": {
     "react": "^18.3 || >=19.0.0-0",
     "rxjs": "^7"
   },
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "pnpm@9.15.9",
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "require": "./dist/index.cjs",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  }
 }
