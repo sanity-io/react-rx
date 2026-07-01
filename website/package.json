@@ -13,10 +13,10 @@
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",
     "@codesandbox/sandpack-themes": "^2.0.21",
-    "@types/node": "^24.13.2",
+    "@types/node": "^26.0.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "bezier-easing": "^2.1.0",
+    "bezier-easing": "^3.0.1",
     "date-fns": "^4.4.0",
     "next": "^15.5.19",
     "nextra": "^3.3.1",
