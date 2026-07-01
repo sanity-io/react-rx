@@ -2,6 +2,15 @@ packages:
   - 'packages/*'
   - 'website'
 
+allowBuilds:
+  es5-ext: false
+  esbuild: false
+  sharp: true
+
+publicHoistPattern:
+  - '*eslint*'
+  - '*prettier*'
+
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - '@sanity/*'
