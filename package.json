@@ -79,6 +79,7 @@
     "use-effect-event": "^2.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@sanity/browserslist-config": "^1.0.5",
     "@sanity/pkg-utils": "^10.8.1",
     "@sanity/prettier-config": "^3.0.0",
