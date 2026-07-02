@@ -2,17 +2,6 @@
   "name": "react-rx-monorepo",
   "version": "0.0.0",
   "private": true,
-  "description": "Monorepo for react-rx — React + RxJS = <3",
-  "homepage": "https://react-rx.dev",
-  "bugs": {
-    "url": "https://github.com/sanity-io/react-rx/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sanity-io/react-rx.git"
-  },
-  "license": "MIT",
-  "author": "Sanity.io <hello@sanity.io>",
   "type": "module",
   "scripts": {
     "build": "pnpm --filter react-rx build",
