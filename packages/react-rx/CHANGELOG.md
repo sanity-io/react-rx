@@ -1,9 +1,4 @@
-<!-- markdownlint-disable --><!-- textlint-disable -->
-
-# 📓 Changelog
-
-All notable changes to this project will be documented in this file. See
-[Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+# react-rx
 
 ## [4.2.2](https://github.com/sanity-io/react-rx/compare/v4.2.1...v4.2.2) (2025-10-20)
 
