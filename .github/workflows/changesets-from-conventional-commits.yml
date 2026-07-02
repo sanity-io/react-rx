@@ -1,7 +1,7 @@
 name: Add changeset from conventional commits
 
 on:
-  pull_request_target: # zizmor: ignore[dangerous-triggers] gated to renovate[bot]/squiggler-legacy[bot]; no PR code is checked out or executed in the reusable workflow
+  pull_request_target: # zizmor: ignore[dangerous-triggers] gated to renovate[bot]/squiggler-legacy[bot]/squiggler-app[bot]; no PR code is checked out or executed in the reusable workflow
     types: [opened, synchronize]
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
@@ -12,7 +12,7 @@ permissions:
 jobs:
   call:
     uses: sanity-io/.github/.github/workflows/changesets-from-conventional-commits.yml@main
-    if: github.event.pull_request.user.login == 'renovate[bot]' || github.event.pull_request.user.login == 'squiggler-legacy[bot]'
+    if: github.event.pull_request.user.login == 'renovate[bot]' || github.event.pull_request.user.login == 'squiggler-legacy[bot]' || github.event.pull_request.user.login == 'squiggler-app[bot]'
     secrets:
       ECOSPARK_APP_ID: ${{ secrets.ECOSPARK_APP_ID }}
       ECOSPARK_APP_PRIVATE_KEY: ${{ secrets.ECOSPARK_APP_PRIVATE_KEY }}
