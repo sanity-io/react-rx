@@ -3,8 +3,8 @@ import {atomDark, githubLight} from '@codesandbox/sandpack-themes'
 import {useTheme} from 'nextra-theme-docs'
 import {type ComponentProps, useMemo} from 'react'
 
-import reactRxRaw from '../../../dist/index.js?raw'
-import reactRxPackageJson from '../../../package.json'
+import reactRxRaw from '../../../packages/react-rx/dist/index.js?raw'
+import reactRxPackageJson from '../../../packages/react-rx/package.json'
 import websitePackageJson from '../../package.json'
 
 const {dependencies: websiteDependencies} = websitePackageJson

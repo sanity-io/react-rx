@@ -1,5 +1,5 @@
 ---
-name: Prettier
+name: Format
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
           path: node_modules/.cache/prettier/.prettier-cache
           key: prettier-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('.prettierignore') }}-${{ hashFiles('package.json') }}
       - run: pnpm format
-      - run: git restore .github/workflows pnpm-lock.yaml CHANGELOG.md
+      - run: git restore .github/workflows pnpm-lock.yaml
       - uses: actions/create-github-app-token@v2
         id: generate-token
         with:

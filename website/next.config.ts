@@ -19,7 +19,7 @@ const nextConfig = {
   webpack(config) {
     config.resolve.alias = {
       ...config.resolve.alias,
-      'react-rx': require.resolve('../src/index.ts'),
+      'react-rx': require.resolve('../packages/react-rx/src/index.ts'),
     }
     config.module.rules.push({
       test: /\.(js|ts)x?$/,

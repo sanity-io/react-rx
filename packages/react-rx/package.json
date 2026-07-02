@@ -1,0 +1,100 @@
+{
+  "name": "react-rx",
+  "version": "4.2.2",
+  "description": "React + RxJS = <3",
+  "keywords": [
+    "action",
+    "behavior",
+    "concurrent",
+    "es6",
+    "events",
+    "external",
+    "hooks",
+    "observables",
+    "observe",
+    "pipe",
+    "react",
+    "react18",
+    "react19",
+    "reactive",
+    "realtime",
+    "rx",
+    "rxjs",
+    "sanity",
+    "sanity-io",
+    "store",
+    "streams",
+    "subject",
+    "suspense",
+    "sync",
+    "typesafe",
+    "typescript",
+    "use"
+  ],
+  "homepage": "https://react-rx.dev",
+  "bugs": {
+    "url": "https://github.com/sanity-io/react-rx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanity-io/react-rx.git",
+    "directory": "packages/react-rx"
+  },
+  "license": "MIT",
+  "author": "Sanity.io <hello@sanity.io>",
+  "contributors": [
+    "Bjørge Næss <bjoerge@gmail.com>",
+    "Cody Olsen <stipsan@gmail.com> (https://github.com/stipsan)"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "pkg build --strict --clean --check",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run --typecheck",
+    "watch": "pnpm build -- --watch"
+  },
+  "browserslist": "extends @sanity/browserslist-config",
+  "dependencies": {
+    "observable-callback": "^1.0.3",
+    "react-compiler-runtime": "1.0.0",
+    "use-effect-event": "^2.0.3"
+  },
+  "devDependencies": {
+    "@sanity/browserslist-config": "^1.0.5",
+    "@sanity/pkg-utils": "^8.1.23",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.0.3",
+    "babel-plugin-react-compiler": "1.0.0",
+    "jsdom": "^26.1.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-test-renderer": "^19.2.1",
+    "rxjs": "^7.8.2",
+    "typescript": "5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "react": "^18.3 || >=19.0.0-0",
+    "rxjs": "^7"
+  }
+}

@@ -1,116 +1,32 @@
 {
-  "name": "react-rx",
-  "version": "4.2.2",
-  "description": "React + RxJS = <3",
-  "keywords": [
-    "action",
-    "behavior",
-    "concurrent",
-    "es6",
-    "events",
-    "external",
-    "hooks",
-    "observables",
-    "observe",
-    "pipe",
-    "react",
-    "react18",
-    "react19",
-    "reactive",
-    "realtime",
-    "rx",
-    "rxjs",
-    "sanity",
-    "sanity-io",
-    "store",
-    "streams",
-    "subject",
-    "suspense",
-    "sync",
-    "typesafe",
-    "typescript",
-    "use"
-  ],
-  "homepage": "https://react-rx.dev",
-  "bugs": {
-    "url": "https://github.com/sanity-io/react-rx/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sanity-io/react-rx.git"
-  },
-  "license": "MIT",
-  "author": "Sanity.io <hello@sanity.io>",
-  "contributors": [
-    "Bjørge Næss <bjoerge@gmail.com>",
-    "Cody Olsen <stipsan@gmail.com> (https://github.com/stipsan)"
-  ],
-  "sideEffects": false,
+  "name": "react-rx-monorepo",
+  "version": "0.0.0",
+  "private": true,
   "type": "module",
-  "exports": {
-    ".": {
-      "source": "./src/index.ts",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
-    "build": "pkg build --strict --clean --check",
-    "dev": "pnpm --filter 'react-rx-website' dev",
+    "build": "pnpm --filter react-rx build",
+    "dev": "pnpm --filter react-rx-website dev",
     "format": "prettier --cache --write .",
     "lint": "eslint --cache .",
-    "prepublishOnly": "pnpm build",
-    "test": "vitest run --typecheck",
-    "watch": "pnpm build -- --watch"
+    "release": "changeset publish",
+    "test": "pnpm --filter react-rx test",
+    "watch": "pnpm --filter react-rx watch"
   },
-  "browserslist": "extends @sanity/browserslist-config",
   "prettier": "@sanity/prettier-config",
-  "dependencies": {
-    "observable-callback": "^1.0.3",
-    "react-compiler-runtime": "1.0.0",
-    "use-effect-event": "^2.0.3"
-  },
   "devDependencies": {
-    "@sanity/browserslist-config": "^1.0.5",
-    "@sanity/pkg-utils": "^8.1.23",
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
     "@sanity/prettier-config": "^1.0.6",
-    "@sanity/semantic-release-preset": "^5.0.0",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.0",
-    "@types/node": "^24.3.0",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
-    "@vitejs/plugin-react": "^5.0.3",
-    "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "7.0.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "jsdom": "^26.1.0",
     "prettier": "^3.6.2",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
-    "react-test-renderer": "^19.2.1",
-    "rxjs": "^7.8.2",
-    "semantic-release": "^24.2.7",
     "typescript": "5.9.2",
-    "typescript-eslint": "^8.41.0",
-    "vitest": "^3.2.4"
+    "typescript-eslint": "^8.41.0"
   },
-  "peerDependencies": {
-    "react": "^18.3 || >=19.0.0-0",
-    "rxjs": "^7"
-  },
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "pnpm@11.9.0"
 }
