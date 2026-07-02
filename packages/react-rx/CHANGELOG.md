@@ -1,5 +1,11 @@
 # react-rx
 
+## 4.2.3
+
+### Patch Changes
+
+- [#370](https://github.com/sanity-io/react-rx/pull/370) [`878ad83`](https://github.com/sanity-io/react-rx/commit/878ad83635a2921d915dc1f8ad4cd3de0750eb8b) Thanks [@stipsan](https://github.com/stipsan)! - Set up Changesets-based releases with npm trusted publishing. No runtime changes.
+
 ## [4.2.2](https://github.com/sanity-io/react-rx/compare/v4.2.1...v4.2.2) (2025-10-20)
 
 ### Bug Fixes
