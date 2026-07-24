@@ -15,3 +15,5 @@ minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - '@sanity/*'
   - 'use-effect-event'
+  # Renovate security update: vitest@3.2.6
+  - vitest@3.2.6
