@@ -19,21 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
-        with:
-          node-version: lts/*
-      - run: pnpm install --dev --ignore-scripts
-      - uses: actions/cache@v6
-        with:
-          path: node_modules/.cache/prettier/.prettier-cache
-          key: prettier-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('.prettierignore') }}-${{ hashFiles('package.json') }}
+      - uses: ./.github/actions/setup
       - run: pnpm format
       - run: git restore .github/workflows pnpm-lock.yaml
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         id: generate-token
         with:
-          app-id: ${{ secrets.ECOSPARK_APP_ID }}
+          client-id: ${{ vars.ECOSPARK_CLIENT_ID }}
           private-key: ${{ secrets.ECOSPARK_APP_PRIVATE_KEY }}
       - uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
         with:
