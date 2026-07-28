@@ -6,7 +6,7 @@ settings:
 
 overrides:
   nextra>zod: 4.3.6
-  nextra-theme-docs>zod: 4.3.6
+  nextra-theme-docs>zod: 4.4.3
 
 importers:
 
@@ -9901,7 +9901,7 @@ snapshots:
       react-compiler-runtime: 19.1.0-rc.1-rc-af1b7da-20250421(react@19.2.8)
       react-dom: 19.2.8(react@19.2.8)
       scroll-into-view-if-needed: 3.1.0
-      zod: 4.3.6
+      zod: 4.4.3
       zustand: 5.0.14(@types/react@19.2.17)(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))
     transitivePeerDependencies:
       - '@types/react'
