@@ -28,11 +28,5 @@
     "typescript": "5.9.2",
     "typescript-eslint": "^8.41.0"
   },
-  "packageManager": "pnpm@11.9.0",
-  "pnpm": {
-    "overrides": {
-      "nextra>zod": "4.3.6",
-      "nextra-theme-docs>zod": "4.3.6"
-    }
-  }
+  "packageManager": "pnpm@11.9.0"
 }

@@ -18,9 +18,6 @@ minimumReleaseAgeExclude:
 
 # nextra 4.6.1 is incompatible with zod 4.4.x (Layout children validation).
 # Remove when upgrading to a nextra release that includes shuding/nextra#4990.
-# Declared here for pnpm 10+/11, and mirrored in package.json "pnpm.overrides"
-# so Vercel (still on pnpm 9 via lockfileVersion 9.0) does not hit
-# ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
 overrides:
   'nextra>zod': 4.3.6
   'nextra-theme-docs>zod': 4.3.6
