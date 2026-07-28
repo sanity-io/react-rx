@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "build": "next build --turbopack",
+    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
     "predev": "pnpm --filter react-rx build",
     "dev": "next dev --turbopack",
-    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
     "format": "prettier --cache --write .",
     "start": "next start"
   },

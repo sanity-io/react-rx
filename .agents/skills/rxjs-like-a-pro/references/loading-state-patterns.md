@@ -6,44 +6,42 @@ Instead of tracking loading/error in mutable variables, derive it inside the `sw
 
 ```typescript
 const dataWithLoadingState$ = input$.pipe(
-  switchMap(value => fetchData(value).pipe(
-    map(data => ({ loading: false, data })),
-    catchError(error => of({ loading: false, error })),
-    startWith({ loading: true }),
-  )),
-);
+  switchMap((value) =>
+    fetchData(value).pipe(
+      map((data) => ({loading: false, data})),
+      catchError((error) => of({loading: false, error})),
+      startWith({loading: true}),
+    ),
+  ),
+)
 ```
 
 ## Extract into a reusable custom operator
 
 ```typescript
-import { OperatorFunction, Observable, of } from 'rxjs';
-import { switchMap, map, catchError, startWith } from 'rxjs/operators';
+import {OperatorFunction, Observable, of} from 'rxjs'
+import {switchMap, map, catchError, startWith} from 'rxjs/operators'
 
 type LoadingState<T> =
-  | { loading: true }
-  | { loading: false; data: T }
-  | { loading: false; error: unknown };
+  {loading: true} | {loading: false; data: T} | {loading: false; error: unknown}
 
 function withLoadingState<T, R>(
   project: (value: T) => Observable<R>,
 ): OperatorFunction<T, LoadingState<R>> {
   return (source) =>
     source.pipe(
-      switchMap(value =>
+      switchMap((value) =>
         project(value).pipe(
-          map(data => ({ loading: false, data }) as const),
-          catchError(error => of({ loading: false, error } as const)),
-          startWith({ loading: true } as const),
+          map((data) => ({loading: false, data}) as const),
+          catchError((error) => of({loading: false, error} as const)),
+          startWith({loading: true} as const),
         ),
       ),
-    );
+    )
 }
 
 // Now any stream can use it:
-const results$ = searchInput$.pipe(
-  withLoadingState(query => apiService.search(query)),
-);
+const results$ = searchInput$.pipe(withLoadingState((query) => apiService.search(query)))
 ```
 
 Once a pattern is in an operator, it's tested once and reusable everywhere. The loading/error/data lifecycle
@@ -59,24 +57,25 @@ Use `scan` to carry forward previous results while new ones are loading:
 
 ```typescript
 const results$ = searchInput$.pipe(
-  withLoadingState(query => apiService.search(query)),
+  withLoadingState((query) => apiService.search(query)),
   scan((previous, current) => {
     if (current.loading) {
       // Keep showing previous data while loading
-      return { ...current, data: 'data' in previous ? previous.data : undefined };
+      return {...current, data: 'data' in previous ? previous.data : undefined}
     }
     if ('error' in current) {
       // On error, keep the previous data so the UI doesn't blank out,
       // but surface the error so it can be displayed
-      return { ...current, data: 'data' in previous ? previous.data : undefined };
+      return {...current, data: 'data' in previous ? previous.data : undefined}
     }
-    return current;
+    return current
   }),
-);
+)
 ```
 
 Now the UI can:
-- Show a loading indicator *and* keep displaying previous results until new ones arrive
+
+- Show a loading indicator _and_ keep displaying previous results until new ones arrive
 - On error, show the error message while still displaying the last successful results
 - On success, replace everything with the fresh data
 
