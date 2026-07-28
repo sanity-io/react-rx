@@ -35,6 +35,7 @@
     "typescript/ban-ts-comment": "error",
     "typescript/prefer-ts-expect-error": "error",
     "typescript/switch-exhaustiveness-check": "error",
+    "typescript/no-deprecated": "error",
     "typescript/no-explicit-any": "off",
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/no-unnecessary-type-assertion": "off",

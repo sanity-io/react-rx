@@ -1,6 +1,6 @@
 import {
   ChangeEvent,
-  FormEvent,
+  type SyntheticEvent,
   useState,
 } from 'react'
 import {
@@ -25,7 +25,7 @@ const STORAGE_KEY = '__form-submit-example__'
 // Create subjects for form events
 const formData$ = new Subject<Partial<FormValues>>()
 const submit$ = new Subject<
-  FormEvent<HTMLFormElement>
+  SyntheticEvent<HTMLFormElement>
 >()
 
 interface FormValues {
@@ -51,7 +51,7 @@ function FormDataExample() {
 
   // Handle form submissions
   const handleSubmit = useObservableEvent<
-    FormEvent<HTMLFormElement>,
+    SyntheticEvent<HTMLFormElement>,
     any
   >((event$) =>
     event$.pipe(
