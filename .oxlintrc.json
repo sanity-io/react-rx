@@ -39,6 +39,9 @@
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/no-unnecessary-type-assertion": "off",
     "react-in-jsx-scope": "off",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "react/jsx-key": "error",
     "eslint/no-console": ["error", {"allow": ["warn", "error"]}],
     "eslint/no-shadow": "off",
     "import/no-unassigned-import": ["error", {"allow": ["**/*.css"]}],
@@ -48,20 +51,12 @@
   "overrides": [
     {
       "files": ["website/**/*.{js,jsx,mjs,ts,tsx}"],
-      "plugins": ["nextjs"],
-      "rules": {
-        "react/rules-of-hooks": "error",
-        "react/exhaustive-deps": "error",
-        "react/jsx-key": "error"
-      }
+      "plugins": ["nextjs"]
     },
     {
       "files": ["packages/react-rx/**/*.{js,jsx,mjs,ts,tsx}"],
       "rules": {
-        "react/react-compiler": "error",
-        "react/rules-of-hooks": "error",
-        "react/exhaustive-deps": "error",
-        "react/jsx-key": "error"
+        "react/react-compiler": "error"
       }
     }
   ]
