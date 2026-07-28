@@ -5,9 +5,18 @@ export default function Example() {
   return (
     <ExampleSandpack
       files={{
-        '/App.tsx': readExample('context', 'App.tsx'),
-        '/ModeSwitcher.tsx': readExample('context', 'ModeSwitcher.tsx'),
-        '/context.tsx': readExample('context', 'context.tsx'),
+        '/App.tsx': readExample(
+          'context',
+          'App.tsx',
+        ),
+        '/ModeSwitcher.tsx': readExample(
+          'context',
+          'ModeSwitcher.tsx',
+        ),
+        '/context.tsx': readExample(
+          'context',
+          'context.tsx',
+        ),
       }}
     />
   )

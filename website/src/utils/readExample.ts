@@ -8,8 +8,5 @@ export function readExample(...segments: string[]): string {
 
 /** Local react-rx build used by Sandpack in development. */
 export function readReactRxDist(): string {
-  return fs.readFileSync(
-    path.join(process.cwd(), '../packages/react-rx/dist/index.js'),
-    'utf8',
-  )
+  return fs.readFileSync(path.join(process.cwd(), '../packages/react-rx/dist/index.js'), 'utf8')
 }

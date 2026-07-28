@@ -10,18 +10,17 @@ allowBuilds:
   esbuild: false
   sharp: true
 
-publicHoistPattern:
-  - '*prettier*'
-
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
+  - '@oxfmt/*'
+  - '@oxlint/*'
+  - '@rollup/*'
   - '@sanity/*'
-  - 'use-effect-event'
+  - 'oxfmt'
   - 'oxlint'
   - 'oxlint-tsgolint'
-  - '@oxlint/*'
   - 'rollup'
-  - '@rollup/*'
+  - 'use-effect-event'
 
 # nextra 4.6.1 is incompatible with zod 4.4.x (Layout children validation).
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).

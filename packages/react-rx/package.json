@@ -35,19 +35,26 @@
   "bugs": {
     "url": "https://github.com/sanity-io/react-rx/issues"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sanity-io/react-rx.git",
-    "directory": "packages/react-rx"
-  },
   "license": "MIT",
   "author": "Sanity.io <hello@sanity.io>",
   "contributors": [
     "Bjørge Næss <bjoerge@gmail.com>",
     "Cody Olsen <stipsan@gmail.com> (https://github.com/stipsan)"
   ],
-  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanity-io/react-rx.git",
+    "directory": "packages/react-rx"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -56,13 +63,6 @@
     },
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "publishConfig": {
     "exports": {
       ".": {
@@ -78,7 +78,6 @@
     "test": "vitest run --typecheck",
     "watch": "pnpm build -- --watch"
   },
-  "browserslist": "extends @sanity/browserslist-config",
   "dependencies": {
     "observable-callback": "^1.0.3",
     "react-compiler-runtime": "1.0.0",
@@ -109,5 +108,6 @@
   "peerDependencies": {
     "react": "^18.3 || >=19.0.0-0",
     "rxjs": "^7"
-  }
+  },
+  "browserslist": "extends @sanity/browserslist-config"
 }

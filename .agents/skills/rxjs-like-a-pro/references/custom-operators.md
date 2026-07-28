@@ -12,13 +12,14 @@ multi-step `.pipe()` chain in several places, that's a candidate:
 // An inline operator is just a function: Observable<In> → Observable<Out>
 const results$ = searchInput$.pipe(
   // inline operator — debounce, deduplicate, and skip empty
-  (source) => source.pipe(
-    debounceTime(300),
-    distinctUntilChanged(),
-    filter(query => query.length > 0),
-  ),
-  switchMap(query => apiService.search(query)),
-);
+  (source) =>
+    source.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      filter((query) => query.length > 0),
+    ),
+  switchMap((query) => apiService.search(query)),
+)
 ```
 
 This works because `.pipe()` accepts any function with the signature `(source: Observable<A>) => Observable<B>`.
@@ -29,39 +30,38 @@ When you use the same inline operator in multiple places, extract it into a name
 `OperatorFunction<In, Out>` as the return type so it slots cleanly into any `.pipe()` chain:
 
 ```typescript
-import { OperatorFunction, Observable } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+import {OperatorFunction, Observable} from 'rxjs'
+import {debounceTime, distinctUntilChanged, filter} from 'rxjs/operators'
 
 interface StabilizeOptions {
-  debounce?: number;
-  minLength?: number;
+  debounce?: number
+  minLength?: number
 }
 
-function stabilizeInput(
-  options: StabilizeOptions = {},
-): OperatorFunction<string, string> {
-  const { debounce = 300, minLength = 1 } = options;
+function stabilizeInput(options: StabilizeOptions = {}): OperatorFunction<string, string> {
+  const {debounce = 300, minLength = 1} = options
   return (source: Observable<string>) =>
     source.pipe(
       debounceTime(debounce),
       distinctUntilChanged(),
-      filter(query => query.length >= minLength),
-    );
+      filter((query) => query.length >= minLength),
+    )
 }
 
 // Now reusable across any text input stream:
 const search$ = searchInput$.pipe(
-  stabilizeInput({ debounce: 200 }),
-  switchMap(query => apiService.search(query)),
-);
+  stabilizeInput({debounce: 200}),
+  switchMap((query) => apiService.search(query)),
+)
 
 const autocomplete$ = nameInput$.pipe(
-  stabilizeInput({ debounce: 500, minLength: 2 }),
-  switchMap(name => apiService.suggest(name)),
-);
+  stabilizeInput({debounce: 500, minLength: 2}),
+  switchMap((name) => apiService.suggest(name)),
+)
 ```
 
 The pattern is always the same:
+
 1. Write a function that accepts configuration (if any) and returns `OperatorFunction<In, Out>`
 2. The returned function takes a `source` observable and pipes operators onto it
 3. Use it in `.pipe()` just like any built-in operator

@@ -23,7 +23,9 @@ import storage from './storage'
 const STORAGE_KEY = '__form-submit-example__'
 
 // Create subjects for form events
-const formData$ = new Subject<Partial<FormValues>>()
+const formData$ = new Subject<
+  Partial<FormValues>
+>()
 const submit$ = new Subject<
   SyntheticEvent<HTMLFormElement>
 >()
