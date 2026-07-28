@@ -1,10 +1,9 @@
 import 'nextra-theme-docs/style.css'
 import './global.css'
-
 import type {Metadata, Viewport} from 'next'
+import {Footer, Layout, Navbar} from 'nextra-theme-docs'
 import {Head} from 'nextra/components'
 import {getPageMap} from 'nextra/page-map'
-import {Footer, Layout, Navbar} from 'nextra-theme-docs'
 import type {ReactNode} from 'react'
 
 import {ReactRxLogo} from '@/components/logos/ReactRxLogo'
