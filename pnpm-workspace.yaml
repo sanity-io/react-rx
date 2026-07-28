@@ -17,6 +17,8 @@ minimumReleaseAgeExclude:
   - 'oxlint'
   - 'oxlint-tsgolint'
   - '@oxlint/*'
+  - 'rollup'
+  - '@rollup/*'
 
 # nextra 4.6.1 is incompatible with zod 4.4.x (Layout children validation).
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).
