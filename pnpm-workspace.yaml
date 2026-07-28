@@ -10,7 +10,6 @@ allowBuilds:
   esbuild: false
   sharp: true
 
-minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - '@oxfmt/*'
   - '@oxlint/*'
@@ -25,7 +24,3 @@ minimumReleaseAgeExclude:
 overrides:
   'nextra>zod': 4.3.6
   'nextra-theme-docs>zod': 4.3.6
-  # `@sanity/tsdown-config` pulls in the vanilla-extract plugin (unused here, react-rx ships no CSS),
-  # and its `@vanilla-extract/css@^1.21.2` requirement can't be satisfied under `minimumReleaseAge`
-  # yet. Remove once 1.21.2 is old enough to resolve on its own.
-  '@vanilla-extract/css': 1.21.1
