@@ -16,8 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: pnpm lint
       - run: pnpm build
+      - run: pnpm lint
 
   test:
     needs: build

@@ -18,7 +18,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "react-rx": ["../packages/react-rx/src/index.ts"]
     },
     "strictNullChecks": true,
     "target": "ES2017"

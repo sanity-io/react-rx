@@ -1,6 +1,6 @@
 import {
   ChangeEvent,
-  FormEvent,
+  type SyntheticEvent,
   useMemo,
 } from 'react'
 import {
@@ -25,7 +25,7 @@ interface TodoItem {
 
 const text$ = new Subject<string>()
 const submit$ = new Subject<
-  FormEvent<HTMLFormElement>
+  SyntheticEvent<HTMLFormElement>
 >()
 const textToItem = (text: string) => ({
   text,
@@ -49,7 +49,7 @@ function TodoApp() {
 
   // Handle form submissions
   const handleSubmit = useObservableEvent<
-    FormEvent<HTMLFormElement>,
+    SyntheticEvent<HTMLFormElement>,
     any
   >((event$) =>
     event$.pipe(

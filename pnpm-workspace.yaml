@@ -2,19 +2,22 @@ packages:
   - 'packages/*'
   - 'website'
 
+catalog:
+  babel-plugin-react-compiler: ^1.0.0
+
 allowBuilds:
   es5-ext: false
   esbuild: false
   sharp: true
 
-publicHoistPattern:
-  - '*eslint*'
-
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - '@oxfmt/*'
+  - '@oxlint/*'
   - '@sanity/*'
   - 'oxfmt'
+  - 'oxlint'
+  - 'oxlint-tsgolint'
   - 'use-effect-event'
 
 # nextra 4.6.1 is incompatible with zod 4.4.x (Layout children validation).

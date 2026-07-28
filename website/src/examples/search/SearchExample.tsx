@@ -84,8 +84,10 @@ function SearchExample() {
               Got {result.hits.length} hits
             </div>
             <ul>
-              {result.hits.map((hit, i) => (
-                <li key={i}>{hit.title}</li>
+              {result.hits.map((hit) => (
+                <li key={hit.title}>
+                  {hit.title}
+                </li>
               ))}
             </ul>
           </>
