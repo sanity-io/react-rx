@@ -1,4 +1,5 @@
 node_modules
 dist
 .eslintcache
+.oxlintcache
 website/next-env.d.ts

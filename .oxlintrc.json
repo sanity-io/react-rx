@@ -1,0 +1,69 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "options": {
+    "typeAware": true,
+    "typeCheck": true
+  },
+  "ignorePatterns": [
+    "**/dist",
+    "website/.next",
+    "website/next-env.d.ts",
+    "website/public/_pagefind"
+  ],
+  "plugins": [
+    "react",
+    "react-perf",
+    "unicorn",
+    "typescript",
+    "oxc",
+    "import",
+    "node"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "error"
+  },
+  "settings": {
+    "next": {
+      "rootDir": "website/"
+    }
+  },
+  "rules": {
+    "typescript/ban-ts-comment": "error",
+    "typescript/prefer-ts-expect-error": "error",
+    "typescript/switch-exhaustiveness-check": "error",
+    "typescript/no-explicit-any": "off",
+    "typescript/no-unsafe-type-assertion": "off",
+    "typescript/no-unnecessary-type-assertion": "off",
+    "react-in-jsx-scope": "off",
+    "eslint/no-console": ["error", {"allow": ["warn", "error"]}],
+    "eslint/no-shadow": "off",
+    "import/no-unassigned-import": ["error", {"allow": ["**/*.css"]}],
+    "jsx-no-new-function-as-prop": "off",
+    "jsx-no-new-object-as-prop": "off",
+    "jsx-no-jsx-as-prop": "off",
+    "consistent-return": "off",
+    "eslint/no-underscore-dangle": "off"
+  },
+  "overrides": [
+    {
+      "files": ["website/**/*.{js,jsx,mjs,ts,tsx}"],
+      "plugins": ["nextjs"],
+      "rules": {
+        "react/rules-of-hooks": "error",
+        "react/exhaustive-deps": "error",
+        "react/jsx-key": "error"
+      }
+    },
+    {
+      "files": ["packages/react-rx/**/*.{js,jsx,mjs,ts,tsx}"],
+      "rules": {
+        "react/react-compiler": "error",
+        "react/rules-of-hooks": "error",
+        "react/exhaustive-deps": "error",
+        "react/jsx-key": "error"
+      }
+    }
+  ]
+}

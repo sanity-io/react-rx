@@ -8,7 +8,6 @@
     "dev": "next dev --turbopack",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
     "format": "prettier --cache --write .",
-    "lint": "eslint .",
     "start": "next start"
   },
   "dependencies": {

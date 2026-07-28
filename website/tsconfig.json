@@ -24,6 +24,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "react-rx": [
+        "../packages/react-rx/src/index.ts"
       ]
     },
     "strictNullChecks": true,
