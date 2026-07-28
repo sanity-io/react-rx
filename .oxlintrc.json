@@ -14,7 +14,6 @@
   ],
   "plugins": [
     "react",
-    "react-perf",
     "unicorn",
     "typescript",
     "oxc",
@@ -43,9 +42,6 @@
     "eslint/no-console": ["error", {"allow": ["warn", "error"]}],
     "eslint/no-shadow": "off",
     "import/no-unassigned-import": ["error", {"allow": ["**/*.css"]}],
-    "jsx-no-new-function-as-prop": "off",
-    "jsx-no-new-object-as-prop": "off",
-    "jsx-no-jsx-as-prop": "off",
     "consistent-return": "off",
     "eslint/no-underscore-dangle": "off"
   },
