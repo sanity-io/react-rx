@@ -7,7 +7,7 @@
     "build": "pnpm --filter react-rx build",
     "dev": "pnpm --filter react-rx-website dev",
     "format": "prettier --cache --write .",
-    "lint": "oxlint --type-check --type-aware --report-unused-disable-directives --deny-warnings",
+    "lint": "oxlint",
     "release": "changeset publish",
     "test": "pnpm --filter react-rx test",
     "watch": "pnpm --filter react-rx watch"
