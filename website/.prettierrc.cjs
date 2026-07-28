@@ -1,7 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 const sanityConfig = require('@sanity/prettier-config')
 
-// eslint-disable-next-line no-undef
 module.exports = {
   ...sanityConfig,
   overrides: [
