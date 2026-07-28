@@ -1,15 +1,10 @@
-import path from 'node:path'
-import {fileURLToPath} from 'node:url'
-
+import type {NextConfig} from 'next'
 import nextra from 'nextra'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const withNextra = nextra({
   defaultShowCopyCode: true,
 })
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   compiler: {
     styledComponents: true,
@@ -22,10 +17,7 @@ const nextConfig = {
   turbopack: {
     resolveAlias: {
       // Resolve workspace package from source (relative to this config file)
-      'react-rx': path.relative(
-        __dirname,
-        path.join(__dirname, '../packages/react-rx/src/index.ts'),
-      ),
+      'react-rx': '../packages/react-rx/src/index.ts',
     },
   },
   async headers() {
@@ -54,6 +46,6 @@ const nextConfig = {
       },
     ]
   },
-}
+} satisfies NextConfig
 
 export default withNextra(nextConfig)
