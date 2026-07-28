@@ -1,4 +1,5 @@
 import 'nextra-theme-docs/style.css'
+import './global.css'
 
 import type {Metadata, Viewport} from 'next'
 import {Head} from 'nextra/components'
