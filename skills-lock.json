@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "rxjs-like-a-pro": {
+      "source": "bjoerge/rxjs-skills",
+      "sourceType": "github",
+      "skillPath": "rxjs-like-a-pro/SKILL.md",
+      "computedHash": "139717d9d0f9f128d83ea8b4bf1f26c6ff1f2b13df8b7c55e8877635127e1266"
+    }
+  }
+}
