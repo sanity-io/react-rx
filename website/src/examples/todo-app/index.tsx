@@ -1,3 +1,5 @@
+'use client'
+
 import Sandpack from '@/components/Sandpack'
 
 import App from './TodoApp.example.tsx?raw'

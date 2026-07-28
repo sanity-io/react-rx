@@ -1,9 +1,11 @@
+import {createRequire} from 'node:module'
+
 import type {NextConfig} from 'next'
 import nextra from 'nextra'
 
+const require = createRequire(import.meta.url)
+
 const withNextra = nextra({
-  theme: 'nextra-theme-docs',
-  themeConfig: './theme.config.jsx',
   defaultShowCopyCode: true,
 })
 
@@ -21,10 +23,10 @@ const nextConfig = {
       ...config.resolve.alias,
       'react-rx': require.resolve('../packages/react-rx/src/index.ts'),
     }
-    config.module.rules.push({
-      test: /\.(js|ts)x?$/,
+    // Ensure ?raw imports are treated as source strings before other loaders/RSC analysis
+    config.module.rules.unshift({
       resourceQuery: /raw/,
-      use: 'raw-loader',
+      type: 'asset/source',
     })
     return config
   },

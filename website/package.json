@@ -6,6 +6,7 @@
     "build": "next build",
     "predev": "pnpm --filter react-rx build",
     "dev": "next",
+    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
     "format": "prettier --cache --write .",
     "lint": "next lint",
     "start": "next start"
@@ -19,10 +20,9 @@
     "bezier-easing": "^2.1.0",
     "date-fns": "^4.1.0",
     "next": "^15.5.7",
-    "nextra": "^3.3.1",
-    "nextra-theme-docs": "^3.3.1",
+    "nextra": "^4.6.1",
+    "nextra-theme-docs": "^4.6.1",
     "observable-callback": "^1.0.3",
-    "raw-loader": "^4.0.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-rx": "workspace:*",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@sanity/prettier-config": "^1.0.6",
+    "pagefind": "^1.5.2",
     "prettier": "^3.6.2"
   }
 }

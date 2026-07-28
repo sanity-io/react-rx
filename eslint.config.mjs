@@ -7,7 +7,7 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  globalIgnores(['**/dist', 'website/.next', 'website/next-env.d.ts']),
+  globalIgnores(['**/dist', 'website/.next', 'website/next-env.d.ts', 'website/public/_pagefind']),
   js.configs.recommended,
   tseslint.configs.recommended,
   eslintConfigPrettier,

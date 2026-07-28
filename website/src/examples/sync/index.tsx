@@ -1,3 +1,5 @@
+'use client'
+
 import Sandpack from '@/components/Sandpack'
 
 import App from './Sync.example.tsx?raw'

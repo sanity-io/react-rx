@@ -1,3 +1,5 @@
+'use client'
+
 import {Sandpack} from '@codesandbox/sandpack-react'
 import {atomDark, githubLight} from '@codesandbox/sandpack-themes'
 import {useTheme} from 'nextra-theme-docs'
