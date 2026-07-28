@@ -10,8 +10,10 @@ import websitePackageJson from '../../package.json'
 
 const {dependencies: websiteDependencies} = websitePackageJson
 
+const EMPTY_FILES = {}
+
 export default function SandpackComponent({
-  files = {},
+  files = EMPTY_FILES,
   dependencies = null,
   reactRxSource,
 }: Pick<ComponentProps<typeof Sandpack>, 'files'> & {
