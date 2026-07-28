@@ -146,7 +146,9 @@ test('should restart any completed observable on mount', async () => {
   let unsubscribeCount = 0
 
   type Notification<T> =
-    {kind: 'next'; value: T} | {kind: 'error'; error: Error} | {kind: 'complete'}
+    | {kind: 'next'; value: T}
+    | {kind: 'error'; error: Error}
+    | {kind: 'complete'}
 
   const notifications$ = new Subject<Notification<string>>()
 

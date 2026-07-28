@@ -5,7 +5,10 @@ export default function Example() {
   return (
     <ExampleSandpack
       files={{
-        '/App.tsx': readExample('fizz-buzz', 'FizzBuzzExample.tsx'),
+        '/App.tsx': readExample(
+          'fizz-buzz',
+          'FizzBuzzExample.tsx',
+        ),
       }}
     />
   )
