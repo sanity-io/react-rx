@@ -2,6 +2,9 @@ packages:
   - 'packages/*'
   - 'website'
 
+catalog:
+  babel-plugin-react-compiler: ^1.0.0
+
 allowBuilds:
   es5-ext: false
   esbuild: false
