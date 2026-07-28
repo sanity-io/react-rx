@@ -9,11 +9,12 @@ allowBuilds:
 
 publicHoistPattern:
   - '*eslint*'
-  - '*prettier*'
 
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
+  - '@oxfmt/*'
   - '@sanity/*'
+  - 'oxfmt'
   - 'use-effect-event'
 
 # nextra 4.6.1 is incompatible with zod 4.4.x (Layout children validation).

@@ -5,7 +5,10 @@ export default function Example() {
   return (
     <ExampleSandpack
       files={{
-        '/App.tsx': readExample('todo-app', 'TodoApp.example.tsx'),
+        '/App.tsx': readExample(
+          'todo-app',
+          'TodoApp.example.tsx',
+        ),
       }}
       dependencies={{
         'styled-components': 'latest',

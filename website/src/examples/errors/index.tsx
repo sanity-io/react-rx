@@ -5,9 +5,18 @@ export default function Example() {
   return (
     <ExampleSandpack
       files={{
-        '/App.tsx': readExample('errors', 'App.tsx'),
-        '/Example.tsx': readExample('errors', 'Example.tsx'),
-        '/Counter.tsx': readExample('errors', 'Counter.tsx'),
+        '/App.tsx': readExample(
+          'errors',
+          'App.tsx',
+        ),
+        '/Example.tsx': readExample(
+          'errors',
+          'Example.tsx',
+        ),
+        '/Counter.tsx': readExample(
+          'errors',
+          'Counter.tsx',
+        ),
       }}
       dependencies={{
         'use-error-boundary': 'latest',

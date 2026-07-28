@@ -5,7 +5,10 @@ export default function Example() {
   return (
     <ExampleSandpack
       files={{
-        '/App.tsx': readExample('event-handlers', 'EventHandlersExample.tsx'),
+        '/App.tsx': readExample(
+          'event-handlers',
+          'EventHandlersExample.tsx',
+        ),
       }}
     />
   )

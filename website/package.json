@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "build": "next build --turbopack",
-    "predev": "pnpm --filter react-rx build",
     "dev": "next dev --turbopack",
-    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
-    "format": "prettier --cache --write .",
     "lint": "eslint .",
+    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
+    "predev": "pnpm --filter react-rx build",
     "start": "next start"
   },
   "dependencies": {
@@ -32,8 +31,6 @@
     "use-error-boundary": "^2.0.6"
   },
   "devDependencies": {
-    "@sanity/prettier-config": "^1.0.6",
-    "pagefind": "^1.5.2",
-    "prettier": "^3.6.2"
+    "pagefind": "^1.5.2"
   }
 }
