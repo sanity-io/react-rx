@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  nextra>zod: 4.3.6
+  nextra>zod: 4.4.3
   nextra-theme-docs>zod: 4.3.6
 
 importers:
@@ -9951,7 +9951,7 @@ snapshots:
       unist-util-visit: 5.1.0
       unist-util-visit-children: 3.0.0
       yaml: 2.9.0
-      zod: 4.3.6
+      zod: 4.4.3
     transitivePeerDependencies:
       - supports-color
       - typescript

@@ -19,5 +19,5 @@ minimumReleaseAgeExclude:
 # nextra 4.6.1 is incompatible with zod 4.4.x (Layout children validation).
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).
 overrides:
-  'nextra>zod': 4.3.6
+  'nextra>zod': 4.4.3
   'nextra-theme-docs>zod': 4.3.6
