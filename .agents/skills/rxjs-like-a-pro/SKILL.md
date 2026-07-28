@@ -31,7 +31,7 @@ For detailed examples and patterns, read the relevant reference file:
 ## The #1 Anti-pattern: Premature Subscribe
 
 The most common RxJS mistake is subscribing too early and then doing imperative work inside the callback —
-tracking state in variables, calling functions with side effects, or worse, subscribing to *another* observable
+tracking state in variables, calling functions with side effects, or worse, subscribing to _another_ observable
 inside the callback (the "subscribe-in-subscribe" pattern).
 
 Why this matters: when you subscribe early, you lose the power of the reactive chain. You can no longer
@@ -41,21 +41,19 @@ means more manual state management.
 
 ```typescript
 // ❌ Bad: subscribe-in-subscribe with manual state tracking
-let currentData: Data | null = null;
-let loading = false;
+let currentData: Data | null = null
+let loading = false
 
-input$.subscribe(value => {
-  loading = true;
-  fetchData(value).subscribe(data => {
-    currentData = data;
-    loading = false;
-  });
-});
+input$.subscribe((value) => {
+  loading = true
+  fetchData(value).subscribe((data) => {
+    currentData = data
+    loading = false
+  })
+})
 
 // ✅ Good: everything is in the chain
-const data$ = input$.pipe(
-  switchMap(value => fetchData(value)),
-);
+const data$ = input$.pipe(switchMap((value) => fetchData(value)))
 ```
 
 For loading state, derive it inside the chain using `startWith` — see `references/loading-state-patterns.md`.
@@ -66,7 +64,7 @@ Another common antipattern is stuffing an entire program into a single `new Obse
 constructor — setting up listeners, resolving promises, subscribing to other observables, managing retry
 state, all in one giant callback. This is imperative code wearing an Observable costume.
 
-The `new Observable()` constructor should be small and focused — a thin bridge from *one* non-reactive source
+The `new Observable()` constructor should be small and focused — a thin bridge from _one_ non-reactive source
 into the reactive world. For promise-based sources, use `defer(() => promise)` instead. Retry logic, error
 handling, combining sources — all of that belongs in the operator chain.
 
@@ -74,12 +72,12 @@ See `references/massive-observable.md` for a full before/after example.
 
 ## Choosing the Right Flattening Operator
 
-| Operator | Behavior | Use when |
-|---|---|---|
-| `switchMap` | Cancels previous inner when new value arrives | User input, search-as-you-type, route changes — only the latest matters |
-| `mergeMap` | Runs all inner observables concurrently | Independent operations where all results are needed (logging, fire-and-forget) |
-| `concatMap` | Queues inner observables, runs in order | Order matters and nothing should be dropped (sequential writes, queues) |
-| `exhaustMap` | Ignores new values while inner is running | Preventing duplicate submissions (form submit clicks) |
+| Operator     | Behavior                                      | Use when                                                                       |
+| ------------ | --------------------------------------------- | ------------------------------------------------------------------------------ |
+| `switchMap`  | Cancels previous inner when new value arrives | User input, search-as-you-type, route changes — only the latest matters        |
+| `mergeMap`   | Runs all inner observables concurrently       | Independent operations where all results are needed (logging, fire-and-forget) |
+| `concatMap`  | Queues inner observables, runs in order       | Order matters and nothing should be dropped (sequential writes, queues)        |
+| `exhaustMap` | Ignores new values while inner is running     | Preventing duplicate submissions (form submit clicks)                          |
 
 Default to `switchMap` for most UI/request scenarios.
 
@@ -89,37 +87,31 @@ examples.
 
 ## Error Handling
 
-Put `catchError` on the *inner* observable when you want the outer stream to keep running. Put it on the
+Put `catchError` on the _inner_ observable when you want the outer stream to keep running. Put it on the
 outer stream only when you truly want to replace the entire stream on error:
 
 ```typescript
 // ❌ Bad: catchError on outer stream kills it for good
 source$.pipe(
-  switchMap(value => fetchData(value)),
-  catchError(err => of(fallback)),
-);
+  switchMap((value) => fetchData(value)),
+  catchError((err) => of(fallback)),
+)
 
 // ✅ Good: catchError inside switchMap — outer stream survives
-source$.pipe(
-  switchMap(value =>
-    fetchData(value).pipe(
-      catchError(err => of(fallback)),
-    ),
-  ),
-);
+source$.pipe(switchMap((value) => fetchData(value).pipe(catchError((err) => of(fallback)))))
 ```
 
 Same principle applies to `retry` — retry the inner operation, not the entire outer stream:
 
 ```typescript
 source$.pipe(
-  switchMap(value =>
+  switchMap((value) =>
     fetchData(value).pipe(
-      retry({ count: 3, delay: 1000 }),
-      catchError(err => of(fallback)),
+      retry({count: 3, delay: 1000}),
+      catchError((err) => of(fallback)),
     ),
   ),
-);
+)
 ```
 
 ## Avoiding Memory Leaks
@@ -159,19 +151,25 @@ Instead of mutable variables updated from multiple subscriptions, derive state f
 
 ```typescript
 // ❌ Bad: mutable state, inconsistent windows
-let items: Item[] = [];
-let filter = '';
-items$.subscribe(i => { items = i; recompute(); });
-filter$.subscribe(f => { filter = f; recompute(); });
+let items: Item[] = []
+let filter = ''
+items$.subscribe((i) => {
+  items = i
+  recompute()
+})
+filter$.subscribe((f) => {
+  filter = f
+  recompute()
+})
 
 // ✅ Good: always consistent
 const filteredItems$ = combineLatest([items$, filter$]).pipe(
-  map(([items, filter]) => items.filter(item => item.name.includes(filter))),
-);
+  map(([items, filter]) => items.filter((item) => item.name.includes(filter))),
+)
 ```
 
-**`combineLatest` vs `withLatestFrom`**: `combineLatest` emits when *any* input emits (all inputs drive
-output). `withLatestFrom` emits only when the *source* emits (one driver, others are context).
+**`combineLatest` vs `withLatestFrom`**: `combineLatest` emits when _any_ input emits (all inputs drive
+output). `withLatestFrom` emits only when the _source_ emits (one driver, others are context).
 
 **`startWith`**: `combineLatest` won't emit until every input has emitted at least once. Use `startWith` to
 provide initial values and unblock the stream.
@@ -179,7 +177,7 @@ provide initial values and unblock the stream.
 ## Subjects: Use Sparingly
 
 `Subject`, `BehaviorSubject`, `ReplaySubject` are escape hatches for bridging imperative and reactive code.
-Appropriate for event buses and bridging callbacks. *Not* appropriate as general-purpose state containers —
+Appropriate for event buses and bridging callbacks. _Not_ appropriate as general-purpose state containers —
 if you're calling `.next()` in multiple places to keep a Subject in sync, use a derived stream instead.
 
 ## Custom Operators
@@ -196,25 +194,25 @@ just activates the stream.
 
 ```typescript
 // ❌ Bad: side effects crammed into subscribe
-source$.pipe(
-  switchMap(value => fetchData(value)),
-).subscribe(
-  data => {
-    updateUI(data);
-    logAnalytics('data_loaded', data);
-    cache.set(data);
+source$.pipe(switchMap((value) => fetchData(value))).subscribe(
+  (data) => {
+    updateUI(data)
+    logAnalytics('data_loaded', data)
+    cache.set(data)
   },
-  err => showError(err),
-);
+  (err) => showError(err),
+)
 
 // ✅ Good: side effects in tap, subscribe just activates
-source$.pipe(
-  switchMap(value => fetchData(value)),
-  tap(data => updateUI(data)),
-  tap(data => logAnalytics('data_loaded', data)),
-  tap(data => cache.set(data)),
-  tap({ error: err => showError(err) }),
-).subscribe();
+source$
+  .pipe(
+    switchMap((value) => fetchData(value)),
+    tap((data) => updateUI(data)),
+    tap((data) => logAnalytics('data_loaded', data)),
+    tap((data) => cache.set(data)),
+    tap({error: (err) => showError(err)}),
+  )
+  .subscribe()
 ```
 
 Why this matters: when side effects are in the chain, they're composable. You can add, remove, or reorder
@@ -227,13 +225,13 @@ duplicating side-effect logic. When everything is stuffed into `.subscribe()`, y
 source$.pipe(
   tap({
     subscribe: () => console.log('subscribed!'),
-    next: value => console.log('value:', value),
-    error: err => console.log('error:', err),
+    next: (value) => console.log('value:', value),
+    error: (err) => console.log('error:', err),
     complete: () => console.log('complete'),
     unsubscribe: () => console.log('unsubscribed'),
     finalize: () => console.log('finalized (complete or unsubscribe)'),
   }),
-);
+)
 ```
 
 The `subscribe` hook is especially handy for debugging "why isn't my stream emitting?" — it confirms whether
@@ -247,15 +245,15 @@ chain with `switchMap`.
 
 ## Quick Reference: Common Refactoring Patterns
 
-| Anti-pattern | Refactoring |
-|---|---|
+| Anti-pattern                                | Refactoring                                                            |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
 | `a$.subscribe(x => b$.subscribe(y => ...))` | `a$.pipe(switchMap(x => b$))` (or `mergeMap`/`concatMap`/`exhaustMap`) |
-| Mutable variable updated in subscribe | `scan()` or `combineLatest` to derive state |
-| `setTimeout` inside subscribe | `delay()`, `timer()`, or `debounceTime()` |
-| `if` guard in subscribe to skip values | `filter()` before subscribe |
-| `try/catch` inside subscribe | `catchError()` in the pipe |
-| Manual request cancellation flags | `switchMap` (auto-cancels previous) |
-| Multiple subscribes to same cold observable | `shareReplay({ bufferSize: 1, refCount: true })` |
-| `.subscribe()` just to trigger side effects | `tap()` for side effects, keep the chain going |
-| Massive `new Observable()` constructor | Small focused constructors + `defer()` + operator composition |
-| `await firstValueFrom()` inside subscribe | `switchMap` — stay in the chain |
+| Mutable variable updated in subscribe       | `scan()` or `combineLatest` to derive state                            |
+| `setTimeout` inside subscribe               | `delay()`, `timer()`, or `debounceTime()`                              |
+| `if` guard in subscribe to skip values      | `filter()` before subscribe                                            |
+| `try/catch` inside subscribe                | `catchError()` in the pipe                                             |
+| Manual request cancellation flags           | `switchMap` (auto-cancels previous)                                    |
+| Multiple subscribes to same cold observable | `shareReplay({ bufferSize: 1, refCount: true })`                       |
+| `.subscribe()` just to trigger side effects | `tap()` for side effects, keep the chain going                         |
+| Massive `new Observable()` constructor      | Small focused constructors + `defer()` + operator composition          |
+| `await firstValueFrom()` inside subscribe   | `switchMap` — stay in the chain                                        |

@@ -1,6 +1,6 @@
 import {
   ChangeEvent,
-  FormEvent,
+  type SyntheticEvent,
   useState,
 } from 'react'
 import {
@@ -12,6 +12,7 @@ import {
   map,
   scan,
   startWith,
+  switchMap,
   tap,
   withLatestFrom,
 } from 'rxjs/operators'
@@ -22,12 +23,14 @@ import storage from './storage'
 const STORAGE_KEY = '__form-submit-example__'
 
 // Create subjects for form events
-const formData$ = new Subject<Partial<FormData>>()
+const formData$ = new Subject<
+  Partial<FormValues>
+>()
 const submit$ = new Subject<
-  FormEvent<HTMLFormElement>
+  SyntheticEvent<HTMLFormElement>
 >()
 
-interface FormData {
+interface FormValues {
   title: string
   description: string
 }
@@ -50,7 +53,7 @@ function FormDataExample() {
 
   // Handle form submissions
   const handleSubmit = useObservableEvent<
-    FormEvent<HTMLFormElement>,
+    SyntheticEvent<HTMLFormElement>,
     any
   >((event$) =>
     event$.pipe(
@@ -63,21 +66,25 @@ function FormDataExample() {
 
   // Create form data stream
   const [data$] = useState(() =>
-    formData$.pipe(
-      startWith(
-        storage.get(STORAGE_KEY, {
-          title: '',
-          description: '',
-        }),
+    storage
+      .get(STORAGE_KEY, {
+        title: '',
+        description: '',
+      })
+      .pipe(
+        switchMap((initial) =>
+          formData$.pipe(
+            startWith(initial),
+            scan(
+              (data, update) => ({
+                ...data,
+                ...update,
+              }),
+              initial,
+            ),
+          ),
+        ),
       ),
-      scan(
-        (data, update) => ({
-          ...data,
-          ...update,
-        }),
-        {} as FormData,
-      ),
-    ),
   )
 
   // Create submit state stream
@@ -112,7 +119,7 @@ function FormDataExample() {
     // @TODO investigate why this is necessary
     submitState$ as unknown as Observable<{
       status: 'saved' | 'saving' | 'unsaved'
-      result: FormData | null
+      result: FormValues | null
     }>,
     {
       status: 'unsaved' as const,

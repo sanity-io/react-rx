@@ -3,7 +3,7 @@ import {useObservable} from 'react-rx'
 import {type Observable, timer} from 'rxjs'
 import {
   distinctUntilChanged,
-  mapTo,
+  map,
   startWith,
   switchMap,
 } from 'rxjs/operators'
@@ -16,7 +16,7 @@ export function Ticker(props: {
       props.observable.pipe(
         distinctUntilChanged(),
         switchMap((tick) =>
-          timer(300).pipe(mapTo(tick)),
+          timer(300).pipe(map(() => tick)),
         ),
         startWith(0),
       ),

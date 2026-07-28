@@ -5,7 +5,10 @@ export default function Example() {
   return (
     <ExampleSandpack
       files={{
-        '/App.tsx': readExample('animation', 'AnimationExample.tsx'),
+        '/App.tsx': readExample(
+          'animation',
+          'AnimationExample.tsx',
+        ),
       }}
       dependencies={{
         'bezier-easing': 'latest',

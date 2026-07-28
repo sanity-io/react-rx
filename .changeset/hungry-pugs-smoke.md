@@ -1,5 +1,5 @@
 ---
-'react-rx': patch
+"react-rx": patch
 ---
 
 Build with `tsdown` instead of `@sanity/pkg-utils`. The published entry points are unchanged; the bundled output is now produced by rolldown and ships declaration maps.

@@ -19,7 +19,12 @@ export default defineConfig({
       },
       {
         extends: true,
-        plugins: [react(), babel({presets: [reactCompilerPreset({target: '18'})]})],
+        plugins: [
+          react(),
+          babel({
+            presets: [reactCompilerPreset({target: '18'})],
+          }),
+        ],
         test: {
           name: 'react-compiler',
         },
