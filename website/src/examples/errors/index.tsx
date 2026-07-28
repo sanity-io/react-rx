@@ -1,16 +1,13 @@
-import Sandpack from '@/components/Sandpack'
-
-import App from './App.tsx?raw'
-import Counter from './Counter.tsx?raw'
-import ErrorsExample from './Example.tsx?raw'
+import ExampleSandpack from '@/components/ExampleSandpack'
+import {readExample} from '@/utils/readExample'
 
 export default function Example() {
   return (
-    <Sandpack
+    <ExampleSandpack
       files={{
-        '/App.tsx': App,
-        '/Example.tsx': ErrorsExample,
-        '/Counter.tsx': Counter,
+        '/App.tsx': readExample('errors', 'App.tsx'),
+        '/Example.tsx': readExample('errors', 'Example.tsx'),
+        '/Counter.tsx': readExample('errors', 'Counter.tsx'),
       }}
       dependencies={{
         'use-error-boundary': 'latest',

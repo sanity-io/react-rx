@@ -1,12 +1,11 @@
-import Sandpack from '@/components/Sandpack'
-
-import App from './HelloWorldExample.tsx?raw'
+import ExampleSandpack from '@/components/ExampleSandpack'
+import {readExample} from '@/utils/readExample'
 
 export default function Example() {
   return (
-    <Sandpack
+    <ExampleSandpack
       files={{
-        '/App.tsx': App,
+        '/App.tsx': readExample('hello-world', 'HelloWorldExample.tsx'),
       }}
     />
   )

@@ -2,8 +2,6 @@ import type {NextConfig} from 'next'
 import nextra from 'nextra'
 
 const withNextra = nextra({
-  theme: 'nextra-theme-docs',
-  themeConfig: './theme.config.jsx',
   defaultShowCopyCode: true,
 })
 
@@ -16,17 +14,11 @@ const nextConfig = {
   },
   productionBrowserSourceMaps: true,
   transpilePackages: ['react-rx'],
-  webpack(config) {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'react-rx': require.resolve('../packages/react-rx/src/index.ts'),
-    }
-    config.module.rules.push({
-      test: /\.(js|ts)x?$/,
-      resourceQuery: /raw/,
-      use: 'raw-loader',
-    })
-    return config
+  turbopack: {
+    resolveAlias: {
+      // Resolve workspace package from source (relative to this config file)
+      'react-rx': '../packages/react-rx/src/index.ts',
+    },
   },
   async headers() {
     return [

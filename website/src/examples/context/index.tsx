@@ -1,16 +1,13 @@
-import Sandpack from '@/components/Sandpack'
-
-import App from './App.tsx?raw'
-import context from './context.tsx?raw'
-import ModeSwitcher from './ModeSwitcher.tsx?raw'
+import ExampleSandpack from '@/components/ExampleSandpack'
+import {readExample} from '@/utils/readExample'
 
 export default function Example() {
   return (
-    <Sandpack
+    <ExampleSandpack
       files={{
-        '/App.tsx': App,
-        '/ModeSwitcher.tsx': ModeSwitcher,
-        '/context.tsx': context,
+        '/App.tsx': readExample('context', 'App.tsx'),
+        '/ModeSwitcher.tsx': readExample('context', 'ModeSwitcher.tsx'),
+        '/context.tsx': readExample('context', 'context.tsx'),
       }}
     />
   )

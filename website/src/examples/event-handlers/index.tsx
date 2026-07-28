@@ -1,12 +1,11 @@
-import Sandpack from '@/components/Sandpack'
-
-import App from './EventHandlersExample.tsx?raw'
+import ExampleSandpack from '@/components/ExampleSandpack'
+import {readExample} from '@/utils/readExample'
 
 export default function Example() {
   return (
-    <Sandpack
+    <ExampleSandpack
       files={{
-        '/App.tsx': App,
+        '/App.tsx': readExample('event-handlers', 'EventHandlersExample.tsx'),
       }}
     />
   )

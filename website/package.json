@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "next build --turbopack",
     "predev": "pnpm --filter react-rx build",
-    "dev": "next",
+    "dev": "next dev --turbopack",
+    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
     "format": "prettier --cache --write .",
-    "lint": "next lint",
+    "lint": "eslint .",
     "start": "next start"
   },
   "dependencies": {
@@ -18,21 +19,21 @@
     "@types/react-dom": "^19.2.2",
     "bezier-easing": "^2.1.0",
     "date-fns": "^4.1.0",
-    "next": "^15.5.7",
-    "nextra": "^3.3.1",
-    "nextra-theme-docs": "^3.3.1",
+    "next": "^16.2.11",
+    "nextra": "^4.6.1",
+    "nextra-theme-docs": "^4.6.1",
     "observable-callback": "^1.0.3",
-    "raw-loader": "^4.0.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-rx": "workspace:*",
     "rxjs": "^7.8.2",
-    "styled-components": "^6.1.19",
+    "styled-components": "^6.4.4",
     "typescript": "5.9.2",
     "use-error-boundary": "^2.0.6"
   },
   "devDependencies": {
     "@sanity/prettier-config": "^1.0.6",
+    "pagefind": "^1.5.2",
     "prettier": "^3.6.2"
   }
 }

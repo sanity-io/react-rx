@@ -1,17 +1,13 @@
-import Sandpack from '@/components/Sandpack'
-
-import Ticker from './Ticker.tsx?raw'
-import TickerWithSubTick from './TickerWithSubTick.tsx?raw'
-import App from './TickExample.tsx?raw'
+import ExampleSandpack from '@/components/ExampleSandpack'
+import {readExample} from '@/utils/readExample'
 
 export default function Example() {
   return (
-    <Sandpack
+    <ExampleSandpack
       files={{
-        '/App.tsx': App,
-        './Ticker.tsx': Ticker,
-        './TickerWithSubTick.tsx':
-          TickerWithSubTick,
+        '/App.tsx': readExample('tick', 'TickExample.tsx'),
+        './Ticker.tsx': readExample('tick', 'Ticker.tsx'),
+        './TickerWithSubTick.tsx': readExample('tick', 'TickerWithSubTick.tsx'),
       }}
     />
   )
