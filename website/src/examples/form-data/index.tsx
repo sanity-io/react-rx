@@ -1,16 +1,12 @@
-'use client'
-
-import Sandpack from '@/components/Sandpack'
-
-import App from './FormDataExample.tsx?raw'
-import Storage from './storage.ts?raw'
+import ExampleSandpack from '@/components/ExampleSandpack'
+import {readExample} from '@/utils/readExample'
 
 export default function Example() {
   return (
-    <Sandpack
+    <ExampleSandpack
       files={{
-        '/App.tsx': App,
-        '/storage.ts': Storage,
+        '/App.tsx': readExample('form-data', 'FormDataExample.tsx'),
+        '/storage.ts': readExample('form-data', 'storage.ts'),
       }}
       dependencies={{
         'styled-components': 'latest',

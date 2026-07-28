@@ -1,20 +1,18 @@
-'use client'
-
-import Sandpack from '@/components/Sandpack'
-
-import App from './FetchExample.tsx?raw'
+import ExampleSandpack from '@/components/ExampleSandpack'
+import {readExample} from '@/utils/readExample'
 
 export default function Example() {
+  const app = readExample('fetch', 'FetchExample.tsx').replace(
+    'http://localhost:3000',
+    process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}`
+      : 'https://react-rx.sanity.dev',
+  )
+
   return (
-    <Sandpack
+    <ExampleSandpack
       files={{
-        '/App.tsx': App.replace(
-          'http://localhost:3000',
-          process.env
-            .NEXT_PUBLIC_VERCEL_BRANCH_URL
-            ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}`
-            : 'https://react-rx.sanity.dev',
-        ),
+        '/App.tsx': app,
       }}
     />
   )

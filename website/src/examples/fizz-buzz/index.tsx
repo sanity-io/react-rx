@@ -1,14 +1,11 @@
-'use client'
-
-import Sandpack from '@/components/Sandpack'
-
-import App from './FizzBuzzExample.tsx?raw'
+import ExampleSandpack from '@/components/ExampleSandpack'
+import {readExample} from '@/utils/readExample'
 
 export default function Example() {
   return (
-    <Sandpack
+    <ExampleSandpack
       files={{
-        '/App.tsx': App,
+        '/App.tsx': readExample('fizz-buzz', 'FizzBuzzExample.tsx'),
       }}
     />
   )

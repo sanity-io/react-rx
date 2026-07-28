@@ -5,7 +5,6 @@ import {atomDark, githubLight} from '@codesandbox/sandpack-themes'
 import {useTheme} from 'nextra-theme-docs'
 import {type ComponentProps, useMemo} from 'react'
 
-import reactRxRaw from '../../../packages/react-rx/dist/index.js?raw'
 import reactRxPackageJson from '../../../packages/react-rx/package.json'
 import websitePackageJson from '../../package.json'
 
@@ -14,8 +13,11 @@ const {dependencies: websiteDependencies} = websitePackageJson
 export default function SandpackComponent({
   files = {},
   dependencies = null,
+  reactRxSource,
 }: Pick<ComponentProps<typeof Sandpack>, 'files'> & {
   dependencies?: Partial<Record<keyof typeof websiteDependencies, 'latest'>> | null
+  /** Local react-rx build injected into Sandpack in development. */
+  reactRxSource?: string
 }) {
   const {resolvedTheme} = useTheme()
   const extraDependencies = useMemo(() => {
@@ -36,8 +38,8 @@ export default function SandpackComponent({
         editorHeight: '60vh',
         editorWidthPercentage: 66,
         showConsoleButton: true,
-        showInlineErrors: true,
         showLineNumbers: true,
+        showInlineErrors: true,
         wrapContent: true,
       }}
       theme={resolvedTheme === 'dark' ? atomDark : githubLight}
@@ -47,7 +49,7 @@ export default function SandpackComponent({
          * In production we should always use the package on npm, which supports canaries
          * while locally we use the build package
          */
-        ...(process.env.NODE_ENV === 'development'
+        ...(reactRxSource
           ? {
               '/node_modules/react-rx/package.json': {
                 hidden: true,
@@ -59,7 +61,7 @@ export default function SandpackComponent({
               },
               '/node_modules/react-rx/index.js': {
                 hidden: true,
-                code: reactRxRaw,
+                code: reactRxSource,
               },
             }
           : {}),
@@ -71,9 +73,7 @@ export default function SandpackComponent({
            * In production we should always use the package on npm, which supports canaries
            * while locally we use the build package
            */
-          ...(process.env.NODE_ENV === 'development'
-            ? {}
-            : {'react-rx': reactRxPackageJson.version}),
+          ...(reactRxSource ? {} : {'react-rx': reactRxPackageJson.version}),
           ...reactRxPackageJson.dependencies,
           'rxjs': reactRxPackageJson.peerDependencies.rxjs,
           'react': reactRxPackageJson.devDependencies.react,
