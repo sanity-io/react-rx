@@ -1,4 +1,5 @@
-import react from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
+import react, {reactCompilerPreset} from '@vitejs/plugin-react'
 import {defineConfig} from 'vitest/config'
 
 export default defineConfig({
@@ -19,8 +20,9 @@ export default defineConfig({
       {
         extends: true,
         plugins: [
-          react({
-            babel: {plugins: [['babel-plugin-react-compiler', {target: '18'}]]},
+          react(),
+          babel({
+            presets: [reactCompilerPreset({target: '18'})],
           }),
         ],
         test: {
