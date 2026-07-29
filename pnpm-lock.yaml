@@ -41,9 +41,6 @@ importers:
       observable-callback:
         specifier: ^1.0.3
         version: 1.0.3(rxjs@7.8.2)
-      use-effect-event:
-        specifier: ^2.0.3
-        version: 2.0.3(react@19.2.8)
     devDependencies:
       '@babel/core':
         specifier: ^7.29.7
@@ -3994,11 +3991,6 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
-
-  use-effect-event@2.0.3:
-    resolution: {integrity: sha512-fz1en+z3fYXCXx3nMB8hXDMuygBltifNKZq29zDx+xNJ+1vEs6oJlYd9sK31vxJ0YI534VUsHEBY0k2BATsmBQ==}
-    peerDependencies:
-      react: ^18.3 || ^19.0.0-0
 
   use-error-boundary@2.0.6:
     resolution: {integrity: sha512-AWCVKSAanLe6R/on/ZkHYtGKfXs8BQX6z/TUGYqtvkajLqQyrGKJJscbahtq8OyN8L3LqTRjJWx4gCOLmfIObw==}
@@ -8419,10 +8411,6 @@ snapshots:
       browserslist: 4.28.7
       escalade: 3.2.0
       picocolors: 1.1.1
-
-  use-effect-event@2.0.3(react@19.2.8):
-    dependencies:
-      react: 19.2.8
 
   use-error-boundary@2.0.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:

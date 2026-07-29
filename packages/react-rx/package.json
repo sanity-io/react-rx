@@ -73,8 +73,7 @@
     "watch": "tsdown --watch"
   },
   "dependencies": {
-    "observable-callback": "^1.0.3",
-    "use-effect-event": "^2.0.3"
+    "observable-callback": "^1.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
