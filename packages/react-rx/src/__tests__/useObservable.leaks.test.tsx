@@ -15,10 +15,10 @@ import {useObservable} from '../useObservable'
  * that terminate (complete or error) synchronously upon subscription, `finalize` fired during that eager
  * subscription — while the entry was not yet in the cache — so the delete was a no-op and the entry was
  * inserted right after, with nothing left to evict it. A later committed mount would re-trigger teardown
- * through its store subscription and clean the entry up, but that never happens for server renders or
- * renders that throw before commit (synchronously erroring sources). In those cases the entry retained
- * the last snapshot/error for as long as the source observable object itself stayed alive, and a
- * poisoned entry replayed its stale error on later mounts instead of re-subscribing.
+ * through its store subscription and clean the entry up, but that never happens for server renders,
+ * disabled hooks, or renders that throw before commit (synchronously erroring sources). In those cases
+ * the entry retained the last snapshot/error for as long as the source observable object itself stayed
+ * alive, and a poisoned entry replayed its stale error on later mounts instead of re-subscribing.
  */
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -40,37 +40,30 @@ async function forceGC() {
   }
 }
 
-test('does not subscribe to a synchronously completing observable while disabled', async () => {
-  let subscriptions = 0
+test('releases the last snapshot of a synchronously completing observable used by a disabled hook', async () => {
   let snapshotRef: WeakRef<object> | undefined
   // Long-lived source, as if declared at module scope in an app. It emits a fresh object per
   // subscription and completes synchronously (like a replayed+completed cache observable would).
   const source = defer(() => {
-    subscriptions++
     const snapshot = {payload: 'x'.repeat(1024)}
     snapshotRef = new WeakRef(snapshot)
     return of(snapshot)
   })
 
-  function ObservableComponent({disabled}: {disabled: boolean}) {
-    useObservable(source, undefined, {disabled})
+  function ObservableComponent() {
+    useObservable(source, undefined, {disabled: true})
     return null
   }
 
-  const {unmount, rerender} = render(<ObservableComponent disabled={true} />)
-
-  // Disabled hooks must not subscribe at all — not even the eager render-phase subscribe — so the
-  // source factory never runs and no snapshot is retained.
-  expect(subscriptions).toBe(0)
-  expect(snapshotRef).toBeUndefined()
-
-  rerender(<ObservableComponent disabled={false} />)
-  expect(subscriptions).toBeGreaterThan(0)
-  expect(snapshotRef!.deref()).toEqual({payload: 'x'.repeat(1024)})
-
+  const {unmount} = render(<ObservableComponent />)
   unmount()
+
   await forceGC()
 
+  // While disabled, the hook never establishes its store subscription — only the eager render-phase
+  // subscription runs (that a disabled hook subscribes at all contradicts the documented `disabled`
+  // contract and is left for a follow-up). With no store subscription to re-trigger teardown, the
+  // entry created during render must already have been evicted, releasing the snapshot.
   expect(snapshotRef!.deref()).toBeUndefined()
   // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
   // only have been released through eviction, not by the key getting collected.

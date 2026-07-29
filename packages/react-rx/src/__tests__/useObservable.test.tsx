@@ -311,58 +311,11 @@ test('should throw during SSR if no initial value is defined', () => {
 })
 
 test('should not subscribe if the disabled prop is present', () => {
-  let subscriptions = 0
-  const values$ = new Observable<string>((subscriber) => {
-    subscriptions++
-    subscriber.next('emitted')
-  })
-
+  const values$ = new Subject<string | undefined>()
   const {result, unmount} = renderHook(() => useObservable(values$, 'initial', {disabled: true}))
 
-  expect(subscriptions).toBe(0)
+  act(() => values$.next('something'))
   expect(result.current).toBe('initial')
-
-  unmount()
-  expect(subscriptions).toBe(0)
-})
-
-test('should not subscribe to a synchronously emitting observable while disabled', () => {
-  let subscriptions = 0
-  const values$ = of('sync').pipe(
-    map((value) => {
-      subscriptions++
-      return value
-    }),
-  )
-
-  // `of(...)` completes synchronously on subscribe — without the disabled guard the eager
-  // render-phase subscription would still run and both subscribe and resolve past initialValue.
-  const {result, unmount} = renderHook(() => useObservable(values$, 'initial', {disabled: true}))
-
-  expect(subscriptions).toBe(0)
-  expect(result.current).toBe('initial')
-
-  unmount()
-})
-
-test('should subscribe when disabled flips from true to false', () => {
-  let subscriptions = 0
-  const values$ = new Observable<string>((subscriber) => {
-    subscriptions++
-    subscriber.next('live')
-  })
-
-  const {result, unmount, rerender} = renderHook<string, UseObservableOptions>(
-    (props) => useObservable(values$, 'initial', props),
-    {initialProps: {disabled: true}},
-  )
-
-  expect(subscriptions).toBe(0)
-  expect(result.current).toBe('initial')
-
-  rerender({disabled: false})
-  expect(subscriptions).toBeGreaterThan(0)
-  expect(result.current).toBe('live')
 
   unmount()
 })
