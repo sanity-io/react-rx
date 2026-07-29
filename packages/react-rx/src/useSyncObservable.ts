@@ -1,4 +1,4 @@
-import {useCallback, useDeferredValue, useMemo, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useSyncExternalStore} from 'react'
 import {
   asapScheduler,
   catchError,
@@ -11,8 +11,6 @@ import {
   tap,
   timer,
 } from 'rxjs'
-
-import type {UseObservableOptions} from './useSyncObservable'
 
 function getValue<T>(value: T): T extends () => infer U ? U : T {
   return (typeof value === 'function' ? (value as () => any)() : value) as T extends () => infer U
@@ -40,39 +38,48 @@ const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
 
 const EMPTY_OBJECT = {}
 
+/** @public */
+export interface UseObservableOptions {
+  /**
+   * Pause the active store subscription. While `true`, later emissions do not update the component
+   * and the last received value (or `initialValue`) is returned. Does not skip the render-phase
+   * warm-up subscription — swap the observable if you need zero subscriptions.
+   */
+  disabled?: boolean
+}
+
 /**
- * Subscribe to an observable and return its latest value, with store updates deferred via
- * [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue).
+ * Subscribe to an observable and return its latest value synchronously via
+ * [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore).
  *
- * Urgent renders keep the previous value while a background render catches up — so children that
- * suspend on the returned value keep showing already-revealed content instead of the nearest
- * Suspense fallback. Mounts, remounts, and `<Activity>` reveals still render the current snapshot
- * synchronously (no initial-value flash).
+ * This is the v4 `useObservable` behavior. Prefer the deferred {@link useObservable} for most
+ * reads. Reach for `useSyncObservable` when the value feeds a controlled input (or must stay
+ * consistent within the same event), or when you need strict control over server markup: the
+ * server renders the resolved `initialValue` and throws without one.
  *
- * On the server this hook renders exactly what the client's first paint will show (a synchronous
- * emission when there is one, else the resolved `initialValue`, else nothing) and never throws
- * for a missing `initialValue`. Prefer {@link useSyncObservable} for controlled inputs or when you
- * need the strict v4 server-snapshot contract.
+ * **Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by
+ * this hook replaces already-visible content with the nearest Suspense fallback — see the
+ * [useSyncExternalStore caveats](https://react.dev/reference/react/useSyncExternalStore#caveats).
  *
  * @public
  */
-export function useObservable<ObservableType extends Observable<any>>(
+export function useSyncObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
   initialValue: ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
   options?: UseObservableOptions,
 ): ObservedValueOf<ObservableType>
 /** @public */
-export function useObservable<ObservableType extends Observable<any>>(
+export function useSyncObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
 ): undefined | ObservedValueOf<ObservableType>
 /** @public */
-export function useObservable<ObservableType extends Observable<any>, InitialValue>(
+export function useSyncObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
   initialValue: InitialValue | (() => InitialValue),
   options?: UseObservableOptions,
 ): InitialValue | ObservedValueOf<ObservableType>
 /** @public */
-export function useObservable<ObservableType extends Observable<any>, InitialValue>(
+export function useSyncObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
   initialValue?: InitialValue | (() => InitialValue),
   options: UseObservableOptions = EMPTY_OBJECT,
@@ -154,22 +161,13 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
     [instance.observable, disabled],
   )
 
-  const value = useSyncExternalStore<ObservedValueOf<ObservableType>>(
+  return useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
       return instance.getSnapshot(initialValue)
     },
-    // Always provide getServerSnapshot so SSR never throws. The server renders
-    // exactly what the client's first render will show (sync emission, else
-    // initialValue, else undefined).
-    () => instance.getSnapshot(initialValue),
+    typeof initialValue === 'undefined'
+      ? undefined
+      : () => getValue(initialValue) as ObservedValueOf<ObservableType>,
   )
-
-  // Second arg is only read on mount / Activity reveal (mount path). Passing the
-  // live snapshot means those renders show the current value with no flash;
-  // later store updates are deferred. On the server, Fizz returns this arg and
-  // getServerSnapshot returns the same snapshot, so SSR matches the first client paint.
-  // Safe if getSnapshot throws: the useSyncExternalStore call above throws first.
-  // React Compiler may memoize this getSnapshot call — harmless, React only reads it on mount/reveal.
-  return useDeferredValue(value, instance.getSnapshot(initialValue))
 }
