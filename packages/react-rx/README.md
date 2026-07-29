@@ -16,7 +16,7 @@ This package provides React hooks for working with RxJS Observables in your comp
 
 - [Guide](https://react-rx.dev/guide)
 - [API reference](https://react-rx.dev/reference)
-- [Code examples](https://react-rx.dev/examples)
+- [Code examples](https://react-rx.dev/examples/simple)
 
 ---
 
