@@ -5,7 +5,5 @@
     "react-rx": "4.2.4",
     "react-rx-website": "1.0.0"
   },
-  "changesets": [
-    "node-engines-22"
-  ]
+  "changesets": ["node-engines-22"]
 }
