@@ -4,7 +4,7 @@ import Example from '@/examples/suspense'
 
 Type into the search field and watch the two panels side by side.
 
-- **Left (`useSyncObservable`)** — each keystroke is a synchronous store update. When results suspend, React replaces already-visible content with the Suspense fallback (and may log *“A component suspended while responding to synchronous input”* — open Sandpack’s console).
+- **Left (`useSyncObservable`)** — each keystroke is a synchronous store update. When results suspend, React replaces already-visible content with the Suspense fallback (and may log _“A component suspended while responding to synchronous input”_ — open Sandpack’s console).
 - **Right (`useObservable`)** — store updates are deferred. Already-revealed results stay on screen (dimmed while stale) until the new ones are ready.
 - **The input itself** reads `useSyncObservable` so typing never lags — this is exactly when you need the sync hook.
 

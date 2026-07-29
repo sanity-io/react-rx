@@ -333,7 +333,9 @@ test('SSR renders the initialValue even when the observable emits synchronously'
 
 test('should not receive updates while disabled', () => {
   const values$ = new Subject<string | undefined>()
-  const {result, unmount} = renderHook(() => useSyncObservable(values$, 'initial', {disabled: true}))
+  const {result, unmount} = renderHook(() =>
+    useSyncObservable(values$, 'initial', {disabled: true}),
+  )
 
   act(() => values$.next('something'))
   expect(result.current).toBe('initial')

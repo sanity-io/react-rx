@@ -1,8 +1,4 @@
-import {
-  ChangeEvent,
-  Suspense,
-  use,
-} from 'react'
+import {ChangeEvent, Suspense, use} from 'react'
 import {
   useObservable,
   useObservableEvent,
@@ -19,10 +15,7 @@ type CacheEntry = {
   value?: string[]
 }
 
-const resultsCache = new Map<
-  string,
-  CacheEntry
->()
+const resultsCache = new Map<string, CacheEntry>()
 
 function searchHits(
   keyword: string,
@@ -74,10 +67,7 @@ function SlowResults({
 }
 
 function SyncPanel() {
-  const keyword = useSyncObservable(
-    keyword$,
-    '',
-  )
+  const keyword = useSyncObservable(keyword$, '')
   return (
     <section
       style={{
@@ -88,11 +78,11 @@ function SyncPanel() {
     >
       <h3>useSyncObservable</h3>
       <p style={{fontSize: 13, opacity: 0.8}}>
-        Synchronous store updates. Typing
-        discards visible results and shows the
-        Suspense fallback (also logs React’s
-        “suspended while responding to synchronous
-        input” warning — open the console).
+        Synchronous store updates. Typing discards
+        visible results and shows the Suspense
+        fallback (also logs React’s “suspended
+        while responding to synchronous input”
+        warning — open the console).
       </p>
       <Suspense
         fallback={<p>Loading results…</p>}
@@ -124,7 +114,8 @@ function DeferredPanel() {
       <p style={{fontSize: 13, opacity: 0.8}}>
         Deferred store updates. Previous results
         stay on screen (dimmed while stale) until
-        the new ones are ready — no fallback flash.
+        the new ones are ready — no fallback
+        flash.
       </p>
       <Suspense
         fallback={<p>Loading results…</p>}
@@ -137,10 +128,7 @@ function DeferredPanel() {
 
 export default function App() {
   // Controlled input value must update synchronously.
-  const keyword = useSyncObservable(
-    keyword$,
-    '',
-  )
+  const keyword = useSyncObservable(keyword$, '')
   const handleInput = useObservableEvent<
     ChangeEvent<HTMLInputElement>,
     any

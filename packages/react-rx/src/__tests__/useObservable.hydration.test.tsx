@@ -44,9 +44,7 @@ function SuspendOn({value}: {value: string}) {
 }
 
 function withSuspense(child: ReactNode) {
-  return (
-    <Suspense fallback={<div data-testid="fallback">loading</div>}>{child}</Suspense>
-  )
+  return <Suspense fallback={<div data-testid="fallback">loading</div>}>{child}</Suspense>
 }
 
 let container: HTMLDivElement | undefined
