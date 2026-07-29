@@ -31,7 +31,7 @@ export class ObservablePromiseImpl<T> extends Promise<T> {
   #reject: (reason?: unknown) => void
 
   // Derived `.then()` chains should return plain Promises, not instrumented subclasses.
-  static get [Symbol.species]() {
+  static override get [Symbol.species]() {
     return Promise
   }
 
@@ -48,7 +48,7 @@ export class ObservablePromiseImpl<T> extends Promise<T> {
     // an error settles (e.g. preload that nobody mounts).
     // Use Promise.prototype.then — `this.then` would construct another subclass
     // instance via @@species and recurse forever.
-    Promise.prototype.then.call(this, noop, noop)
+    void Promise.prototype.then.call(this, noop, noop)
   }
 
   /** Fulfill a pending promise in place (stable identity for Suspense unblock). */
@@ -77,8 +77,8 @@ export class ObservablePromiseImpl<T> extends Promise<T> {
     return promise
   }
 
-  static rejected(reason: unknown): ObservablePromiseImpl<never> {
-    const promise = new ObservablePromiseImpl<never>()
+  static rejected<T = never>(reason: unknown): ObservablePromiseImpl<T> {
+    const promise = new ObservablePromiseImpl<T>()
     promise.rejectWith(reason)
     return promise
   }

@@ -1,6 +1,5 @@
 import {
   catchError,
-  EmptyError,
   finalize,
   map,
   type Observable,
@@ -30,6 +29,17 @@ export const DEFAULT_HOOK_TTL = 500
  * Longer than the hook default so a hover-warmed value survives until click/navigation.
  */
 export const DEFAULT_PRELOAD_TTL = 5000
+
+/**
+ * Mirrors RxJS `EmptyError` / `firstValueFrom` when a source completes without
+ * emitting. We avoid constructing RxJS's deprecated `EmptyError` class.
+ */
+export class ObservableEmptyError extends Error {
+  override name = 'EmptyError'
+  constructor() {
+    super('no elements in sequence')
+  }
+}
 
 type Outcome<T> = {ok: true; value: T} | {ok: false; error: unknown}
 
@@ -134,7 +144,7 @@ function createEntry<T>(source: Observable<T>, retentionMs: number): CacheEntry<
       },
       complete: () => {
         if (!entry.settled) {
-          settle(entry, {ok: false, error: new EmptyError()})
+          settle(entry, {ok: false, error: new ObservableEmptyError()})
         }
         entry.sourceTerminated = true
       },

@@ -26,7 +26,7 @@ function TabButton({
       type="button"
       onMouseEnter={() => {
         if (strategy === 'preload') {
-          preloadObservablePromise(data$, {ttl: 10_000})
+          void preloadObservablePromise(data$, {ttl: 10_000})
         }
       }}
       onClick={onSelect}

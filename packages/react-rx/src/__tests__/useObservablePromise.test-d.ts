@@ -13,7 +13,7 @@ test('useObservablePromise returns ObservablePromise<T> assignable to Promise<T>
   const observable = of('foo')
   const result = useObservablePromise(observable)
   expectTypeOf(result).toEqualTypeOf<ObservablePromise<string>>()
-  expectTypeOf(result).toMatchTypeOf<Promise<string>>()
+  expectTypeOf<ObservablePromise<string>>().toExtend<Promise<string>>()
 })
 
 test('use(result) yields T', () => {
@@ -38,7 +38,7 @@ test('status discriminant narrows value and reason', () => {
 
 test('options accept disabled and ttl', () => {
   const options: UseObservablePromiseOptions = {disabled: true, ttl: 1000}
-  useObservablePromise(of(1), options)
+  void useObservablePromise(of(1), options)
 })
 
 test('preloadObservablePromise returns ObservablePromise<T>', () => {

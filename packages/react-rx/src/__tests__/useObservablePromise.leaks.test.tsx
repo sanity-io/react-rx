@@ -55,7 +55,7 @@ test('preloaded-never-consumed entry is torn down after ttl', async () => {
     }
   })
 
-  preloadObservablePromise(observable, {ttl: 40})
+  void preloadObservablePromise(observable, {ttl: 40})
   expect(active).toBe(1)
   await wait(70)
   expect(active).toBe(0)

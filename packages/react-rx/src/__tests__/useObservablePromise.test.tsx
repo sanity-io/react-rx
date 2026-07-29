@@ -12,7 +12,6 @@ import {
   BehaviorSubject,
   defer,
   EMPTY,
-  EmptyError,
   from,
   NEVER,
   Observable,
@@ -23,7 +22,11 @@ import {
 } from 'rxjs'
 import {expect, test, vi} from 'vitest'
 
-import {preloadObservablePromise, useObservablePromise} from '../useObservablePromise'
+import {
+  preloadObservablePromise,
+  useObservablePromise,
+  type ObservablePromise,
+} from '../useObservablePromise'
 
 /**
  * Suspense recovery requires the initial render to be inside an awaited `act`.
@@ -47,24 +50,39 @@ function Reader({promise}: {promise: Promise<string>}) {
   return <div data-testid="value">{value}</div>
 }
 
+function ReaderA({promise}: {promise: Promise<string>}) {
+  return <div data-testid="a">{use(promise)}</div>
+}
+
+function ReaderB({promise}: {promise: Promise<string>}) {
+  return <div data-testid="b">{use(promise)}</div>
+}
+
+function EmptyParent() {
+  const p = useObservablePromise(EMPTY)
+  return (
+    <TestErrorBoundary>
+      <Suspense fallback={<Fallback />}>
+        <Reader promise={p as Promise<string>} />
+      </Suspense>
+    </TestErrorBoundary>
+  )
+}
+
 class TestErrorBoundary extends Component<
-  {children: ReactNode; onError?: (error: unknown) => void},
-  {error: unknown | null}
+  {children: ReactNode; onError?: (error: Error) => void},
+  {error: Error | null}
 > {
-  state: {error: unknown | null} = {error: null}
-  static getDerivedStateFromError(error: unknown) {
+  override state: {error: Error | null} = {error: null}
+  static getDerivedStateFromError(error: Error) {
     return {error}
   }
-  componentDidCatch(error: unknown) {
+  override componentDidCatch(error: Error) {
     this.props.onError?.(error)
   }
-  render() {
+  override render() {
     if (this.state.error) {
-      return (
-        <div data-testid="error">
-          {String((this.state.error as Error)?.message ?? this.state.error)}
-        </div>
-      )
+      return <div data-testid="error">{this.state.error.message}</div>
     }
     return this.props.children
   }
@@ -145,7 +163,7 @@ test('startWith(placeholder) fulfills instantly with the placeholder (use useObs
 
 test('promise identity is stable across re-renders while pending', async () => {
   const subject = new Subject<string>()
-  const identities: Promise<string>[] = []
+  const identities: ObservablePromise<string>[] = []
 
   function Parent() {
     const [, setTick] = useState(0)
@@ -177,7 +195,7 @@ test('promise identity is stable across re-renders while pending', async () => {
 test('first emission keeps promise identity; later emissions swap without re-activating fallback', async () => {
   const subject = new Subject<string>()
   let fallbackCount = 0
-  const identities: Promise<string>[] = []
+  const identities: ObservablePromise<string>[] = []
 
   function Parent() {
     const p = useObservablePromise(subject)
@@ -250,14 +268,7 @@ test('multiple components share one source subscription and the same promise ide
     return () => sub.unsubscribe()
   })
 
-  const promises: Promise<string>[] = []
-
-  function ChildA({promise}: {promise: Promise<string>}) {
-    return <div data-testid="a">{use(promise)}</div>
-  }
-  function ChildB({promise}: {promise: Promise<string>}) {
-    return <div data-testid="b">{use(promise)}</div>
-  }
+  const promises: ObservablePromise<string>[] = []
 
   function Parent() {
     const p1 = useObservablePromise(observable)
@@ -265,8 +276,8 @@ test('multiple components share one source subscription and the same promise ide
     promises.push(p1, p2)
     return (
       <Suspense fallback={<Fallback />}>
-        <ChildA promise={p1} />
-        <ChildB promise={p2} />
+        <ReaderA promise={p1} />
+        <ReaderB promise={p2} />
       </Suspense>
     )
   }
@@ -330,23 +341,11 @@ test('error after a value is thrown to the nearest Error Boundary', async () => 
 })
 
 test('EMPTY rejects with EmptyError', async () => {
-  function Parent() {
-    const p = useObservablePromise(EMPTY)
-    return (
-      <TestErrorBoundary>
-        <Suspense fallback={<Fallback />}>
-          <Reader promise={p as Promise<string>} />
-        </Suspense>
-      </TestErrorBoundary>
-    )
-  }
-
-  await renderAsync(<Parent />)
+  await renderAsync(<EmptyParent />)
   await waitFor(() => {
     const text = screen.getByTestId('error').textContent ?? ''
     expect(text.includes('EmptyError') || text.includes('no elements')).toBe(true)
   })
-  expect(new EmptyError()).toBeInstanceOf(EmptyError)
 })
 
 test('complete after value keeps data; remount within retention reuses without refetch', async () => {
@@ -539,7 +538,7 @@ test('flipping disabled to false starts the fetch and resolves the same promise 
     return from(promise)
   })
 
-  const identities: Promise<string>[] = []
+  const identities: ObservablePromise<string>[] = []
   function TrackingParent() {
     const [disabled, setDisabled] = useState(true)
     const p = useObservablePromise(observable, {disabled})
@@ -687,7 +686,7 @@ test('mount mid-flight after preload shares the subscription (total = 1)', async
 test('mount after preload settle within ttl renders with zero fallbacks', async () => {
   let fallbackCount = 0
   const observable = of('ready')
-  preloadObservablePromise(observable, {ttl: 500})
+  void preloadObservablePromise(observable, {ttl: 500})
 
   function Parent() {
     const p = useObservablePromise(observable)
@@ -722,14 +721,14 @@ test('preloaded-never-consumed entry unsubscribes and evicts after ttl', async (
     }
   })
 
-  preloadObservablePromise(observable, {ttl: 50})
+  void preloadObservablePromise(observable, {ttl: 50})
   expect(active).toBe(1)
 
   await wait(80)
   expect(active).toBe(0)
 
   // After eviction, a new preload starts a fresh subscription.
-  preloadObservablePromise(observable, {ttl: 50})
+  void preloadObservablePromise(observable, {ttl: 50})
   expect(active).toBe(1)
 })
 
@@ -775,20 +774,18 @@ test('rapid emissions while suspended converge to the latest value', async () =>
 test('observable identity change without deferred value re-suspends', async () => {
   let resolveA!: (value: string) => void
   let resolveB!: (value: string) => void
-  const make = (assign: (r: (v: string) => void) => void) =>
-    defer(
-      () =>
-        new Promise<string>((r) => {
-          assign(r)
-        }),
-    )
-
-  const obsA = make((r) => {
-    resolveA = r
-  })
-  const obsB = make((r) => {
-    resolveB = r
-  })
+  const obsA = defer(
+    () =>
+      new Promise<string>((r) => {
+        resolveA = r
+      }),
+  )
+  const obsB = defer(
+    () =>
+      new Promise<string>((r) => {
+        resolveB = r
+      }),
+  )
 
   function Parent() {
     const [obs, setObs] = useState(obsA)
