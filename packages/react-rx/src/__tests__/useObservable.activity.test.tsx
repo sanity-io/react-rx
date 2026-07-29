@@ -16,6 +16,11 @@ import {useObservable} from '../useObservable'
  * Because `useObservable` also eagerly probes the observable during render to
  * pick up synchronous emissions, sync sources can still populate the snapshot
  * even when Activity has not yet mounted a live subscription.
+ *
+ * While hidden, children can still re-render from new props (lower priority).
+ * The WeakMap cache entry for a stable observable keeps `didEmit` / `snapshot`,
+ * so a later async emission is not lost when the Activity becomes visible again
+ * — even if a parent `useState` update forced a hidden re-render in between.
  */
 
 function ToggleActivity({children}: {children: ReactNode}) {
@@ -40,6 +45,44 @@ async function toggle() {
 
 function textOf(testId: string) {
   return screen.getByTestId(testId).textContent
+}
+
+/** Used by the parent-state-while-hidden scenario below — kept at module scope so identity is stable across App re-renders. */
+function LabeledObservableValue({
+  label,
+  observable,
+}: {
+  label: string
+  observable: Observable<string>
+}) {
+  const value = useObservable(observable, 'initial')
+  return (
+    <div data-testid="child">
+      <span data-testid="label">{label}</span>
+      <span data-testid="value">{value}</span>
+    </div>
+  )
+}
+
+function ParentStateWhileHiddenApp({observable}: {observable: Observable<string>}) {
+  const [mode, setMode] = useState<'visible' | 'hidden'>('visible')
+  const [label, setLabel] = useState('before')
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setMode((m) => (m === 'visible' ? 'hidden' : 'visible'))}
+      >
+        toggle
+      </button>
+      <button type="button" onClick={() => setLabel('after')}>
+        update-parent
+      </button>
+      <Activity mode={mode}>
+        <LabeledObservableValue label={label} observable={observable} />
+      </Activity>
+    </>
+  )
 }
 
 test('Activity hides and restores useObservable subscriptions the same way it does Effects', async () => {
@@ -384,4 +427,63 @@ test('sync from() without initial value under initially-hidden Activity still re
 
   expect(textOf('value')).toBe('from-value')
   expect(screen.getByTestId('value').style.display).toBe('none')
+})
+
+test('after async emission, hiding Activity then updating parent state: last emission survives when visible again (cache does not reset to initial)', async () => {
+  const subject = new Subject<string>()
+  let activeSubscriptions = 0
+  const observable = new Observable<string>((subscriber) => {
+    activeSubscriptions++
+    const subscription = subject.subscribe(subscriber)
+    return () => {
+      activeSubscriptions--
+      subscription.unsubscribe()
+    }
+  })
+
+  render(<ParentStateWhileHiddenApp observable={observable} />)
+
+  // Visible Activity, async source still pending → initial value.
+  expect(textOf('value')).toBe('initial')
+  expect(textOf('label')).toBe('before')
+  expect(activeSubscriptions).toBe(1)
+
+  // Async emission arrives while visible.
+  act(() => subject.next('async-emitted'))
+  expect(textOf('value')).toBe('async-emitted')
+
+  // Hide: subscription tears down; last rendered emission stays in the hidden DOM.
+  await act(async () => {
+    screen.getByRole('button', {name: 'toggle'}).click()
+  })
+  await Promise.resolve()
+  expect(activeSubscriptions).toBe(0)
+  expect(textOf('value')).toBe('async-emitted')
+  expect(screen.getByTestId('child').style.display).toBe('none')
+
+  // Parent useState update while hidden — Activity still re-renders children
+  // (lower priority), so the hidden markup eventually reflects the new props.
+  await act(async () => {
+    screen.getByRole('button', {name: 'update-parent'}).click()
+  })
+  await act(async () => {
+    // Give React a turn to process the deferred hidden update.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+  expect(textOf('label')).toBe('after')
+  expect(screen.getByTestId('child').style.display).toBe('none')
+  // Re-render while unsubscribed did not drop the cached emission back to initial.
+  expect(textOf('value')).toBe('async-emitted')
+  expect(activeSubscriptions).toBe(0)
+
+  // Visible again: live subscription resumes, and the last async emission is still there
+  // — the useObservable cache entry did not "die" during the hidden parent update.
+  await act(async () => {
+    screen.getByRole('button', {name: 'toggle'}).click()
+  })
+  await Promise.resolve()
+  expect(activeSubscriptions).toBe(1)
+  expect(textOf('label')).toBe('after')
+  expect(textOf('value')).toBe('async-emitted')
+  expect(screen.getByTestId('child').style.display).not.toBe('none')
 })
