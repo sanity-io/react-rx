@@ -1,0 +1,9 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "react-rx": "4.2.4",
+    "react-rx-website": "1.0.0"
+  },
+  "changesets": []
+}
