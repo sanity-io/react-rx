@@ -40,6 +40,11 @@ const EMPTY_OBJECT = {}
 
 /** @public */
 export interface UseObservableOptions {
+  /**
+   * Pause the active store subscription. While `true`, later emissions do not update the component
+   * and the last received value (or `initialValue`) is returned. Does not skip the render-phase
+   * warm-up subscription — swap the observable if you need zero subscriptions.
+   */
   disabled?: boolean
 }
 
@@ -117,7 +122,9 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
     // instead of re-subscribing the source.
     cache.set(observable, entry)
 
-    // Eagerly subscribe to sync set `state.snapshot` to what the observable returns, and keep the observable alive until the component unmounts.
+    // Eagerly subscribe during render to warm up a synchronous snapshot into `state`. This runs even
+    // when `disabled` is true — `disabled` only pauses the live store subscription below. The
+    // subscribe/unsubscribe here does not keep the observable alive; the store subscription does.
     const subscription = entry.observable.subscribe()
     subscription.unsubscribe()
 

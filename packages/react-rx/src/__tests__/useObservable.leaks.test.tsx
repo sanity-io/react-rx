@@ -15,9 +15,10 @@ import {useObservable} from '../useObservable'
  * subscription — while the entry was not yet in the cache — so the delete was a no-op and the entry was
  * inserted right after, with nothing left to evict it. A later committed mount would re-trigger teardown
  * through its store subscription and clean the entry up, but that never happens for server renders,
- * disabled hooks, or renders that throw before commit (synchronously erroring sources). In those cases
- * the entry retained the last snapshot/error for as long as the source observable object itself stayed
- * alive, and a poisoned entry replayed its stale error on later mounts instead of re-subscribing.
+ * disabled hooks (which still warm up via the eager subscribe, but never establish a store subscription),
+ * or renders that throw before commit (synchronously erroring sources). In those cases the entry retained
+ * the last snapshot/error for as long as the source observable object itself stayed alive, and a
+ * poisoned entry replayed its stale error on later mounts instead of re-subscribing.
  */
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -59,10 +60,9 @@ test('releases the last snapshot of a synchronously completing observable used b
 
   await forceGC()
 
-  // While disabled, the hook never establishes its store subscription — only the eager render-phase
-  // subscription runs (that a disabled hook subscribes at all contradicts the documented `disabled`
-  // contract and is left for a follow-up). With no store subscription to re-trigger teardown, the
-  // entry created during render must already have been evicted, releasing the snapshot.
+  // While disabled, the hook still performs its eager render-phase warm-up subscription (disabled only
+  // pauses the live store subscription), but nothing re-triggers teardown after that — so the entry
+  // created during render must already have been evicted, releasing the snapshot.
   expect(snapshotRef!.deref()).toBeUndefined()
   // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
   // only have been released through eviction, not by the key getting collected.
