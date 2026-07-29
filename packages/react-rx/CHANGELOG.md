@@ -1,5 +1,11 @@
 # react-rx
 
+## 5.0.0-next.5
+
+### Patch Changes
+
+- [#453](https://github.com/sanity-io/react-rx/pull/453) [`222f4ef`](https://github.com/sanity-io/react-rx/commit/222f4ef09e68b1db9d6200334ed6ad0e860cec21) Thanks [@stipsan](https://github.com/stipsan)! - Clarify that `useObservable`'s `disabled` option pauses the live store subscription (and keeps returning the last value) but does not skip the render-phase warm-up subscription. Document swapping the observable when zero subscriptions are required.
+
 ## 5.0.0-next.4
 
 ### Major Changes
