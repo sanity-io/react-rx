@@ -1,5 +1,13 @@
 # react-rx
 
+## 5.0.0-next.2
+
+### Minor Changes
+
+- [#442](https://github.com/sanity-io/react-rx/pull/442) [`a89ec09`](https://github.com/sanity-io/react-rx/commit/a89ec099cd44a53c9b8d62ab1cc23d7e4f19ee59) Thanks [@stipsan](https://github.com/stipsan)! - Stop publishing CommonJS builds. The package is now ESM-only.
+
+  With the existing Node.js `>=22.12` engine requirement, `require()` of ESM is supported, so this is not a breaking change for consumers that follow `engines`.
+
 ## 5.0.0-next.1
 
 ### Major Changes
