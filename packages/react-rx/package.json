@@ -14,7 +14,6 @@
     "observe",
     "pipe",
     "react",
-    "react18",
     "react19",
     "reactive",
     "realtime",
@@ -102,7 +101,7 @@
     "vitest": "^4.1.10"
   },
   "peerDependencies": {
-    "react": "^18.3 || >=19.0.0-0",
+    "react": "^19.2",
     "rxjs": "^7"
   },
   "engines": {
