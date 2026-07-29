@@ -19,6 +19,21 @@ interface UseObservableOptions {
 }
 ```
 
+**Example**
+
+```tsx
+import {useMemo} from 'react'
+import {useObservable} from 'react-rx'
+import {interval} from 'rxjs'
+
+function MyComponent() {
+  const observable = useMemo(() => interval(100), [])
+  const number = useObservable(observable, 0)
+
+  return <>The number is {number}</>
+}
+```
+
 ## useObservableEvent()
 
 A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.
