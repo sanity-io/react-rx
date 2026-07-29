@@ -9,6 +9,9 @@ export default defineConfig({
       ignoreSourceErrors: true,
     },
     environment: 'jsdom',
+    // Expose `globalThis.gc` in the worker processes so the memory-leak regression tests in
+    // `useObservable.leaks.test.tsx` can force garbage collection.
+    execArgv: ['--expose-gc'],
     projects: [
       {
         extends: true,
