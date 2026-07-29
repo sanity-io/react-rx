@@ -6,6 +6,9 @@
     "react-rx-website": "1.0.0"
   },
   "changesets": [
-    "node-engines-22"
+    "native-use-effect-event",
+    "node-engines-22",
+    "react-compiler-target-19",
+    "react-peer-19-2"
   ]
 }
