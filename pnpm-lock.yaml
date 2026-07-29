@@ -130,8 +130,8 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.17)
       bezier-easing:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^3.0.1
+        version: 3.0.1
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -2117,8 +2117,8 @@ packages:
     peerDependencies:
       react: '>=16.8'
 
-  bezier-easing@2.1.0:
-    resolution: {integrity: sha512-gbIqZ/eslnUFC1tjEvtz0sgx+xTK20wDnYMIA27VA04R7w6xxXQPZDbibjA9DTWZRA2CXtwHykkVzlCaAJAZig==}
+  bezier-easing@3.0.1:
+    resolution: {integrity: sha512-vvvg10Anq7py0+KkIqlwJpUVdde9Z8kSzeUzAkQNYAJdA3mZnLG9r9ExdwtjcASCYER6UkNHdBNHHMnVimnU7A==}
 
   brace-expansion@5.0.8:
     resolution: {integrity: sha512-JZyDyq3D4AUifKTPOB7DELf6XsB3WdPuNxCtob1vFXPsSXhdAiHBWJ/tJ8HAc9aH84BK+5JFZLNkJKx3G9kzQg==}
@@ -6038,7 +6038,7 @@ snapshots:
       mathjax-full: 3.2.2
       react: 19.2.8
 
-  bezier-easing@2.1.0: {}
+  bezier-easing@3.0.1: {}
 
   brace-expansion@5.0.8:
     dependencies:
