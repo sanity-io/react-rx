@@ -11,6 +11,8 @@
     "react-compiler-target-19",
     "react-peer-19-2",
     "remove-cjs",
+    "rxjs-import-consolidate",
+    "use-observable-sync-termination-leak",
     "vendor-observable-callback"
   ]
 }
