@@ -40,6 +40,11 @@ const EMPTY_OBJECT = {}
 
 /** @public */
 export interface UseObservableOptions {
+  /**
+   * Pause the active store subscription. While `true`, later emissions do not update the component
+   * and the last received value (or `initialValue`) is returned. Does not skip the render-phase
+   * warm-up subscription — swap the observable if you need zero subscriptions.
+   */
   disabled?: boolean
 }
 
@@ -110,31 +115,23 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
       },
     }
 
-    // The entry must be added to the cache before any subscription: if the observable terminates
-    // synchronously during subscribe, `finalize` runs right away and must find the entry in order to
+    // The entry must be added to the cache before the eager subscription below: if the observable
+    // terminates synchronously during it, `finalize` runs right away and must find the entry in order to
     // delete it. Inserting the entry afterwards would retain it (and its last snapshot or error) for as
     // long as the source observable lives, and poisoned entries would replay stale errors on remount
     // instead of re-subscribing the source.
     cache.set(observable, entry)
 
-    // For synchronously terminating observables the entry may already have been evicted again by the
-    // time a later subscribe finishes, so return the local reference instead of reading back from the
-    // cache.
+    // Eagerly subscribe during render to warm up a synchronous snapshot into `state`. This runs even
+    // when `disabled` is true — `disabled` only pauses the live store subscription below. The
+    // subscribe/unsubscribe here does not keep the observable alive; the store subscription does.
+    const subscription = entry.observable.subscribe()
+    subscription.unsubscribe()
+
+    // For synchronously terminating observables the entry has already been evicted from the cache again
+    // at this point, so return the local reference instead of reading back from the cache.
     return entry
   }, [observable])
-
-  // Eagerly subscribe during render so a synchronous emission is available to `getSnapshot` in the
-  // same pass. Skip while `disabled` — the documented contract is that the hook must not subscribe
-  // until/unless it becomes enabled. Re-running when `disabled` flips to `false` primes the snapshot
-  // then. The memo returns `instance` so the result is used (and so disabled toggles keep the same
-  // cache entry, preserving the last snapshot after an enabled→disabled transition).
-  const store = useMemo(() => {
-    if (!disabled) {
-      const subscription = instance.observable.subscribe()
-      subscription.unsubscribe()
-    }
-    return instance
-  }, [instance, disabled])
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -142,18 +139,18 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
         return () => {}
       }
 
-      const subscription = store.observable.subscribe(onStoreChange)
+      const subscription = instance.observable.subscribe(onStoreChange)
       return () => {
         subscription.unsubscribe()
       }
     },
-    [store.observable, disabled],
+    [instance.observable, disabled],
   )
 
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
-      return store.getSnapshot(initialValue)
+      return instance.getSnapshot(initialValue)
     },
     typeof initialValue === 'undefined'
       ? undefined
