@@ -23,7 +23,7 @@ interface UseObservableOptions {
 
 A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.
 
-When the returned callback is invoked, each argument is pushed into the observable. The pipeline you return is subscribed for the lifetime of the component, and unsubscribed on unmount.
+When the returned callback is invoked, its single argument is emitted into the observable. The pipeline you return is subscribed for the lifetime of the component, and unsubscribed on unmount.
 
 **Signature**
 
@@ -41,10 +41,10 @@ import {useObservableEvent} from 'react-rx'
 import {filter, map, tap} from 'rxjs/operators'
 
 const ShowSliderValue = () => {
-  const [value, setValue] = useState(0)
+  const [value, setValue] = useState(1)
   const handleChange = useObservableEvent((value$) =>
     value$.pipe(
-      // Ignore null values
+      // Ignore nullish values
       filter(nonNullable),
       // Cast to number
       map((value) => Number(value)),
@@ -68,6 +68,6 @@ const ShowSliderValue = () => {
 }
 
 function nonNullable<T>(v: T): v is NonNullable<T> {
-  return v !== null
+  return v != null
 }
 ```
