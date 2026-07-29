@@ -43,7 +43,7 @@ importers:
         specifier: ^1.0.3
         version: 1.0.3(rxjs@7.8.2)
       react-compiler-runtime:
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0(react@19.2.8)
       use-effect-event:
         specifier: ^2.0.3
