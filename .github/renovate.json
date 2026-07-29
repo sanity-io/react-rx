@@ -9,7 +9,7 @@
       "semanticCommitType": "chore"
     },
     {
-      "matchPackageNames": ["observable-callback", "use-effect-event"],
+      "matchPackageNames": ["observable-callback"],
       "rangeStrategy": "bump",
       "semanticCommitType": "fix"
     },
