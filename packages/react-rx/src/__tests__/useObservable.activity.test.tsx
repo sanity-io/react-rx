@@ -111,8 +111,10 @@ test('sync observable (of/from) without initial value: hide keeps last value, sh
 })
 
 test('sync observable with initial value: sync emission wins over initial, including across Activity toggles', async () => {
+  const observable = of('sync')
+
   function Child() {
-    return <div data-testid="value">{useObservable(of('sync'), 'initial')}</div>
+    return <div data-testid="value">{useObservable(observable, 'initial')}</div>
   }
 
   render(
