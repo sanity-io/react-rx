@@ -1,5 +1,11 @@
 # react-rx
 
+## 5.0.0-next.3
+
+### Patch Changes
+
+- [#446](https://github.com/sanity-io/react-rx/pull/446) [`dbd123c`](https://github.com/sanity-io/react-rx/commit/dbd123c24a6187eee7760b8df8ba2a7361507eb7) Thanks [@stipsan](https://github.com/stipsan)! - Vendor `observableCallback` into the package and drop the `observable-callback` dependency.
+
 ## 5.0.0-next.2
 
 ### Minor Changes
