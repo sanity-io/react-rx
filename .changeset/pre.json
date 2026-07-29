@@ -10,6 +10,7 @@
     "node-engines-22",
     "react-compiler-target-19",
     "react-peer-19-2",
-    "remove-cjs"
+    "remove-cjs",
+    "vendor-observable-callback"
   ]
 }
