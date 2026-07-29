@@ -10,17 +10,12 @@ Features:
 - Lightweight. Implemented on top of a small React Hook based core.
 - Full TypeScript support.
 
-This package offers two slightly different utilities for working with RxJS and React:
-
-- A set of utilities for creating _Reactive components_
-- A set of React hooks for using with observables with React
-
-Although they share a lot of similarities, and reactiveComponent is built on top of `useObservable` are not intended to be used together inside the same component as they represent two different programming styles.
+This package provides React hooks for working with RxJS Observables in your components.
 
 ---
 
-- [Reactive components](https://react-rx.dev/guide#reactive-components)
-- [Observable hooks](https://react-rx.dev/guide#observable-hooks)
+- [Guide](https://react-rx.dev/guide)
+- [API reference](https://react-rx.dev/reference)
 - [Code examples](https://react-rx.dev/examples)
 
 ---

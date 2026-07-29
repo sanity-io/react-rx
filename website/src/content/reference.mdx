@@ -1,5 +1,3 @@
-import {Callout} from 'nextra/components'
-
 # React hooks
 
 ## useObservable()
@@ -23,4 +21,53 @@ interface UseObservableOptions {
 
 ## useObservableEvent()
 
-<Callout emoji="🚨">This page is a stub. Help us expand it by contributing!</Callout>
+A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.
+
+When the returned callback is invoked, each argument is pushed into the observable. The pipeline you return is subscribed for the lifetime of the component, and unsubscribed on unmount.
+
+**Signature**
+
+```ts
+function useObservableEvent<T, U>(
+  handleEvent: (arg: Observable<T>) => Observable<U>,
+): (arg: T) => void
+```
+
+**Example**
+
+```tsx
+import {useState} from 'react'
+import {useObservableEvent} from 'react-rx'
+import {filter, map, tap} from 'rxjs/operators'
+
+const ShowSliderValue = () => {
+  const [value, setValue] = useState(0)
+  const handleChange = useObservableEvent((value$) =>
+    value$.pipe(
+      // Ignore null values
+      filter(nonNullable),
+      // Cast to number
+      map((value) => Number(value)),
+      // Update local state
+      tap(setValue),
+    ),
+  )
+
+  return (
+    <>
+      <input
+        type="range"
+        value={value}
+        onChange={(event) => handleChange(event.target.value)}
+        min={1}
+        max={10}
+      />
+      <div>Value is: {value}</div>
+    </>
+  )
+}
+
+function nonNullable<T>(v: T): v is NonNullable<T> {
+  return v !== null
+}
+```
