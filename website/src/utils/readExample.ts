@@ -1,12 +1,22 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-/** Read an example source file as a string for Sandpack (Turbopack-safe). */
-export function readExample(...segments: string[]): string {
-  return fs.readFileSync(path.join(process.cwd(), 'src/examples', ...segments), 'utf8')
-}
+import {cache} from 'react'
 
-/** Local react-rx build used by Sandpack in development. */
-export function readReactRxDist(): string {
-  return fs.readFileSync(path.join(process.cwd(), '../packages/react-rx/dist/index.js'), 'utf8')
-}
+/**
+ * Read an example source file as a string for Sandpack (Turbopack-safe).
+ *
+ * `cache` collapses the synchronous read to once per file per render. It deliberately does not
+ * memoize across requests, so editing an example in dev still shows up on the next one.
+ */
+export const readExample = cache((...segments: string[]): string =>
+  fs.readFileSync(path.join(process.cwd(), 'src/examples', ...segments), 'utf8'),
+)
+
+/**
+ * Local react-rx build used by Sandpack in development. Every `ExampleSandpack` on a page asks for
+ * it, so `cache` is what keeps that to a single read per render.
+ */
+export const readReactRxDist = cache((): string =>
+  fs.readFileSync(path.join(process.cwd(), '../packages/react-rx/dist/index.js'), 'utf8'),
+)
