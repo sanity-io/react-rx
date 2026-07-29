@@ -45,7 +45,7 @@ function MyComponent(props) {
 }
 ```
 
-The `disabled` option pauses the hook's *active* subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription.
+The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription.
 
 Important: `disabled` does **not** skip the hook's initial warm-up subscription. `useObservable` always briefly subscribes during render so a synchronous emission can become the current snapshot. That means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`.
 
@@ -68,7 +68,7 @@ function MyComponent(props) {
 }
 ```
 
-If the goal is to avoid *any* subscription to a particular observable, do not use `disabled`. Pass a different observable instead — for example swap in `of(null)` until you are ready to fetch:
+If the goal is to avoid _any_ subscription to a particular observable, do not use `disabled`. Pass a different observable instead — for example swap in `of(null)` until you are ready to fetch:
 
 ```tsx
 import {useMemo} from 'react'
