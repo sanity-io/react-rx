@@ -37,10 +37,6 @@ importers:
         version: 7.0.2
 
   packages/react-rx:
-    dependencies:
-      observable-callback:
-        specifier: ^1.0.3
-        version: 1.0.3(rxjs@7.8.2)
     devDependencies:
       '@babel/core':
         specifier: ^7.29.7
@@ -138,9 +134,6 @@ importers:
       nextra-theme-docs:
         specifier: ^4.6.1
         version: 4.6.1(@types/react@19.2.17)(next@16.2.12(@babel/core@7.29.7)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(nextra@4.6.1(next@16.2.12(@babel/core@7.29.7)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))
-      observable-callback:
-        specifier: ^1.0.3
-        version: 1.0.3(rxjs@7.8.2)
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -3272,12 +3265,6 @@ packages:
   npm-to-yarn@3.2.0:
     resolution: {integrity: sha512-K1HmQeZT2HrjpsR6KgqbN2FAXL2NrJJmNUSD9ck7HGTVu1JKXox8n9SB+tjbU8m8JGLF4OscrroPepew/L7/Xw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-
-  observable-callback@1.0.3:
-    resolution: {integrity: sha512-VlS275UyPnwdMtzxDgr/lCiOUyq9uXNll3vdwzDcJ6PB/LuO7gLmxAQopcCA3JoFwwujBwyA7/tP5TXZwWSXew==}
-    engines: {node: '>=16'}
-    peerDependencies:
-      rxjs: ^6.5 || ^7
 
   obug@2.1.4:
     resolution: {integrity: sha512-4a+OsYv9UktOJKE+l1A4OufDgdRF9PifWj+tJnHURo/P+WOxpG4GzUFL9qCalmWauao6ogiG+QvnCovwPoyAWA==}
@@ -7525,10 +7512,6 @@ snapshots:
       path-key: 4.0.0
 
   npm-to-yarn@3.2.0: {}
-
-  observable-callback@1.0.3(rxjs@7.8.2):
-    dependencies:
-      rxjs: 7.8.2
 
   obug@2.1.4: {}
 

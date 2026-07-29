@@ -67,9 +67,6 @@
     "test": "vitest run --typecheck",
     "watch": "tsdown --watch"
   },
-  "dependencies": {
-    "observable-callback": "^1.0.3"
-  },
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@rolldown/plugin-babel": "^0.2.3",
