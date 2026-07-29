@@ -47,8 +47,7 @@
     "directory": "packages/react-rx"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "type": "module",
   "sideEffects": false,
