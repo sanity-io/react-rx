@@ -1,6 +1,5 @@
 import {useObservable} from 'react-rx'
-import {timer} from 'rxjs'
-import {map, take} from 'rxjs/operators'
+import {map, take, timer} from 'rxjs'
 
 const observable = timer(0, 500).pipe(
   map((n) => n + 1),

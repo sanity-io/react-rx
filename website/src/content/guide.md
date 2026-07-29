@@ -75,7 +75,7 @@ Here's an example of a component that displays the current value from a range in
 ```tsx
 import {useState} from 'react'
 import {useObservableEvent} from 'react-rx'
-import {filter, map, tap} from 'rxjs/operators'
+import {filter, map, tap} from 'rxjs'
 
 const ShowSliderValue = () => {
   const [value, setValue] = useState(1)

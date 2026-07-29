@@ -1,12 +1,13 @@
 import {useMemo} from 'react'
 import {useObservable} from 'react-rx'
-import {type Observable, timer} from 'rxjs'
 import {
   distinctUntilChanged,
   map,
+  type Observable,
   startWith,
   switchMap,
-} from 'rxjs/operators'
+  timer,
+} from 'rxjs'
 
 export function Ticker(props: {
   observable: Observable<number>

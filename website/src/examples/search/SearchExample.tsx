@@ -7,15 +7,16 @@ import {
   useObservable,
   useObservableEvent,
 } from 'react-rx'
-import {Observable, Subject} from 'rxjs'
-import {timer} from 'rxjs'
 import {
   distinctUntilChanged,
   filter,
   map,
+  Observable,
+  Subject,
   switchMap,
   tap,
-} from 'rxjs/operators'
+  timer,
+} from 'rxjs'
 
 interface SearchResult {
   keyword: string

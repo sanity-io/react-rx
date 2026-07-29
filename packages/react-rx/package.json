@@ -91,7 +91,7 @@
   },
   "peerDependencies": {
     "react": "^19.2",
-    "rxjs": "^7"
+    "rxjs": "^7.2"
   },
   "engines": {
     "node": ">=22.12"

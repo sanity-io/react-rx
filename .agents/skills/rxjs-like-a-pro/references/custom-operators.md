@@ -30,8 +30,13 @@ When you use the same inline operator in multiple places, extract it into a name
 `OperatorFunction<In, Out>` as the return type so it slots cleanly into any `.pipe()` chain:
 
 ```typescript
-import {OperatorFunction, Observable} from 'rxjs'
-import {debounceTime, distinctUntilChanged, filter} from 'rxjs/operators'
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  type Observable,
+  type OperatorFunction,
+} from 'rxjs'
 
 interface StabilizeOptions {
   debounce?: number

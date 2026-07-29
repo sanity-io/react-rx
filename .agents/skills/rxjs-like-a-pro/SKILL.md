@@ -2,7 +2,7 @@
 name: rxjs-like-a-pro
 description: >
   How to write idiomatic, efficient RxJS code. Use this skill whenever the user is writing, refactoring,
-  reviewing, or debugging code that uses RxJS — including any file that imports from 'rxjs' or 'rxjs/operators'.
+  reviewing, or debugging code that uses RxJS — including any file that imports from 'rxjs'.
   Trigger on mentions of observables, subscriptions, RxJS operators, or reactive streams. Even if the user
   doesn't say "RxJS" explicitly, activate when you see patterns like `.pipe()`, `.subscribe()`, `Observable`,
   `Subject`, `BehaviorSubject`, `switchMap`, `mergeMap`, or similar.

@@ -7,15 +7,16 @@ import {
   useObservable,
   useObservableEvent,
 } from 'react-rx'
-import {type Observable, Subject} from 'rxjs'
 import {
+  type Observable,
   map,
   scan,
   startWith,
+  Subject,
   switchMap,
   tap,
   withLatestFrom,
-} from 'rxjs/operators'
+} from 'rxjs'
 import {styled} from 'styled-components'
 
 import storage from './storage'
