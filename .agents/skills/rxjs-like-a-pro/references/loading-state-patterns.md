@@ -19,8 +19,15 @@ const dataWithLoadingState$ = input$.pipe(
 ## Extract into a reusable custom operator
 
 ```typescript
-import {OperatorFunction, Observable, of} from 'rxjs'
-import {switchMap, map, catchError, startWith} from 'rxjs/operators'
+import {
+  catchError,
+  map,
+  type Observable,
+  of,
+  type OperatorFunction,
+  startWith,
+  switchMap,
+} from 'rxjs'
 
 type LoadingState<T> =
   {loading: true} | {loading: false; data: T} | {loading: false; error: unknown}

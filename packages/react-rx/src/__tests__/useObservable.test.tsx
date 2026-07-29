@@ -1,8 +1,17 @@
 import {act, render, renderHook} from '@testing-library/react'
 import {useMemo} from 'react'
 import {renderToString} from 'react-dom/server'
-import {asyncScheduler, Observable, of, ReplaySubject, scheduled, share, Subject, timer} from 'rxjs'
-import {map} from 'rxjs/operators'
+import {
+  asyncScheduler,
+  map,
+  Observable,
+  of,
+  ReplaySubject,
+  scheduled,
+  share,
+  Subject,
+  timer,
+} from 'rxjs'
 import {expect, test} from 'vitest'
 
 import {useObservable, type UseObservableOptions} from '../useObservable'

@@ -3,13 +3,13 @@ import {
   useObservable,
   useObservableEvent,
 } from 'react-rx'
-import {Subject} from 'rxjs'
 import {
   distinctUntilChanged,
   map,
+  Subject,
   switchMap,
   tap,
-} from 'rxjs/operators'
+} from 'rxjs'
 
 // Create subject for URL changes
 const url$ = new Subject<string>()

@@ -7,15 +7,15 @@ import {
   useObservable,
   useObservableEvent,
 } from 'react-rx'
-import {Subject} from 'rxjs'
 import {
   filter,
   map,
   scan,
   startWith,
+  Subject,
   tap,
   withLatestFrom,
-} from 'rxjs/operators'
+} from 'rxjs'
 import {styled} from 'styled-components'
 
 interface TodoItem {

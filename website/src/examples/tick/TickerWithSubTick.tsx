@@ -1,12 +1,13 @@
 import {useMemo} from 'react'
 import {useObservable} from 'react-rx'
-import {type Observable, timer} from 'rxjs'
 import {
   distinctUntilChanged,
   map,
+  type Observable,
   sampleTime,
   switchMap,
-} from 'rxjs/operators'
+  timer,
+} from 'rxjs'
 
 const initial = {tick: 0, subtick: 0} as const
 

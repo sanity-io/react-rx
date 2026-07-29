@@ -1,7 +1,6 @@
 import {useMemo, useState} from 'react'
 import {useObservable} from 'react-rx'
-import {timer} from 'rxjs'
-import {map, startWith} from 'rxjs/operators'
+import {map, startWith, timer} from 'rxjs'
 
 export default function App() {
   const [delay, setDelay] = useState(500)

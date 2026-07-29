@@ -4,13 +4,14 @@ import {
   useObservable,
   useObservableEvent,
 } from 'react-rx'
-import {Subject, timer} from 'rxjs'
 import {
   map,
   startWith,
+  Subject,
   switchMap,
   tap,
-} from 'rxjs/operators'
+  timer,
+} from 'rxjs'
 import {styled} from 'styled-components'
 
 const BALL_SIZE = 30

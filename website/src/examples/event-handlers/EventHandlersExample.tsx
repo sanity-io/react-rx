@@ -1,7 +1,6 @@
 import {MouseEvent, useMemo} from 'react'
 import {useObservable} from 'react-rx'
-import {Subject} from 'rxjs'
-import {map, startWith} from 'rxjs/operators'
+import {map, startWith, Subject} from 'rxjs'
 
 // Create subject for mouse moves
 const mouseMove$ = new Subject<MouseEvent>()
