@@ -1,3 +1,6 @@
+// NOTE: This file intentionally duplicates `useSyncObservable.ts` — the only shared code is the
+// type-only `UseObservableOptions` import. Keep the copies in sync instead of extracting shared
+// helpers or merging the two WeakMap caches; deduplication is a planned follow-up PR.
 import {useCallback, useDeferredValue, useMemo, useSyncExternalStore} from 'react'
 import {
   asapScheduler,

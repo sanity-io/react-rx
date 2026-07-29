@@ -1,3 +1,6 @@
+// NOTE: `useObservable.ts` intentionally duplicates this file (plus a useDeferredValue wrap and a
+// snapshot-based getServerSnapshot). Keep the copies in sync instead of extracting shared helpers
+// or merging the two WeakMap caches; deduplication is a planned follow-up PR.
 import {useCallback, useMemo, useSyncExternalStore} from 'react'
 import {
   asapScheduler,
