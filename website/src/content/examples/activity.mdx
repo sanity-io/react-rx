@@ -1,0 +1,11 @@
+import Example from '@/examples/activity'
+
+# Activity and preload
+
+Compare three strategies for the same ~1s tab fetch:
+
+1. **No prefetch** — mount on click; Suspense fallback is visible
+2. **Hover preload** — `preloadObservablePromise` on `mouseenter` warms the cache
+3. **Activity pre-render** — hidden `<Activity>` starts `use(promise)` fetches up front
+
+<Example />

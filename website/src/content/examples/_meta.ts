@@ -7,4 +7,6 @@ export default {
   'context': 'React context',
   'sync': 'Sync rendering',
   'suspense': 'Suspense & deferred values',
+  'data-fetching': 'Suspense data fetching',
+  'activity': 'Activity and preload',
 }
