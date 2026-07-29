@@ -24,4 +24,4 @@ minimumReleaseAgeExclude:
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).
 overrides:
   'nextra>zod': 4.3.6
-  'nextra-theme-docs>zod': 4.3.6
+  'nextra-theme-docs>zod': 4.4.3
