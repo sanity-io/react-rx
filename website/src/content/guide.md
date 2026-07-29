@@ -52,7 +52,7 @@ function MyComponent(props) {
 }
 ```
 
-The difference between `useObservable` and `useSyncObservable` is how *updates* propagate (deferred vs synchronous), not the first render. On the server, `useObservable` paints what the first client render will show (here `"world"`), while `useSyncObservable` would paint the `initialValue` (`"mars"`).
+The difference between `useObservable` and `useSyncObservable` is how _updates_ propagate (deferred vs synchronous), not the first render. On the server, `useObservable` paints what the first client render will show (here `"world"`), while `useSyncObservable` would paint the `initialValue` (`"mars"`).
 
 The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription.
 
@@ -111,14 +111,14 @@ Because the fetch observable is only created (and therefore only ever subscribed
 Same signature as `useObservable`, but updates are synchronous (the previous default). Use it for controlled inputs:
 
 ```tsx
-import {useSyncObservable, useObservableEvent} from 'react-rx'
-import {Subject} from 'rxjs'
-import {map, tap} from 'rxjs'
+import type {ChangeEvent} from 'react'
+import {useObservableEvent, useSyncObservable} from 'react-rx'
+import {map, Subject, tap, type Observable} from 'rxjs'
 
 const text$ = new Subject<string>()
 
 function SearchField() {
-  const handleChange = useObservableEvent((events$) =>
+  const handleChange = useObservableEvent((events$: Observable<ChangeEvent<HTMLInputElement>>) =>
     events$.pipe(
       map((e) => e.currentTarget.value),
       tap((value) => text$.next(value)),
