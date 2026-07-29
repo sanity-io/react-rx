@@ -38,7 +38,7 @@ import {of} from 'rxjs'
 
 // This component will never render "Hello mars!" since the observable emits "world" synchronously.
 function MyComponent(props) {
-  const observable = useMemo() => of('world'),[])
+  const observable = useMemo(() => of('world'), [])
   const planet = useObservable(observable, 'mars')
 
   return <>Hello {planet}!</>
@@ -48,18 +48,19 @@ function MyComponent(props) {
 The `disabled` option is optional. If its omitted, the hook will subscribe to the observable and return the current value. If its `true` initially, the hook will not subscribe to the observable and return the `initialValue` if provided. In the event that it has already subscribed it will then unsubscribe from the observable and return the last value it received.
 
 ```tsx
-import {useMemo} from 'react'
+import {useEffect, useState} from 'react'
 import {useObservable} from 'react-rx'
-import {of} from 'rxjs'
+import {Subject} from 'rxjs'
 
-// This component will never render "Hello world!" since the observable emits "world" asynchronously and the disabled option is true.
+// This component will never render "Hello world!" while `disabled` is true,
+// even if the subject emits asynchronously.
 function MyComponent(props) {
-  const observable = useMemo() => of(),[])
+  const [observable] = useState(() => new Subject<string>())
   const planet = useObservable(observable, 'mars', {disabled: true})
 
   useEffect(() => {
     observable.next('world')
-  },[observable])
+  }, [observable])
 
   return <>Hello {planet}!</>
 }
@@ -77,10 +78,10 @@ import {useObservableEvent} from 'react-rx'
 import {filter, map, tap} from 'rxjs/operators'
 
 const ShowSliderValue = () => {
-  const [value, setValue] = useState(0)
+  const [value, setValue] = useState(1)
   const handleChange = useObservableEvent((value$) =>
     value$.pipe(
-      // Ignore null values
+      // Ignore nullish values
       filter(nonNullable),
       // Cast to number
       map((value) => Number(value)),
@@ -104,6 +105,6 @@ const ShowSliderValue = () => {
 }
 
 function nonNullable<T>(v: T): v is NonNullable<T> {
-  return v !== null
+  return v != null
 }
 ```
