@@ -74,7 +74,6 @@
   },
   "dependencies": {
     "observable-callback": "^1.0.3",
-    "react-compiler-runtime": "^1.0.0",
     "use-effect-event": "^2.0.3"
   },
   "devDependencies": {
