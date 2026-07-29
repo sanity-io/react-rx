@@ -50,7 +50,7 @@ importers:
         version: 2.0.3(react@19.2.8)
     devDependencies:
       '@babel/core':
-        specifier: ^7.29.0
+        specifier: ^7.29.7
         version: 7.29.7(supports-color@8.1.1)
       '@rolldown/plugin-babel':
         specifier: ^0.2.3

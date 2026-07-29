@@ -75,7 +75,7 @@
     "use-effect-event": "^2.0.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
+    "@babel/core": "^7.29.7",
     "@rolldown/plugin-babel": "^0.2.3",
     "@sanity/browserslist-config": "^1.0.5",
     "@sanity/pkg-utils": "^8.1.23",
