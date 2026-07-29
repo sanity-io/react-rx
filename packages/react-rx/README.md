@@ -12,6 +12,11 @@ Features:
 
 This package provides React hooks for working with RxJS Observables in your components.
 
+## Requirements
+
+- React `^19.2`
+- RxJS `^7.2` — operators are imported from `'rxjs'` (not the deprecated `'rxjs/operators'` path). If you're still on an older RxJS, see the [RxJS import migration guide](https://rxjs.dev/guide/importing#how-to-migrate).
+
 ---
 
 - [Guide](https://react-rx.dev/guide)
