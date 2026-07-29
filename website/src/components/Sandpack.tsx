@@ -76,7 +76,6 @@ export default function SandpackComponent({
            * while locally we use the build package
            */
           ...(reactRxSource ? {} : {'react-rx': reactRxPackageJson.version}),
-          ...reactRxPackageJson.dependencies,
           'rxjs': reactRxPackageJson.peerDependencies.rxjs,
           'react': reactRxPackageJson.devDependencies.react,
           'react-dom': reactRxPackageJson.devDependencies['react-dom'],

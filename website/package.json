@@ -20,7 +20,6 @@
     "next": "^16.2.12",
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
-    "observable-callback": "^1.0.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-rx": "workspace:*",

@@ -1,6 +1,7 @@
-import {observableCallback} from 'observable-callback'
 import {useEffect, useEffectEvent, useState} from 'react'
 import {type Observable} from 'rxjs'
+
+import {observableCallback} from './observableCallback'
 
 /** @public */
 export function useObservableEvent<T, U>(
