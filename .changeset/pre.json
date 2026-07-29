@@ -6,6 +6,7 @@
     "react-rx-website": "1.0.0"
   },
   "changesets": [
+    "clarify-disabled-option",
     "native-use-effect-event",
     "node-engines-22",
     "react-compiler-target-19",
