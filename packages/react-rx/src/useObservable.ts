@@ -64,7 +64,9 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   initialValue?: InitialValue | (() => InitialValue),
   options: UseObservableOptions = EMPTY_OBJECT,
 ): InitialValue | ObservedValueOf<ObservableType> {
-  const {disabled = false} = options
+  // Object-pattern defaults use AssignmentPattern, which Babel 8 no longer treats as
+  // LVal — babel-plugin-react-compiler then skips this hook (BuildHIR::lowerAssignment).
+  const disabled = options.disabled ?? false
 
   const instance = useMemo(() => {
     if (!cache.has(observable)) {
