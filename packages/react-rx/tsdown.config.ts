@@ -7,6 +7,5 @@ import type {UserConfig} from 'tsdown'
 export default defineConfig({
   tsconfig: 'tsconfig.build.json',
   entry: ['./src/index.ts'],
-  format: ['esm', 'cjs'],
   reactCompiler: {target: '19'},
 }) satisfies Promise<UserConfig>
