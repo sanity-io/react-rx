@@ -1,5 +1,13 @@
 # react-rx
 
+## 5.0.0-next.0
+
+### Major Changes
+
+- [#434](https://github.com/sanity-io/react-rx/pull/434) [`08379ed`](https://github.com/sanity-io/react-rx/commit/08379ed994a4c6a8d1c20c0d919ff2f374c0a10c) Thanks [@stipsan](https://github.com/stipsan)! - Require Node.js `>=22.12`, matching `sanity`'s `engines.node` field.
+
+  Packages that declare an incompatible Node engine may see install warnings or failures under strict engine checks (`engine-strict` / `--engine-strict`).
+
 ## 4.2.4
 
 ### Patch Changes
