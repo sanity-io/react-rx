@@ -18,7 +18,7 @@
     "oxfmt": "^0.61.0",
     "oxlint": "^1.76.0",
     "oxlint-tsgolint": "^7.0.2001",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   },
   "packageManager": "pnpm@11.17.0"
 }
