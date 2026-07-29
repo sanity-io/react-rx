@@ -27,7 +27,10 @@ function ToggleActivity({children}: {children: ReactNode}) {
   const [mode, setMode] = useState<'visible' | 'hidden'>('visible')
   return (
     <>
-      <button type="button" onClick={() => setMode((m) => (m === 'visible' ? 'hidden' : 'visible'))}>
+      <button
+        type="button"
+        onClick={() => setMode((m) => (m === 'visible' ? 'hidden' : 'visible'))}
+      >
         toggle
       </button>
       <Activity mode={mode}>{children}</Activity>
