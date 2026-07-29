@@ -39,108 +39,99 @@ async function forceGC() {
   }
 }
 
-test(
-  'does not subscribe to a synchronously completing observable while disabled',
-  async () => {
-    let subscriptions = 0
-    let snapshotRef: WeakRef<object> | undefined
-    // Long-lived source, as if declared at module scope in an app. It emits a fresh object per
-    // subscription and completes synchronously (like a replayed+completed cache observable would).
-    const source = defer(() => {
-      subscriptions++
-      const snapshot = {payload: 'x'.repeat(1024)}
-      snapshotRef = new WeakRef(snapshot)
-      return of(snapshot)
-    })
+test('does not subscribe to a synchronously completing observable while disabled', async () => {
+  let subscriptions = 0
+  let snapshotRef: WeakRef<object> | undefined
+  // Long-lived source, as if declared at module scope in an app. It emits a fresh object per
+  // subscription and completes synchronously (like a replayed+completed cache observable would).
+  const source = defer(() => {
+    subscriptions++
+    const snapshot = {payload: 'x'.repeat(1024)}
+    snapshotRef = new WeakRef(snapshot)
+    return of(snapshot)
+  })
 
-    function ObservableComponent({disabled}: {disabled: boolean}) {
-      useObservable(source, undefined, {disabled})
-      return null
-    }
+  function ObservableComponent({disabled}: {disabled: boolean}) {
+    useObservable(source, undefined, {disabled})
+    return null
+  }
 
-    const {unmount, rerender} = render(<ObservableComponent disabled={true} />)
+  const {unmount, rerender} = render(<ObservableComponent disabled={true} />)
 
-    // Disabled hooks must not subscribe at all — not even the eager render-phase subscribe — so the
-    // source factory never runs and no snapshot is retained.
-    expect(subscriptions).toBe(0)
-    expect(snapshotRef).toBeUndefined()
+  // Disabled hooks must not subscribe at all — not even the eager render-phase subscribe — so the
+  // source factory never runs and no snapshot is retained.
+  expect(subscriptions).toBe(0)
+  expect(snapshotRef).toBeUndefined()
 
-    rerender(<ObservableComponent disabled={false} />)
-    expect(subscriptions).toBeGreaterThan(0)
-    expect(snapshotRef!.deref()).toEqual({payload: 'x'.repeat(1024)})
+  rerender(<ObservableComponent disabled={false} />)
+  expect(subscriptions).toBeGreaterThan(0)
+  expect(snapshotRef!.deref()).toEqual({payload: 'x'.repeat(1024)})
 
-    unmount()
-    await forceGC()
+  unmount()
+  await forceGC()
 
-    expect(snapshotRef!.deref()).toBeUndefined()
-    // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
-    // only have been released through eviction, not by the key getting collected.
-    expect(source).toBeInstanceOf(Observable)
-  },
-)
+  expect(snapshotRef!.deref()).toBeUndefined()
+  // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
+  // only have been released through eviction, not by the key getting collected.
+  expect(source).toBeInstanceOf(Observable)
+})
 
-test(
-  'releases the last snapshot of a synchronously completing observable after server-side rendering',
-  async () => {
-    let snapshotRef: WeakRef<object> | undefined
-    const source = defer(() => {
-      const snapshot = {payload: 'x'.repeat(1024)}
-      snapshotRef = new WeakRef(snapshot)
-      return of(snapshot)
-    })
+test('releases the last snapshot of a synchronously completing observable after server-side rendering', async () => {
+  let snapshotRef: WeakRef<object> | undefined
+  const source = defer(() => {
+    const snapshot = {payload: 'x'.repeat(1024)}
+    snapshotRef = new WeakRef(snapshot)
+    return of(snapshot)
+  })
 
-    function ObservableComponent() {
-      useObservable(source, 'server value')
-      return null
-    }
+  function ObservableComponent() {
+    useObservable(source, 'server value')
+    return null
+  }
 
-    // On the server there is no commit phase and no store subscription, only the eager subscription made
-    // during render — the cache entry must not outlive it, or every unique observable rendered by a
-    // long-lived server process would keep its last snapshot alive.
-    renderToString(<ObservableComponent />)
+  // On the server there is no commit phase and no store subscription, only the eager subscription made
+  // during render — the cache entry must not outlive it, or every unique observable rendered by a
+  // long-lived server process would keep its last snapshot alive.
+  renderToString(<ObservableComponent />)
 
-    await forceGC()
+  await forceGC()
 
-    expect(snapshotRef!.deref()).toBeUndefined()
-    // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
-    // only have been released through eviction, not by the key getting collected.
-    expect(source).toBeInstanceOf(Observable)
-  },
-)
+  expect(snapshotRef!.deref()).toBeUndefined()
+  // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
+  // only have been released through eviction, not by the key getting collected.
+  expect(source).toBeInstanceOf(Observable)
+})
 
-test(
-  're-subscribes a synchronously erroring observable on a later mount instead of replaying a stale error',
-  async () => {
-    let shouldFail = true
-    let subscriptions = 0
-    const source = defer(() => {
-      subscriptions++
-      return shouldFail ? throwError(() => new Error('transient error')) : of('recovered')
-    })
+test('re-subscribes a synchronously erroring observable on a later mount instead of replaying a stale error', async () => {
+  let shouldFail = true
+  let subscriptions = 0
+  const source = defer(() => {
+    subscriptions++
+    return shouldFail ? throwError(() => new Error('transient error')) : of('recovered')
+  })
 
-    function ObservableComponent() {
-      return <>{useObservable(source, 'initial')}</>
-    }
+  function ObservableComponent() {
+    return <>{useObservable(source, 'initial')}</>
+  }
 
-    // First mount: the source errors synchronously during the eager render-phase subscription, so the
-    // render throws before commit and no store subscription ever runs that could clean up the cache
-    // entry created for the errored source. The source keeps failing for the whole mount, which keeps
-    // the test agnostic to how many render attempts React makes before surfacing the error.
-    expect(() => render(<ObservableComponent />)).toThrow('transient error')
-    const failedSubscriptions = subscriptions
-    expect(failedSubscriptions).toBeGreaterThan(0)
+  // First mount: the source errors synchronously during the eager render-phase subscription, so the
+  // render throws before commit and no store subscription ever runs that could clean up the cache
+  // entry created for the errored source. The source keeps failing for the whole mount, which keeps
+  // the test agnostic to how many render attempts React makes before surfacing the error.
+  expect(() => render(<ObservableComponent />)).toThrow('transient error')
+  const failedSubscriptions = subscriptions
+  expect(failedSubscriptions).toBeGreaterThan(0)
 
-    // Give any pending grace-period timers a chance to run, then let the upstream failure resolve.
-    await wait(10)
-    shouldFail = false
+  // Give any pending grace-period timers a chance to run, then let the upstream failure resolve.
+  await wait(10)
+  shouldFail = false
 
-    // A later mount in the same runtime must re-subscribe the source (which has recovered) instead of
-    // a leftover cache entry replaying the stale error and turning the transient failure permanent.
-    const {container} = render(<ObservableComponent />)
-    expect(subscriptions).toBeGreaterThan(failedSubscriptions)
-    expect(container.textContent).toBe('recovered')
-  },
-)
+  // A later mount in the same runtime must re-subscribe the source (which has recovered) instead of
+  // a leftover cache entry replaying the stale error and turning the transient failure permanent.
+  const {container} = render(<ObservableComponent />)
+  expect(subscriptions).toBeGreaterThan(failedSubscriptions)
+  expect(container.textContent).toBe('recovered')
+})
 
 // Control: for a source that terminates asynchronously, the entry was in the cache when `finalize` ran
 // even before the fix, so this passes either way. Its job is to prove the GC harness can actually
