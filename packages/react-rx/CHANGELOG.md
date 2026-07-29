@@ -1,5 +1,15 @@
 # react-rx
 
+## 5.0.0-next.4
+
+### Major Changes
+
+- [#449](https://github.com/sanity-io/react-rx/pull/449) [`5e83cbe`](https://github.com/sanity-io/react-rx/commit/5e83cbe9e3eaa99c3e2108535bebaf87ee5bedaf) Thanks [@stipsan](https://github.com/stipsan)! - **BREAKING:** Require RxJS `^7.2` as a peer dependency (operators are imported from `'rxjs'`, which landed in 7.2). Import operators from `'rxjs'` instead of the deprecated `'rxjs/operators'` path.
+
+### Patch Changes
+
+- [#451](https://github.com/sanity-io/react-rx/pull/451) [`8d5f3fb`](https://github.com/sanity-io/react-rx/commit/8d5f3fbe00a21eefcb5463510725240661ea7769) Thanks [@stipsan](https://github.com/stipsan)! - Fix a `useObservable` memory leak where observables that complete or error synchronously upon subscription (e.g. `of(...)`, a replayed-and-completed `shareReplay(1)`, a synchronous `throwError`) left an entry in the internal cache that its own teardown could no longer evict. A later committed mount of the same observable would clean the entry up as a side effect, but that never happens for server renders, `disabled` hooks, or renders that throw before commit — there the entry retained the last emitted snapshot (or error) for as long as the source observable itself stayed alive. In the synchronous error case the stale entry also replayed the old error on later mounts instead of re-subscribing the source, turning transient errors permanent.
+
 ## 5.0.0-next.3
 
 ### Patch Changes
