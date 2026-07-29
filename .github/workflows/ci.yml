@@ -18,6 +18,7 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm build
       - run: pnpm lint
+      - run: pnpm knip --reporter github-actions
 
   test:
     needs: build
