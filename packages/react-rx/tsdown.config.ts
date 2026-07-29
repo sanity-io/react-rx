@@ -8,5 +8,5 @@ export default defineConfig({
   tsconfig: 'tsconfig.build.json',
   entry: ['./src/index.ts'],
   format: ['esm', 'cjs'],
-  reactCompiler: {target: '18'},
+  reactCompiler: {target: '19'},
 }) satisfies Promise<UserConfig>
