@@ -1,5 +1,17 @@
 # react-rx
 
+## 5.0.0-next.1
+
+### Major Changes
+
+- [#435](https://github.com/sanity-io/react-rx/pull/435) [`bdef45b`](https://github.com/sanity-io/react-rx/commit/bdef45b9a52cb8d01f940fdf7d092db5b8502301) Thanks [@stipsan](https://github.com/stipsan)! - **BREAKING:** Require React `^19.2` as a peer dependency. React 18 is no longer supported.
+
+### Patch Changes
+
+- [#440](https://github.com/sanity-io/react-rx/pull/440) [`aa39b2d`](https://github.com/sanity-io/react-rx/commit/aa39b2de60017d62341122c2413b109d1e652b66) Thanks [@stipsan](https://github.com/stipsan)! - Use React's native `useEffectEvent` instead of the `use-effect-event` polyfill.
+
+- [#439](https://github.com/sanity-io/react-rx/pull/439) [`fc965f2`](https://github.com/sanity-io/react-rx/commit/fc965f23b00cd089f1f8cc6fb91bcc0b01bfe214) Thanks [@stipsan](https://github.com/stipsan)! - Compile with React Compiler `target: '19'` and drop the `react-compiler-runtime` dependency. React 19 provides the runtime natively.
+
 ## 5.0.0-next.0
 
 ### Major Changes
