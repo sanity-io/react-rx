@@ -10,7 +10,6 @@ allowBuilds:
   esbuild: false
   sharp: true
 
-minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - '@oxfmt/*'
   - '@oxlint/*'

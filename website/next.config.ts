@@ -14,12 +14,6 @@ const nextConfig = {
   },
   productionBrowserSourceMaps: true,
   transpilePackages: ['react-rx'],
-  turbopack: {
-    resolveAlias: {
-      // Resolve workspace package from source (relative to this config file)
-      'react-rx': '../packages/react-rx/src/index.ts',
-    },
-  },
   async headers() {
     return [
       {
