@@ -19,6 +19,8 @@ interface UseObservableOptions {
 }
 ```
 
+`disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). It does **not** skip the render-phase warm-up subscription — see the [guide](/guide) for swapping the observable when you need zero subscriptions.
+
 **Example**
 
 ```tsx

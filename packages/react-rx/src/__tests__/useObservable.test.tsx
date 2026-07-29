@@ -310,7 +310,7 @@ test('should throw during SSR if no initial value is defined', () => {
   )
 })
 
-test('should not subscribe if the disabled prop is present', () => {
+test('should not receive updates while disabled', () => {
   const values$ = new Subject<string | undefined>()
   const {result, unmount} = renderHook(() => useObservable(values$, 'initial', {disabled: true}))
 

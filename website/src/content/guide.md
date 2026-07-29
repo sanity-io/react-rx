@@ -45,15 +45,17 @@ function MyComponent(props) {
 }
 ```
 
-The `disabled` option is optional. If its omitted, the hook will subscribe to the observable and return the current value. If its `true` initially, the hook will not subscribe to the observable and return the `initialValue` if provided. In the event that it has already subscribed it will then unsubscribe from the observable and return the last value it received.
+The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription.
+
+Important: `disabled` does **not** skip the hook's initial warm-up subscription. `useObservable` always briefly subscribes during render so a synchronous emission can become the current snapshot. That means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`.
 
 ```tsx
 import {useEffect, useState} from 'react'
 import {useObservable} from 'react-rx'
 import {Subject} from 'rxjs'
 
-// This component will never render "Hello world!" while `disabled` is true,
-// even if the subject emits asynchronously.
+// While `disabled` is true, later async emissions are ignored and the last
+// received value (here the initialValue "mars") is returned.
 function MyComponent(props) {
   const [observable] = useState(() => new Subject<string>())
   const planet = useObservable(observable, 'mars', {disabled: true})
@@ -65,6 +67,35 @@ function MyComponent(props) {
   return <>Hello {planet}!</>
 }
 ```
+
+If the goal is to avoid _any_ subscription to a particular observable, do not use `disabled`. Pass a different observable instead — for example swap in `of(null)` until you are ready to fetch:
+
+```tsx
+import {useMemo} from 'react'
+import {useObservable} from 'react-rx'
+import {of} from 'rxjs'
+import {fromFetch} from 'rxjs/fetch'
+
+function Users({shouldFetch}: {shouldFetch: boolean}) {
+  // Prefer swapping the observable over `{disabled: !shouldFetch}`:
+  // `disabled` still performs the render-phase warm-up subscribe, which would
+  // fire the request even when `shouldFetch` is false.
+  const users$ = useMemo(
+    () =>
+      shouldFetch
+        ? fromFetch('https://api.github.com/users?per_page=5', {
+            selector: (response) => response.json(),
+          })
+        : of(null),
+    [shouldFetch],
+  )
+  const users = useObservable(users$, null)
+
+  return <pre>{JSON.stringify(users, null, 2)}</pre>
+}
+```
+
+Because the fetch observable is only created (and therefore only ever subscribed) when `shouldFetch` is true, this guarantees zero subscriptions to `fromFetch` until then.
 
 ### useObservableEvent()
 
