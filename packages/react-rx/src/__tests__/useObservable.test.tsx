@@ -504,17 +504,18 @@ test('SSR with an async observable renders the resolved initialValue', () => {
 
 test('SSR without an initialValue no longer throws', () => {
   // Contrast with useSyncObservable, which still throws without getServerSnapshot.
-  function SyncEmit() {
-    return <>{useObservable(of('sync'))}</>
-  }
-  expect(renderToString(<SyncEmit />)).toBe('sync')
-
-  function AsyncNoInitial() {
-    return <>{useObservable(scheduled('async', asyncScheduler))}</>
-  }
+  expect(renderToString(<SSRSyncEmit />)).toBe('sync')
   // Empty output matches the client's first paint (undefined).
-  expect(renderToString(<AsyncNoInitial />)).toBe('')
+  expect(renderToString(<SSRAsyncNoInitial />)).toBe('')
 })
+
+function SSRSyncEmit() {
+  return <>{useObservable(of('sync'))}</>
+}
+
+function SSRAsyncNoInitial() {
+  return <>{useObservable(scheduled('async', asyncScheduler))}</>
+}
 
 test('SSR surfaces synchronous observable errors', () => {
   // v4 rendered the initialValue on the server and deferred the explosion to client hydration.

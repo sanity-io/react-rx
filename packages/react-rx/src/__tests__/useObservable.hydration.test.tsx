@@ -3,7 +3,7 @@ import {Suspense, type ReactNode} from 'react'
 import {hydrateRoot} from 'react-dom/client'
 import {renderToString} from 'react-dom/server'
 import {map, Observable, of, Subject, timer} from 'rxjs'
-import {afterEach, expect, test, vi} from 'vitest'
+import {afterEach, expect, test, vi, type MockInstance} from 'vitest'
 
 import {useObservable} from '../useObservable'
 import {useSyncObservable} from '../useSyncObservable'
@@ -50,15 +50,16 @@ function withSuspense(child: ReactNode) {
 }
 
 let container: HTMLDivElement | undefined
-let consoleErrorSpy: ReturnType<typeof vi.spyOn> | undefined
+let consoleErrorSpy: MockInstance<(...data: unknown[]) => void> | undefined
 const roots: Array<ReturnType<typeof hydrateRoot>> = []
 
 afterEach(async () => {
-  for (const root of roots.splice(0)) {
-    await act(async () => {
+  const toUnmount = roots.splice(0)
+  await act(async () => {
+    for (const root of toUnmount) {
       root.unmount()
-    })
-  }
+    }
+  })
   container?.remove()
   container = undefined
   consoleErrorSpy?.mockRestore()
@@ -81,8 +82,8 @@ async function hydrate(ui: ReactNode, html: string) {
 
 function hydrationErrors() {
   return (consoleErrorSpy?.mock.calls ?? [])
-    .map((args) => String(args[0]))
-    .filter((msg) => /hydrat|did not match|Text content does not match/i.test(msg))
+    .map((args: unknown[]) => String(args[0]))
+    .filter((msg: string) => /hydrat|did not match|Text content does not match/i.test(msg))
 }
 
 test('hydration is clean for both hooks when the observable has not emitted (initialValue everywhere)', async () => {

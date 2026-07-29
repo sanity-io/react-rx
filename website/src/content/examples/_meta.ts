@@ -6,4 +6,5 @@ export default {
   'animation': 'Animation',
   'context': 'React context',
   'sync': 'Sync rendering',
+  'suspense': 'Suspense & deferred values',
 }

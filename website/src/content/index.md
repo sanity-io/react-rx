@@ -5,5 +5,6 @@
 Features:
 
 - Works well with `Observables` emitting values synchronously. You don't pay the re-render-on-mount tax.
+- Non-blocking by default — `useObservable` defers store updates; reach for `useSyncObservable` for controlled inputs.
 - Lightweight. Implemented on top of a small React Hook based core.
 - Full TypeScript support.

@@ -2,15 +2,19 @@
 
 ## useObservable()
 
-A React hook that returns the current/latest value from an observable
+A React hook that returns the current/latest value from an observable. Store updates are **deferred by default** via [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue): urgent renders keep the previous value while a background render catches up. That makes it safe to suspend on the returned value without replacing already-revealed UI with a Suspense fallback.
+
+Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash). On the server, this hook renders exactly what the client's first paint will show (a synchronous emission when there is one, else the resolved `initialValue`, else nothing) and never throws for a missing `initialValue`.
+
+Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs or strict SSR control.
 
 **Signature**
 
 ```ts
-function useObservable<T>(observable$: Observable<T>): T | null
+function useObservable<T>(observable$: Observable<T>): T | undefined
 function useObservable<T>(
   observable$: Observable<T>,
-  initialValue: T | undefined,
+  initialValue: T | (() => T),
   options?: UseObservableOptions,
 ): T
 
@@ -33,6 +37,48 @@ function MyComponent() {
   const number = useObservable(observable, 0)
 
   return <>The number is {number}</>
+}
+```
+
+## useSyncObservable()
+
+A React hook that returns the current/latest value from an observable **synchronously** via [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore). This is the v4 `useObservable` behavior.
+
+Use it when the value feeds a controlled input (or must stay consistent within the same event), or when you need strict control over server markup: the server renders the resolved `initialValue` and throws without one.
+
+**Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by this hook replaces already-visible content with the nearest Suspense fallback — see the [useSyncExternalStore caveats](https://react.dev/reference/react/useSyncExternalStore#caveats). Compare the two hooks in the [Suspense example](/examples/suspense).
+
+**Signature**
+
+```ts
+function useSyncObservable<T>(observable$: Observable<T>): T | undefined
+function useSyncObservable<T>(
+  observable$: Observable<T>,
+  initialValue: T | (() => T),
+  options?: UseObservableOptions,
+): T
+```
+
+**Example**
+
+```tsx
+import {useSyncObservable, useObservableEvent} from 'react-rx'
+import {Subject} from 'rxjs'
+import {map, tap} from 'rxjs'
+
+const text$ = new Subject<string>()
+
+function SearchField() {
+  const handleChange = useObservableEvent((events$) =>
+    events$.pipe(
+      map((e) => e.currentTarget.value),
+      tap((value) => text$.next(value)),
+    ),
+  )
+  // Controlled input values must update synchronously.
+  const text = useSyncObservable(text$, '')
+
+  return <input value={text} onChange={handleChange} />
 }
 ```
 

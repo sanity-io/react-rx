@@ -6,6 +6,7 @@ import {
 import {
   useObservable,
   useObservableEvent,
+  useSyncObservable,
 } from 'react-rx'
 import {
   filter,
@@ -79,7 +80,8 @@ function TodoApp() {
     [],
   )
 
-  const text = useObservable(text$, '')
+  // Controlled input value must update synchronously to avoid caret/IME issues.
+  const text = useSyncObservable(text$, '')
   const items = useObservable(items$, [])
 
   return (
