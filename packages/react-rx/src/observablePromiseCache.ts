@@ -192,11 +192,22 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
 
   entry.handle = {
     ensure: (ttl, startResolver) => {
+      const previousRetentionMs = entry.retentionMs
       entry.retentionMs = Math.max(entry.retentionMs, ttl)
       // Retention counts from the last touch (and may have just been extended,
       // e.g. a preload arriving while a hook-settled entry awaits eviction).
       if (entry.evictionTimer !== null) {
         scheduleEviction(entry as CacheEntry<unknown>)
+        // `share({resetOnRefCountZero})` already started a disconnect timer with
+        // the *old* retention when refCount hit zero. Extending `retentionMs`
+        // alone does not cancel that timer. Bounce a no-op subscription so
+        // share cancels the pending reset and, on the immediate unsubscribe,
+        // starts a fresh grace period with the updated retention — otherwise
+        // long-lived sources disconnect early and miss emissions that should
+        // still update the cache. Terminated sources need no connection.
+        if (entry.retentionMs > previousRetentionMs && !entry.sourceTerminated) {
+          entry.shared$.subscribe().unsubscribe()
+        }
       }
       if (startResolver) {
         ensureResolver(entry)

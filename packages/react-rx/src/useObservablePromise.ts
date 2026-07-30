@@ -97,9 +97,13 @@ export function useObservablePromise<T>(
 
 /**
  * Warm the promise cache outside of rendering (e.g. `onMouseEnter`, route
- * loaders). Creates or reuses the cache entry, starts the source subscription,
- * and returns the same {@link ObservablePromise} the hook would return for
- * that observable. Not a hook — callable anywhere.
+ * loaders). Creates or reuses the cache entry, starts the source subscription
+ * immediately, and returns the same {@link ObservablePromise} the hook would
+ * return for that observable. Not a hook — callable anywhere.
+ *
+ * Pending entries are never timed out: a never-emitting source keeps the
+ * promise pending and the subscription alive until it settles. Bound hang
+ * risk with RxJS `timeout` (or cancel the source) when a preload can stall.
  *
  * @public
  */

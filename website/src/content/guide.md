@@ -221,7 +221,7 @@ The `memo` is load-bearing: without it the subtree re-renders during the synchro
 
 **Preloading**
 
-Warm the cache outside of render (hover, route loaders) with `preloadObservablePromise`:
+Warm the cache outside of render (hover, route loaders) with `preloadObservablePromise`. Calling it starts the source subscription immediately. Pending entries are never timed out — if the observable never emits or completes, the promise stays pending and the subscription stays alive until it settles (or the process tears down). Bound hang risk with RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when the preload can stall:
 
 ```tsx
 import {preloadObservablePromise, useObservablePromise} from 'react-rx'

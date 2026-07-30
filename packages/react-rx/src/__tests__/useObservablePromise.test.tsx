@@ -432,6 +432,52 @@ test('remount after ttl expiry refetches', async () => {
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('second'))
 })
 
+test('extending ttl after unmount keeps a long-lived source connected for the new retention', async () => {
+  const subject = new Subject<string>()
+  let active = 0
+  const observable = new Observable<string>((subscriber) => {
+    active++
+    const sub = subject.subscribe(subscriber)
+    return () => {
+      active--
+      sub.unsubscribe()
+    }
+  })
+
+  function Parent() {
+    const p = useObservablePromise(observable, {ttl: 40})
+    return (
+      <Suspense fallback={<Fallback />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
+  }
+
+  const {unmount} = await renderAsync(<Parent />)
+  await act(async () => {
+    subject.next('one')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('one'))
+  expect(active).toBe(1)
+  unmount()
+  expect(active).toBe(1) // share grace still holding the connection
+
+  // Extend retention past the original 40ms grace while the disconnect timer
+  // from the short ttl is already running. Without bouncing share's reset,
+  // the connection would drop at ~40ms and this emission would be lost.
+  void preloadObservablePromise(observable, {ttl: 200})
+  await wait(80)
+  expect(active).toBe(1)
+
+  await act(async () => {
+    subject.next('two')
+  })
+
+  await renderAsync(<Parent />)
+  expect(screen.getByTestId('value').textContent).toBe('two')
+  expect(active).toBe(1)
+})
+
 test('observable swap re-suspends; useDeferredValue keeps previous content', async () => {
   let resolveA!: (value: string) => void
   let resolveB!: (value: string) => void

@@ -138,6 +138,8 @@ function Pre({promise}: {promise: Promise<unknown>}) {
 
 Warm the `useObservablePromise` cache outside of rendering (for example on `mouseenter` or in a route loader). Not a hook — callable anywhere. Returns the same promise instance the hook would return for that observable.
 
+Calling it starts the source subscription immediately. Pending entries are never timed out, so a never-emitting / hung observable keeps both the promise and the subscription alive until it settles. Prefer RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when a preload can stall.
+
 **Signature**
 
 ```ts
