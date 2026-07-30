@@ -218,7 +218,7 @@ test('first emission keeps promise identity; later emissions swap without re-act
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('one'))
   // The first emission unblocks Suspense purely by resolving the promise in
   // place: the store snapshot is unchanged, useSyncExternalStore bails out, and
-  // the parent does not re-render (per async-react discussion #3).
+  // the parent does not re-render (per https://github.com/reactwg/async-react/discussions/3).
   expect(identities.length).toBe(parentRendersBeforeFirstEmission)
   expect(identities.at(-1)).toBe(pending)
   expect(pending.status).toBe('fulfilled')
