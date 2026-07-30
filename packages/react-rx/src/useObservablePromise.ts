@@ -113,7 +113,7 @@ export function preloadObservablePromise<T>(
 ): ObservablePromise<T> {
   const {ttl = DEFAULT_PRELOAD_TTL} = options
   const entry = getObservablePromiseEntry(observable)
-  entry.ensure(ttl, true)
+  entry.ensure(ttl, true, true)
   return entry.getPromise()
 }
 

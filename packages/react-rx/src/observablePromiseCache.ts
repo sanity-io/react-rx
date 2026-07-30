@@ -54,11 +54,16 @@ type Outcome<T> = {ok: true; value: T} | {ok: false; error: unknown}
  */
 export interface ObservablePromiseEntry<T> {
   /**
-   * Adopt `ttl` (entries keep the max across consumers; a pending eviction
-   * timer is re-armed so retention counts from the last touch) and optionally
-   * start the eager resolver subscription. Idempotent — safe on every render.
+   * Adopt `ttl` (entries keep the max across consumers) and optionally start
+   * the eager resolver subscription. Idempotent — safe on every render.
+   *
+   * Pass `renewGrace: true` only for intentional touches (e.g. preload): that
+   * re-arms the eviction/share grace window from now. Idle renders from mounted
+   * but non-subscribed consumers (`disabled`, hidden `<Activity>`) must omit it
+   * so parent re-renders cannot keep the entry alive forever — pinning already
+   * preserves the mounted value after a real eviction.
    */
-  ensure(ttl: number, startResolver: boolean): void
+  ensure(ttl: number, startResolver: boolean, renewGrace?: boolean): void
   getPromise(): ObservablePromise<T>
   subscribe(onStoreChange: () => void): () => void
 }
@@ -201,25 +206,16 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
   )
 
   entry.handle = {
-    ensure: (ttl, startResolver) => {
-      const previousRetentionMs = entry.retentionMs
+    ensure: (ttl, startResolver, renewGrace = false) => {
       entry.retentionMs = Math.max(entry.retentionMs, ttl)
-      // Retention counts from the last touch (and may have just been extended,
-      // e.g. a preload arriving while a hook-settled entry awaits eviction).
-      if (entry.evictionTimer !== null) {
+      // Only intentional touches (preload) renew the grace window. The hook
+      // calls ensure on every render — including disabled consumers and hidden
+      // <Activity> trees that have no live store subscription — and must not
+      // reset the ttl clock or bounce share, or the entry/connection can live
+      // forever. Pinning already keeps the mounted value after eviction.
+      if (renewGrace && entry.evictionTimer !== null) {
         scheduleEviction(entry as CacheEntry<unknown>)
-        // `share({resetOnRefCountZero})` already started a disconnect timer when
-        // refCount hit zero. Re-arming eviction alone does not cancel that timer.
-        // Bounce a no-op subscription so share cancels the pending reset and
-        // starts a fresh grace period aligned with the renewed retention —
-        // otherwise long-lived sources disconnect early and miss emissions.
-        // Bounce on ttl increase *or* an active fetch intent (`startResolver`),
-        // so same-ttl preloads/remounts renew the connection too; skip for
-        // disabled re-renders that only touch retention.
-        if (
-          !entry.sourceTerminated &&
-          (entry.retentionMs > previousRetentionMs || startResolver)
-        ) {
+        if (!entry.sourceTerminated) {
           entry.shared$.subscribe().unsubscribe()
         }
       }

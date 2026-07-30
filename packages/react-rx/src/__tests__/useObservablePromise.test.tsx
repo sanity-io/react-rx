@@ -521,6 +521,57 @@ test('same-ttl preload after unmount renews share grace for long-lived sources',
   expect(screen.getByTestId('value').textContent).toBe('two')
 })
 
+test('disabled re-renders do not renew grace — entry still evicts for later mounts', async () => {
+  let subscriptions = 0
+  const resolvers: Array<(value: string) => void> = []
+  const observable = defer(() => {
+    subscriptions++
+    return from(
+      new Promise<string>((r) => {
+        resolvers.push(r)
+      }),
+    )
+  })
+
+  function Active() {
+    const p = useObservablePromise(observable, {ttl: 40})
+    return (
+      <Suspense fallback={<Fallback />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
+  }
+
+  function Disabled({tick}: {tick: number}) {
+    // Idle ensure on every render must not reset the eviction clock.
+    useObservablePromise(observable, {disabled: true, ttl: 40})
+    return <span data-testid="tick">{tick}</span>
+  }
+
+  const {unmount} = await renderAsync(<Active />)
+  await act(async () => {
+    resolvers[0]!('first')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('first'))
+  unmount()
+
+  const disabled = await renderAsync(<Disabled tick={0} />)
+  await act(async () => {
+    disabled.rerender(<Disabled tick={1} />)
+    disabled.rerender(<Disabled tick={2} />)
+  })
+  await wait(70)
+  disabled.unmount()
+
+  await renderAsync(<Active />)
+  expect(screen.getByTestId('fallback')).toBeTruthy()
+  expect(subscriptions).toBe(2)
+  await act(async () => {
+    resolvers[1]!('second')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('second'))
+})
+
 test('settled entry is evicted after one retention window, not two', async () => {
   const subject = new Subject<string>()
   let active = 0
