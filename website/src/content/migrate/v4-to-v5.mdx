@@ -17,7 +17,7 @@ See the [RxJS import migration guide](https://rxjs.dev/guide/importing#how-to-mi
 
 In v4, `useObservable` was built on [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) and forced **synchronous** React updates. Under load that blocks the main thread for chrome that does not need to be sync — validation, presence, previews, permissions, and similar.
 
-v5 moves the established pattern from [sanity-io/sanity#13799](https://github.com/sanity-io/sanity/pull/13799) into the library:
+v5 makes that the library default:
 
 - **`useObservable`** — store updates are deferred with `useDeferredValue`. Urgent renders keep the previous value; a background render catches up. Mounts, remounts, and `<Activity>` reveals still show the live snapshot (no initial-value flash).
 - **`useSyncObservable`** — exact v4 synchronous behavior, including the strict server snapshot (`initialValue` on the server, throws without one).
