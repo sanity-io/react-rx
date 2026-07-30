@@ -1,5 +1,15 @@
 # react-rx
 
+## 5.0.0-next.6
+
+### Major Changes
+
+- [#459](https://github.com/sanity-io/react-rx/pull/459) [`7ed6b55`](https://github.com/sanity-io/react-rx/commit/7ed6b55b69321592e973af1f903bdcea2776953a) Thanks [@stipsan](https://github.com/stipsan)! - **BREAKING:** `useObservable` now defers store updates with `useDeferredValue` — urgent renders keep the previous value while a background render catches up. Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash). SSR now renders exactly what the first client render would show (synchronous emissions win over the `initialValue`) and no longer throws when `initialValue` is omitted; synchronously erroring observables now fail the server render instead of masking the error until hydration.
+
+  New `useSyncObservable` preserves the exact v4 synchronous behavior, including the strict `getServerSnapshot` contract — switch to it for values feeding controlled inputs or strict server markup control (or rename wholesale for a mechanical migration).
+
+  See the [v4 to v5 migration guide](https://react-rx.dev/migrate/v4-to-v5).
+
 ## 5.0.0-next.5
 
 ### Patch Changes

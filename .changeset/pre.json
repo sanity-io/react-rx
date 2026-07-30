@@ -7,6 +7,7 @@
   },
   "changesets": [
     "clarify-disabled-option",
+    "deferred-use-observable",
     "native-use-effect-event",
     "node-engines-22",
     "react-compiler-target-19",
