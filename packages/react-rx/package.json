@@ -67,6 +67,9 @@
     "test": "vitest run --typecheck",
     "watch": "tsdown --watch"
   },
+  "dependencies": {
+    "use-effect-event": "^2.0.3"
+  },
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@rolldown/plugin-babel": "^0.2.3",
