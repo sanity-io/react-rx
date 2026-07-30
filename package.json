@@ -8,7 +8,7 @@
     "dev": "pnpm --filter react-rx-website dev",
     "format": "oxfmt && pnpm lint --fix",
     "lint": "oxlint",
-    "release": "changeset publish",
+    "release": "changeset publish --tag version-4",
     "test": "pnpm --filter react-rx test",
     "watch": "pnpm --filter react-rx watch"
   },
