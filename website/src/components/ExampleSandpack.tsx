@@ -10,6 +10,6 @@ import {readReactRxDist} from '@/utils/readExample'
 export default function ExampleSandpack(
   props: Omit<ComponentProps<typeof Sandpack>, 'reactRxSource'>,
 ) {
-  const reactRxSource = process.env.NODE_ENV === 'development' ? readReactRxDist() : undefined
+  const reactRxSource = readReactRxDist()
   return <Sandpack {...props} reactRxSource={reactRxSource} />
 }
