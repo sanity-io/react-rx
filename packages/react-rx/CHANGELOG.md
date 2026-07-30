@@ -1,5 +1,29 @@
 # react-rx
 
+## 5.0.0
+
+### Major Changes
+
+- [#459](https://github.com/sanity-io/react-rx/pull/459) [`7ed6b55`](https://github.com/sanity-io/react-rx/commit/7ed6b55b69321592e973af1f903bdcea2776953a) Thanks [@stipsan](https://github.com/stipsan)! - **BREAKING:** `useObservable` now defers store updates with `useDeferredValue` — urgent renders keep the previous value while a background render catches up. Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash). SSR renders synchronous emissions (instead of always using `initialValue`), no longer throws when `initialValue` is omitted, and fails the server render on synchronously erroring observables.
+
+  New `useSyncObservable` preserves v4's synchronous behavior and strict `getServerSnapshot` contract — use it for controlled inputs, or rename wholesale for a mechanical migration.
+
+  See the [v4 to v5 migration guide](https://react-rx.dev/migrate/v4-to-v5).
+
+- [#434](https://github.com/sanity-io/react-rx/pull/434) [`08379ed`](https://github.com/sanity-io/react-rx/commit/08379ed994a4c6a8d1c20c0d919ff2f374c0a10c) Thanks [@stipsan](https://github.com/stipsan)! - **BREAKING:** Require Node.js `>=22.12`, matching `sanity`'s `engines.node`.
+
+- [#435](https://github.com/sanity-io/react-rx/pull/435) [`bdef45b`](https://github.com/sanity-io/react-rx/commit/bdef45b9a52cb8d01f940fdf7d092db5b8502301) Thanks [@stipsan](https://github.com/stipsan)! - **BREAKING:** Require React `^19.2` as a peer dependency. React 18 is no longer supported.
+
+- [#449](https://github.com/sanity-io/react-rx/pull/449) [`5e83cbe`](https://github.com/sanity-io/react-rx/commit/5e83cbe9e3eaa99c3e2108535bebaf87ee5bedaf) Thanks [@stipsan](https://github.com/stipsan)! - **BREAKING:** Require RxJS `^7.2` as a peer dependency. Import operators from `'rxjs'` instead of the deprecated `'rxjs/operators'` path.
+
+### Minor Changes
+
+- [#442](https://github.com/sanity-io/react-rx/pull/442) [`a89ec09`](https://github.com/sanity-io/react-rx/commit/a89ec099cd44a53c9b8d62ab1cc23d7e4f19ee59) Thanks [@stipsan](https://github.com/stipsan)! - Stop publishing CommonJS builds — the package is ESM-only. With the Node.js `>=22.12` engine requirement, `require()` of ESM is supported, so this is not a breaking change for consumers that follow `engines`.
+
+### Patch Changes
+
+- [#451](https://github.com/sanity-io/react-rx/pull/451) [`8d5f3fb`](https://github.com/sanity-io/react-rx/commit/8d5f3fbe00a21eefcb5463510725240661ea7769) Thanks [@stipsan](https://github.com/stipsan)! - Fix a `useObservable` cache leak for observables that complete or error synchronously on subscribe. Stale entries could retain snapshots (or replay errors) indefinitely on server renders, `disabled` hooks, and renders that throw before commit.
+
 ## 5.0.0-next.7
 
 ### Patch Changes
