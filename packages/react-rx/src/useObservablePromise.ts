@@ -1,4 +1,4 @@
-import {useCallback, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useSyncExternalStore} from 'react'
 import {type Observable} from 'rxjs'
 
 import {type ObservablePromise} from './observablePromise'
@@ -6,6 +6,7 @@ import {
   DEFAULT_HOOK_TTL,
   DEFAULT_PRELOAD_TTL,
   getObservablePromiseEntry,
+  type ObservablePromiseEntry,
 } from './observablePromiseCache'
 
 const EMPTY_OPTIONS = {}
@@ -31,6 +32,10 @@ export interface UseObservablePromiseOptions {
    * without refetching, and how long the shared connection lingers before
    * teardown/eviction. The entry adopts the max `ttl` across all of its
    * consumers.
+   *
+   * Eviction only affects future consumers: components that are still mounted
+   * keep their entry pinned, so hiding a `<Activity>` tree longer than `ttl`
+   * does not drop the value it rendered.
    *
    * @defaultValue 500
    */
@@ -60,26 +65,32 @@ export function useObservablePromise<T>(
 ): ObservablePromise<T> {
   const {disabled = false, ttl = DEFAULT_HOOK_TTL} = options
 
-  // Render-phase: ensure the cache entry exists, adopt max ttl, and eagerly
-  // start fetching unless disabled (required for Activity pre-rendering).
-  getObservablePromiseEntry(observable, {ttl, startResolver: !disabled})
+  // Pin the cache entry for as long as this component renders this observable
+  // identity. A mounted component without a live store subscription (hidden
+  // <Activity> tree, disabled consumer) must keep reading its settled promise
+  // even if the shared entry is evicted after `ttl` — the same local-reference
+  // pattern as `useObservable`.
+  const entry: ObservablePromiseEntry<T> = useMemo(
+    () => getObservablePromiseEntry(observable),
+    [observable],
+  )
+
+  // Per-render policy on the pinned entry: adopt the max ttl and eagerly start
+  // fetching unless disabled (required for Activity pre-rendering, where
+  // effects never run). Idempotent.
+  entry.ensure(ttl, !disabled)
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       if (disabled) {
         return () => {}
       }
-      return getObservablePromiseEntry(observable, {ttl, startResolver: false}).subscribe(
-        onStoreChange,
-      )
+      return entry.subscribe(onStoreChange)
     },
-    [observable, disabled, ttl],
+    [entry, disabled],
   )
 
-  const getSnapshot = useCallback(
-    () => getObservablePromiseEntry(observable, {ttl, startResolver: false}).getPromise(),
-    [observable, ttl],
-  )
+  const getSnapshot = useCallback(() => entry.getPromise(), [entry])
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }
@@ -97,7 +108,9 @@ export function preloadObservablePromise<T>(
   options: PreloadObservablePromiseOptions = EMPTY_OPTIONS,
 ): ObservablePromise<T> {
   const {ttl = DEFAULT_PRELOAD_TTL} = options
-  return getObservablePromiseEntry(observable, {ttl, startResolver: true}).getPromise()
+  const entry = getObservablePromiseEntry(observable)
+  entry.ensure(ttl, true)
+  return entry.getPromise()
 }
 
 export type {ObservablePromise} from './observablePromise'

@@ -43,6 +43,26 @@ class ObservableEmptyError extends Error {
 
 type Outcome<T> = {ok: true; value: T} | {ok: false; error: unknown}
 
+/**
+ * Stable accessor for one cache entry. `useObservablePromise` pins one of these
+ * per observable identity (via `useMemo`) so a component that is mounted but has
+ * no live store subscription — hidden `<Activity>` trees, `disabled` consumers —
+ * keeps reading its settled promise even after the shared entry is evicted from
+ * the cache by the ttl policy. Mirrors `useObservable`'s local-reference pattern.
+ *
+ * @internal
+ */
+export interface ObservablePromiseEntry<T> {
+  /**
+   * Adopt `ttl` (entries keep the max across consumers; a pending eviction
+   * timer is re-armed so retention counts from the last touch) and optionally
+   * start the eager resolver subscription. Idempotent — safe on every render.
+   */
+  ensure(ttl: number, startResolver: boolean): void
+  getPromise(): ObservablePromise<T>
+  subscribe(onStoreChange: () => void): () => void
+}
+
 interface CacheEntry<T> {
   /** Unique per entry; used to guard stale finalize/eviction against successors. */
   readonly token: object
@@ -56,6 +76,7 @@ interface CacheEntry<T> {
   shared$: Observable<void>
   resolverSub: Subscription | null
   evictionTimer: ReturnType<typeof setTimeout> | null
+  handle: ObservablePromiseEntry<T>
 }
 
 const cache = new WeakMap<Observable<unknown>, CacheEntry<unknown>>()
@@ -120,19 +141,22 @@ function settle<T>(entry: CacheEntry<T>, outcome: Outcome<T>): void {
   }
 }
 
-function createEntry<T>(source: Observable<T>, retentionMs: number): CacheEntry<T> {
+function createEntry<T>(source: Observable<T>): CacheEntry<T> {
   const token = {}
   const entry: CacheEntry<T> = {
     token,
     source,
     current: new ObservablePromiseImpl<T>(),
     settled: false,
-    retentionMs,
+    // Every consumer calls `ensure` right after get-or-create, which sets the
+    // real retention. No subscription can start before that.
+    retentionMs: 0,
     liveCount: 0,
     sourceTerminated: false,
     shared$: undefined as unknown as Observable<void>,
     resolverSub: null,
     evictionTimer: null,
+    handle: undefined as unknown as ObservablePromiseEntry<T>,
   }
 
   entry.shared$ = source.pipe(
@@ -166,6 +190,51 @@ function createEntry<T>(source: Observable<T>, retentionMs: number): CacheEntry<
     }),
   )
 
+  entry.handle = {
+    ensure: (ttl, startResolver) => {
+      entry.retentionMs = Math.max(entry.retentionMs, ttl)
+      // Retention counts from the last touch (and may have just been extended,
+      // e.g. a preload arriving while a hook-settled entry awaits eviction).
+      if (entry.evictionTimer !== null) {
+        scheduleEviction(entry as CacheEntry<unknown>)
+      }
+      if (startResolver) {
+        ensureResolver(entry)
+      }
+    },
+    getPromise: () => asObservablePromise(entry.current),
+    subscribe: (onStoreChange: () => void) => {
+      // A pinned entry may have been evicted while its component was mounted
+      // without a live subscription (hidden <Activity> beyond ttl). Re-register
+      // it so new consumers share it again while it has live subscribers.
+      if (!cache.has(source)) {
+        cache.set(source, entry as CacheEntry<unknown>)
+      }
+      entry.liveCount++
+      clearEvictionTimer(entry as CacheEntry<unknown>)
+
+      if (entry.sourceTerminated) {
+        // No further emissions possible — retain the settled promise without
+        // re-subscribing (avoids refetching completed cold sources within TTL).
+        return () => {
+          entry.liveCount--
+          if (entry.liveCount === 0 && entry.settled) {
+            scheduleEviction(entry as CacheEntry<unknown>)
+          }
+        }
+      }
+
+      const subscription = entry.shared$.subscribe(onStoreChange)
+      return () => {
+        subscription.unsubscribe()
+        entry.liveCount--
+        if (entry.liveCount === 0 && entry.settled) {
+          scheduleEviction(entry as CacheEntry<unknown>)
+        }
+      }
+    },
+  }
+
   return entry
 }
 
@@ -187,65 +256,20 @@ function ensureResolver<T>(entry: CacheEntry<T>): void {
 }
 
 /**
- * Get or create the cache entry for `source`. Optionally start the eager
- * resolver subscription (render-phase / preload fetching).
+ * Get or create the cache entry for `source` and return its stable handle.
+ * Consumers call `handle.ensure(...)` immediately after to apply their
+ * retention/fetch policy.
  *
  * @internal
  */
-export function getObservablePromiseEntry<T>(
-  source: Observable<T>,
-  options: {ttl: number; startResolver: boolean},
-): {
-  getPromise: () => ObservablePromise<T>
-  subscribe: (onStoreChange: () => void) => () => void
-} {
-  const {ttl, startResolver} = options
+export function getObservablePromiseEntry<T>(source: Observable<T>): ObservablePromiseEntry<T> {
   let entry = cache.get(source) as CacheEntry<T> | undefined
-
   if (!entry) {
-    entry = createEntry(source, ttl)
-    // Insert before starting the resolver: sync-terminating sources trigger
-    // finalize immediately and must find the entry to schedule eviction.
+    entry = createEntry(source)
+    // Insert before any subscription can start (via `ensure`): sync-terminating
+    // sources trigger finalize immediately and must find the entry in the cache
+    // to schedule eviction.
     cache.set(source, entry as CacheEntry<unknown>)
-    if (startResolver) {
-      ensureResolver(entry)
-    }
-  } else {
-    entry.retentionMs = Math.max(entry.retentionMs, ttl)
-    if (startResolver) {
-      ensureResolver(entry)
-    }
   }
-
-  // For sync sources the entry may already be settled (and possibly scheduled
-  // for eviction). Return the local reference regardless.
-  const resolved = entry
-
-  return {
-    getPromise: () => asObservablePromise(resolved.current),
-    subscribe: (onStoreChange: () => void) => {
-      resolved.liveCount++
-      clearEvictionTimer(resolved as CacheEntry<unknown>)
-
-      if (resolved.sourceTerminated) {
-        // No further emissions possible — retain the settled promise without
-        // re-subscribing (avoids refetching completed cold sources within TTL).
-        return () => {
-          resolved.liveCount--
-          if (resolved.liveCount === 0 && resolved.settled) {
-            scheduleEviction(resolved as CacheEntry<unknown>)
-          }
-        }
-      }
-
-      const subscription = resolved.shared$.subscribe(onStoreChange)
-      return () => {
-        subscription.unsubscribe()
-        resolved.liveCount--
-        if (resolved.liveCount === 0 && resolved.settled) {
-          scheduleEviction(resolved as CacheEntry<unknown>)
-        }
-      }
-    },
-  }
+  return entry.handle
 }

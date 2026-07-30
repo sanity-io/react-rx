@@ -164,6 +164,53 @@ test('visible Activity hide/show preserves fulfilled value across toggles', asyn
   expect(screen.getByTestId('value').textContent).toBe('fetched')
 })
 
+test('entry evicted while hidden: reveal shows the cached value without fallback or refetch', async () => {
+  let subscriptions = 0
+  let resolve!: (value: string) => void
+  const promise = new Promise<string>((r) => {
+    resolve = r
+  })
+  const observable = defer(() => {
+    subscriptions++
+    return from(promise)
+  })
+  let fallbackCount = 0
+
+  function Child() {
+    const value = use(useObservablePromise(observable, {ttl: 40}))
+    return <div data-testid="value">{value}</div>
+  }
+
+  await renderAsync(
+    <ToggleActivity>
+      <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
+        <Child />
+      </Suspense>
+    </ToggleActivity>,
+  )
+  await act(async () => {
+    resolve('fetched')
+    await promise
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('fetched'))
+  const fallbacksBeforeHide = fallbackCount
+  expect(subscriptions).toBe(1)
+
+  // Hide: the store subscription is torn down, so after `ttl` the shared cache
+  // entry is evicted. The component is still mounted and must keep its pinned
+  // entry — otherwise reveal would find a fresh pending entry and re-suspend.
+  await toggle()
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 100))
+  })
+
+  await toggle()
+  expect(screen.getByTestId('value').textContent).toBe('fetched')
+  expect(fallbackCount).toBe(fallbacksBeforeHide)
+  // The source completed after its single emission — reveal must not refetch.
+  expect(subscriptions).toBe(1)
+})
+
 test('long-lived source: share retention keeps the connection during ttl, so hidden emissions update the cache', async () => {
   const subject = new Subject<string>()
   let subscriptions = 0
