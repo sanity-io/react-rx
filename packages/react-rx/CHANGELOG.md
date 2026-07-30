@@ -1,5 +1,11 @@
 # react-rx
 
+## 5.0.1
+
+### Patch Changes
+
+- [#469](https://github.com/sanity-io/react-rx/pull/469) [`e546141`](https://github.com/sanity-io/react-rx/commit/e54614188aa7a7d6547ec570b77af9bebbbb9b7b) Thanks [@stipsan](https://github.com/stipsan)! - Restore the `use-effect-event` ponyfill so effect events see the latest values in `memo` and `forwardRef` components.
+
 ## 5.0.0
 
 ### Major Changes
