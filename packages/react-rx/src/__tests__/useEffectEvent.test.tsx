@@ -50,8 +50,9 @@ describe('useEffectEvent', () => {
 })
 
 describe('React.useEffectEvent', () => {
-  // These expected failures become unexpected passes when the lowest supported
-  // React version is safe, prompting us to replace the ponyfill with the native hook.
+  // These expected failures become unexpected passes when the tested React
+  // version contains the upstream fix. Before replacing the ponyfill, ensure
+  // the fix is also available in the lowest supported React version.
   for (const componentType of componentTypes) {
     test.fails(`sees the latest value in ${componentType} components`, () => {
       expectLatestValue(useNativeEffectEvent, componentType)
