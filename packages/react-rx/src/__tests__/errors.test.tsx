@@ -1,36 +1,49 @@
 import {render} from '@testing-library/react'
 import {mergeMap, of, Subject, throwError} from 'rxjs'
-import {expect, test} from 'vitest'
+import {describe, expect, test} from 'vitest'
 
 import {useObservable} from '../useObservable.ts'
+import {useSyncObservable} from '../useSyncObservable.ts'
 
-test('errors emitted by the observable should be thrown during the react render phase', () => {
-  const subject = new Subject<{error: boolean; message: string}>()
+const hooks = [
+  {name: 'useObservable', useHook: useObservable},
+  {name: 'useSyncObservable', useHook: useSyncObservable},
+] as const
 
-  const messages = subject
-    .asObservable()
-    .pipe(
-      mergeMap((value) =>
-        value.error ? throwError(() => new Error(value.message)) : of(value.message),
-      ),
-    )
+describe.each(hooks)(
+  '$name: errors emitted by the observable should be thrown during the react render phase',
+  ({useHook}) => {
+    test('throws during render after an error emission', () => {
+      // For useObservable the uSES getSnapshot call throws during the urgent render,
+      // before the useDeferredValue line executes.
+      const subject = new Subject<{error: boolean; message: string}>()
 
-  function ObservableComponent() {
-    return useObservable(messages, '☺️')
-  }
+      const messages = subject
+        .asObservable()
+        .pipe(
+          mergeMap((value) =>
+            value.error ? throwError(() => new Error(value.message)) : of(value.message),
+          ),
+        )
 
-  const {container, rerender} = render(<ObservableComponent />)
-  // no error (yet)
-  expect(container).toMatchInlineSnapshot(`
-    <div>
-      ☺️
-    </div>
-  `)
+      function ObservableComponent() {
+        return useHook(messages, '☺️')
+      }
 
-  // Note that the error is thrown later, during the render phase
-  subject.next({error: true, message: 'Boom'})
+      const {container, rerender} = render(<ObservableComponent />)
+      // no error (yet)
+      expect(container).toMatchInlineSnapshot(`
+        <div>
+          ☺️
+        </div>
+      `)
 
-  expect(() => rerender(<ObservableComponent />)).toThrowErrorMatchingInlineSnapshot(
-    `[Error: Boom]`,
-  )
-})
+      // Note that the error is thrown later, during the render phase
+      subject.next({error: true, message: 'Boom'})
+
+      expect(() => rerender(<ObservableComponent />)).toThrowErrorMatchingInlineSnapshot(
+        `[Error: Boom]`,
+      )
+    })
+  },
+)

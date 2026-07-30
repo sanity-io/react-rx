@@ -8,11 +8,18 @@ npm i react-rx rxjs
 
 ## Observable Hooks
 
+### Which one should I use?
+
+- **Default to `useObservable`** — store updates are deferred, so previews, validation, lists, and other chrome stay responsive and play nicely with Suspense.
+- **Reach for `useSyncObservable`** only when the value feeds a controlled input (caret/IME breakage or lost keystrokes under load) or must be read back synchronously in the same event. It is also the hook with the strict v4 SSR contract (server renders the `initialValue`, throws without one).
+
+See [Suspense & deferred values](/examples/suspense) for a side-by-side demo, and the [v4 → v5 migration guide](/migrate/v4-to-v5) if you are upgrading.
+
 ### useObservable()
 
 Use observables in React components with the `useObservable` hook.
 
-If you need to subscribe to an observable in your component, this hook will give you the current value from it
+If you need to subscribe to an observable in your component, this hook will give you the current value from it. Later emissions update the component at deferred priority — urgent renders keep the previous value until a background render catches up.
 
 Example:
 
@@ -29,7 +36,7 @@ function MyComponent(props) {
 }
 ```
 
-The `initialValue` argument is optional. If its omitted, the value returned from `useObservable` may be `null` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored:
+The `initialValue` argument is optional. If it is omitted, the value returned from `useObservable` may be `undefined` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored on the first render (mounts and `<Activity>` reveals are not deferred):
 
 ```tsx
 import {useMemo} from 'react'
@@ -45,9 +52,11 @@ function MyComponent(props) {
 }
 ```
 
+The difference between `useObservable` and `useSyncObservable` is how _updates_ propagate (deferred vs synchronous), not the first render. On the server, `useObservable` paints what the first client render will show (here `"world"`), while `useSyncObservable` would paint the `initialValue` (`"mars"`).
+
 The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription.
 
-Important: `disabled` does **not** skip the hook's initial warm-up subscription. `useObservable` always briefly subscribes during render so a synchronous emission can become the current snapshot. That means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`.
+Important: `disabled` does **not** skip the hook's initial warm-up subscription. Both hooks always briefly subscribe during render so a synchronous emission can become the current snapshot. That means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`.
 
 ```tsx
 import {useEffect, useState} from 'react'
@@ -96,6 +105,30 @@ function Users({shouldFetch}: {shouldFetch: boolean}) {
 ```
 
 Because the fetch observable is only created (and therefore only ever subscribed) when `shouldFetch` is true, this guarantees zero subscriptions to `fromFetch` until then.
+
+### useSyncObservable()
+
+Same signature as `useObservable`, but updates are synchronous (the previous default). Use it for controlled inputs:
+
+```tsx
+import type {ChangeEvent} from 'react'
+import {useObservableEvent, useSyncObservable} from 'react-rx'
+import {map, Subject, tap, type Observable} from 'rxjs'
+
+const text$ = new Subject<string>()
+
+function SearchField() {
+  const handleChange = useObservableEvent((events$: Observable<ChangeEvent<HTMLInputElement>>) =>
+    events$.pipe(
+      map((e) => e.currentTarget.value),
+      tap((value) => text$.next(value)),
+    ),
+  )
+  const text = useSyncObservable(text$, '')
+
+  return <input value={text} onChange={handleChange} />
+}
+```
 
 ### useObservableEvent()
 

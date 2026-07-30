@@ -7,6 +7,7 @@
 Features:
 
 - Works well with Observables emitting values synchronously. You don't pay the re-render-on-mount tax.
+- Non-blocking by default — `useObservable` defers store updates; reach for `useSyncObservable` for controlled inputs.
 - Lightweight. Implemented on top of a small React Hook based core.
 - Full TypeScript support.
 
@@ -21,6 +22,7 @@ This package provides React hooks for working with RxJS Observables in your comp
 
 - [Guide](https://react-rx.dev/guide)
 - [API reference](https://react-rx.dev/reference)
+- [Migration (v4 → v5)](https://react-rx.dev/migrate/v4-to-v5)
 - [Code examples](https://react-rx.dev/examples/simple)
 
 ---

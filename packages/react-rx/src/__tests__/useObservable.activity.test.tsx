@@ -490,3 +490,86 @@ test('after async emission, hiding Activity then updating parent state: last emi
   expect(textOf('value')).toBe('async-emitted')
   expect(screen.getByTestId('child').style.display).not.toBe('none')
 })
+
+/** Used by the no-flash scenario below — kept at module scope so identity is stable across re-renders. */
+function NoFlashProbe({
+  label,
+  observable,
+  log,
+}: {
+  label: string
+  observable: Observable<string>
+  log: string[]
+}) {
+  const value = useObservable(observable, 'initial')
+  log.push(value)
+  return (
+    <div data-testid="value">
+      {label}:{value}
+    </div>
+  )
+}
+
+function NoFlashApp({observable, log}: {observable: Observable<string>; log: string[]}) {
+  const [mode, setMode] = useState<'visible' | 'hidden'>('visible')
+  const [label, setLabel] = useState('a')
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setMode((m) => (m === 'visible' ? 'hidden' : 'visible'))}
+      >
+        toggle
+      </button>
+      <button type="button" onClick={() => setLabel('b')}>
+        relabel
+      </button>
+      <Activity mode={mode}>
+        <NoFlashProbe label={label} observable={observable} log={log} />
+      </Activity>
+    </>
+  )
+}
+
+test('hidden re-renders and the reveal never render the initialValue (no flash)', async () => {
+  // Renders inside a hidden Activity take useDeferredValue's *mount* path, which returns the
+  // second argument. Because that argument is the live snapshot (not the initialValue), a
+  // hidden re-render — and therefore the later reveal — never shows the initialValue.
+  // (A clean reveal with no intervening update restores the preserved tree without
+  // re-rendering at all, so this test forces a parent update while hidden.)
+  const subject = new Subject<string>()
+  const log: string[] = []
+
+  render(<NoFlashApp observable={subject} log={log} />)
+  act(() => subject.next('emitted'))
+  expect(textOf('value')).toBe('a:emitted')
+
+  // Hide: the store subscription tears down but the WeakMap cache entry survives.
+  await act(async () => {
+    screen.getByRole('button', {name: 'toggle'}).click()
+  })
+  await Promise.resolve()
+  expect(screen.getByTestId('value').style.display).toBe('none')
+
+  log.length = 0
+  // Parent update re-renders the hidden tree (lower priority — give React a turn to flush).
+  await act(async () => {
+    screen.getByRole('button', {name: 'relabel'}).click()
+  })
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+  expect(log.length).toBeGreaterThan(0)
+  expect(log).not.toContain('initial')
+  expect(textOf('value')).toBe('b:emitted')
+
+  // Reveal: the preserved tree still shows the cached snapshot.
+  await act(async () => {
+    screen.getByRole('button', {name: 'toggle'}).click()
+  })
+  await Promise.resolve()
+  expect(textOf('value')).toBe('b:emitted')
+  expect(screen.getByTestId('value').style.display).not.toBe('none')
+  expect(log).not.toContain('initial')
+  expect(log.every((v) => v === 'emitted')).toBe(true)
+})

@@ -6,6 +6,7 @@ import {
 import {
   useObservable,
   useObservableEvent,
+  useSyncObservable,
 } from 'react-rx'
 import {
   type Observable,
@@ -112,7 +113,8 @@ function FormDataExample() {
     ),
   )
 
-  const formData = useObservable(data$, {
+  // Form field values feed controlled inputs — must stay synchronous.
+  const formData = useSyncObservable(data$, {
     title: '',
     description: '',
   })

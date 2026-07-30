@@ -1,11 +1,8 @@
-import {
-  ChangeEvent,
-  useDeferredValue,
-  useMemo,
-} from 'react'
+import {ChangeEvent, useMemo} from 'react'
 import {
   useObservable,
   useObservableEvent,
+  useSyncObservable,
 } from 'react-rx'
 import {
   distinctUntilChanged,
@@ -97,11 +94,10 @@ function SearchExample() {
     [],
   )
 
-  const keyword = useObservable(keyword$, '')
+  // Controlled input value must update synchronously.
+  const keyword = useSyncObservable(keyword$, '')
+  // Results are deferred by default via useObservable (no manual useDeferredValue).
   const results = useObservable(results$)
-  // Uses React Concurrent Rendering to defer rendering of results if the search query changes before the results are done rendering
-  const deferredResults =
-    useDeferredValue(results)
 
   return (
     <>
@@ -116,7 +112,7 @@ function SearchExample() {
         The more characters you type, the faster
         the results will appear
       </div>
-      {deferredResults}
+      {results}
     </>
   )
 }
