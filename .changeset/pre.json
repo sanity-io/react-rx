@@ -1,21 +1,16 @@
 {
-  "mode": "pre",
+  "mode": "exit",
   "tag": "next",
   "initialVersions": {
     "react-rx": "4.2.4",
     "react-rx-website": "1.0.0"
   },
   "changesets": [
-    "clarify-disabled-option",
-    "dedupe-hook-internals",
     "deferred-use-observable",
-    "native-use-effect-event",
     "node-engines-22",
-    "react-compiler-target-19",
     "react-peer-19-2",
     "remove-cjs",
     "rxjs-import-consolidate",
-    "use-observable-sync-termination-leak",
-    "vendor-observable-callback"
+    "use-observable-sync-termination-leak"
   ]
 }
