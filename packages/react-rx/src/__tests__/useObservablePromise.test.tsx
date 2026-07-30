@@ -478,6 +478,93 @@ test('extending ttl after unmount keeps a long-lived source connected for the ne
   expect(active).toBe(1)
 })
 
+test('same-ttl preload after unmount renews share grace for long-lived sources', async () => {
+  const subject = new Subject<string>()
+  let active = 0
+  const observable = new Observable<string>((subscriber) => {
+    active++
+    const sub = subject.subscribe(subscriber)
+    return () => {
+      active--
+      sub.unsubscribe()
+    }
+  })
+
+  function Parent() {
+    const p = useObservablePromise(observable, {ttl: 40})
+    return (
+      <Suspense fallback={<Fallback />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
+  }
+
+  const {unmount} = await renderAsync(<Parent />)
+  await act(async () => {
+    subject.next('one')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('one'))
+  unmount()
+
+  // Still inside the original 40ms grace: renew with the same ttl. Without a
+  // share bounce the disconnect still fires at unmount+40ms while eviction is
+  // pushed to touch+40ms — emissions in that gap are lost.
+  await wait(20)
+  void preloadObservablePromise(observable, {ttl: 40})
+  await wait(30) // ~50ms after unmount, ~30ms after renew — only valid if bounced
+  expect(active).toBe(1)
+
+  await act(async () => {
+    subject.next('two')
+  })
+  await renderAsync(<Parent />)
+  expect(screen.getByTestId('value').textContent).toBe('two')
+})
+
+test('settled entry is evicted after one retention window, not two', async () => {
+  const subject = new Subject<string>()
+  let active = 0
+  const observable = new Observable<string>((subscriber) => {
+    active++
+    const sub = subject.subscribe(subscriber)
+    return () => {
+      active--
+      sub.unsubscribe()
+    }
+  })
+  let fallbackCount = 0
+
+  function Parent() {
+    const p = useObservablePromise(observable, {ttl: 40})
+    return (
+      <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
+  }
+
+  const {unmount} = await renderAsync(<Parent />)
+  await act(async () => {
+    subject.next('first')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('first'))
+  const fallbacksAfterFirst = fallbackCount
+  unmount()
+
+  // One retention window (+ slack). If finalize restarted eviction when share
+  // disconnected, the entry would still be cached until ~2×ttl and remount
+  // would reuse the fulfilled promise (no fallback).
+  await wait(70)
+
+  await renderAsync(<Parent />)
+  expect(fallbackCount).toBeGreaterThan(fallbacksAfterFirst)
+  expect(screen.getByTestId('fallback')).toBeTruthy()
+  await act(async () => {
+    subject.next('second')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('second'))
+})
+
 test('observable swap re-suspends; useDeferredValue keeps previous content', async () => {
   let resolveA!: (value: string) => void
   let resolveB!: (value: string) => void

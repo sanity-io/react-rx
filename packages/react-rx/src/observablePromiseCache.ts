@@ -181,7 +181,17 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
       // be able to reconnect to long-lived sources (e.g. Subject / SSE).
       // Comparing `token` prevents teardown of a stale, already replaced entry
       // from deleting its successor.
-      if (cache.get(source)?.token === token && entry.liveCount === 0 && entry.settled) {
+      //
+      // Do NOT restart an already-pending eviction timer: unsubscribe/settle
+      // schedule eviction for `retentionMs` at the same moment share starts its
+      // disconnect grace. When that grace ends, finalize runs — restarting
+      // eviction here would double the documented ttl.
+      if (
+        cache.get(source)?.token === token &&
+        entry.liveCount === 0 &&
+        entry.settled &&
+        entry.evictionTimer === null
+      ) {
         scheduleEviction(entry as CacheEntry<unknown>)
       }
     }),
@@ -198,14 +208,18 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
       // e.g. a preload arriving while a hook-settled entry awaits eviction).
       if (entry.evictionTimer !== null) {
         scheduleEviction(entry as CacheEntry<unknown>)
-        // `share({resetOnRefCountZero})` already started a disconnect timer with
-        // the *old* retention when refCount hit zero. Extending `retentionMs`
-        // alone does not cancel that timer. Bounce a no-op subscription so
-        // share cancels the pending reset and, on the immediate unsubscribe,
-        // starts a fresh grace period with the updated retention — otherwise
-        // long-lived sources disconnect early and miss emissions that should
-        // still update the cache. Terminated sources need no connection.
-        if (entry.retentionMs > previousRetentionMs && !entry.sourceTerminated) {
+        // `share({resetOnRefCountZero})` already started a disconnect timer when
+        // refCount hit zero. Re-arming eviction alone does not cancel that timer.
+        // Bounce a no-op subscription so share cancels the pending reset and
+        // starts a fresh grace period aligned with the renewed retention —
+        // otherwise long-lived sources disconnect early and miss emissions.
+        // Bounce on ttl increase *or* an active fetch intent (`startResolver`),
+        // so same-ttl preloads/remounts renew the connection too; skip for
+        // disabled re-renders that only touch retention.
+        if (
+          !entry.sourceTerminated &&
+          (entry.retentionMs > previousRetentionMs || startResolver)
+        ) {
           entry.shared$.subscribe().unsubscribe()
         }
       }
