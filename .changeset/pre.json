@@ -6,6 +6,7 @@
     "react-rx-website": "1.0.0"
   },
   "changesets": [
+    "dedupe-hook-internals",
     "deferred-use-observable",
     "node-engines-22",
     "react-peer-19-2",

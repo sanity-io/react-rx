@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "5.0.0-next.6",
+  "version": "5.0.0-next.7",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -79,7 +79,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "babel-plugin-react-compiler": "catalog:",
-    "jsdom": "^30.0.0",
+    "jsdom": "^30.0.1",
     "publint": "^0.3.22",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

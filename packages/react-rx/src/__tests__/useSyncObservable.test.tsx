@@ -14,7 +14,8 @@ import {
 } from 'rxjs'
 import {expect, test} from 'vitest'
 
-import {useSyncObservable, type UseObservableOptions} from '../useSyncObservable'
+import type {UseObservableOptions} from '../types'
+import {useSyncObservable} from '../useSyncObservable'
 
 test('should subscribe immediately on component mount and unsubscribe on component unmount', async () => {
   let subscribed = false
