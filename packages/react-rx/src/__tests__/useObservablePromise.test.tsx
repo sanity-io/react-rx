@@ -210,11 +210,16 @@ test('first emission keeps promise identity; later emissions swap without re-act
   await renderAsync(<Parent />)
   const pending = identities[0]!
   const fallbacksAfterSuspend = fallbackCount
+  const parentRendersBeforeFirstEmission = identities.length
 
   await act(async () => {
     subject.next('one')
   })
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('one'))
+  // The first emission unblocks Suspense purely by resolving the promise in
+  // place: the store snapshot is unchanged, useSyncExternalStore bails out, and
+  // the parent does not re-render (per async-react discussion #3).
+  expect(identities.length).toBe(parentRendersBeforeFirstEmission)
   expect(identities.at(-1)).toBe(pending)
   expect(pending.status).toBe('fulfilled')
   expect(fallbackCount).toBe(fallbacksAfterSuspend)
@@ -223,6 +228,9 @@ test('first emission keeps promise identity; later emissions swap without re-act
     subject.next('two')
   })
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('two'))
+  // Later emissions DO notify the store (snapshot swapped to a pre-fulfilled
+  // promise) — the parent re-renders and the reader reads it synchronously.
+  expect(identities.length).toBeGreaterThan(parentRendersBeforeFirstEmission)
   expect(identities.at(-1)).not.toBe(pending)
   expect(fallbackCount).toBe(fallbacksAfterSuspend)
 })
