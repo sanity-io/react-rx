@@ -34,7 +34,7 @@ export const DEFAULT_PRELOAD_TTL = 5000
  * Mirrors RxJS `EmptyError` / `firstValueFrom` when a source completes without
  * emitting. We avoid constructing RxJS's deprecated `EmptyError` class.
  */
-export class ObservableEmptyError extends Error {
+class ObservableEmptyError extends Error {
   override name = 'EmptyError'
   constructor() {
     super('no elements in sequence')
@@ -248,10 +248,4 @@ export function getObservablePromiseEntry<T>(
       }
     },
   }
-}
-
-/** @internal — test helper */
-export function __resetObservablePromiseCacheForTests(): void {
-  // WeakMap has no clear; entries are keyed by caller-owned observables.
-  // Tests rely on fresh observable identities instead.
 }
