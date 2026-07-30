@@ -62,6 +62,7 @@
     }
   },
   "scripts": {
+    "prepare": "pnpm build",
     "build": "tsdown",
     "prepublishOnly": "pnpm build",
     "test": "vitest run --typecheck",
