@@ -1,15 +1,5 @@
-import {
-  asapScheduler,
-  catchError,
-  finalize,
-  map,
-  type Observable,
-  type ObservedValueOf,
-  of,
-  share,
-  tap,
-  timer,
-} from 'rxjs'
+import {asapScheduler, catchError, finalize, map, of, share, tap, timer} from 'rxjs'
+import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getValue} from './utils'
 

@@ -1,5 +1,5 @@
 import {useCallback, useMemo, useSyncExternalStore} from 'react'
-import {type Observable, type ObservedValueOf} from 'rxjs'
+import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore} from './cache'
 import type {UseObservableOptions} from './types'
