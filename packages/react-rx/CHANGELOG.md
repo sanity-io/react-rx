@@ -1,5 +1,11 @@
 # react-rx
 
+## 5.0.0-next.7
+
+### Patch Changes
+
+- [#465](https://github.com/sanity-io/react-rx/pull/465) [`664f641`](https://github.com/sanity-io/react-rx/commit/664f6416ef278fff67c78446dca2cc0c597fb49c) Thanks [@stipsan](https://github.com/stipsan)! - Deduplicate the internals of `useObservable` and `useSyncObservable` into shared modules. The two hooks now share a single observable cache, so observing the same observable with both hooks reuses one shared source subscription and snapshot instead of two.
+
 ## 5.0.0-next.6
 
 ### Major Changes

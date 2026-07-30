@@ -7,6 +7,7 @@
   },
   "changesets": [
     "clarify-disabled-option",
+    "dedupe-hook-internals",
     "deferred-use-observable",
     "native-use-effect-event",
     "node-engines-22",
