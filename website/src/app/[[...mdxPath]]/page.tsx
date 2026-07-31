@@ -1,5 +1,7 @@
 import {generateStaticParamsFor, importPage} from 'nextra/pages'
 
+import {expandExampleSources} from '@/utils/agentMarkdown'
+
 import {useMDXComponents as getMDXComponents} from '../../../mdx-components'
 
 export const generateStaticParams = generateStaticParamsFor('mdxPath')
@@ -24,7 +26,9 @@ export default async function Page(props: PageProps) {
   const params = await props.params
   const {default: MDXContent, toc, metadata, sourceCode} = await importPage(params.mdxPath)
   return (
-    <Wrapper toc={toc} metadata={metadata} sourceCode={sourceCode}>
+    // `sourceCode` feeds the theme's "Copy page" button; expanding the example embeds makes the
+    // copied markdown include the Sandpack sources instead of opaque `<Example />` tags.
+    <Wrapper toc={toc} metadata={metadata} sourceCode={expandExampleSources(sourceCode)}>
       <MDXContent {...props} params={params} />
     </Wrapper>
   )
