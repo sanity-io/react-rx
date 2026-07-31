@@ -1,13 +1,5 @@
 import {act, render, screen, waitFor} from '@testing-library/react'
-import {
-  Component,
-  Suspense,
-  use,
-  useDeferredValue,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react'
+import {Component, Suspense, use, useDeferredValue, useMemo, useState, type ReactNode} from 'react'
 import {
   BehaviorSubject,
   defer,
@@ -792,7 +784,11 @@ test('disabled component sharing a warmed entry gets the settled promise', async
 
   function Disabled() {
     const p = useObservablePromise(observable, {disabled: true})
-    return <div data-testid="disabled-status">{p.status}:{(p as {value?: string}).value}</div>
+    return (
+      <div data-testid="disabled-status">
+        {p.status}:{(p as {value?: string}).value}
+      </div>
+    )
   }
 
   await renderAsync(
@@ -824,9 +820,7 @@ test('does not warn about uncached promises in DEV', async () => {
   })
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('ok'))
 
-  const uncached = spy.mock.calls.some((args) =>
-    String(args[0] ?? '').includes('uncached promise'),
-  )
+  const uncached = spy.mock.calls.some((args) => String(args[0] ?? '').includes('uncached promise'))
   expect(uncached).toBe(false)
   spy.mockRestore()
 })

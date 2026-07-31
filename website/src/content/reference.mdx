@@ -100,11 +100,7 @@ interface UseObservablePromiseOptions {
 }
 
 type ObservablePromise<T> = Promise<T> &
-  (
-    | {status: 'pending'}
-    | {status: 'fulfilled'; value: T}
-    | {status: 'rejected'; reason: unknown}
-  )
+  ({status: 'pending'} | {status: 'fulfilled'; value: T} | {status: 'rejected'; reason: unknown})
 ```
 
 The hook does **not** suspend. Pass the returned promise to React's [`use`](https://react.dev/reference/react/use) inside a `<Suspense>` boundary. Suspends until the first emission; later emissions update without re-suspending. Errors reject the promise (Error Boundary). See the [guide](/guide) for `startWith` caveats, `disabled` / `ttl`, and when to prefer `useObservable`.
@@ -117,10 +113,7 @@ import {useObservablePromise} from 'react-rx'
 import {fromFetch} from 'rxjs/fetch'
 
 function Profile({url}: {url: string}) {
-  const data$ = useMemo(
-    () => fromFetch(url, {selector: (r) => r.json()}),
-    [url],
-  )
+  const data$ = useMemo(() => fromFetch(url, {selector: (r) => r.json()}), [url])
   const promise = useObservablePromise(data$)
   return (
     <Suspense fallback="Loading…">

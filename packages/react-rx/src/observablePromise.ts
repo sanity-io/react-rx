@@ -15,11 +15,7 @@ function noop() {}
 
 /** @public */
 export type ObservablePromise<T> = Promise<T> &
-  (
-    | {status: 'pending'}
-    | {status: 'fulfilled'; value: T}
-    | {status: 'rejected'; reason: unknown}
-  )
+  ({status: 'pending'} | {status: 'fulfilled'; value: T} | {status: 'rejected'; reason: unknown})
 
 /** @internal */
 export class ObservablePromiseImpl<T> extends Promise<T> {
