@@ -3,4 +3,5 @@
 export * from './types'
 export * from './useObservable'
 export * from './useObservableEvent'
+export * from './useObservablePromise'
 export * from './useSyncObservable'

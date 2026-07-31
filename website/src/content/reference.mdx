@@ -82,6 +82,75 @@ function SearchField() {
 }
 ```
 
+## useObservablePromise()
+
+A React hook that turns an observable into a `use()`-compatible promise for Suspense and Activity pre-rendering.
+
+**Signature**
+
+```ts
+function useObservablePromise<T>(
+  observable: Observable<T>,
+  options?: UseObservablePromiseOptions,
+): ObservablePromise<T>
+
+interface UseObservablePromiseOptions {
+  disabled?: boolean
+  ttl?: number
+}
+
+type ObservablePromise<T> = Promise<T> &
+  (
+    | {status: 'pending'}
+    | {status: 'fulfilled'; value: T}
+    | {status: 'rejected'; reason: unknown}
+  )
+```
+
+The hook does **not** suspend. Pass the returned promise to React's [`use`](https://react.dev/reference/react/use) inside a `<Suspense>` boundary. Suspends until the first emission; later emissions update without re-suspending. Errors reject the promise (Error Boundary). See the [guide](/guide) for `startWith` caveats, `disabled` / `ttl`, and when to prefer `useObservable`.
+
+**Example**
+
+```tsx
+import {Suspense, use, useMemo} from 'react'
+import {useObservablePromise} from 'react-rx'
+import {fromFetch} from 'rxjs/fetch'
+
+function Profile({url}: {url: string}) {
+  const data$ = useMemo(
+    () => fromFetch(url, {selector: (r) => r.json()}),
+    [url],
+  )
+  const promise = useObservablePromise(data$)
+  return (
+    <Suspense fallback="Loading…">
+      <Pre promise={promise} />
+    </Suspense>
+  )
+}
+
+function Pre({promise}: {promise: Promise<unknown>}) {
+  return <pre>{JSON.stringify(use(promise), null, 2)}</pre>
+}
+```
+
+## preloadObservablePromise()
+
+Warm the `useObservablePromise` cache outside of rendering (for example on `mouseenter` or in a route loader). Not a hook — callable anywhere. Returns the same promise instance the hook would return for that observable.
+
+Calling it starts the source subscription immediately. Pending entries are never timed out, so a never-emitting / hung observable keeps both the promise and the subscription alive until it settles. Prefer RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when a preload can stall.
+
+**Signature**
+
+```ts
+function preloadObservablePromise<T>(
+  observable: Observable<T>,
+  options?: {ttl?: number},
+): ObservablePromise<T>
+```
+
+Default `ttl` is `5000` (longer than the hook default) so a hover-warmed value survives until click/navigation.
+
 ## useObservableEvent()
 
 A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.

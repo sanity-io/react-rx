@@ -130,6 +130,126 @@ function SearchField() {
 }
 ```
 
+### useObservablePromise()
+
+Use this when you want **Suspense-powered data fetching** instead of tracking loading state in the stream.
+
+`useObservable` is built on `useSyncExternalStore`. That is great for live values, but it cannot activate a [`Suspense`](https://react.dev/reference/react/Suspense#what-activates-a-suspense-boundary) boundary, and React 19.2 [`Activity`](https://react.dev/reference/react/Activity#pre-rendering-content-thats-likely-to-become-visible) pre-rendering only fetches data read with `use(promise)`.
+
+`useObservablePromise` returns an instrumented Promise you pass to React's `use()`. The hook itself does **not** suspend — the consumer decides where the Suspense boundary lives:
+
+```tsx
+import {Suspense, use, useMemo} from 'react'
+import {useObservablePromise} from 'react-rx'
+import {fromFetch} from 'rxjs/fetch'
+
+function Users() {
+  const users$ = useMemo(
+    () =>
+      fromFetch('https://api.github.com/users?per_page=5', {
+        selector: (response) => response.json(),
+      }),
+    [],
+  )
+  const promise = useObservablePromise(users$)
+
+  return (
+    <Suspense fallback={<p>Loading users…</p>}>
+      <UsersList promise={promise} />
+    </Suspense>
+  )
+}
+
+function UsersList({promise}: {promise: Promise<unknown>}) {
+  const users = use(promise)
+  return <pre>{JSON.stringify(users, null, 2)}</pre>
+}
+```
+
+Prefer creating the promise in a parent that does **not** suspend (as above), so Suspense retries always see the same promise identity. The single-component form also works when the observable identity is stable across retries (module-level cache, or a shared `WeakMap` keyed by request):
+
+```tsx
+function UsersList({users$}) {
+  // `users$` must be referentially stable for the in-flight request
+  const users = use(useObservablePromise(users$))
+  return <pre>{JSON.stringify(users, null, 2)}</pre>
+}
+```
+
+**Semantics**
+
+- Suspends until the observable's **first** emission (`firstValueFrom` semantics).
+- Later emissions update the UI **without** re-showing the Suspense fallback.
+- Sync sources (`of`, `BehaviorSubject`, replayed `shareReplay`) never flash a fallback.
+- Errors reject the promise and surface through the nearest Error Boundary. Prefer `catchError` on the *inner* observable when you want graceful degradation instead of a boundary.
+- Completing without emitting rejects with RxJS `EmptyError`.
+- Swapping to a **different** observable returns a new pending promise, so the fallback shows again. To keep the previous content visible instead, change the observable inside [`startTransition`](https://react.dev/reference/react/startTransition) or read the promise through [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) — both also give you a staleness signal (`isPending`, or `deferredPromise !== promise`) to dim stale content while the new data loads.
+
+**Not for `startWith` placeholders.** Because the first emission unblocks Suspense, `startWith('loading')` fulfills immediately with `"loading"`. For placeholder / loading-value patterns, use `useObservable` instead.
+
+**Options**
+
+```ts
+useObservablePromise(observable$, {
+  disabled?: boolean // default false — when true, this component starts no fetch
+  ttl?: number // default 500 — retention (ms) after settle with no subscribers
+})
+```
+
+Unlike `useObservable`'s `disabled` (which still runs a warm-up probe), `disabled: true` here fully prevents fetching on behalf of this component. The returned promise is still the shared cache entry — a sibling or `preloadObservablePromise` can warm it.
+
+`ttl` controls how long a settled value stays reusable after unmount. Remount within the window reuses the promise (no refetch, no fallback). After it expires, the next mount refetches. Eviction only affects future consumers: components that are still mounted keep their value — hiding an `<Activity>` tree longer than `ttl` never drops what it already rendered.
+
+**Deferring expensive re-renders**
+
+Like every external-store subscription, emission-driven updates render at synchronous priority — React cannot time-slice them directly. If an emission re-renders something expensive, defer the promise itself and memoize the expensive subtree. The synchronous pass then skips the memoized subtree (it still sees the old promise), and its re-render happens at deferred priority: time-sliced, interruptible by urgent updates, and coalesced under rapid emissions.
+
+```tsx
+const BigChart = memo(function BigChart({promise}) {
+  const data = use(promise)
+  return <Chart data={data} />
+})
+
+function Dashboard({metrics$}) {
+  const promise = useObservablePromise(metrics$)
+  const deferredPromise = useDeferredValue(promise)
+  return <BigChart promise={deferredPromise} />
+}
+```
+
+The `memo` is load-bearing: without it the subtree re-renders during the synchronous pass anyway (with the old promise), defeating the deferral — see [deferring re-rendering for a part of the UI](https://react.dev/reference/react/useDeferredValue#deferring-re-rendering-for-a-part-of-the-ui). Swapped promises are always pre-settled, so the deferred subtree never suspends — it just lags by a paint under load. When the stream itself is too chatty, throttling in the pipe (`auditTime`, `throttleTime`) remains the RxJS-native complement.
+
+**Preloading**
+
+Warm the cache outside of render (hover, route loaders) with `preloadObservablePromise`. Calling it starts the source subscription immediately. Pending entries are never timed out — if the observable never emits or completes, the promise stays pending and the subscription stays alive until it settles (or the process tears down). Bound hang risk with RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when the preload can stall:
+
+```tsx
+import {preloadObservablePromise, useObservablePromise} from 'react-rx'
+
+function TabButton({users$, onSelect}) {
+  return (
+    <button
+      type="button"
+      onMouseEnter={() => preloadObservablePromise(users$, {ttl: 5_000})}
+      onClick={onSelect}
+    >
+      Users
+    </button>
+  )
+}
+```
+
+**Which hook when?**
+
+| Need | Hook |
+| --- | --- |
+| Live values, timers, subjects, optional `initialValue` | `useObservable` |
+| Controlled inputs / synchronous store updates | `useSyncObservable` |
+| Async data + Suspense / Activity pre-render | `useObservablePromise` |
+| Event → observable pipelines | `useObservableEvent` |
+
+For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
+
 ### useObservableEvent()
 
 This creates an event handler that can be used to create an observable from events.
