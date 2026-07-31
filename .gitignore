@@ -3,3 +3,4 @@ dist
 .eslintcache
 website/next-env.d.ts
 .pnpm-store
+*.tsbuildinfo
