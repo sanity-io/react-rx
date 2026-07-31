@@ -1,5 +1,6 @@
 import {
   catchError,
+  EmptyError,
   finalize,
   map,
   type Observable,
@@ -31,14 +32,15 @@ export const DEFAULT_HOOK_TTL = 500
 export const DEFAULT_PRELOAD_TTL = 5000
 
 /**
- * Mirrors RxJS `EmptyError` / `firstValueFrom` when a source completes without
- * emitting. We avoid constructing RxJS's deprecated `EmptyError` class.
+ * Reject with the real RxJS `EmptyError` when a source completes without
+ * emitting, matching `firstValueFrom` so `instanceof EmptyError` holds for
+ * consumers. RxJS marks the constructor `@deprecated` ("internal implementation
+ * detail"), but `firstValueFrom`/`first`/`single` throw this exact type, so
+ * mirroring it is intentional here.
  */
-class ObservableEmptyError extends Error {
-  override name = 'EmptyError'
-  constructor() {
-    super('no elements in sequence')
-  }
+function createEmptyError(): EmptyError {
+  // oxlint-disable-next-line typescript/no-deprecated -- mirror firstValueFrom's thrown EmptyError so instanceof works
+  return new EmptyError()
 }
 
 type Outcome<T> = {ok: true; value: T} | {ok: false; error: unknown}
@@ -173,7 +175,7 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
       },
       complete: () => {
         if (!entry.settled) {
-          settle(entry, {ok: false, error: new ObservableEmptyError()})
+          settle(entry, {ok: false, error: createEmptyError()})
         }
         entry.sourceTerminated = true
       },

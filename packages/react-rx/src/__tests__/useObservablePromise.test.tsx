@@ -12,6 +12,7 @@ import {
   BehaviorSubject,
   defer,
   EMPTY,
+  EmptyError,
   from,
   NEVER,
   Observable,
@@ -58,10 +59,10 @@ function ReaderB({promise}: {promise: Promise<string>}) {
   return <div data-testid="b">{use(promise)}</div>
 }
 
-function EmptyParent() {
+function EmptyParent({onError}: {onError?: (error: Error) => void}) {
   const p = useObservablePromise(EMPTY)
   return (
-    <TestErrorBoundary>
+    <TestErrorBoundary onError={onError}>
       <Suspense fallback={<Fallback />}>
         <Reader promise={p as Promise<string>} />
       </Suspense>
@@ -348,12 +349,22 @@ test('error after a value is thrown to the nearest Error Boundary', async () => 
   await waitFor(() => expect(screen.getByTestId('error').textContent).toContain('boom-after'))
 })
 
-test('EMPTY rejects with EmptyError', async () => {
-  await renderAsync(<EmptyParent />)
+test('EMPTY rejects with the real RxJS EmptyError (instanceof holds)', async () => {
+  let captured: Error | undefined
+  await renderAsync(
+    <EmptyParent
+      onError={(error) => {
+        captured = error
+      }}
+    />,
+  )
   await waitFor(() => {
     const text = screen.getByTestId('error').textContent ?? ''
     expect(text.includes('EmptyError') || text.includes('no elements')).toBe(true)
   })
+  // firstValueFrom semantics: the rejection must be the exact RxJS EmptyError
+  // type so `instanceof EmptyError` checks in consumer code succeed.
+  expect(captured).toBeInstanceOf(EmptyError)
 })
 
 test('complete after value keeps data; remount within retention reuses without refetch', async () => {
