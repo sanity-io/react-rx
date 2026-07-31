@@ -1,13 +1,5 @@
 import {act, render, screen} from '@testing-library/react'
-import {
-  memo,
-  Suspense,
-  use,
-  useDeferredValue,
-  useState,
-  useTransition,
-  type ReactNode,
-} from 'react'
+import {memo, Suspense, use, useDeferredValue, useState, useTransition, type ReactNode} from 'react'
 import {createRoot} from 'react-dom/client'
 import {BehaviorSubject} from 'rxjs'
 import {expect, test} from 'vitest'
@@ -57,9 +49,7 @@ function Counter({
 }
 
 function readAll(): number[] {
-  return Array.from({length: COUNTERS}, (_, i) =>
-    Number(screen.getByTestId(`c-${i}`).textContent),
-  )
+  return Array.from({length: COUNTERS}, (_, i) => Number(screen.getByTestId(`c-${i}`).textContent))
 }
 
 test('no tearing finally on update (startTransition)', async () => {
@@ -120,9 +110,7 @@ test('no tearing finally on mount (startTransition)', async () => {
         </button>
         <Suspense fallback={<div>loading</div>}>
           {mounted &&
-            Array.from({length: COUNTERS}, (_, i) => (
-              <Counter key={i} count$={count$} index={i} />
-            ))}
+            Array.from({length: COUNTERS}, (_, i) => <Counter key={i} count$={count$} index={i} />)}
         </Suspense>
       </>
     )
@@ -199,9 +187,7 @@ test('no tearing finally on mount (useDeferredValue)', async () => {
         </button>
         <Suspense fallback={<div>loading</div>}>
           {deferredMounted &&
-            Array.from({length: COUNTERS}, (_, i) => (
-              <Counter key={i} count$={count$} index={i} />
-            ))}
+            Array.from({length: COUNTERS}, (_, i) => <Counter key={i} count$={count$} index={i} />)}
         </Suspense>
       </>
     )

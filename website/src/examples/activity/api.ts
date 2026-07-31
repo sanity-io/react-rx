@@ -2,10 +2,15 @@ import {map, type Observable, timer} from 'rxjs'
 
 const LATENCY_MS = 1000
 
-const cache = new Map<string, Observable<{tab: string; body: string}>>()
+const cache = new Map<
+  string,
+  Observable<{tab: string; body: string}>
+>()
 
 /** Cold fetch-like source with visible artificial latency. Stable per tab id. */
-export function fetchTab$(tab: string): Observable<{tab: string; body: string}> {
+export function fetchTab$(
+  tab: string,
+): Observable<{tab: string; body: string}> {
   let observable = cache.get(tab)
   if (!observable) {
     observable = timer(LATENCY_MS).pipe(

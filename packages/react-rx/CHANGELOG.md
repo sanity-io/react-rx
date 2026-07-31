@@ -1,5 +1,11 @@
 # react-rx
 
+## 5.1.0
+
+### Minor Changes
+
+- [#460](https://github.com/sanity-io/react-rx/pull/460) [`4d9b613`](https://github.com/sanity-io/react-rx/commit/4d9b61332a48a2de053e966ffcbd92f1c5e8ec4f) Thanks [@stipsan](https://github.com/stipsan)! - Add `useObservablePromise` and `preloadObservablePromise`: Suspense-ready data fetching returning a `use()`-compatible promise, with `{disabled, ttl}` options.
+
 ## 5.0.1
 
 ### Patch Changes

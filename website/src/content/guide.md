@@ -181,7 +181,7 @@ function UsersList({users$}) {
 - Suspends until the observable's **first** emission (`firstValueFrom` semantics).
 - Later emissions update the UI **without** re-showing the Suspense fallback.
 - Sync sources (`of`, `BehaviorSubject`, replayed `shareReplay`) never flash a fallback.
-- Errors reject the promise and surface through the nearest Error Boundary. Prefer `catchError` on the *inner* observable when you want graceful degradation instead of a boundary.
+- Errors reject the promise and surface through the nearest Error Boundary. Prefer `catchError` on the _inner_ observable when you want graceful degradation instead of a boundary.
 - Completing without emitting rejects with RxJS `EmptyError`.
 - Swapping to a **different** observable returns a new pending promise, so the fallback shows again. To keep the previous content visible instead, change the observable inside [`startTransition`](https://react.dev/reference/react/startTransition) or read the promise through [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) — both also give you a staleness signal (`isPending`, or `deferredPromise !== promise`) to dim stale content while the new data loads.
 
@@ -241,12 +241,12 @@ function TabButton({users$, onSelect}) {
 
 **Which hook when?**
 
-| Need | Hook |
-| --- | --- |
-| Live values, timers, subjects, optional `initialValue` | `useObservable` |
-| Controlled inputs / synchronous store updates | `useSyncObservable` |
-| Async data + Suspense / Activity pre-render | `useObservablePromise` |
-| Event → observable pipelines | `useObservableEvent` |
+| Need                                                   | Hook                   |
+| ------------------------------------------------------ | ---------------------- |
+| Live values, timers, subjects, optional `initialValue` | `useObservable`        |
+| Controlled inputs / synchronous store updates          | `useSyncObservable`    |
+| Async data + Suspense / Activity pre-render            | `useObservablePromise` |
+| Event → observable pipelines                           | `useObservableEvent`   |
 
 For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
 
