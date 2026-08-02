@@ -4,6 +4,8 @@
 
 A React hook that returns the current/latest value from an observable. Store updates are **deferred by default** via [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue): urgent renders keep the previous value while a background render catches up. That makes it safe to suspend on the returned value without replacing already-revealed UI with a Suspense fallback.
 
+The deferral is **identity-coherent**: unlike a bare `useDeferredValue(useObservable(...))`, the observable identity and its value are deferred as one snapshot, and when the observable identity changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live value — typically the new observable's synchronous emission or the `initialValue` — so the previous identity's value never renders under the new one.
+
 Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash). On the server, this hook renders exactly what the client's first paint will show (a synchronous emission when there is one, else the resolved `initialValue`, else nothing) and never throws for a missing `initialValue`.
 
 Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs or strict SSR control.
