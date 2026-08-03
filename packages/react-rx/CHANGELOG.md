@@ -1,5 +1,11 @@
 # react-rx
 
+## 5.1.1
+
+### Patch Changes
+
+- [#479](https://github.com/sanity-io/react-rx/pull/479) [`0f7bce9`](https://github.com/sanity-io/react-rx/commit/0f7bce90963fa8d540940303e6acfd8a38567dc2) Thanks [@stipsan](https://github.com/stipsan)! - fix: make `useObservable` deferral identity-coherent. The observable identity and its value are now deferred as one snapshot, and when the observable identity changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live value — so the previous identity's value never renders under the new one.
+
 ## 5.1.0
 
 ### Minor Changes
