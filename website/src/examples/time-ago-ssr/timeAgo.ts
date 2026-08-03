@@ -2,7 +2,7 @@ import {
   distinctUntilChanged,
   map,
   type Observable,
-  shareReplay,
+  share,
   timer,
 } from 'rxjs'
 
@@ -34,10 +34,14 @@ export function toTimeAgoParts(
   }
 }
 
-// One shared clock for every label on the page.
+// One shared clock for every label on the page. Plain share() — no replay:
+// a replay buffer would hand a *stale* tick to the next subscriber after the
+// last one leaves, which breaks the deterministic first render (and, in the
+// SSR demo, hydration). New subscribers use the hook's initialValue until the
+// next real tick instead.
 const now$ = timer(0, 1000).pipe(
   map(() => Date.now()),
-  shareReplay({bufferSize: 1, refCount: true}),
+  share(),
 )
 
 const cache = new Map<
