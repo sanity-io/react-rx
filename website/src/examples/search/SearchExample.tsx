@@ -1,19 +1,6 @@
-import {ChangeEvent, useMemo} from 'react'
-import {
-  useObservable,
-  useObservableEvent,
-  useSyncObservable,
-} from 'react-rx'
-import {
-  distinctUntilChanged,
-  filter,
-  map,
-  Observable,
-  Subject,
-  switchMap,
-  tap,
-  timer,
-} from 'rxjs'
+import {useMemo} from 'react'
+import {useObservable, useSyncObservable} from 'react-rx'
+import {distinctUntilChanged, filter, map, Observable, Subject, switchMap, timer} from 'rxjs'
 
 interface SearchResult {
   keyword: string
@@ -32,43 +19,21 @@ const range = (len: number) => {
   return res
 }
 
-// Create subject for search input
+// Search input pushes into a Subject
 const keyword$ = new Subject<string>()
 
 // A search function that takes longer time to complete for shorter keywords
-const search = (
-  keyword: string,
-): Observable<SearchResult> => {
-  const delay = Math.max(
-    1,
-    Math.round(10 - keyword.length),
-  )
+const search = (keyword: string): Observable<SearchResult> => {
+  const delay = Math.max(1, Math.round(10 - keyword.length))
   return timer(delay * 200).pipe(
-    map(() =>
-      range(delay).map((_, i) => ({
-        title: `Hit #${i}`,
-      })),
-    ),
-    map((hits) => ({
-      keyword,
-      hits,
-    })),
+    map(() => range(delay).map((_, i) => ({title: `Hit #${i}`}))),
+    map((hits) => ({keyword, hits})),
   )
 }
 
 function SearchExample() {
-  // Handle input changes
-  const handleInput = useObservableEvent<
-    ChangeEvent<HTMLInputElement>,
-    any
-  >((input$) =>
-    input$.pipe(
-      map((e) => e.currentTarget.value),
-      tap((value) => keyword$.next(value)),
-    ),
-  )
-
-  // Create search results stream
+  // Search results stream: switchMap cancels the previous search when a new
+  // keyword arrives, so out-of-order responses can never win.
   const results$ = useMemo(
     () =>
       keyword$.pipe(
@@ -77,15 +42,11 @@ function SearchExample() {
         switchMap((kw: string) => search(kw)),
         map((result: SearchResult) => (
           <>
-            <h1>Searched for {result.keyword}</h1>
-            <div>
-              Got {result.hits.length} hits
-            </div>
+            <h4>Searched for {result.keyword}</h4>
+            <div>Got {result.hits.length} hits</div>
             <ul>
               {result.hits.map((hit) => (
-                <li key={hit.title}>
-                  {hit.title}
-                </li>
+                <li key={hit.title}>{hit.title}</li>
               ))}
             </ul>
           </>
@@ -103,15 +64,11 @@ function SearchExample() {
     <>
       <input
         type="search"
-        style={{width: '100%'}}
         value={keyword}
         placeholder="Type a keyword to search"
-        onChange={handleInput}
+        onChange={(e) => keyword$.next(e.currentTarget.value)}
       />
-      <div>
-        The more characters you type, the faster
-        the results will appear
-      </div>
+      <small>The more characters you type, the faster the results will appear</small>
       {results}
     </>
   )

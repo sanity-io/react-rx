@@ -75,7 +75,6 @@ export const exampleManifests = {
       '/App.tsx': 'FormDataExample.tsx',
       '/storage.ts': 'storage.ts',
     },
-    dependencies: {'styled-components': 'latest'},
   },
   'hello-world': {
     files: {'/App.tsx': 'HelloWorldExample.tsx'},
@@ -123,7 +122,6 @@ export const exampleManifests = {
   },
   'todo-app': {
     files: {'/App.tsx': 'TodoApp.example.tsx'},
-    dependencies: {'styled-components': 'latest'},
   },
 } satisfies Record<string, ExampleManifest>
 
