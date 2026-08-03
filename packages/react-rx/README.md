@@ -20,7 +20,7 @@ const users = useObservable(users$, [])
 
 ## Why react-rx
 
-- **Non-blocking by default.** `useObservable` defers store updates ([`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) semantics): chatty streams can't make typing feel blocked, and updates coalesce under load. The deferral is *identity-coherent* — when the observable changes (say, memoized on a document id), the previous document's value can never render under the new one.
+- **Non-blocking by default.** `useObservable` defers store updates ([`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) semantics): chatty streams can't make typing feel blocked, and updates coalesce under load. The deferral is _identity-coherent_ — when the observable changes (say, memoized on a document id), the previous document's value can never render under the new one.
 - **Synchronous emissions paint on the first render.** No re-render-on-mount tax: a `BehaviorSubject` or replayed value renders immediately, on the client and during SSR.
 - **First-class [`<Activity>`](https://react.dev/reference/react/Activity) (React 19.2).** Hidden trees keep warm snapshots and reveal instantly; pre-rendered trees start their data fetches during render — no effects required.
 - **SSR that never throws.** `useObservable` renders exactly what the client's first paint will show; `useSyncObservable` keeps the strict server-snapshot contract when you want it.
@@ -32,7 +32,7 @@ const users = useObservable(users$, [])
 
 The `suspense` keyword on this package is earned two ways:
 
-- **[`useObservablePromise`](https://react-rx.dev/reference#useobservablepromise)** turns any observable into a [`use()`](https://react.dev/reference/react/use)-compatible promise: the reader suspends until the *first* emission, later emissions update in place **without re-suspending**, and synchronous sources never flash a fallback. `preloadObservablePromise` warms the same cache outside render (hover, route loaders, `<Activity>` tabs).
+- **[`useObservablePromise`](https://react-rx.dev/reference#useobservablepromise)** turns any observable into a [`use()`](https://react.dev/reference/react/use)-compatible promise: the reader suspends until the _first_ emission, later emissions update in place **without re-suspending**, and synchronous sources never flash a fallback. `preloadObservablePromise` warms the same cache outside render (hover, route loaders, `<Activity>` tabs).
 - **`useObservable` is safe to suspend on.** Because its updates are deferred, a store update that causes a child to suspend keeps the already-visible content on screen instead of yanking it back to the nearest fallback — the classic [`useSyncExternalStore` caveat](https://react.dev/reference/react/useSyncExternalStore#caveats), solved. See the [side-by-side demo](https://react-rx.dev/examples/suspense).
 
 ```tsx
@@ -62,18 +62,18 @@ function UsersList({promise}: {promise: Promise<User[]>}) {
 
 Against the other RxJS ↔ React bindings:
 
-| Capability | [react-rx](https://react-rx.dev) | [observable-hooks](https://observable-hooks.js.org) | [@react-rxjs/core](https://react-rxjs.org) | DIY `useEffect` |
-| --- | --- | --- | --- | --- |
-| Deferred, identity-coherent updates | built into `useObservable` | — (synchronous) | — (synchronous) | manual |
-| Suspense data fetching | `use()`-compatible promise; streams update in place without re-suspending | `ObservableResource` | suspends until first value | manual |
-| `<Activity>` pre-rendering (React 19.2) | fetches start during render; `preloadObservablePromise` for hover warm-up | — | — | — |
-| Sync emission on first paint | no extra re-render | `useObservableEagerState` | with an active subscription | extra render after mount |
-| Setup per stream | none — pass any `Observable` | none | `bind()` + `<Subscribe>` / active subscription | subscription plumbing each time |
-| SSR | never throws; server matches the client's first paint | renders initial state | — | manual |
-| React Compiler | test suite runs through it | — | — | — |
-| React / RxJS support | React 19.2+, RxJS 7.2+ | React 16.8+, RxJS 6–7 | React 16.8+, RxJS 7+ | any |
+| Capability                              | [react-rx](https://react-rx.dev)                                          | [observable-hooks](https://observable-hooks.js.org) | [@react-rxjs/core](https://react-rxjs.org)     | DIY `useEffect`                 |
+| --------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------- | ------------------------------- |
+| Deferred, identity-coherent updates     | built into `useObservable`                                                | — (synchronous)                                     | — (synchronous)                                | manual                          |
+| Suspense data fetching                  | `use()`-compatible promise; streams update in place without re-suspending | `ObservableResource`                                | suspends until first value                     | manual                          |
+| `<Activity>` pre-rendering (React 19.2) | fetches start during render; `preloadObservablePromise` for hover warm-up | —                                                   | —                                              | —                               |
+| Sync emission on first paint            | no extra re-render                                                        | `useObservableEagerState`                           | with an active subscription                    | extra render after mount        |
+| Setup per stream                        | none — pass any `Observable`                                              | none                                                | `bind()` + `<Subscribe>` / active subscription | subscription plumbing each time |
+| SSR                                     | never throws; server matches the client's first paint                     | renders initial state                               | —                                              | manual                          |
+| React Compiler                          | test suite runs through it                                                | —                                                   | —                                              | —                               |
+| React / RxJS support                    | React 19.2+, RxJS 7.2+                                                    | React 16.8+, RxJS 6–7                               | React 16.8+, RxJS 7+                           | any                             |
 
-The honest flip side: observable-hooks and @react-rxjs support much older React versions. react-rx deliberately targets the newest React — the concurrent-rendering rows above *are* the point.
+The honest flip side: observable-hooks and @react-rxjs support much older React versions. react-rx deliberately targets the newest React — the concurrent-rendering rows above _are_ the point.
 
 Wondering about Zustand, Jotai, XState, or TanStack Query instead? Those solve different shapes of state — see [how react-rx compares to general state libraries](https://react-rx.dev/comparison) for when streams are the right tool and how they compose.
 

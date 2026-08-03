@@ -1,4 +1,10 @@
-import {concatMap, delay, from, of, type Observable} from 'rxjs'
+import {
+  concatMap,
+  delay,
+  from,
+  of,
+  type Observable,
+} from 'rxjs'
 
 /**
  * ─── MOCK ────────────────────────────────────────────────────────────────
@@ -7,7 +13,9 @@ import {concatMap, delay, from, of, type Observable} from 'rxjs'
  * token deltas. Everything OUTSIDE this file is what your own code looks
  * like — swap this mock for a real client and the rest stays the same.
  */
-export function streamCompletion(prompt: string): Observable<string> {
+export function streamCompletion(
+  prompt: string,
+): Observable<string> {
   const answer =
     CANNED_ANSWERS[prompt] ??
     `I don't have a canned answer for “${prompt}”, but a real model would stream one here.`
@@ -15,7 +23,11 @@ export function streamCompletion(prompt: string): Observable<string> {
   // A cold observable: every subscription is one "request" that streams
   // tokens with a bit of jitter, then completes.
   return from(tokenize(answer)).pipe(
-    concatMap((token) => of(token).pipe(delay(40 + Math.random() * 130))),
+    concatMap((token) =>
+      of(token).pipe(
+        delay(40 + Math.random() * 130),
+      ),
+    ),
   )
 }
 

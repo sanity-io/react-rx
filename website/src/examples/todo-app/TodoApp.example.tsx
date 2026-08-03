@@ -1,6 +1,16 @@
-import {type FormEvent} from 'react'
-import {useObservable, useSyncObservable} from 'react-rx'
-import {filter, map, scan, startWith, Subject, withLatestFrom} from 'rxjs'
+import {type SyntheticEvent} from 'react'
+import {
+  useObservable,
+  useSyncObservable,
+} from 'react-rx'
+import {
+  filter,
+  map,
+  scan,
+  startWith,
+  Subject,
+  withLatestFrom,
+} from 'rxjs'
 
 interface TodoItem {
   id: number
@@ -17,7 +27,11 @@ const items$ = submit$.pipe(
   map(([, text]) => text.trim()),
   filter((text) => text.length > 0),
   map((text) => ({text, id: Date.now()})),
-  scan((items: TodoItem[], item) => items.concat(item), []),
+  scan(
+    (items: TodoItem[], item) =>
+      items.concat(item),
+    [],
+  ),
   startWith([] as TodoItem[]),
 )
 
@@ -26,7 +40,9 @@ function TodoApp() {
   const text = useSyncObservable(text$, '')
   const items = useObservable(items$, [])
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (
+    event: SyntheticEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault()
     submit$.next()
     text$.next('')
@@ -41,8 +57,16 @@ function TodoApp() {
         ))}
       </ul>
       <form onSubmit={handleSubmit}>
-        <label htmlFor="new-todo">What needs to be done?</label>
-        <input id="new-todo" value={text} onChange={(e) => text$.next(e.currentTarget.value)} />
+        <label htmlFor="new-todo">
+          What needs to be done?
+        </label>
+        <input
+          id="new-todo"
+          value={text}
+          onChange={(e) =>
+            text$.next(e.currentTarget.value)
+          }
+        />
         <button>Add #{items.length + 1}</button>
       </form>
     </>

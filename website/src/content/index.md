@@ -6,7 +6,7 @@ RxJS is how you orchestrate the state that plain React makes hard: live streams 
 
 ## Why react-rx
 
-- **Non-blocking by default.** `useObservable` defers store updates: chatty streams can't make typing feel blocked, and updates coalesce under load. The deferral is *identity-coherent* — when the observable changes, the previous observable's value can never render under the new one.
+- **Non-blocking by default.** `useObservable` defers store updates: chatty streams can't make typing feel blocked, and updates coalesce under load. The deferral is _identity-coherent_ — when the observable changes, the previous observable's value can never render under the new one.
 - **Synchronous emissions paint on the first render.** No re-render-on-mount tax: a `BehaviorSubject` or replayed value renders immediately, on the client and during SSR.
 - **First-class [`<Activity>`](https://react.dev/reference/react/Activity) (React 19.2).** Hidden trees keep warm snapshots and reveal instantly; pre-rendered trees start their data fetches during render — see [Activity and preload](/examples/activity).
 - **Suspense-powered data fetching.** [`useObservablePromise`](/reference#useobservablepromise) turns any observable into a `use()`-compatible promise: suspend until the first emission, then live-update in place without re-suspending — see [Suspense data fetching](/examples/data-fetching).

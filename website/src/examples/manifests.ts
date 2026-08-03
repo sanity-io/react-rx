@@ -92,7 +92,9 @@ export const exampleManifests = {
     },
   },
   'relative-time': {
-    files: {'/App.tsx': 'RelativeTimeExample.tsx'},
+    files: {
+      '/App.tsx': 'RelativeTimeExample.tsx',
+    },
   },
   'resilient-fetch': {
     files: {

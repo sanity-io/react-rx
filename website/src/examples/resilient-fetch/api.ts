@@ -1,4 +1,10 @@
-import {BehaviorSubject, defer, map, timer, type Observable} from 'rxjs'
+import {
+  BehaviorSubject,
+  defer,
+  map,
+  timer,
+  type Observable,
+} from 'rxjs'
 
 export interface Snapshot {
   price: number
@@ -17,9 +23,16 @@ export function fetchPrice(): Observable<Snapshot> {
     timer(400).pipe(
       map(() => {
         if (Math.random() < 0.35) {
-          throw new Error('503 Service Unavailable')
+          throw new Error(
+            '503 Service Unavailable',
+          )
         }
-        lastPrice = Math.round((lastPrice + (Math.random() - 0.5) * 4) * 100) / 100
+        lastPrice =
+          Math.round(
+            (lastPrice +
+              (Math.random() - 0.5) * 4) *
+              100,
+          ) / 100
         return {price: lastPrice, at: Date.now()}
       }),
     ),

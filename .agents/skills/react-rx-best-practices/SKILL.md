@@ -75,11 +75,11 @@ missing `unsubscribe` or a stale-closure bug.
 
 ## Choosing the right hook
 
-| You are rendering                                        | Hook                   |
-| -------------------------------------------------------- | ---------------------- |
-| Live values: lists, previews, timers, sockets, chrome     | `useObservable`        |
+| You are rendering                                          | Hook                   |
+| ---------------------------------------------------------- | ---------------------- |
+| Live values: lists, previews, timers, sockets, chrome      | `useObservable`        |
 | A controlled input, or a value read back in the same event | `useSyncObservable`    |
-| Async data where "loading" means a Suspense fallback      | `useObservablePromise` |
+| Async data where "loading" means a Suspense fallback       | `useObservablePromise` |
 
 Default to `useObservable`. Its updates are deferred (`useDeferredValue` semantics) and
 identity-coherent, so streams can be chatty without making the UI feel blocked, and suspending

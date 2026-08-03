@@ -1,6 +1,17 @@
 import {useMemo} from 'react'
-import {useObservable, useSyncObservable} from 'react-rx'
-import {distinctUntilChanged, filter, map, Observable, Subject, switchMap, timer} from 'rxjs'
+import {
+  useObservable,
+  useSyncObservable,
+} from 'react-rx'
+import {
+  distinctUntilChanged,
+  filter,
+  map,
+  Observable,
+  Subject,
+  switchMap,
+  timer,
+} from 'rxjs'
 
 interface SearchResult {
   keyword: string
@@ -23,10 +34,19 @@ const range = (len: number) => {
 const keyword$ = new Subject<string>()
 
 // A search function that takes longer time to complete for shorter keywords
-const search = (keyword: string): Observable<SearchResult> => {
-  const delay = Math.max(1, Math.round(10 - keyword.length))
+const search = (
+  keyword: string,
+): Observable<SearchResult> => {
+  const delay = Math.max(
+    1,
+    Math.round(10 - keyword.length),
+  )
   return timer(delay * 200).pipe(
-    map(() => range(delay).map((_, i) => ({title: `Hit #${i}`}))),
+    map(() =>
+      range(delay).map((_, i) => ({
+        title: `Hit #${i}`,
+      })),
+    ),
     map((hits) => ({keyword, hits})),
   )
 }
@@ -43,10 +63,14 @@ function SearchExample() {
         map((result: SearchResult) => (
           <>
             <h4>Searched for {result.keyword}</h4>
-            <div>Got {result.hits.length} hits</div>
+            <div>
+              Got {result.hits.length} hits
+            </div>
             <ul>
               {result.hits.map((hit) => (
-                <li key={hit.title}>{hit.title}</li>
+                <li key={hit.title}>
+                  {hit.title}
+                </li>
               ))}
             </ul>
           </>
@@ -66,9 +90,14 @@ function SearchExample() {
         type="search"
         value={keyword}
         placeholder="Type a keyword to search"
-        onChange={(e) => keyword$.next(e.currentTarget.value)}
+        onChange={(e) =>
+          keyword$.next(e.currentTarget.value)
+        }
       />
-      <small>The more characters you type, the faster the results will appear</small>
+      <small>
+        The more characters you type, the faster
+        the results will appear
+      </small>
       {results}
     </>
   )

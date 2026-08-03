@@ -1,5 +1,7 @@
 import ExampleSandpack from '@/components/ExampleSandpack'
 
 export default function Example() {
-  return <ExampleSandpack example="relative-time" />
+  return (
+    <ExampleSandpack example="relative-time" />
+  )
 }

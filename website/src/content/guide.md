@@ -52,7 +52,7 @@ function Search() {
 
 - **Default to `useObservable`** — store updates are deferred, so previews, validation, lists, and other chrome stay responsive and play nicely with Suspense. Don't use it for controlled inputs (deferred updates can lag the caret) or for one-shot async where the loading UI is a Suspense fallback.
 - **Reach for `useSyncObservable`** only when the value feeds a controlled input (caret/IME breakage or lost keystrokes under load) or must be read back synchronously in the same event. It is also the hook with the strict v4 SSR contract (server renders the `initialValue`, throws without one). Don't make it your default: synchronous store updates cannot be marked as Transitions, so a suspending child replaces visible content with a fallback.
-- **Reach for `useObservablePromise`** when "waiting for the first value" should render as a `<Suspense>` fallback. Don't use it on streams that `startWith(...)` a placeholder — the placeholder *is* the first emission, so the promise fulfills instantly with it.
+- **Reach for `useObservablePromise`** when "waiting for the first value" should render as a `<Suspense>` fallback. Don't use it on streams that `startWith(...)` a placeholder — the placeholder _is_ the first emission, so the promise fulfills instantly with it.
 
 Each hook's [API reference](/reference) has a full "When not to use" list. See [Suspense & deferred values](/examples/suspense) for a side-by-side demo, and the [v4 → v5 migration guide](/migrate/v4-to-v5) if you are upgrading.
 
@@ -320,9 +320,7 @@ import {useObservable} from 'react-rx'
 import {BehaviorSubject, catchError, map, of, startWith, switchMap} from 'rxjs'
 
 type State =
-  | {status: 'loading'}
-  | {status: 'error'; error: Error}
-  | {status: 'success'; users: User[]}
+  {status: 'loading'} | {status: 'error'; error: Error} | {status: 'success'; users: User[]}
 
 function ProjectUsers({projectId}: {projectId: string}) {
   const [retry$] = useState(() => new BehaviorSubject(0))

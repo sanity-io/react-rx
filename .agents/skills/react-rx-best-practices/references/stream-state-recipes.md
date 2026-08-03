@@ -121,10 +121,7 @@ When the "loading" UI maps 1:1 to a fallback — a spinner where the content wil
 
 ```tsx
 // ❌ Before: sentinel values threaded through the stream and the render
-const state$ = useMemo(
-  () => fetchDatasets(client).pipe(startWith(LOADING_SENTINEL)),
-  [client],
-)
+const state$ = useMemo(() => fetchDatasets(client).pipe(startWith(LOADING_SENTINEL)), [client])
 const state = useObservable(state$, LOADING_SENTINEL)
 if (state === LOADING_SENTINEL) return <Spinner />
 return <DatasetList datasets={state} />

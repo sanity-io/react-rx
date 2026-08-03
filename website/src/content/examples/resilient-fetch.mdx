@@ -8,7 +8,7 @@ Doing this with `useEffect` means juggling interval handles, abort flags, retry 
 
 - **Pause and resume** — `online$.pipe(switchMap(...))` tears the polling down while offline and rebuilds it on reconnect; `timer(0, …)` makes the first fetch after reconnect immediate.
 - **Retry with backoff** — `retry({count: 3, delay})` on the request, with the backoff computed from the attempt number.
-- **Errors don't kill the poll** — `catchError` sits on the *inner* request observable, so an exhausted retry becomes a status value while the outer timer keeps ticking.
+- **Errors don't kill the poll** — `catchError` sits on the _inner_ request observable, so an exhausted retry becomes a status value while the outer timer keeps ticking.
 - **Keep last-good data** — a `scan` folds every status into a view that remembers the most recent successful snapshot.
 
 Try it: hit "Simulate going offline", wait a few polls, and come back online — the price refreshes immediately. The mock API fails about a third of the time, so you'll also see the retry/backoff path fire on its own.

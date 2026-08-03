@@ -1,5 +1,11 @@
 import {useObservable} from 'react-rx'
-import {map, scan, startWith, Subject, timer} from 'rxjs'
+import {
+  map,
+  scan,
+  startWith,
+  Subject,
+  timer,
+} from 'rxjs'
 
 interface Message {
   id: number
@@ -11,10 +17,18 @@ interface Message {
 // One shared clock for the whole app. Every <Timestamp> below reads this
 // same observable, and react-rx shares a single underlying subscription —
 // one interval, no matter how many labels are on screen.
-const now$ = timer(0, 1000).pipe(map(() => Date.now()))
+const now$ = timer(0, 1000).pipe(
+  map(() => Date.now()),
+)
 
-function formatAgo(sentAt: number, now: number): string {
-  const seconds = Math.max(0, Math.floor((now - sentAt) / 1000))
+function formatAgo(
+  sentAt: number,
+  now: number,
+): string {
+  const seconds = Math.max(
+    0,
+    Math.floor((now - sentAt) / 1000),
+  )
   if (seconds < 5) return 'just now'
   if (seconds < 60) return `${seconds}s ago`
   const minutes = Math.floor(seconds / 60)
@@ -23,14 +37,31 @@ function formatAgo(sentAt: number, now: number): string {
 }
 
 function Timestamp({sentAt}: {sentAt: number}) {
-  const now = useObservable(now$, () => Date.now())
+  const now = useObservable(now$, () =>
+    Date.now(),
+  )
   return <small>{formatAgo(sentAt, now)}</small>
 }
 
 const SEED: Message[] = [
-  {id: 1, author: 'Ada', text: 'Deploy is out', sentAt: Date.now() - 95_000},
-  {id: 2, author: 'Grace', text: 'Dashboards look healthy', sentAt: Date.now() - 42_000},
-  {id: 3, author: 'Ada', text: 'Closing the incident', sentAt: Date.now() - 7_000},
+  {
+    id: 1,
+    author: 'Ada',
+    text: 'Deploy is out',
+    sentAt: Date.now() - 95_000,
+  },
+  {
+    id: 2,
+    author: 'Grace',
+    text: 'Dashboards look healthy',
+    sentAt: Date.now() - 42_000,
+  },
+  {
+    id: 3,
+    author: 'Ada',
+    text: 'Closing the incident',
+    sentAt: Date.now() - 7_000,
+  },
 ]
 
 // New messages push into a Subject; the list accumulates with scan.
@@ -56,7 +87,8 @@ export default function App() {
     <>
       {messages.map((message) => (
         <article key={message.id}>
-          <strong>{message.author}</strong> <Timestamp sentAt={message.sentAt} />
+          <strong>{message.author}</strong>{' '}
+          <Timestamp sentAt={message.sentAt} />
           <p>{message.text}</p>
         </article>
       ))}

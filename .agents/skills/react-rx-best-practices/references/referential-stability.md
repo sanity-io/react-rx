@@ -47,14 +47,14 @@ Before flagging a bare inline observable as unstable, check whether the compiler
 - Next.js: `reactCompiler: true` (or `experimental.reactCompiler` on older versions) in `next.config.*`
 - `eslint-plugin-react-hooks` with the `react-compiler` rule enabled (signals intent, not proof)
 - Per-file opt-outs: a `"use no memo"` directive disables the compiler for that file — treat those
-  files as *not* compiled and require explicit memoization there
+  files as _not_ compiled and require explicit memoization there
 
 If the compiler is enabled, do not add redundant `useMemo` wrappers around observable construction —
 that's noise the compiler already handles. If it isn't, one of rules 1–3 must hold.
 
 ## Stabilize params and initial values by value
 
-Identity bugs hide one level up, in the *inputs*:
+Identity bugs hide one level up, in the _inputs_:
 
 ```tsx
 // ❌ The caller passes a fresh [] every render → memo key changes → observable recreated forever
