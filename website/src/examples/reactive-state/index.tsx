@@ -1,5 +1,7 @@
 import ExampleSandpack from '@/components/ExampleSandpack'
 
 export default function Example() {
-  return <ExampleSandpack example="reactive-state" />
+  return (
+    <ExampleSandpack example="reactive-state" />
+  )
 }

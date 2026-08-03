@@ -12,7 +12,12 @@ export interface ExampleManifest {
   /** Sandpack file path (e.g. `/App.tsx`) → source file inside `src/examples/<name>`. */
   files: Record<string, string>
   /** Extra npm dependencies for the sandbox. Versions are resolved from the website's own deps. */
-  dependencies?: Partial<Record<keyof typeof websitePackageJson.dependencies, 'latest'>>
+  dependencies?: Partial<
+    Record<
+      keyof typeof websitePackageJson.dependencies,
+      'latest'
+    >
+  >
   /** Optional post-processing applied to each file, both in Sandpack and in exported markdown. */
   transform?: (source: string) => string
 }
@@ -27,7 +32,10 @@ export const exampleManifests = {
   },
   'animation': {
     files: {'/App.tsx': 'AnimationExample.tsx'},
-    dependencies: {'bezier-easing': 'latest', 'styled-components': 'latest'},
+    dependencies: {
+      'bezier-easing': 'latest',
+      'styled-components': 'latest',
+    },
   },
   'context': {
     files: {
@@ -37,7 +45,9 @@ export const exampleManifests = {
     },
   },
   'data-fetching': {
-    files: {'/App.tsx': 'DataFetchingExample.tsx'},
+    files: {
+      '/App.tsx': 'DataFetchingExample.tsx',
+    },
   },
   'errors': {
     files: {
@@ -45,10 +55,14 @@ export const exampleManifests = {
       '/Example.tsx': 'Example.tsx',
       '/Counter.tsx': 'Counter.tsx',
     },
-    dependencies: {'use-error-boundary': 'latest'},
+    dependencies: {
+      'use-error-boundary': 'latest',
+    },
   },
   'event-handlers': {
-    files: {'/App.tsx': 'EventHandlersExample.tsx'},
+    files: {
+      '/App.tsx': 'EventHandlersExample.tsx',
+    },
   },
   'fetch': {
     files: {'/App.tsx': 'FetchExample.tsx'},
@@ -74,7 +88,9 @@ export const exampleManifests = {
     files: {'/App.tsx': 'HelloWorldExample.tsx'},
   },
   'reactive-state': {
-    files: {'/App.tsx': 'ReactiveStateExample.tsx'},
+    files: {
+      '/App.tsx': 'ReactiveStateExample.tsx',
+    },
   },
   'search': {
     files: {'/App.tsx': 'SearchExample.tsx'},
@@ -92,7 +108,8 @@ export const exampleManifests = {
     files: {
       '/App.tsx': 'TickExample.tsx',
       './Ticker.tsx': 'Ticker.tsx',
-      './TickerWithSubTick.tsx': 'TickerWithSubTick.tsx',
+      './TickerWithSubTick.tsx':
+        'TickerWithSubTick.tsx',
     },
   },
   'todo-app': {
@@ -101,4 +118,5 @@ export const exampleManifests = {
   },
 } satisfies Record<string, ExampleManifest>
 
-export type ExampleName = keyof typeof exampleManifests
+export type ExampleName =
+  keyof typeof exampleManifests
