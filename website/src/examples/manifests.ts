@@ -30,13 +30,6 @@ export const exampleManifests = {
       '/api.ts': 'api.ts',
     },
   },
-  'animation': {
-    files: {'/App.tsx': 'AnimationExample.tsx'},
-    dependencies: {
-      'bezier-easing': 'latest',
-      'styled-components': 'latest',
-    },
-  },
   'context': {
     files: {
       '/App.tsx': 'App.tsx',
@@ -87,9 +80,25 @@ export const exampleManifests = {
   'hello-world': {
     files: {'/App.tsx': 'HelloWorldExample.tsx'},
   },
+  'llm-chat': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/chat.ts': 'chat.ts',
+      '/llm.ts': 'llm.ts',
+    },
+  },
   'reactive-state': {
     files: {
       '/App.tsx': 'ReactiveStateExample.tsx',
+    },
+  },
+  'relative-time': {
+    files: {'/App.tsx': 'RelativeTimeExample.tsx'},
+  },
+  'resilient-fetch': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/api.ts': 'api.ts',
     },
   },
   'search': {

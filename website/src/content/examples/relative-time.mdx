@@ -1,0 +1,16 @@
+import Example from '@/examples/relative-time'
+
+# Relative time
+
+Every chat app has them: "just now", "42s ago", "2m ago" labels that keep themselves up to date. In vanilla React this usually means a `setInterval` per component (or a shared context you build yourself), effect cleanup, and a re-render bookkeeping question nobody wants to own.
+
+With a stream it's one line: a single module-level `timer` is the clock, and every `<Timestamp>` derives its label from it.
+
+<Example />
+
+What to notice:
+
+- **One subscription, many readers.** All `<Timestamp>` components read the same `now$` observable, and react-rx shares one underlying subscription per observable — one interval drives every label, however many messages are on screen.
+- **No effects, no cleanup.** Components read the clock with [`useObservable`](/reference#useobservable); subscription lifecycle is the hook's job. When the last label unmounts, the interval stops.
+- **Deferred by default.** The once-a-second tick re-renders at deferred priority, so a burst of labels never competes with your typing.
+- **New messages are the [Subject pattern](/guide#working-with-events):** the button pushes into `newMessage$`, and the list accumulates with `scan`.

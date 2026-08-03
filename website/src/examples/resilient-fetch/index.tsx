@@ -1,5 +1,5 @@
 import ExampleSandpack from '@/components/ExampleSandpack'
 
 export default function Example() {
-  return <ExampleSandpack example="animation" />
+  return <ExampleSandpack example="resilient-fetch" />
 }
