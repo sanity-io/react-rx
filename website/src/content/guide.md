@@ -341,3 +341,5 @@ react-rx caches subscriptions and snapshots by the observable's **reference iden
 4. The [React Compiler](https://react.dev/learn/react-compiler), which auto-memoizes construction — react-rx's test suite runs through it.
 
 Watch the inputs too: a fresh `[]` or `{}` passed as a param or `initialValue` on every render can silently defeat a `useMemo` one level down. Stabilize object-ish inputs by value before they enter a dependency list.
+
+The same discipline applies to **lazy `initialValue` functions**. Until the stream's first emission, the initializer is invoked on every snapshot read — so it must return a stable value. A function that builds a fresh object per call (`() => computeParts(Date.now())`) makes `useSyncExternalStore` see a changed snapshot on every check and loops ("Maximum update depth exceeded"). Memoize the computed value with `useMemo` and pass it as a plain value instead; streams that emit synchronously (`startWith`, `BehaviorSubject`) never reach the `initialValue` path at all.

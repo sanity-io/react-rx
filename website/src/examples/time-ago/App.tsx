@@ -12,12 +12,21 @@ const rtf = new Intl.RelativeTimeFormat('en', {
 })
 
 function TimeAgo({sentAt}: {sentAt: number}) {
-  const parts$ = useMemo(
-    () => timeAgoParts$(sentAt),
+  // Memoize the stream AND the initial value together. The initial value is
+  // read on every snapshot check until the stream's first (async) emission,
+  // so it must stay referentially stable — a fresh object per read would
+  // loop useSyncExternalStore.
+  const [parts$, initialParts] = useMemo(
+    () =>
+      [
+        timeAgoParts$(sentAt),
+        toTimeAgoParts(Date.now() - sentAt),
+      ] as const,
     [sentAt],
   )
-  const parts = useObservable(parts$, () =>
-    toTimeAgoParts(Date.now() - sentAt),
+  const parts = useObservable(
+    parts$,
+    initialParts,
   )
 
   // Visible proof of how often React re-renders this label.

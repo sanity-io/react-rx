@@ -86,6 +86,12 @@ reference equality for downstream `distinctUntilChanged(isEqual)` / memo checks.
 
 - `initialValue` only fills in before the first emission; it does not protect against identity
   churn — a recreated observable resets to `initialValue` every render.
+- **Lazy `initialValue` functions must return stable values.** Until the stream's first emission,
+  the initializer is invoked on every snapshot read — a function that builds a fresh object each
+  call (`() => computeParts(Date.now())`) makes `useSyncExternalStore` see a "new" snapshot every
+  check and loops with "The result of getSnapshot should be cached" / "Maximum update depth
+  exceeded". Memoize the computed value (`useMemo`) and pass it as a plain value instead. Streams
+  that emit synchronously (`startWith`, `BehaviorSubject`) never hit this path.
 - `disabled: true` pauses the live subscription but the render-phase warm-up subscribe still runs.
   To guarantee an observable is never subscribed, swap it out (`shouldFetch ? fetch$ : of(null)`)
   instead of disabling the hook.
