@@ -31,9 +31,14 @@ export default function App() {
   >([])
 
   // What the server would serialize next to the HTML: the message and the
-  // server's clock at render time.
-  const [payload, setPayload] =
-    useState<Payload>(makePayload)
+  // server's clock at render time. Each rerun is a fresh "request" with its
+  // own id, and the container below is keyed by that id so every run renders
+  // into its own element.
+  const [run, setRun] = useState(() => ({
+    id: 1,
+    payload: makePayload(),
+  }))
+  const {payload} = run
 
   useEffect(() => {
     const el = containerRef.current
@@ -66,8 +71,12 @@ export default function App() {
 
     return () => {
       clearTimeout(id)
-      root?.unmount()
-      el.innerHTML = ''
+      // This cleanup runs while React is committing the rerun, and a root
+      // must not be unmounted synchronously mid-render — defer it by one
+      // microtask. By then the keyed container has been swapped out, so the
+      // unmount tears down this run's tree (and its subscriptions) on the
+      // detached element without touching the static HTML on screen.
+      queueMicrotask(() => root?.unmount())
     }
   }, [payload])
 
@@ -93,12 +102,18 @@ export default function App() {
             : mismatches.length}
         </strong>
       </p>
-      <div ref={containerRef} />
+      {/* Keyed per run: a rerun swaps in a fresh container element, so the
+          previous run's root unmounts against the old, detached one and can
+          never wipe the static HTML of the run that is on screen. */}
+      <div key={run.id} ref={containerRef} />
       <p>
         <button
           type="button"
           onClick={() =>
-            setPayload(makePayload())
+            setRun((prev) => ({
+              id: prev.id + 1,
+              payload: makePayload(),
+            }))
           }
         >
           Run the simulation again
