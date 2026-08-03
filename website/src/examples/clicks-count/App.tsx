@@ -1,18 +1,15 @@
-import {useMemo, useState} from 'react'
 import {useObservable} from 'react-rx'
 import {scan, Subject} from 'rxjs'
 
-// With react-rx the hook owns the subscription, the initial value and the
-// teardown. The count state lives in the stream (scan), not in a variable.
+// The same two streams…
+const clicks$ = new Subject<void>()
+const count$ = clicks$.pipe(
+  scan((count) => count + 1, 0),
+)
+
+// …and the whole bridge is one hook: subscription, initial value and
+// teardown are owned by useObservable.
 export default function App() {
-  const [clicks$] = useState(
-    () => new Subject<void>(),
-  )
-  const count$ = useMemo(
-    () =>
-      clicks$.pipe(scan((count) => count + 1, 0)),
-    [clicks$],
-  )
   const count = useObservable(count$, 0)
 
   return (

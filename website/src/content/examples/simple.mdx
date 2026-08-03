@@ -19,6 +19,8 @@ Using react-rx, the component just **reads the stream**. The count state lives i
 
 The bridge boilerplate is gone, and something subtler improved too: the state can no longer be mutated from anywhere else. The only way to change the count is to emit a click.
 
+(The streams live at module scope here so the components stay minimal — one shared instance per sandbox. For per-component streams, create them with `useState(() => new Subject())` instead; [Basic state](/examples/basic-state) shows both styles.)
+
 ## Flow
 
 RxJS has [a whole range of operators](https://rxjs.dev/guide/operators) that control how events flow through your streams. In vanilla React, "count at most one click per second" means refs, timestamps, and an easy-to-botch comparison. In a stream it is one operator:
