@@ -19,7 +19,7 @@ In v4, `useObservable` was built on [`useSyncExternalStore`](https://react.dev/r
 
 v5 makes that the library default:
 
-- **`useObservable`** — store updates are deferred with `useDeferredValue`. Urgent renders keep the previous value; a background render catches up. Mounts, remounts, and `<Activity>` reveals still show the live snapshot (no initial-value flash).
+- **`useObservable`** — store updates are deferred with `useDeferredValue`. Urgent renders keep the previous value; a background render catches up. Mounts, remounts, and `<Activity>` reveals still show the live snapshot (no initial-value flash). The deferral is identity-coherent: when the observable identity changes, the hook falls back to the live value so the previous observable's value never renders under the new one — a stale-value bug a hand-rolled `useDeferredValue(useObservable(...))` wrapper is prone to.
 - **`useSyncObservable`** — exact v4 synchronous behavior, including the strict server snapshot (`initialValue` on the server, throws without one).
 
 ### What you may notice

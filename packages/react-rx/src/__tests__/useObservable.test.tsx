@@ -3,6 +3,7 @@ import {startTransition, useMemo} from 'react'
 import {renderToString} from 'react-dom/server'
 import {
   asyncScheduler,
+  BehaviorSubject,
   map,
   Observable,
   of,
@@ -249,6 +250,59 @@ test('should re-subscribe when receiving a new observable', () => {
   unmount()
 })
 
+test('falls back to the live value when the observable identity changes (deferral is identity-coherent)', () => {
+  const subjectA = new BehaviorSubject('value for a')
+  const subjectB = new BehaviorSubject('initial for b')
+  const renderTimeline: string[] = []
+
+  function ObservableComponent({observable}: {observable: BehaviorSubject<string>}) {
+    renderTimeline.push(useObservable(observable, 'fallback'))
+    return null
+  }
+  const {rerender, unmount} = render(<ObservableComponent observable={subjectA} />)
+  expect(renderTimeline.at(-1)).toBe('value for a')
+
+  const timelineLengthBeforeSwitch = renderTimeline.length
+  rerender(<ObservableComponent observable={subjectB} />)
+
+  // The render right after the identity change must reflect the new observable
+  // (BehaviorSubject emits synchronously), never the deferred snapshot belonging
+  // to the previous observable.
+  expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('initial for b')
+  expect(renderTimeline.slice(timelineLengthBeforeSwitch)).not.toContain('value for a')
+
+  act(() => subjectB.next('updated for b'))
+  expect(renderTimeline.at(-1)).toBe('updated for b')
+
+  unmount()
+})
+
+test('identity change to an async observable renders the initialValue immediately, never the previous value', () => {
+  const subjectA = new BehaviorSubject('value for a')
+  const subjectB = new Subject<string>()
+  const renderTimeline: string[] = []
+
+  function ObservableComponent({observable}: {observable: Observable<string>}) {
+    renderTimeline.push(useObservable(observable, 'initial'))
+    return null
+  }
+  const {rerender, unmount} = render(<ObservableComponent observable={subjectA} />)
+  expect(renderTimeline.at(-1)).toBe('value for a')
+
+  const timelineLengthBeforeSwitch = renderTimeline.length
+  rerender(<ObservableComponent observable={subjectB} />)
+
+  // The new observable has not emitted yet, so the urgent render right after the
+  // switch shows the initialValue — not the previous observable's deferred value.
+  expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('initial')
+  expect(renderTimeline.slice(timelineLengthBeforeSwitch)).not.toContain('value for a')
+
+  act(() => subjectB.next('value for b'))
+  expect(renderTimeline.at(-1)).toBe('value for b')
+
+  unmount()
+})
+
 test('should return undefined if observable emits undefined, also when given initial value', () => {
   const values$ = new Subject<string | undefined>()
   const {result, unmount} = renderHook(() => useObservable(values$, 'initial'))
@@ -374,9 +428,9 @@ test('should return the actual value when the hook is disabled and then re-enabl
 })
 
 test('sync emission wins over initialValue on the first render (no flash)', () => {
-  // useDeferredValue's second arg is instance.getSnapshot(initialValue), which equals the
-  // sync emission after warm-up. mountDeferredValueImpl therefore memoizes 'sync' and may
-  // schedule a bail-out deferred pass that also returns 'sync' — never 'initial'.
+  // useDeferredValue's second arg is the live snapshot, which holds the sync emission
+  // after warm-up. mountDeferredValueImpl therefore memoizes 'sync' and may schedule a
+  // bail-out deferred pass that also returns 'sync' — never 'initial'.
   const returnedValues: unknown[] = []
   function ObservableComponent() {
     returnedValues.push(useObservable(of('sync'), 'initial'))
@@ -471,7 +525,8 @@ test('initialValue factories must be pure', () => {
   }
 
   const {result} = renderHook(() => useObservable(values$, factory))
-  // Pre-emission: uSES getSnapshot + useDeferredValue second arg each call the factory per render.
+  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
+  // when checking for tearing on commit.
   expect(factoryCalls).toBeGreaterThanOrEqual(2)
   expect(result.current).toBe('initial')
   const callsBeforeEmit = factoryCalls

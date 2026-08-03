@@ -494,7 +494,7 @@ test('same-ttl preload after unmount renews share grace for long-lived sources',
   })
 
   function Parent() {
-    const p = useObservablePromise(observable, {ttl: 40})
+    const p = useObservablePromise(observable, {ttl: 200})
     return (
       <Suspense fallback={<Fallback />}>
         <Reader promise={p} />
@@ -509,12 +509,12 @@ test('same-ttl preload after unmount renews share grace for long-lived sources',
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('one'))
   unmount()
 
-  // Still inside the original 40ms grace: renew with the same ttl. Without a
-  // share bounce the disconnect still fires at unmount+40ms while eviction is
-  // pushed to touch+40ms — emissions in that gap are lost.
-  await wait(20)
-  void preloadObservablePromise(observable, {ttl: 40})
-  await wait(30) // ~50ms after unmount, ~30ms after renew — only valid if bounced
+  // Still inside the original 200ms grace: renew with the same ttl. Without a
+  // share bounce the disconnect still fires at unmount+200ms while eviction is
+  // pushed to touch+200ms — emissions in that gap are lost.
+  await wait(100)
+  void preloadObservablePromise(observable, {ttl: 200})
+  await wait(150) // ~250ms after unmount, ~150ms after renew — only valid if bounced
   expect(active).toBe(1)
 
   await act(async () => {
