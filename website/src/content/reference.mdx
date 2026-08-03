@@ -8,7 +8,7 @@ The deferral is **identity-coherent**: unlike a bare `useDeferredValue(useObserv
 
 Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash). On the server, this hook renders exactly what the client's first paint will show (a synchronous emission when there is one, else the resolved `initialValue`, else nothing) and never throws for a missing `initialValue`.
 
-Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs or strict SSR control.
+Prefer this hook for previews, validation, lists, and other non-input reads.
 
 **Signature**
 
@@ -26,6 +26,13 @@ interface UseObservableOptions {
 ```
 
 `disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). It does **not** skip the render-phase warm-up subscription — see the [guide](/guide) for swapping the observable when you need zero subscriptions.
+
+**When not to use**
+
+- **Controlled inputs, or values read back in the same event** — deferred updates can lag the caret or drop keystrokes under load. Use [`useSyncObservable`](#usesyncobservable).
+- **One-shot async data where "loading" is a Suspense fallback** — emitting `{loading: true}` placeholder values duplicates what `<Suspense>` already expresses. Use [`useObservablePromise`](#useobservablepromise).
+- **Plain values with no stream involved** — don't wrap values in `of()` or a `Subject` just to use the hook; `useState` or props are simpler and faster.
+- **Observables created fresh on every render** — the hook caches by reference identity, so an unstable observable resubscribes every render. Memoize it, hoist it, or rely on the React Compiler — see [keep observables referentially stable](/guide#keep-observables-referentially-stable).
 
 **Example**
 
@@ -48,8 +55,6 @@ A React hook that returns the current/latest value from an observable **synchron
 
 Use it when the value feeds a controlled input (or must stay consistent within the same event), or when you need strict control over server markup: the server renders the resolved `initialValue` and throws without one.
 
-**Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by this hook replaces already-visible content with the nearest Suspense fallback — see the [useSyncExternalStore caveats](https://react.dev/reference/react/useSyncExternalStore#caveats). Compare the two hooks in the [Suspense example](/examples/suspense).
-
 **Signature**
 
 ```ts
@@ -61,26 +66,25 @@ function useSyncObservable<T>(
 ): T
 ```
 
+**When not to use**
+
+- **As the default for lists, previews, and other chrome** — synchronous store mutations cannot be marked as Transitions, so a suspending child replaces already-visible content with the nearest Suspense fallback (see the [useSyncExternalStore caveats](https://react.dev/reference/react/useSyncExternalStore#caveats) and compare both hooks in the [Suspense example](/examples/suspense)). Use [`useObservable`](#useobservable).
+- **Fetch-loading UI** — use [`useObservablePromise`](#useobservablepromise) and let `<Suspense>` own the fallback.
+- **Wrapped in `useDeferredValue`** — `useDeferredValue(useSyncObservable(...))` is just [`useObservable`](#useobservable), minus its identity-coherence guarantee.
+
 **Example**
 
 ```tsx
-import type {ChangeEvent} from 'react'
-import {useObservableEvent, useSyncObservable} from 'react-rx'
-import {map, Subject, tap, type Observable} from 'rxjs'
-
-const text$ = new Subject<string>()
+import {useState} from 'react'
+import {useSyncObservable} from 'react-rx'
+import {Subject} from 'rxjs'
 
 function SearchField() {
-  const handleChange = useObservableEvent((events$: Observable<ChangeEvent<HTMLInputElement>>) =>
-    events$.pipe(
-      map((e) => e.currentTarget.value),
-      tap((value) => text$.next(value)),
-    ),
-  )
+  const [text$] = useState(() => new Subject<string>())
   // Controlled input values must update synchronously.
   const text = useSyncObservable(text$, '')
 
-  return <input value={text} onChange={handleChange} />
+  return <input value={text} onChange={(e) => text$.next(e.currentTarget.value)} />
 }
 ```
 
@@ -106,6 +110,13 @@ type ObservablePromise<T> = Promise<T> &
 ```
 
 The hook does **not** suspend. Pass the returned promise to React's [`use`](https://react.dev/reference/react/use) inside a `<Suspense>` boundary. Suspends until the first emission; later emissions update without re-suspending. Errors reject the promise (Error Boundary). See the [guide](/guide) for `startWith` caveats, `disabled` / `ttl`, and when to prefer `useObservable`.
+
+**When not to use**
+
+- **Streams that `startWith(...)` a placeholder** — the placeholder is the first emission, so the promise fulfills instantly with it and Suspense never shows. Drop the `startWith`, or use [`useObservable`](#useobservable) with the placeholder as `initialValue`.
+- **Live values that should render immediately without a boundary** — use [`useObservable`](#useobservable).
+- **Controlled inputs** — use [`useSyncObservable`](#usesyncobservable).
+- **Unstable observable identity** — every new observable reference is a new pending promise, which re-triggers the fallback. Keep the observable stable, and prefer creating the promise in a parent that does not itself suspend.
 
 **Example**
 
@@ -146,11 +157,16 @@ function preloadObservablePromise<T>(
 
 Default `ttl` is `5000` (longer than the hook default) so a hover-warmed value survives until click/navigation.
 
+**When not to use**
+
+- **Sources that may never settle** without bounding them — the subscription stays alive until the promise settles. Add a `timeout` or make the source cancellable first.
+- **As a data-reading mechanism** — it only warms the cache. Components still read through [`useObservablePromise`](#useobservablepromise) + `use()`.
+
 ## useObservableEvent()
 
-A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.
+A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props. When the returned callback is invoked, its argument is emitted into the pipeline, which is subscribed for the lifetime of the component.
 
-When the returned callback is invoked, its single argument is emitted into the observable. The pipeline you return is subscribed for the lifetime of the component, and unsubscribed on unmount.
+**Prefer an explicit `Subject` instead.** `useObservableEvent` hides both the subscription and the data flow inside the hook: values vanish into `tap` side effects, and the pipeline cannot be composed with anything else. The same wiring is clearer when events push into a `Subject` you can see, and behavior lives on streams derived from it — see [working with events](/guide#working-with-events) in the guide. Reserve this hook for pipelines that are genuinely event-first, per-component, and side-effect-only.
 
 **Signature**
 
@@ -160,41 +176,38 @@ function useObservableEvent<T, U>(
 ): (arg: T) => void
 ```
 
-**Example**
+**When not to use**
+
+- **Feeding state that components render** — push into a `Subject` and read derived streams with [`useObservable`](#useobservable) / [`useSyncObservable`](#usesyncobservable) instead; the flow stays visible and testable.
+- **Anything another stream needs to compose with** — the internal subject is unreachable from outside the hook.
+- **New code, as a default** — reach for the explicit pattern first.
+
+**Example** — and the explicit-`Subject` equivalent to prefer:
 
 ```tsx
-import {useState} from 'react'
-import {useObservableEvent} from 'react-rx'
-import {filter, map, tap} from 'rxjs'
+import {useMemo, useState} from 'react'
+import {useObservable, useObservableEvent} from 'react-rx'
+import {scan, Subject, tap} from 'rxjs'
 
-const ShowSliderValue = () => {
-  const [value, setValue] = useState(1)
-  const handleChange = useObservableEvent((value$) =>
-    value$.pipe(
-      // Ignore nullish values
-      filter(nonNullable),
-      // Cast to number
-      map((value) => Number(value)),
-      // Update local state
-      tap(setValue),
+// With useObservableEvent: the pipeline is subscribed invisibly, for side effects
+function WithHook() {
+  const [count, setCount] = useState(0)
+  const handleClick = useObservableEvent((clicks$) =>
+    clicks$.pipe(
+      scan((count) => count + 1, 0),
+      tap(setCount),
     ),
   )
-
-  return (
-    <>
-      <input
-        type="range"
-        value={value}
-        onChange={(event) => handleChange(event.target.value)}
-        min={1}
-        max={10}
-      />
-      <div>Value is: {value}</div>
-    </>
-  )
+  return <button onClick={handleClick}>Clicked {count} times</button>
 }
 
-function nonNullable<T>(v: T): v is NonNullable<T> {
-  return v != null
+// Preferred: events push into a Subject; hooks read the derived stream
+function WithSubject() {
+  const [clicks$] = useState(() => new Subject<void>())
+  const count = useObservable(
+    useMemo(() => clicks$.pipe(scan((count) => count + 1, 0)), [clicks$]),
+    0,
+  )
+  return <button onClick={() => clicks$.next()}>Clicked {count} times</button>
 }
 ```

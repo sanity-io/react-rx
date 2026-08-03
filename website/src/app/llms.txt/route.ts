@@ -17,6 +17,14 @@ The full documentation, including the source code of every interactive example, 
 ## Docs
 
 ${links}
+
+## Agent skill
+
+A best-practices skill for writing and reviewing React components that consume observables — hook selection (with per-hook "when not to use" lists), referential stability, and refactoring hand-rolled \`useEffect\` + \`.subscribe()\` bridges.
+
+- Install: \`npx skills add sanity-io/react-rx --skill react-rx-best-practices\`
+- Registry: https://skills.sh/sanity-io/react-rx
+- Source (readable without installing): https://github.com/sanity-io/react-rx/tree/current/.agents/skills/react-rx-best-practices
 `
   return new Response(body, {
     headers: {'Content-Type': 'text/plain; charset=utf-8'},

@@ -6,14 +6,57 @@
 npm i react-rx rxjs
 ```
 
+## The mental model
+
+react-rx keeps a strict division of labor:
+
+- **Streams own behavior.** Fetching, retrying, debouncing, accumulating, combining — all of it is composed in RxJS, outside of render or in a `useMemo`.
+- **Hooks own lifecycle.** A hook subscribes, reads synchronous emissions during the first render, tears down on unmount, and re-renders the component when the stream emits. You never call `.subscribe()` in a component.
+- **Events push into Subjects.** A plain event handler calls `subject.next(value)`; streams derive from the subject.
+
+```tsx
+import {useMemo, useState} from 'react'
+import {useObservable, useSyncObservable} from 'react-rx'
+import {debounceTime, distinctUntilChanged, filter, Subject, switchMap} from 'rxjs'
+
+function Search() {
+  // One Subject per component instance — events push into it
+  const [query$] = useState(() => new Subject<string>())
+
+  // Behavior lives on derived streams
+  const results$ = useMemo(
+    () =>
+      query$.pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        filter((query) => query.length > 1),
+        switchMap((query) => searchApi(query)),
+      ),
+    [query$],
+  )
+
+  // Hooks read the streams
+  const query = useSyncObservable(query$, '') // controlled input → synchronous
+  const results = useObservable(results$) // everything else → deferred
+
+  return (
+    <>
+      <input value={query} onChange={(e) => query$.next(e.currentTarget.value)} />
+      <ResultsList results={results} />
+    </>
+  )
+}
+```
+
+## Which hook should I use?
+
+- **Default to `useObservable`** — store updates are deferred, so previews, validation, lists, and other chrome stay responsive and play nicely with Suspense. Don't use it for controlled inputs (deferred updates can lag the caret) or for one-shot async where the loading UI is a Suspense fallback.
+- **Reach for `useSyncObservable`** only when the value feeds a controlled input (caret/IME breakage or lost keystrokes under load) or must be read back synchronously in the same event. It is also the hook with the strict v4 SSR contract (server renders the `initialValue`, throws without one). Don't make it your default: synchronous store updates cannot be marked as Transitions, so a suspending child replaces visible content with a fallback.
+- **Reach for `useObservablePromise`** when "waiting for the first value" should render as a `<Suspense>` fallback. Don't use it on streams that `startWith(...)` a placeholder — the placeholder *is* the first emission, so the promise fulfills instantly with it.
+
+Each hook's [API reference](/reference) has a full "When not to use" list. See [Suspense & deferred values](/examples/suspense) for a side-by-side demo, and the [v4 → v5 migration guide](/migrate/v4-to-v5) if you are upgrading.
+
 ## Observable Hooks
-
-### Which one should I use?
-
-- **Default to `useObservable`** — store updates are deferred, so previews, validation, lists, and other chrome stay responsive and play nicely with Suspense.
-- **Reach for `useSyncObservable`** only when the value feeds a controlled input (caret/IME breakage or lost keystrokes under load) or must be read back synchronously in the same event. It is also the hook with the strict v4 SSR contract (server renders the `initialValue`, throws without one).
-
-See [Suspense & deferred values](/examples/suspense) for a side-by-side demo, and the [v4 → v5 migration guide](/migrate/v4-to-v5) if you are upgrading.
 
 ### useObservable()
 
@@ -111,22 +154,16 @@ Because the fetch observable is only created (and therefore only ever subscribed
 Same signature as `useObservable`, but updates are synchronous (the previous default). Use it for controlled inputs:
 
 ```tsx
-import type {ChangeEvent} from 'react'
-import {useObservableEvent, useSyncObservable} from 'react-rx'
-import {map, Subject, tap, type Observable} from 'rxjs'
-
-const text$ = new Subject<string>()
+import {useState} from 'react'
+import {useSyncObservable} from 'react-rx'
+import {Subject} from 'rxjs'
 
 function SearchField() {
-  const handleChange = useObservableEvent((events$: Observable<ChangeEvent<HTMLInputElement>>) =>
-    events$.pipe(
-      map((e) => e.currentTarget.value),
-      tap((value) => text$.next(value)),
-    ),
-  )
+  const [text$] = useState(() => new Subject<string>())
+  // Controlled input values must update synchronously.
   const text = useSyncObservable(text$, '')
 
-  return <input value={text} onChange={handleChange} />
+  return <input value={text} onChange={(e) => text$.next(e.currentTarget.value)} />
 }
 ```
 
@@ -246,49 +283,85 @@ function TabButton({users$, onSelect}) {
 | Live values, timers, subjects, optional `initialValue` | `useObservable`        |
 | Controlled inputs / synchronous store updates          | `useSyncObservable`    |
 | Async data + Suspense / Activity pre-render            | `useObservablePromise` |
-| Event → observable pipelines                           | `useObservableEvent`   |
 
 For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
 
-### useObservableEvent()
+## Working with events
 
-This creates an event handler that can be used to create an observable from events.
-
-Here's an example of a component that displays the current value from a range input:
+Events become streams by pushing into a `Subject` from a plain event handler:
 
 ```tsx
-import {useState} from 'react'
-import {useObservableEvent} from 'react-rx'
-import {filter, map, tap} from 'rxjs'
+import {useMemo, useState} from 'react'
+import {useObservable} from 'react-rx'
+import {map, scan, Subject} from 'rxjs'
 
-const ShowSliderValue = () => {
-  const [value, setValue] = useState(1)
-  const handleChange = useObservableEvent((value$) =>
-    value$.pipe(
-      // Ignore nullish values
-      filter(nonNullable),
-      // Cast to number
-      map((value) => Number(value)),
-      // Update local state
-      tap(setValue),
-    ),
-  )
+function ClickCounter() {
+  const [clicks$] = useState(() => new Subject<void>())
+  const count$ = useMemo(() => clicks$.pipe(scan((count) => count + 1, 0)), [clicks$])
+  const count = useObservable(count$, 0)
 
-  return (
-    <>
-      <input
-        type="range"
-        value={value}
-        onChange={(event) => handleChange(event.target.value)}
-        min={1}
-        max={10}
-      />
-      <div>Value is: {value}</div>
-    </>
-  )
-}
-
-function nonNullable<T>(v: T): v is NonNullable<T> {
-  return v != null
+  return <button onClick={() => clicks$.next()}>Clicked {count} times</button>
 }
 ```
+
+The handler is one visible line; every behavior — throttling, deduping, switching to async work — lives on streams derived from the subject, where it can be composed, shared, and tested. Use a module-level `Subject` when the stream is shared across components, or `useState(() => new Subject())` for per-component streams.
+
+There is also a [`useObservableEvent`](/reference#useobservableevent) hook that wires an event callback into a self-subscribed pipeline. We recommend the explicit `Subject` pattern instead: `useObservableEvent` hides the subscription and the data flow inside the hook, which makes components harder to follow as they grow. Reserve it for pipelines that are genuinely event-first, per-component, and side-effect-only.
+
+## Patterns
+
+### Retry and refresh
+
+Model the trigger as a stream, then derive the request from it. A `BehaviorSubject` makes a natural retry counter:
+
+```tsx
+import {useMemo, useState} from 'react'
+import {useObservable} from 'react-rx'
+import {BehaviorSubject, catchError, map, of, startWith, switchMap} from 'rxjs'
+
+type State =
+  | {status: 'loading'}
+  | {status: 'error'; error: Error}
+  | {status: 'success'; users: User[]}
+
+function ProjectUsers({projectId}: {projectId: string}) {
+  const [retry$] = useState(() => new BehaviorSubject(0))
+
+  const state$ = useMemo(
+    () =>
+      retry$.pipe(
+        switchMap(() =>
+          fetchProjectUsers(projectId).pipe(
+            map((users) => ({status: 'success', users}) as const),
+            startWith({status: 'loading'} as const),
+            catchError((error: Error) => of({status: 'error', error} as const)),
+          ),
+        ),
+      ),
+    [retry$, projectId],
+  )
+  const state = useObservable(state$, {status: 'loading'})
+
+  if (state.status === 'error') {
+    return <button onClick={() => retry$.next(retry$.getValue() + 1)}>Retry</button>
+  }
+  return state.status === 'loading' ? <Spinner /> : <UserList users={state.users} />
+}
+```
+
+The same shape covers polling ticks, visibility changes, and form submissions.
+
+### Errors: boundary or value
+
+`useObservable` and `useSyncObservable` re-throw stream errors during render, so an unhandled error surfaces at the nearest [Error Boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) — see the [error handling example](/examples/errors). When errors should render as UI instead (a retry button, a degraded state), catch them in the stream and emit a value, as in the retry pattern above. `useObservablePromise` rejects its promise, which `use()` routes to the Error Boundary the same way.
+
+### Keep observables referentially stable
+
+react-rx caches subscriptions and snapshots by the observable's **reference identity**. An observable recreated on every render resubscribes on every render — refetch loops, timers restarting, `useObservablePromise` stuck on its fallback. Guarantee stability one of these ways:
+
+1. Module scope (or a store/context that owns the stream).
+2. `useState(() => new Subject())` for per-component subjects.
+3. `useMemo(() => ..., [deps])` with deps that are themselves stable.
+4. The [React Compiler](https://react.dev/learn/react-compiler), which auto-memoizes construction — react-rx's test suite runs through it.
+
+Watch the inputs too: a fresh `[]` or `{}` passed as a param or `initialValue` on every render can silently defeat a `useMemo` one level down. Stabilize object-ish inputs by value before they enter a dependency list.
