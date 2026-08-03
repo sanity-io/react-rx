@@ -1,4 +1,4 @@
-import {useMemo, useRef} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import {useObservable} from 'react-rx'
 
 import {
@@ -41,34 +41,47 @@ function TimeAgo({sentAt}: {sentAt: number}) {
   )
 }
 
-const NOW = Date.now()
-const MESSAGES = [
-  {
-    id: 1,
-    text: 'Just posted — re-renders every second',
-    sentAt: NOW - 3_000,
-  },
-  {
-    id: 2,
-    text: 'About to turn a minute old — then goes quiet',
-    sentAt: NOW - 52_000,
-  },
-  {
-    id: 3,
-    text: 'Minutes old — re-renders once a minute',
-    sentAt: NOW - 4.5 * 60_000,
-  },
-]
+function makeMessages(now: number) {
+  return [
+    {
+      id: `${now}-1`,
+      text: 'Just posted — re-renders every second',
+      sentAt: now - 3_000,
+    },
+    {
+      id: `${now}-2`,
+      text: 'About to turn a minute old — then goes quiet',
+      sentAt: now - 52_000,
+    },
+    {
+      id: `${now}-3`,
+      text: 'Minutes old — re-renders once a minute',
+      sentAt: now - 4.5 * 60_000,
+    },
+  ]
+}
 
 export default function App() {
+  const [messages, setMessages] = useState(() =>
+    makeMessages(Date.now()),
+  )
+
   return (
     <>
-      {MESSAGES.map((message) => (
+      {messages.map((message) => (
         <article key={message.id}>
           <p>{message.text}</p>
           <TimeAgo sentAt={message.sentAt} />
         </article>
       ))}
+      <button
+        type="button"
+        onClick={() =>
+          setMessages(makeMessages(Date.now()))
+        }
+      >
+        Restart demo
+      </button>
     </>
   )
 }
