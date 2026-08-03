@@ -1,0 +1,27 @@
+import Example from '@/examples/async-react'
+
+# Async React demo
+
+The final demo from Rick Hanlon's React Conf 2025 **Async React** talk ([rickhanlonii/async-react](https://github.com/rickhanlonii/async-react), live at [async-react.dev](https://async-react.dev/)), rebuilt on react-rx + RxJS. The talk's thesis: with routing that runs in transitions, suspense-by-default data fetching, and design components that own their pending/optimistic feedback through `action` props, product code stays simple and declarative — and the app automatically adapts to network speed.
+
+Things to try (open the **network debugger** at the bottom of the preview):
+
+- **Fast network (all delays at 0):** log out and back in, switch tabs, search, toggle lessons — nothing ever looks "loading". The pending shimmers technically exist, but a CSS `animation-delay` keeps them invisible for 300ms (1.5s on search), so fast actions finish first.
+- **Slow down `/lessons` (~1500ms):** tab switches now shimmer the optimistic tab, searching shimmers the input while showing your keystrokes immediately (`useOptimistic`), and the list only shows skeletons on _first_ load — transitions keep old results visible for every later change.
+- **Slow down `/login` and `/lessons`, then log out and in:** the login button stays pending through the POST _and_ the prefetch. Under 1s of lessons latency you land on a fully-loaded home screen; above it, login navigates anyway and the Suspense fallback takes over — that's the `Promise.race` in `prefetchLessons`.
+- **Slow down `/lesson/:id/toggle` and complete a lesson on the "In progress" tab:** the checkmark flips instantly (optimistic), the button shimmers after 300ms, and when the mutation and refetch land, the item leaves the list — updated **in place**, no fallback.
+
+<Example />
+
+## What react-rx changes
+
+The React side is untouched from the original — the same `useTransition` / `useOptimistic` / `<Suspense>` patterns, the same action-prop design components, the same transition router. The data layer is where streams take over (`api.ts`):
+
+- The original's cache-of-promises plus `revalidate()` (clear everything, re-render, re-fetch) becomes **revalidate-driven streams**: `lessons$(tab, search)` is a cached observable that re-fetches when `revalidate$` fires. Because [`useObservablePromise`](/reference#useobservablepromise) updates in place after the first emission, revalidations can never re-trigger a Suspense fallback — a guarantee the original had to engineer around.
+- `prefetchLessons()` is [`preloadObservablePromise`](/reference#preloadobservablepromise) raced against a 1s timeout — the same promise the home screen's hook reads, warmed before navigation.
+- Returning to a previously-seen tab replays the last result instantly while a fresh fetch streams in behind it (`shareReplay` + `startWith`): stale-while-revalidate in two operators.
+- The network debugger is streams end-to-end: the delay knobs are `BehaviorSubject`s the fetch layer reads, and the request log is one `scan` over request events, read with [`useObservable`](/reference#useobservable).
+
+Route state, by contrast, deliberately stays in React state: only React state updates can be marked as transitions, which is exactly what navigation wants. Streams for server data, transitions for view state — each tool where it's strongest.
+
+One omission: the original animates with React's `<ViewTransition>`, which is still experimental-only — this port runs on stable React, so those animations are left out.

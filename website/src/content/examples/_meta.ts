@@ -15,5 +15,6 @@ export default {
   'suspense': 'Suspense & deferred values',
   'data-fetching': 'Suspense data fetching',
   'activity': 'Activity and preload',
+  'async-react': 'Async React demo',
   'context': 'React context',
 }

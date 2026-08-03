@@ -1,0 +1,111 @@
+/**
+ * The trick that makes a fast network feel synchronous: pending shimmers
+ * exist as soon as an action starts, but their animation-delay keeps them
+ * invisible for 300ms (1.5s for the search input). Fast actions finish
+ * before the delay elapses, so no loading state ever flashes.
+ */
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.overlay-host {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(127, 127, 127, 0.35), transparent);
+}
+
+.shimmer.is-pending {
+  animation: shimmer 1.3s infinite;
+  animation-delay: 300ms;
+}
+
+.shimmer.long.is-pending {
+  animation: shimmer 1.5s infinite;
+  animation-delay: 1.5s;
+}
+
+.lesson {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.complete-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  line-height: 1;
+}
+
+.complete-button ins {
+  text-decoration: none;
+}
+
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.skeleton {
+  display: inline-block;
+  height: 0.9em;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.network-log {
+  padding-left: 0;
+}
+
+.network-log li {
+  list-style: none;
+  margin-bottom: 0.35rem;
+}
+
+.net-bar {
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+@keyframes net-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.net-bar > span {
+  display: block;
+  height: 100%;
+  transform-origin: left;
+  background: var(--pico-primary);
+  animation: net-fill linear forwards;
+}
+
+.net-bar.done > span {
+  animation: none;
+  transform: scaleX(1);
+  background: var(--pico-ins-color);
+}

@@ -30,6 +30,20 @@ export const exampleManifests = {
       '/api.ts': 'api.ts',
     },
   },
+  'async-react': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/Home.tsx': 'Home.tsx',
+      '/Login.tsx': 'Login.tsx',
+      '/design.tsx': 'design.tsx',
+      '/api.ts': 'api.ts',
+      '/router.tsx': 'router.tsx',
+      '/NetworkDebugger.tsx':
+        'NetworkDebugger.tsx',
+      '/server.ts': 'server.ts',
+      '/demo.css': 'demo.css',
+    },
+  },
   'checkbox': {
     files: {'/App.tsx': 'App.tsx'},
   },
