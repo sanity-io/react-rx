@@ -2,14 +2,24 @@ import ReactiveState from '@/examples/reactive-state'
 import DelayedTick from '@/examples/tick'
 import FizzBuzz from '@/examples/fizz-buzz'
 
+# Advanced counters
+
+Three variations on time-driven state, each showing a composition trick that would be fiddly with `setInterval` and effects.
+
 ## Configurable interval
+
+The interval length is a piece of React state, and the observable is memoized on it — moving the slider swaps in a new observable, and the hook switches subscriptions for you.
 
 <ReactiveState />
 
 ## Delayed tick
 
+A shared timer observable read by two components, one of which delays each tick through `switchMap` — same source, two derived views, one underlying subscription.
+
 <DelayedTick />
 
 ## Fizz Buzz
+
+The stream emits JSX directly: `useObservable` doesn't care whether values are numbers or elements.
 
 <FizzBuzz />

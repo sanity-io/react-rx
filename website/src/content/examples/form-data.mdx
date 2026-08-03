@@ -1,3 +1,9 @@
 import Example from '@/examples/form-data'
 
+# Form state
+
+A form whose state is a stream: edits push into `formData$` and fold together with `scan`, seeded from `localStorage`. Submitting samples the latest data with `withLatestFrom` and `switchMap`s into the storage write, emitting `saving` → `saved` states that drive the button label.
+
+The field values read [`useSyncObservable`](/reference#usesyncobservable) (controlled inputs), while the submit state reads [`useObservable`](/reference#useobservable). Submit, then reload the sandbox preview — the form comes back from storage.
+
 <Example />

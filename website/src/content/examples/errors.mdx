@@ -1,3 +1,9 @@
 import Example from '@/examples/errors'
 
+# Error handling
+
+When a stream errors, [`useObservable`](/reference#useobservable) **re-throws the error during render**, so it surfaces at the nearest [Error Boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) — the same place a rendering error would. Click the button to error the stream and watch the boundary catch it; the counter next to it keeps ticking because it reads a different observable.
+
+When errors should render as UI instead (a retry button, a degraded state), catch them in the stream with `catchError` and emit a value — see [errors: boundary or value](/guide#errors-boundary-or-value) in the guide.
+
 <Example />

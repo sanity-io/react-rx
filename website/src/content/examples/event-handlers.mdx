@@ -1,3 +1,7 @@
 import Example from '@/examples/event-handlers'
 
+# Events to streams
+
+The event pattern the rest of these docs build on: a plain handler pushes into a `Subject` (`mouseMove$.next(event)`), and the component reads a stream derived from it. The handler stays one visible line; every transformation lives in the pipe where it can be composed and tested — see [working with events](/guide#working-with-events) in the guide.
+
 <Example />
