@@ -17,7 +17,7 @@ RxJS is how you orchestrate the state that plain React makes hard: live streams 
 ## What people build with it
 
 - [Streaming LLM replies](/examples/llm-chat) — tokens accumulate with `scan`, several conversations stream concurrently behind `<Activity>`
-- ["x seconds ago" timestamps](/examples/relative-time) — one shared ticking `timer` drives every label
+- ["x seconds ago" timestamps](/examples/timers) — one shared ticking `timer` drives every label, hydration-mismatch-free
 - [Offline-resilient data fetching](/examples/resilient-fetch) — polling that pauses offline, resumes on reconnect, retries with backoff
 - [Render-as-you-fetch tabs](/examples/data-fetching) — Suspense data fetching with hover preloading
 

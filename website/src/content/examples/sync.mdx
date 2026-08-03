@@ -1,9 +1,0 @@
-import Example from '@/examples/sync'
-
-# Sync rendering
-
-`from([...])` emits every value **synchronously** at subscription time. react-rx reads synchronous emissions during the first render, so this component renders exactly once — with the final value — instead of re-rendering through each intermediate emission or flashing an initial value after mount.
-
-This is the "no re-render-on-mount tax" property: anything that can emit synchronously (`of`, `BehaviorSubject`, a replayed `shareReplay`) paints its real value immediately, on the client and during SSR.
-
-<Example />

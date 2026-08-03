@@ -15,38 +15,16 @@ react-rx keeps a strict division of labor:
 - **Events push into Subjects.** A plain event handler calls `subject.next(value)`; streams derive from the subject.
 
 ```tsx
-import {useMemo, useState} from 'react'
-import {useObservable, useSyncObservable} from 'react-rx'
-import {debounceTime, distinctUntilChanged, filter, Subject, switchMap} from 'rxjs'
-
-function Search() {
-  // One Subject per component instance — events push into it
-  const [query$] = useState(() => new Subject<string>())
-
-  // Behavior lives on derived streams
-  const results$ = useMemo(
-    () =>
-      query$.pipe(
-        debounceTime(300),
-        distinctUntilChanged(),
-        filter((query) => query.length > 1),
-        switchMap((query) => searchApi(query)),
-      ),
-    [query$],
-  )
-
-  // Hooks read the streams
-  const query = useSyncObservable(query$, '') // controlled input → synchronous
-  const results = useObservable(results$) // everything else → deferred
-
-  return (
-    <>
-      <input value={query} onChange={(e) => query$.next(e.currentTarget.value)} />
-      <ResultsList results={results} />
-    </>
-  )
-}
+// Events push into a Subject…
+const [query$] = useState(() => new Subject<string>())
+// …behavior lives on derived streams…
+const results$ = useMemo(() => query$.pipe(debounceTime(300), switchMap(search)), [query$])
+// …and hooks read the streams.
+const query = useSyncObservable(query$, '') // controlled input → synchronous
+const results = useObservable(results$) // everything else → deferred
 ```
+
+This page stays copy-paste oriented — signatures, options, and recipes. To _learn_ the model in runnable, tinkerable sandboxes, walk the examples instead: [First steps](/examples/simple) (events → state, mirroring the RxJS overview) → [Basic state](/examples/basic-state) (the `useState` shapes) → [Timers & time ago](/examples/timers) (where streams beat hooks hardest, including SSR hydration).
 
 ## Which hook should I use?
 

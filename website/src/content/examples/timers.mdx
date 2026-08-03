@@ -1,0 +1,34 @@
+import UseInterval from '@/examples/use-interval'
+import IntervalObservable from '@/examples/interval-observable'
+import TimeAgo from '@/examples/time-ago'
+import TimeAgoSsr from '@/examples/time-ago-ssr'
+
+# Timers & time ago
+
+Intervals are famously hard to get right with hooks. A naive `useEffect(() => setInterval(...))` either goes stale (empty deps: the callback closes over old state) or resets the timer on every render (deps on the callback). Getting it right takes the `useInterval` hook from Dan Abramov's [Making setInterval Declarative with React Hooks](https://overreacted.io/making-setinterval-declarative-with-react-hooks/) — a ref to smuggle the latest callback past the effect's dependency check:
+
+<UseInterval />
+
+With observables, there is no impedance mismatch to bridge — time is just another stream. The delay and the running flag are _inputs_ to the pipe: `switchMap` swaps the interval whenever either changes, and `scan` keeps the count across swaps. Nothing to get subtly wrong:
+
+<IntervalObservable />
+
+## A smarter time-ago
+
+Every app with a feed has "42 seconds ago" labels. The naive version re-renders every label every second forever. Streams let you say precisely when a re-render is warranted: one shared clock ticks every second, `map` turns it into structured parts (`{value, unit}` — the observable emits **data**; formatting stays in JSX, here via [`Intl.RelativeTimeFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat)), and `distinctUntilChanged` drops every tick that wouldn't change the label.
+
+Watch the render counters: the fresh message re-renders every second, but once a label reads "1 minute ago" it re-renders once a _minute_ — the second message goes quiet right after it flips:
+
+<TimeAgo />
+
+One more thing to notice: all three labels share a single underlying interval — the clock is one module-scoped stream, and react-rx shares one subscription per observable.
+
+## Server rendering & hydration
+
+Time is the classic hydration hazard: the server renders at one `Date.now()`, the client hydrates seconds later at another, and React logs a mismatch. The stream version avoids it by making the initial value **data passed from the server**: the server serializes its clock (`serverNow`) next to the HTML, and the client's hydration render computes the exact same parts from it — byte-for-byte identical markup, zero mismatches. The static HTML already shows the right label before any JavaScript loads, and the live clock takes over right after hydration.
+
+This sandbox simulates the whole journey: `renderToString` produces the "server" HTML, it sits on screen for three seconds ("the bundle is downloading"), then `hydrateRoot` attaches — with `onRecoverableError` counting any mismatches. Watch the label flip to "1 minute ago" shortly after hydration, courtesy of the live stream:
+
+<TimeAgoSsr />
+
+The mechanism is [`useObservable`](/reference#useobservable)'s SSR contract: on the server it renders what the client's first paint will show — a synchronous emission if there is one, else the `initialValue`. Deriving that initial value from serialized server data instead of `Date.now()` is all it takes.

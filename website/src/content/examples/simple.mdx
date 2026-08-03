@@ -1,18 +1,36 @@
-import HelloWorld from '@/examples/hello-world'
-import Simple from '@/examples/simple'
+import ClicksBridge from '@/examples/clicks-bridge'
+import ClicksCount from '@/examples/clicks-count'
+import ClicksThrottle from '@/examples/clicks-throttle'
+import ClicksValues from '@/examples/clicks-values'
 
-# Simple
+# First steps
 
-The smallest possible start: read an observable with [`useObservable`](/reference#useobservable) and render its latest value. No effects, no subscriptions to manage, no cleanup.
+This page mirrors the [RxJS overview](https://rxjs.dev/guide/overview) — the same progression of examples, but inside React components. Where the RxJS guide contrasts plain JavaScript with observables, we contrast **React + RxJS wired by hand** with **react-rx**. If observables themselves are new to you, skim that guide first; react-rx assumes the basics.
 
-## Hello World
+## Counting clicks
 
-`of('World')` emits synchronously, so the value is there on the very first render — no initial flash, no extra re-render after mount.
+Normally, bridging a stream into React means owning the whole lifecycle yourself: a `Subject` for the events, a `useEffect` to subscribe, a mirrored `useState` to hold the latest value, and an unsubscribe on unmount. Every copy of this is a chance for a leak or a stale closure:
 
-<HelloWorld />
+<ClicksBridge />
 
-## Counter
+Using react-rx, the component just **reads the stream**. The count state lives in the pipe — `scan` works like `reduce` for arrays — and the hook owns subscription, initial value, and teardown:
 
-A `timer` drives the count. The hook subscribes for you and tears down when the component unmounts.
+<ClicksCount />
 
-<Simple />
+The bridge boilerplate is gone, and something subtler improved too: the state can no longer be mutated from anywhere else. The only way to change the count is to emit a click.
+
+## Flow
+
+RxJS has [a whole range of operators](https://rxjs.dev/guide/operators) that control how events flow through your streams. In vanilla React, "count at most one click per second" means refs, timestamps, and an easy-to-botch comparison. In a stream it is one operator:
+
+<ClicksThrottle />
+
+## Values
+
+You can transform the values passing through. Here every click contributes its pointer's x position to a running sum — `map` plucks the coordinate, `scan` accumulates it, and the component renders whatever comes out:
+
+<ClicksValues />
+
+## Where to next
+
+[Basic state](/examples/basic-state) rebuilds the `useState` docs examples on streams, and [Timers & time ago](/examples/timers) shows where streams beat hooks hardest. For choosing between the hooks you just saw, read [which hook should I use?](/guide#which-hook-should-i-use)

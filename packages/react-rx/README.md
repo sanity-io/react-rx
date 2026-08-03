@@ -54,7 +54,7 @@ function UsersList({promise}: {promise: Promise<User[]>}) {
 ## What people build with it
 
 - **Streaming LLM replies** — tokens accumulate with `scan`, multiple conversations stream concurrently behind `<Activity>`: [live demo](https://react-rx.dev/examples/llm-chat)
-- **"x seconds ago" timestamps** — one shared ticking `timer` drives every label: [live demo](https://react-rx.dev/examples/relative-time)
+- **"x seconds ago" timestamps** — one shared ticking `timer` drives every label, hydration-mismatch-free: [live demo](https://react-rx.dev/examples/timers)
 - **Offline-resilient data fetching** — polling that pauses offline, resumes on reconnect, retries with backoff, and keeps last-good data visible: [live demo](https://react-rx.dev/examples/resilient-fetch)
 - **Render-as-you-fetch tabs** — Suspense data fetching with hover preloading and `<Activity>` pre-rendering: [data fetching](https://react-rx.dev/examples/data-fetching), [activity](https://react-rx.dev/examples/activity)
 
