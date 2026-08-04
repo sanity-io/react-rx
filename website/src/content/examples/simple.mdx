@@ -5,21 +5,23 @@ import ClicksValues from '@/examples/clicks-values'
 
 # First steps
 
-This page mirrors the [RxJS overview](https://rxjs.dev/guide/overview) — the same progression of examples, but inside React components. Where the RxJS guide contrasts plain JavaScript with observables, we contrast **React + RxJS wired by hand** with **react-rx**. If observables themselves are new to you, skim that guide first; react-rx assumes the basics.
+This page mirrors the [RxJS overview](https://rxjs.dev/guide/overview). Same progression, but inside React components.
+
+Where the RxJS guide contrasts plain JavaScript with observables, we contrast **React + RxJS wired by hand** with **react-rx**. New to observables? Skim that guide first. react-rx assumes the basics.
 
 ## Counting clicks
 
-Normally, bridging a stream into React means owning the whole lifecycle yourself: a `Subject` for the events, a `useEffect` to subscribe, a mirrored `useState` to hold the latest value, and an unsubscribe on unmount. Every copy of this is a chance for a leak or a stale closure:
+Normally, bridging a stream into React means owning the whole lifecycle yourself. A `Subject` for the events. A `useEffect` to subscribe. A mirrored `useState` for the latest value. An unsubscribe on unmount. Every copy of this is a chance for a leak or a stale closure:
 
 <ClicksBridge />
 
-Using react-rx, the component just **reads the stream**. The count state lives in the pipe — `scan` works like `reduce` for arrays — and the hook owns subscription, initial value, and teardown:
+Using react-rx, the component just **reads the stream**. The count lives in the pipe (`scan` works like `reduce` for arrays). The hook owns subscription, initial value, and teardown:
 
 <ClicksCount />
 
-The bridge boilerplate is gone, and something subtler improved too: the state can no longer be mutated from anywhere else. The only way to change the count is to emit a click.
+The bridge boilerplate is gone. Something subtler improved too: the state can no longer be mutated from anywhere else. The only way to change the count is to emit a click.
 
-(The streams live at module scope here so the components stay minimal — one shared instance per sandbox. For per-component streams, create them with `useState(() => new Subject())` instead; [Basic state](/examples/basic-state) shows both styles.)
+(The streams live at module scope here so the components stay minimal. That means one shared instance per sandbox. For per-component streams, create them with `useState(() => new Subject())` instead. [Basic state](/examples/basic-state) shows both styles.)
 
 ## Flow
 
@@ -29,10 +31,10 @@ RxJS has [a whole range of operators](https://rxjs.dev/guide/operators) that con
 
 ## Values
 
-You can transform the values passing through. Here every click contributes its pointer's x position to a running sum — `map` plucks the coordinate, `scan` accumulates it, and the component renders whatever comes out:
+You can transform the values passing through. Here every click contributes its pointer's x position to a running sum. `map` plucks the coordinate. `scan` accumulates it. The component renders whatever comes out:
 
 <ClicksValues />
 
 ## Where to next
 
-[Basic state](/examples/basic-state) rebuilds the `useState` docs examples on streams, and [Timers & time ago](/examples/timers) shows where streams beat hooks hardest. For choosing between the hooks you just saw, read [which hook should I use?](/guide#which-hook-should-i-use)
+[Basic state](/examples/basic-state) rebuilds the `useState` docs examples on streams. [Timers & time ago](/examples/timers) shows where streams beat hooks hardest. For choosing between the hooks you just saw, read [which hook should I use?](/guide#which-hook-should-i-use)

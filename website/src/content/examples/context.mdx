@@ -2,8 +2,10 @@ import Example from '@/examples/context'
 
 # React context
 
-Observables travel through React context like any other value. Here a `Subject` lives in a context provider; components read it with [`useObservable`](/reference#useobservable) via a small `useModeValue()` hook and write to it with `subject.next(...)` via `useSetMode()`.
+Observables travel through React context like any other value.
 
-Both components inside the provider share the same subject, so switching the mode updates them together — while the component outside the provider reads the default context value and never changes.
+Here a `Subject` lives in a context provider. Components read it with [`useObservable`](/reference#useobservable) via a small `useModeValue()` hook. They write to it with `subject.next(...)` via `useSetMode()`.
+
+Both components inside the provider share the same subject, so switching the mode updates them together. The component outside the provider reads the default context value and never changes.
 
 <Example />

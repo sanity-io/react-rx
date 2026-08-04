@@ -13,12 +13,12 @@ export default function App() {
     () => new BehaviorSubject(42),
   )
 
-  // The text input is controlled — synchronous updates.
+  // The text input is controlled, so it needs synchronous updates.
   const name = useSyncObservable(
     name$,
     name$.getValue(),
   )
-  // Age only feeds rendering — the deferred default is fine.
+  // Age only feeds rendering, so the deferred default is fine.
   const age = useObservable(age$, age$.getValue())
 
   return (

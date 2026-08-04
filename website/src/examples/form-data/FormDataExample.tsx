@@ -71,7 +71,7 @@ function FormDataExample() {
     ),
   )
 
-  // Form field values feed controlled inputs — must stay synchronous.
+  // Form field values feed controlled inputs, so they must stay synchronous.
   const formData = useSyncObservable(data$, {
     title: '',
     description: '',

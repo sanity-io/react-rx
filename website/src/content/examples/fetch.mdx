@@ -2,8 +2,12 @@ import Example from '@/examples/fetch'
 
 # Fetch requests
 
-A minimal fetch-on-click: URL selections push into a `Subject`, `switchMap` runs the fetch (cancelling any in-flight one), and `distinctUntilChanged` skips repeat clicks on the same URL.
+A minimal fetch-on-click:
 
-For production-shaped fetching, see [offline-resilient fetch](/examples/resilient-fetch) (retry, backoff, pause/resume) and [Suspense data fetching](/examples/data-fetching) (loading UI as a Suspense fallback).
+- URL selections push into a `Subject`.
+- `switchMap` runs the fetch and cancels any in-flight one.
+- `distinctUntilChanged` skips repeat clicks on the same URL.
+
+For production-shaped fetching, see [offline-resilient fetch](/examples/resilient-fetch) (retry, backoff, pause and resume) and [Suspense data fetching](/examples/data-fetching) (loading UI as a Suspense fallback).
 
 <Example />

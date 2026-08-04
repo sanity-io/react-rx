@@ -26,7 +26,7 @@ type Status =
 
 const status$ = online$.pipe(
   // While offline, stop polling entirely. On reconnect, switchMap
-  // resubscribes and timer(0, …) fires immediately — resume for free.
+  // resubscribes and timer(0, …) fires immediately, so resume is free.
   switchMap((online) =>
     online
       ? timer(0, POLL_MS).pipe(
@@ -131,7 +131,7 @@ function StatusLine({status}: {status: Status}) {
     case 'live':
       return (
         <small>
-          live — polling every {POLL_MS / 1000}s
+          live, polling every {POLL_MS / 1000}s
         </small>
       )
     case 'fetching':
@@ -141,15 +141,14 @@ function StatusLine({status}: {status: Status}) {
     case 'error':
       return (
         <small>
-          <mark>{status.message}</mark> — retrying
+          <mark>{status.message}</mark>, retrying
           on the next poll
         </small>
       )
     case 'offline':
       return (
         <small>
-          offline — polling paused, last price
-          kept
+          offline. Polling paused, last price kept
         </small>
       )
   }

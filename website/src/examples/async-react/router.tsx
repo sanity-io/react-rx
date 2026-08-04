@@ -13,7 +13,7 @@ import {
  * search-param change is a React state update wrapped in startTransition,
  * so route changes are interruptible, can suspend without hiding visible
  * content, and compose with Actions. (The original also syncs the browser
- * URL through the Navigation/History APIs — trimmed here because the
+ * URL through the Navigation/History APIs. Trimmed here because the
  * sandbox runs in an iframe.)
  *
  * Note this state stays in React, not in a stream: transitions can only

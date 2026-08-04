@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import {scan, Subject} from 'rxjs'
 
-// Clicks push into a Subject; the count lives in the stream — scan works
+// Clicks push into a Subject; the count lives in the stream. scan works
 // like reduce for arrays.
 const clicks$ = new Subject<void>()
 const count$ = clicks$.pipe(

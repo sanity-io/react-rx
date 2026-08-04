@@ -30,7 +30,7 @@ function DelaySlider({
   return (
     <label>
       <small>
-        <code>{endpoint}</code> — {delay}ms
+        <code>{endpoint}</code>: {delay}ms
       </small>
       <input
         type="range"
@@ -60,7 +60,7 @@ export default function NetworkDebugger() {
     <details>
       <summary>
         <small>
-          Network debugger — add latency, then use
+          Network debugger: add latency, then use
           the app
         </small>
       </summary>

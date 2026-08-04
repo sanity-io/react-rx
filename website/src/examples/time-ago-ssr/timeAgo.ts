@@ -7,7 +7,7 @@ import {
 } from 'rxjs'
 
 // The observable emits *data* (a value + unit pair ready for
-// Intl.RelativeTimeFormat) — how it reads on screen is the component's job.
+// Intl.RelativeTimeFormat). How it reads on screen is the component's job.
 export interface TimeAgoParts {
   value: number
   unit: 'second' | 'minute' | 'hour' | 'day'
@@ -34,7 +34,7 @@ export function toTimeAgoParts(
   }
 }
 
-// One shared clock for every label on the page. Plain share() — no replay:
+// One shared clock for every label on the page. Plain share(), no replay:
 // a replay buffer would hand a *stale* tick to the next subscriber after the
 // last one leaves, which breaks the deterministic first render (and, in the
 // SSR demo, hydration). New subscribers use the hook's initialValue until the

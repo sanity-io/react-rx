@@ -2,8 +2,15 @@ import Example from '@/examples/search'
 
 # Search
 
-Search-as-you-type with the race condition solved by construction: `switchMap` cancels the previous search whenever a new keyword arrives, so a slow response for an old keyword can never overwrite fresh results. This demo makes shorter keywords _slower_ on purpose — type quickly and watch stale responses lose.
+Search-as-you-type with the race condition solved by construction. `switchMap` cancels the previous search whenever a new keyword arrives. A slow response for an old keyword can never overwrite fresh results.
 
-The input reads [`useSyncObservable`](/reference#usesyncobservable) (controlled inputs need synchronous updates); the results read [`useObservable`](/reference#useobservable), whose built-in deferral keeps typing responsive while results render. For the Suspense-integrated version of this comparison, see [Suspense & deferred values](/examples/suspense).
+This demo makes shorter keywords _slower_ on purpose. Type quickly and watch stale responses lose.
+
+The hook split:
+
+- The input reads [`useSyncObservable`](/reference#usesyncobservable). Controlled inputs need synchronous updates.
+- The results read [`useObservable`](/reference#useobservable). Its built-in deferral keeps typing responsive while results render.
+
+For the Suspense-integrated version of this comparison, see [Suspense & deferred values](/examples/suspense).
 
 <Example />

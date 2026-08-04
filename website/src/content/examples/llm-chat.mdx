@@ -2,29 +2,29 @@ import Example from '@/examples/llm-chat'
 
 # LLM chat streaming
 
-Three conversations with a mock LLM. Each reply streams in token by token, and all three can stream **at the same time** — but only the chat you're looking at is on screen.
+Three conversations with a mock LLM. Each reply streams in token by token. All three can stream **at the same time**, but only the chat you're looking at is on screen.
 
 Things to try:
 
-- Open a chat and watch the reply stream in. Later tokens update in place — the Suspense fallback only ever shows before the **first** token.
-- Switch to another chat mid-stream, wait a moment, and switch back: the first chat kept streaming while hidden and reveals instantly, fully caught up.
-- **Hover** a chat you haven't opened yet before clicking it: the reply starts streaming in the background, so opening it skips the fallback entirely.
+- **Open a chat** and watch the reply stream in. Later tokens update in place. The Suspense fallback only ever shows before the **first** token.
+- **Switch away mid-stream**, wait a moment, and switch back. The first chat kept streaming while hidden. It reveals instantly, fully caught up.
+- **Hover a chat you haven't opened** before clicking it. The reply starts streaming in the background, so opening it skips the fallback entirely.
 
 <Example />
 
 ## The mock vs. your code
 
-`llm.ts` is the only mock in this demo: a stand-in for a real streaming LLM API that emits token deltas as an observable. In a real app it would wrap a fetch [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) or an SSE connection. Everything else — `chat.ts` and `App.tsx` — is what your own code would look like.
+`llm.ts` is the only mock in this demo. It stands in for a real streaming LLM API and emits token deltas as an observable. In a real app it would wrap a fetch [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) or an SSE connection. Everything else (`chat.ts` and `App.tsx`) is what your own code would look like.
 
 The userland recipe is small:
 
-- **`scan` folds tokens into the reply.** The conversation stream emits the whole message list on every token, so components just render the latest value.
-- **`shareReplay({bufferSize: 1, refCount: false})` makes the stream independent of who's watching.** The reply keeps streaming while its chat is hidden or unmounted, and any subscriber — new or returning — immediately gets the latest state. The source completes when the reply ends, so nothing leaks.
+- **`scan` folds tokens into the reply.** The conversation stream emits the whole message list on every token. Components just render the latest value.
+- **`shareReplay({bufferSize: 1, refCount: false})` makes the stream independent of who's watching.** The reply keeps streaming while its chat is hidden or unmounted. Any subscriber, new or returning, immediately gets the latest state. The source completes when the reply ends, so nothing leaks.
 
 ## Why the React side "just works"
 
-- **[`useObservablePromise`](/reference#useobservablepromise) + [`use()`](https://react.dev/reference/react/use)** suspend until the first emission and then update in place. Streaming tokens never re-trigger the fallback — that's the semantic difference from re-fetch-per-render approaches.
-- **[`<Activity mode="hidden">`](https://react.dev/reference/react/Activity)** keeps visited chats mounted with their state intact. Hiding a chat tears down its live subscription (like an effect), but the shared conversation stream keeps running, and on reveal the hook synchronously reads the current snapshot — no flash, no refetch, all the tokens that arrived meanwhile.
+- **[`useObservablePromise`](/reference#useobservablepromise) + [`use()`](https://react.dev/reference/react/use)** suspend until the first emission, then update in place. Streaming tokens never re-trigger the fallback.
+- **[`<Activity mode="hidden">`](https://react.dev/reference/react/Activity)** keeps visited chats mounted with their state intact. Hiding a chat tears down its live subscription (like an effect). The shared conversation stream keeps running. On reveal, the hook synchronously reads the current snapshot. No flash, no refetch, and all the tokens that arrived meanwhile are there.
 - **[`preloadObservablePromise`](/reference#preloadobservablepromise)** warms the same cache the hook reads from, outside of render. Hover-to-preload is one line on the button.
 
-See [Activity and preload](/examples/activity) for a side-by-side comparison of prefetch strategies, and [Suspense data fetching](/examples/data-fetching) for the promise semantics on their own.
+See [Activity and preload](/examples/activity) for a side-by-side comparison of prefetch strategies. See [Suspense data fetching](/examples/data-fetching) for the promise semantics on their own.

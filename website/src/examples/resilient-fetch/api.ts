@@ -14,7 +14,7 @@ export interface Snapshot {
 /**
  * ─── MOCK ────────────────────────────────────────────────────────────────
  * A flaky price API: requests take ~400ms and roughly a third of them fail.
- * Stand-in for `fromFetch(...)` against a real endpoint — everything outside
+ * Stand-in for `fromFetch(...)` against a real endpoint. Everything outside
  * this mock is what your own code would look like.
  */
 let lastPrice = 100

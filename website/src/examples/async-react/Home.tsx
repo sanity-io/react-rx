@@ -25,7 +25,7 @@ function LessonList({
   completeAction: (id: string) => Promise<void>
 }) {
   // use() suspends until the first result. Search/tab changes arrive
-  // through transitions, so the fallback only ever shows on first load —
+  // through transitions, so the fallback only ever shows on first load,
   // and stream revalidations update this list in place.
   const lessons = use(promise)
 

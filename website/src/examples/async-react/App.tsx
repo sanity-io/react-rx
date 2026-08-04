@@ -8,7 +8,7 @@ import {Router, useRouter} from './router'
  * The React Conf 2025 "Async React" demo (github.com/rickhanlonii/async-react)
  * rebuilt on react-rx + RxJS. Product code stays declarative: routing runs
  * in transitions, data reads suspend by default, design components own
- * their pending/optimistic feedback through `action` props — and the data
+ * their pending/optimistic feedback through `action` props. The data
  * layer is streams, so revalidations update visible lists in place.
  *
  * Try it: open the network debugger at the bottom, give /lessons some

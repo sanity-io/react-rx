@@ -27,10 +27,10 @@ export function Message({
     [sentAt],
   )
   // The initial value derives from the *server's* clock, so the server markup
-  // and the client's hydration render are byte-for-byte identical — no
+  // and the client's hydration render are byte-for-byte identical. No
   // Date.now() disagreement, no hydration mismatch. The live clock takes over
   // right after hydration. Memoized because the initial value is read on
-  // every snapshot check until the first emission — it must stay
+  // every snapshot check until the first emission, so it must stay
   // referentially stable.
   const initialParts = useMemo(
     () => toTimeAgoParts(serverNow - sentAt),

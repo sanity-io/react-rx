@@ -22,7 +22,7 @@ import type {Lesson} from './server'
  * The client data layer as streams. Compared to the original demo's
  * cache-of-promises, the streams keep the same suspense-by-default reads
  * (via useObservablePromise + use()) and add one thing for free: after a
- * revalidation, every visible list updates *in place* — later emissions
+ * revalidation, every visible list updates *in place*. Later emissions
  * never re-trigger a Suspense fallback.
  */
 
@@ -51,7 +51,7 @@ export interface NetRequest {
 let nextRequestId = 1
 const requestEvents$ = new Subject<NetRequest>()
 
-/** The last few requests, newest last — one stream drives the debugger UI. */
+/** The last few requests, newest last. One stream drives the debugger UI. */
 export const requests$: Observable<NetRequest[]> =
   requestEvents$.pipe(
     scan(
@@ -133,7 +133,7 @@ export function lessons$(
 
 /**
  * Refetch all live lesson streams, resolving when the given key has fresh
- * data — so actions can await it and their pending state covers the
+ * data, so actions can await it and their pending state covers the
  * mutation *and* the refetch, exactly like router.refresh() in the original.
  */
 export function revalidateLessons(

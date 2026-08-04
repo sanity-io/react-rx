@@ -15,16 +15,16 @@ See the [RxJS import migration guide](https://rxjs.dev/guide/importing#how-to-mi
 
 ## Deferred `useObservable` (headline change)
 
-In v4, `useObservable` was built on [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) and forced **synchronous** React updates. Under load that blocks the main thread for chrome that does not need to be sync — validation, presence, previews, permissions, and similar.
+In v4, `useObservable` was built on [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) and forced **synchronous** React updates. Under load that blocks the main thread for UI that does not need to be sync: validation, presence, previews, permissions, and similar.
 
 v5 makes that the library default:
 
-- **`useObservable`** — store updates are deferred with `useDeferredValue`. Urgent renders keep the previous value; a background render catches up. Mounts, remounts, and `<Activity>` reveals still show the live snapshot (no initial-value flash). The deferral is identity-coherent: when the observable identity changes, the hook falls back to the live value so the previous observable's value never renders under the new one — a stale-value bug a hand-rolled `useDeferredValue(useObservable(...))` wrapper is prone to.
-- **`useSyncObservable`** — exact v4 synchronous behavior, including the strict server snapshot (`initialValue` on the server, throws without one).
+- **`useObservable`**: store updates are deferred with `useDeferredValue`. Urgent renders keep the previous value; a background render catches up. Mounts, remounts, and `<Activity>` reveals still show the live snapshot (no initial-value flash). The deferral is identity-coherent: when the observable identity changes, the hook falls back to the live value so the previous observable's value never renders under the new one. A hand-rolled `useDeferredValue(useObservable(...))` wrapper is prone to that stale-value bug.
+- **`useSyncObservable`**: exact v4 synchronous behavior, including the strict server snapshot (`initialValue` on the server, throws without one).
 
 ### What you may notice
 
-- **Controlled inputs** can lag or lose caret position under load if they keep using `useObservable` — switch those reads to `useSyncObservable`.
+- **Controlled inputs** can lag or lose caret position under load if they keep using `useObservable`. Switch those reads to `useSyncObservable`.
 - The **rendered value can briefly trail the store**, so imperative reads or equality checks against it can observe a stale value. Keep a sync read for write-path equality when needed.
 - **Render-count / test assertions** may see extra passes: one Object.is bail-out pass on mount when the snapshot is defined, and an urgent-plus-deferred pair per emission.
 - **SSR** now renders synchronous emissions instead of the `initialValue`, and no longer throws when `initialValue` is omitted. Non-deterministic sync emissions can surface hydration mismatches that were previously masked. Synchronously erroring observables now fail the server render instead of exploding at hydration.
@@ -38,7 +38,7 @@ Keep calling `useObservable` everywhere. Switch only controlled-input (or same-e
 const text = useObservable(text$, '')
 const items = useObservable(items$, [])
 
-// After (v5) — only the input value needs to be sync
+// After (v5): only the input value needs to be sync
 const text = useSyncObservable(text$, '')
 const items = useObservable(items$, [])
 ```

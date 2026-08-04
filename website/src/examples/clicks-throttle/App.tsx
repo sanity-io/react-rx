@@ -3,7 +3,7 @@ import {scan, Subject, throttleTime} from 'rxjs'
 
 const clicks$ = new Subject<void>()
 // Controlling the flow of events is one operator: click as fast as you
-// like — at most one click per second makes it into the count.
+// like. At most one click per second makes it into the count.
 const count$ = clicks$.pipe(
   throttleTime(1000),
   scan((count) => count + 1, 0),

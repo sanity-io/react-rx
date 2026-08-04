@@ -18,7 +18,7 @@ function makePayload(): Payload {
 /**
  * A self-contained SSR simulation: render the message to an HTML string with
  * react-dom/server, show that static HTML for a while ("the JS bundle is
- * still downloading"), then hydrate it — and count hydration mismatches.
+ * still downloading"), then hydrate it and count hydration mismatches.
  */
 export default function App() {
   const containerRef =
@@ -72,7 +72,7 @@ export default function App() {
     return () => {
       clearTimeout(id)
       // This cleanup runs while React is committing the rerun, and a root
-      // must not be unmounted synchronously mid-render — defer it by one
+      // must not be unmounted synchronously mid-render. Defer it by one
       // microtask. By then the keyed container has been swapped out, so the
       // unmount tears down this run's tree (and its subscriptions) on the
       // detached element without touching the static HTML on screen.
@@ -85,12 +85,12 @@ export default function App() {
       <p>
         {phase === 'server-html' ? (
           <mark>
-            Static server HTML — JS still
+            Static server HTML. JS still
             “downloading”…
           </mark>
         ) : (
           <ins>
-            Hydrated — the label is live now
+            Hydrated. The label is live now
           </ins>
         )}
       </p>

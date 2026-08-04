@@ -4,14 +4,14 @@ import Example from '@/examples/suspense'
 
 Type into the search field and compare the two panels.
 
-- **First panel (`useSyncObservable`)** — each keystroke is a synchronous store update. When results suspend, React replaces already-visible content with the Suspense fallback (and may log _“A component suspended while responding to synchronous input”_ — open Sandpack’s console).
-- **Second panel (`useObservable`)** — store updates are deferred. Already-revealed results stay on screen (dimmed while stale) until the new ones are ready.
-- **The input itself** reads `useSyncObservable` so typing never lags — this is exactly when you need the sync hook.
+- **First panel (`useSyncObservable`):** each keystroke is a synchronous store update. When results suspend, React replaces already-visible content with the Suspense fallback. It may also log _"A component suspended while responding to synchronous input"_ (open Sandpack's console).
+- **Second panel (`useObservable`):** store updates are deferred. Already-revealed results stay on screen, dimmed while stale, until the new ones are ready.
+- **The input itself** reads `useSyncObservable` so typing never lags. This is exactly when you need the sync hook.
 
 <Example />
 
 ## Why this happens
 
-[`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore#caveats) cannot mark store mutations as Transitions, so suspending on its value triggers the nearest Suspense fallback. Wrapping the value in [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) (what `useObservable` does) is how you [prevent unwanted fallbacks](https://react.dev/reference/react/Suspense#preventing-unwanted-fallbacks) for already-revealed content.
+[`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore#caveats) cannot mark store mutations as Transitions. So suspending on its value triggers the nearest Suspense fallback. Wrapping the value in [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue), which is what `useObservable` does, is how you [prevent unwanted fallbacks](https://react.dev/reference/react/Suspense#preventing-unwanted-fallbacks) for already-revealed content.
 
-See also [jantimon/react-hydration-rules](https://github.com/jantimon/react-hydration-rules) for the broader hydration/Suspense matrix, and the React reconciler tests for `useDeferredValue` / `useSyncExternalStore` in [facebook/react](https://github.com/facebook/react). Hydration-time differences between the two hooks are covered by the library’s Vitest suite (Sandpack examples are client-only).
+See also [jantimon/react-hydration-rules](https://github.com/jantimon/react-hydration-rules) for the broader hydration/Suspense matrix, and the React reconciler tests for `useDeferredValue` / `useSyncExternalStore` in [facebook/react](https://github.com/facebook/react). Hydration-time differences between the two hooks are covered by the library's Vitest suite (Sandpack examples are client-only).

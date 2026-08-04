@@ -12,7 +12,7 @@ import type {Lesson} from './api'
  * The design system half of the demo: components that take `action` props
  * and own their own pending/optimistic feedback, so product code never
  * writes loading-state plumbing. The trick that makes a fast network feel
- * synchronous is in demo.css — pending shimmers only become visible after
+ * synchronous is in demo.css: pending shimmers only become visible after
  * an animation-delay (300ms / 1.5s), so quick actions never flash UI.
  */
 

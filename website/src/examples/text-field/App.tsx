@@ -6,7 +6,7 @@ export default function App() {
   const [text$] = useState(
     () => new Subject<string>(),
   )
-  // Controlled inputs read useSyncObservable — the value must update
+  // Controlled inputs read useSyncObservable. The value must update
   // synchronously to keep the caret and IME composition intact.
   const text = useSyncObservable(text$, 'hello')
 

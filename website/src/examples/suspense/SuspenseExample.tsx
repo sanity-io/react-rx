@@ -6,7 +6,7 @@ import {
 import {Subject} from 'rxjs'
 
 // Shared by the input and both panels. Each hook file has its own
-// WeakMap, so dual reads subscribe twice — fine for this demo.
+// WeakMap, so dual reads subscribe twice. Fine for this demo.
 const keyword$ = new Subject<string>()
 
 type CacheEntry = {
@@ -23,7 +23,7 @@ function searchHits(
   if (!entry) {
     entry = {
       promise: new Promise((resolve) => {
-        // Shorter keywords take longer — mirrors the search example.
+        // Shorter keywords take longer, mirroring the search example.
         const delay = Math.max(
           200,
           (10 - keyword.length) * 80,
@@ -50,9 +50,7 @@ function SlowResults({
   keyword: string
 }) {
   if (!keyword) {
-    return (
-      <p>Type to search — results suspend.</p>
-    )
+    return <p>Type to search. Results suspend.</p>
   }
   // use() suspends until the promise resolves (same idea as throwing a promise).
   const hits = use(searchHits(keyword))
@@ -75,7 +73,7 @@ function SyncPanel() {
         visible results and shows the Suspense
         fallback (also logs React’s “suspended
         while responding to synchronous input”
-        warning — open the console).
+        warning; open the console).
       </small>
       <Suspense
         fallback={
@@ -102,8 +100,7 @@ function DeferredPanel() {
       <small>
         Deferred store updates. Previous results
         stay on screen (dimmed while stale) until
-        the new ones are ready — no fallback
-        flash.
+        the new ones are ready. No fallback flash.
       </small>
       <Suspense
         fallback={

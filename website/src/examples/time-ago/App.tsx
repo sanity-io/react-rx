@@ -14,7 +14,7 @@ const rtf = new Intl.RelativeTimeFormat('en', {
 function TimeAgo({sentAt}: {sentAt: number}) {
   // Memoize the stream AND the initial value together. The initial value is
   // read on every snapshot check until the stream's first (async) emission,
-  // so it must stay referentially stable — a fresh object per read would
+  // so it must stay referentially stable. A fresh object per read would
   // loop useSyncExternalStore.
   const [parts$, initialParts] = useMemo(
     () =>
@@ -45,17 +45,17 @@ function makeMessages(now: number) {
   return [
     {
       id: `${now}-1`,
-      text: 'Just posted — re-renders every second',
+      text: 'Just posted (re-renders every second)',
       sentAt: now - 3_000,
     },
     {
       id: `${now}-2`,
-      text: 'About to turn a minute old — then goes quiet',
+      text: 'About to turn a minute old (then goes quiet)',
       sentAt: now - 52_000,
     },
     {
       id: `${now}-3`,
-      text: 'Minutes old — re-renders once a minute',
+      text: 'Minutes old (re-renders once a minute)',
       sentAt: now - 4.5 * 60_000,
     },
   ]

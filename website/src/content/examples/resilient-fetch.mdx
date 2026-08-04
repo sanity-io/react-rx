@@ -2,17 +2,22 @@ import Example from '@/examples/resilient-fetch'
 
 # Offline-resilient fetch
 
-Polling a flaky endpoint the way production apps need to: transient failures retry with exponential backoff, going offline pauses polling entirely, coming back online resumes immediately, and the last good value stays visible the whole time.
+Polling a flaky endpoint the way production apps need to:
+
+- Transient failures retry with exponential backoff.
+- Going offline pauses polling entirely.
+- Coming back online resumes immediately.
+- The last good value stays visible the whole time.
 
 Doing this with `useEffect` means juggling interval handles, abort flags, retry counters, and online/offline listeners across several pieces of state. As a stream, each requirement is one operator:
 
-- **Pause and resume** — `online$.pipe(switchMap(...))` tears the polling down while offline and rebuilds it on reconnect; `timer(0, …)` makes the first fetch after reconnect immediate.
-- **Retry with backoff** — `retry({count: 3, delay})` on the request, with the backoff computed from the attempt number.
-- **Errors don't kill the poll** — `catchError` sits on the _inner_ request observable, so an exhausted retry becomes a status value while the outer timer keeps ticking.
-- **Keep last-good data** — a `scan` folds every status into a view that remembers the most recent successful snapshot.
+- **Pause and resume:** `online$.pipe(switchMap(...))` tears the polling down while offline and rebuilds it on reconnect. `timer(0, …)` makes the first fetch after reconnect immediate.
+- **Retry with backoff:** `retry({count: 3, delay})` on the request, with the backoff computed from the attempt number.
+- **Errors don't kill the poll:** `catchError` sits on the _inner_ request observable. An exhausted retry becomes a status value, and the outer timer keeps ticking.
+- **Keep last-good data:** a `scan` folds every status into a view that remembers the most recent successful snapshot.
 
-Try it: hit "Simulate going offline", wait a few polls, and come back online — the price refreshes immediately. The mock API fails about a third of the time, so you'll also see the retry/backoff path fire on its own.
+Try it: hit "Simulate going offline", wait a few polls, and come back online. The price refreshes immediately. The mock API also fails about a third of the time, so you'll see the retry path fire on its own.
 
 <Example />
 
-`api.ts` is the only mock — a stand-in for `fromFetch(...)` plus, in a real app, an `online$` derived from `fromEvent(window, 'online')` / `'offline'` (the wiring is in the comment). The component itself is two [`useObservable`](/reference#useobservable) reads.
+`api.ts` is the only mock. It stands in for `fromFetch(...)` plus, in a real app, an `online$` derived from `fromEvent(window, 'online')` and `'offline'` (the wiring is in the comment). The component itself is two [`useObservable`](/reference#useobservable) reads.

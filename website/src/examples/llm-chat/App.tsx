@@ -16,7 +16,7 @@ import {
 } from './chat'
 
 function ChatView({chat}: {chat: Chat}) {
-  // Suspends until the first token, then streams in place — later emissions
+  // Suspends until the first token, then streams in place. Later emissions
   // never re-trigger the Suspense fallback.
   const messages = use(
     useObservablePromise(conversation$(chat)),
@@ -97,7 +97,7 @@ export default function App() {
           visitedIds.includes(chat.id),
         ).map((chat) => (
           // Visited chats stay mounted but hidden: they keep their state and
-          // reveal instantly — including every token that streamed while you
+          // reveal instantly, including every token that streamed while you
           // were looking at another chat.
           <Activity
             key={chat.id}
