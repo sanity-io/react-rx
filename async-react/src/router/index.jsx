@@ -22,10 +22,23 @@ import { revalidate } from "../data/index.js";
 // We call the pendingNav callback in the intercept handler
 // to tell the browser to commit the navigation after React has updated the DOM.
 // This allows the browser to wait to reset focus/scroll until after the transition is done.
+// The app can be served from a subpath (the react-rx docs embed builds it
+// with a Vite base). Strip that base so route matching keeps working.
+function normalizePathname(pathname) {
+  const base = import.meta.env.BASE_URL || "/";
+  if (base !== "/" && pathname.startsWith(base)) {
+    pathname = "/" + pathname.slice(base.length);
+  }
+  if (pathname === "/index.html" || pathname === "") {
+    pathname = "/";
+  }
+  return pathname;
+}
+
 function NavigationRouter({ children }) {
   const [routerState, setRouterState] = useState(() => ({
     pendingNav: () => {},
-    url: document.location.pathname,
+    url: normalizePathname(document.location.pathname),
     search: parseSearchParams(document.location.search),
   }));
 
@@ -91,7 +104,7 @@ function NavigationRouter({ children }) {
             }
             promise = new Promise((resolve) => {
               setRouterState({
-                url: newURL.pathname,
+                url: normalizePathname(newURL.pathname),
                 search: parseSearchParams(newURL.search),
                 pendingNav: resolve,
               });
@@ -139,7 +152,7 @@ function NavigationRouter({ children }) {
 function HistoryRouter({ children }) {
   const [routerState, setRouterState] = useState({
     pendingNav: () => {},
-    url: document.location.pathname,
+    url: normalizePathname(document.location.pathname),
     search: parseSearchParams(document.location.search),
   });
 
@@ -201,7 +214,7 @@ function HistoryRouter({ children }) {
       // example why just clearing the cache when a component unmounts is a bad idea.
       startTransition(() => {
         setRouterState({
-          url: document.location.pathname,
+          url: normalizePathname(document.location.pathname),
           search: parseSearchParams(document.location.search),
           pendingNav() {
             // Noop. URL has already updated.

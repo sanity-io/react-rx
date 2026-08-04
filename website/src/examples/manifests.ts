@@ -11,6 +11,13 @@ import websitePackageJson from '../../package.json'
 export interface ExampleManifest {
   /** Sandpack file path (e.g. `/App.tsx`) → source file inside `src/examples/<name>`. */
   files: Record<string, string>
+  /**
+   * Directory the source files live in, relative to the repo root. Defaults to the website's
+   * own `src/examples/<name>` folder. The async-react example reads the `async-react/`
+   * workspace directly this way (its demo is embedded as a built app rather than a sandbox,
+   * but the markdown exports still carry these sources).
+   */
+  sourceDir?: string
   /** Extra npm dependencies for the sandbox. Versions are resolved from the website's own deps. */
   dependencies?: Partial<
     Record<
@@ -31,17 +38,44 @@ export const exampleManifests = {
     },
   },
   'async-react': {
+    // The forked React Conf 2025 demo (the `async-react/` workspace). The
+    // docs page embeds the built app; these sources feed the markdown
+    // exports ("Copy page", /llms-full.txt).
+    sourceDir: 'async-react',
     files: {
-      '/App.tsx': 'App.tsx',
-      '/Home.tsx': 'Home.tsx',
-      '/Login.tsx': 'Login.tsx',
-      '/design.tsx': 'design.tsx',
-      '/api.ts': 'api.ts',
-      '/router.tsx': 'router.tsx',
-      '/NetworkDebugger.tsx':
-        'NetworkDebugger.tsx',
-      '/server.ts': 'server.ts',
-      '/demo.css': 'demo.css',
+      '/src/main.jsx': 'src/main.jsx',
+      '/src/app/Home.jsx': 'src/app/Home.jsx',
+      '/src/app/Login.jsx': 'src/app/Login.jsx',
+      '/src/data/index.js': 'src/data/index.js',
+      '/src/data/debug.jsx': 'src/data/debug.jsx',
+      '/src/data/fake-data.js':
+        'src/data/fake-data.js',
+      '/src/router/index.jsx':
+        'src/router/index.jsx',
+      '/src/design/index.jsx':
+        'src/design/index.jsx',
+      '/src/design/Button.jsx':
+        'src/design/Button.jsx',
+      '/src/design/PendingButton.jsx':
+        'src/design/PendingButton.jsx',
+      '/src/design/CompleteButton.jsx':
+        'src/design/CompleteButton.jsx',
+      '/src/design/SearchInput.jsx':
+        'src/design/SearchInput.jsx',
+      '/src/design/TabList.jsx':
+        'src/design/TabList.jsx',
+      '/src/design/ButtonShimmer.jsx':
+        'src/design/ButtonShimmer.jsx',
+      '/src/design/Lesson.jsx':
+        'src/design/Lesson.jsx',
+      '/src/design/LoginForm.jsx':
+        'src/design/LoginForm.jsx',
+      '/src/design/Fallback.jsx':
+        'src/design/Fallback.jsx',
+      '/src/design/EmptyList.jsx':
+        'src/design/EmptyList.jsx',
+      '/src/design/Card.jsx':
+        'src/design/Card.jsx',
     },
   },
   'checkbox': {

@@ -9,18 +9,10 @@
   "sortPackageJson": {
     "sortScripts": true
   },
-  "ignorePatterns": [
-    "dist/**",
-    ".next/**",
-    "pnpm-lock.yaml",
-    "CHANGELOG.md",
-    "async-react/**"
-  ],
+  "ignorePatterns": ["dist/**", ".next/**", "pnpm-lock.yaml", "CHANGELOG.md", "async-react/**"],
   "overrides": [
     {
-      "files": [
-        ".changeset/*.md"
-      ],
+      "files": [".changeset/*.md"],
       "options": {
         "singleQuote": false
       }

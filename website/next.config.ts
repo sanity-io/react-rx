@@ -11,6 +11,18 @@ const nextConfig = {
   },
   productionBrowserSourceMaps: true,
   transpilePackages: ['react-rx'],
+  async rewrites() {
+    // The embedded async-react demo is a single-page app: serve its
+    // index.html for client-side routes like /async-react-demo/login.
+    // Real files under public/async-react-demo (assets, index.html) are
+    // served directly and never reach this rewrite.
+    return [
+      {
+        source: '/async-react-demo/:path*',
+        destination: '/async-react-demo/index.html',
+      },
+    ]
+  },
   async redirects() {
     // Example pages that moved during the docs restructuring.
     return [

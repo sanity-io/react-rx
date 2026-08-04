@@ -6,11 +6,19 @@ import {cache} from 'react'
 /**
  * Read an example source file as a string for Sandpack (Turbopack-safe).
  *
+ * `sourceDir` is relative to the repo root and defaults to the website's own examples folder.
+ * The async-react example reads straight from the `async-react/` workspace this way.
+ *
  * `cache` collapses the synchronous read to once per file per render. It deliberately does not
  * memoize across requests, so editing an example in dev still shows up on the next one.
  */
-export const readExample = cache((...segments: string[]): string =>
-  fs.readFileSync(path.join(process.cwd(), 'src/examples', ...segments), 'utf8'),
+export const readExample = cache((sourceDir: string | undefined, ...segments: string[]): string =>
+  fs.readFileSync(
+    sourceDir
+      ? path.join(process.cwd(), '..', sourceDir, ...segments)
+      : path.join(process.cwd(), 'src/examples', ...segments),
+    'utf8',
+  ),
 )
 
 /**

@@ -13,14 +13,7 @@
     "website/public/_pagefind",
     "async-react/**"
   ],
-  "plugins": [
-    "react",
-    "unicorn",
-    "typescript",
-    "oxc",
-    "import",
-    "node"
-  ],
+  "plugins": ["react", "unicorn", "typescript", "oxc", "import", "node"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",
@@ -46,19 +39,14 @@
     "eslint/no-console": [
       "error",
       {
-        "allow": [
-          "warn",
-          "error"
-        ]
+        "allow": ["warn", "error"]
       }
     ],
     "eslint/no-shadow": "off",
     "import/no-unassigned-import": [
       "error",
       {
-        "allow": [
-          "**/*.css"
-        ]
+        "allow": ["**/*.css"]
       }
     ],
     "consistent-return": "off",
@@ -66,17 +54,11 @@
   },
   "overrides": [
     {
-      "files": [
-        "website/**/*.{js,jsx,mjs,ts,tsx}"
-      ],
-      "plugins": [
-        "nextjs"
-      ]
+      "files": ["website/**/*.{js,jsx,mjs,ts,tsx}"],
+      "plugins": ["nextjs"]
     },
     {
-      "files": [
-        "packages/react-rx/**/*.{js,jsx,mjs,ts,tsx}"
-      ],
+      "files": ["packages/react-rx/**/*.{js,jsx,mjs,ts,tsx}"],
       "rules": {
         "react/react-compiler": "error"
       }

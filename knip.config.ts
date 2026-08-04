@@ -16,6 +16,9 @@ const config: KnipConfig = {
       project: ['src/**/*.{ts,tsx}', '*.{ts,tsx}'],
     },
     'website': {
+      // scripts/build-async-react-demo.mjs runs vite inside the async-react
+      // workspace via pnpm exec; it is that workspace's dependency.
+      ignoreBinaries: ['vite'],
       entry: [
         'src/app/**/*.{ts,tsx}',
         // Nextra sidebar/meta config (not imported; discovered by convention)
