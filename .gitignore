@@ -2,5 +2,7 @@ node_modules
 dist
 .eslintcache
 website/next-env.d.ts
+# Built async-react workspace app, embedded by the docs (see website/scripts)
+website/public/async-react-demo
 .pnpm-store
 *.tsbuildinfo

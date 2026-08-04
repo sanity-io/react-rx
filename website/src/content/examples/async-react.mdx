@@ -1,0 +1,33 @@
+import Example from '@/examples/async-react'
+
+# Async React demo
+
+The final demo from Rick Hanlon's React Conf 2025 **Async React** talk, with its data layer migrated to react-rx + RxJS.
+
+This is not a re-creation. The repo contains a fork of [rickhanlonii/async-react](https://github.com/rickhanlonii/async-react) (live at [async-react.dev](https://async-react.dev/)) as the [`async-react/` workspace](https://github.com/sanity-io/react-rx/tree/current/async-react), forked with full git history. The embed below **is that app**, built from the workspace: same styling, same router, same `<ViewTransition>` animations, same network debugger. The fork's diff _is_ the migration.
+
+The talk's thesis: product code stays simple and declarative when three things hold. Routing runs in transitions. Data fetching suspends by default. And design components own their pending/optimistic feedback through `action` props. The app then adapts to network speed on its own.
+
+Things to try (the **network debugger** sits at the bottom of the preview):
+
+- **Fast network (all delays at 0):** switch tabs, search, toggle lessons. Nothing ever looks "loading". The pending indicators technically exist, but a CSS `animation-delay` keeps them invisible unless an action is slow. Fast actions finish first.
+- **Slow down `/lessons` (~1500ms):** tab switches shimmer the optimistic tab. Searching shows your keystrokes immediately (`useOptimistic`) while the results load. The list only shows skeletons on _first_ load. Transitions keep old results visible for every later change, and `<ViewTransition>` animates items to their new spots.
+- **Slow down `/lesson/:id/toggle` and complete a lesson on the "In Progress" tab:** the checkmark flips instantly (optimistic). When the mutation and refetch land, the item animates out of the list. Updated **in place**, no fallback.
+- **The login flow:** switch the embed to "Login flow" above it. Slow down `/login` and `/lessons` in the debugger first, then log in. The button stays pending through the POST and the prefetch. Under 1s of lessons latency you land on a loaded list; above it, login navigates into the Suspense fallback.
+
+<Example />
+
+## What react-rx changes
+
+The React side is untouched upstream code. Same `useTransition`, `useOptimistic`, and `<Suspense>` patterns. Same action-prop design components. Same transition router and `<ViewTransition>` animations.
+
+The migration lives in `src/data/index.js` and `src/app/Home.jsx`:
+
+- **Revalidation can't cause fallbacks.** Upstream pairs a cache-of-promises with `revalidate()`: clear everything, re-render, re-fetch. Here, `getLessons$(tab, search)` is a cached observable that re-fetches when revalidation fires. [`useObservablePromise`](/reference#useobservablepromise) updates its promise in place after the first emission, so a revalidation can never re-trigger a Suspense fallback. Upstream had to engineer around that risk.
+- **Prefetching is one call.** `prefetchLessons()` is [`preloadObservablePromise`](/reference#preloadobservablepromise) raced against a 1s timeout. It warms the exact promise the home screen's hook reads.
+- **Stale-while-revalidate for free.** Returning to a previously-seen tab replays the last result instantly while a fresh fetch streams in behind it. That's `shareReplay` plus `startWith`.
+- **Actions still cover the refetch.** `completeAction` awaits `refreshLessons(tab, search)`, which resolves when fresh data lands. The button's pending state spans the mutation and the refetch, like awaiting a router refresh did upstream.
+
+Route state deliberately stays in React state. Only React state updates can be marked as transitions, and that is exactly what navigation wants. Streams for server data, transitions for view state. Each tool where it's strongest.
+
+Why an embed instead of an editable sandbox? The fork runs React's `experimental` build (for `<ViewTransition>`) plus the Vite Tailwind plugin, and the in-browser sandbox bundler supports neither. The embed is the real Vite build of the workspace, and this page's "Copy page" button still exports the actual source files.

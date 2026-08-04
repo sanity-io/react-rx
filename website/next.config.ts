@@ -6,14 +6,33 @@ const withNextra = nextra({
 })
 
 const nextConfig = {
-  compiler: {
-    styledComponents: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
   productionBrowserSourceMaps: true,
   transpilePackages: ['react-rx'],
+  async rewrites() {
+    // The embedded async-react demo is a single-page app: serve its
+    // index.html for client-side routes like /async-react-demo/login.
+    // Real files under public/async-react-demo (assets, index.html) are
+    // served directly and never reach this rewrite.
+    return [
+      {
+        source: '/async-react-demo/:path*',
+        destination: '/async-react-demo/index.html',
+      },
+    ]
+  },
+  async redirects() {
+    // Example pages that moved during the docs restructuring.
+    return [
+      {source: '/examples/animation', destination: '/examples/llm-chat', permanent: false},
+      {source: '/examples/counters', destination: '/examples/timers', permanent: false},
+      {source: '/examples/sync', destination: '/examples/timers', permanent: false},
+      {source: '/examples/relative-time', destination: '/examples/timers', permanent: false},
+      {source: '/examples/event-handlers', destination: '/examples/simple', permanent: false},
+    ]
+  },
   async headers() {
     return [
       {

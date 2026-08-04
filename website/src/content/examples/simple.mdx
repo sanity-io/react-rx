@@ -1,10 +1,40 @@
-import HelloWorld from '@/examples/hello-world'
-import Simple from '@/examples/simple'
+import ClicksBridge from '@/examples/clicks-bridge'
+import ClicksCount from '@/examples/clicks-count'
+import ClicksThrottle from '@/examples/clicks-throttle'
+import ClicksValues from '@/examples/clicks-values'
 
-## Hello World
+# First steps
 
-<HelloWorld />
+This page mirrors the [RxJS overview](https://rxjs.dev/guide/overview). Same progression, but inside React components.
 
-## Counter
+Where the RxJS guide contrasts plain JavaScript with observables, we contrast **React + RxJS wired by hand** with **react-rx**. New to observables? Skim that guide first. react-rx assumes the basics.
 
-<Simple />
+## Counting clicks
+
+Normally, bridging a stream into React means owning the whole lifecycle yourself. A `Subject` for the events. A `useEffect` to subscribe. A mirrored `useState` for the latest value. An unsubscribe on unmount. Every copy of this is a chance for a leak or a stale closure:
+
+<ClicksBridge />
+
+Using react-rx, the component just **reads the stream**. The count lives in the pipe (`scan` works like `reduce` for arrays). The hook owns subscription, initial value, and teardown:
+
+<ClicksCount />
+
+The bridge boilerplate is gone. Something subtler improved too: the state can no longer be mutated from anywhere else. The only way to change the count is to emit a click.
+
+(The streams live at module scope here so the components stay minimal. That means one shared instance per sandbox. For per-component streams, create them with `useState(() => new Subject())` instead. [Basic state](/examples/basic-state) shows both styles.)
+
+## Flow
+
+RxJS has [a whole range of operators](https://rxjs.dev/guide/operators) that control how events flow through your streams. In vanilla React, "count at most one click per second" means refs, timestamps, and an easy-to-botch comparison. In a stream it is one operator:
+
+<ClicksThrottle />
+
+## Values
+
+You can transform the values passing through. Here every click contributes its pointer's x position to a running sum. `map` plucks the coordinate. `scan` accumulates it. The component renders whatever comes out:
+
+<ClicksValues />
+
+## Where to next
+
+[Basic state](/examples/basic-state) rebuilds the `useState` docs examples on streams. [Timers & time ago](/examples/timers) shows where streams beat hooks hardest. For choosing between the hooks you just saw, read [which hook should I use?](/guide#which-hook-should-i-use)

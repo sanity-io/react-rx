@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## Skills
+
+Agent skills live in `.agents/skills/` (symlinked into `.claude/skills/`). When writing or reviewing React components that consume observables — including the website examples and docs snippets — follow `.agents/skills/react-rx-best-practices/SKILL.md`. For general RxJS composition, follow `.agents/skills/rxjs-like-a-pro/SKILL.md`.
+
 ## Cursor Cloud specific instructions
 
 This is the `sanity-io/react-rx` pnpm monorepo (workspaces defined in `pnpm-workspace.yaml`):

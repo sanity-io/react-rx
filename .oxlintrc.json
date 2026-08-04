@@ -10,7 +10,8 @@
     "**/dist",
     "website/.next",
     "website/next-env.d.ts",
-    "website/public/_pagefind"
+    "website/public/_pagefind",
+    "async-react/**"
   ],
   "plugins": ["react", "unicorn", "typescript", "oxc", "import", "node"],
   "categories": {
@@ -35,9 +36,19 @@
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "error",
     "react/jsx-key": "error",
-    "eslint/no-console": ["error", {"allow": ["warn", "error"]}],
+    "eslint/no-console": [
+      "error",
+      {
+        "allow": ["warn", "error"]
+      }
+    ],
     "eslint/no-shadow": "off",
-    "import/no-unassigned-import": ["error", {"allow": ["**/*.css"]}],
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": ["**/*.css"]
+      }
+    ],
     "consistent-return": "off",
     "eslint/no-underscore-dangle": "off"
   },

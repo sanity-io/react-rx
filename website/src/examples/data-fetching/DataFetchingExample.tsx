@@ -38,7 +38,7 @@ function fetchUser$(id: string) {
 const clock$ = timer(0, 1000).pipe(
   map(
     (n) =>
-      `Tick ${n} — live updates skip the Suspense fallback`,
+      `Tick ${n}: live updates skip the Suspense fallback`,
   ),
 )
 

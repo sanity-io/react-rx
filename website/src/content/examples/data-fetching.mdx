@@ -2,8 +2,11 @@ import Example from '@/examples/data-fetching'
 
 # Suspense data fetching
 
-`useObservablePromise` returns a promise for React's `use()`. The Suspense
-fallback shows until the first emission; later stream updates do not re-trigger
-it.
+[`useObservablePromise`](/reference#useobservablepromise) returns a promise for React's `use()`.
+
+- The Suspense fallback shows until the first emission.
+- Later stream updates render in place. They never re-trigger the fallback.
+
+Try it: switch profiles (new observable, so it re-suspends) and watch the clock keep ticking without ever flashing a fallback.
 
 <Example />

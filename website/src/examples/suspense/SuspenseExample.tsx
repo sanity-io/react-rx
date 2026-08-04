@@ -1,13 +1,12 @@
-import {ChangeEvent, Suspense, use} from 'react'
+import {Suspense, use} from 'react'
 import {
   useObservable,
-  useObservableEvent,
   useSyncObservable,
 } from 'react-rx'
-import {map, Subject, tap} from 'rxjs'
+import {Subject} from 'rxjs'
 
 // Shared by the input and both panels. Each hook file has its own
-// WeakMap, so dual reads subscribe twice — fine for this demo.
+// WeakMap, so dual reads subscribe twice. Fine for this demo.
 const keyword$ = new Subject<string>()
 
 type CacheEntry = {
@@ -24,7 +23,7 @@ function searchHits(
   if (!entry) {
     entry = {
       promise: new Promise((resolve) => {
-        // Shorter keywords take longer — mirrors the search example.
+        // Shorter keywords take longer, mirroring the search example.
         const delay = Math.max(
           200,
           (10 - keyword.length) * 80,
@@ -51,9 +50,7 @@ function SlowResults({
   keyword: string
 }) {
   if (!keyword) {
-    return (
-      <p>Type to search — results suspend.</p>
-    )
+    return <p>Type to search. Results suspend.</p>
   }
   // use() suspends until the promise resolves (same idea as throwing a promise).
   const hits = use(searchHits(keyword))
@@ -69,27 +66,23 @@ function SlowResults({
 function SyncPanel() {
   const keyword = useSyncObservable(keyword$, '')
   return (
-    <section
-      style={{
-        flex: 1,
-        border: '1px solid #ccc',
-        padding: 12,
-      }}
-    >
-      <h3>useSyncObservable</h3>
-      <p style={{fontSize: 13, opacity: 0.8}}>
+    <article>
+      <h4>useSyncObservable</h4>
+      <small>
         Synchronous store updates. Typing discards
         visible results and shows the Suspense
         fallback (also logs React’s “suspended
         while responding to synchronous input”
-        warning — open the console).
-      </p>
+        warning; open the console).
+      </small>
       <Suspense
-        fallback={<p>Loading results…</p>}
+        fallback={
+          <p aria-busy="true">Loading results…</p>
+        }
       >
         <SlowResults keyword={keyword} />
       </Suspense>
-    </section>
+    </article>
   )
 }
 
@@ -102,62 +95,40 @@ function DeferredPanel() {
   )
   const isStale = keyword !== syncKeyword
   return (
-    <section
-      style={{
-        flex: 1,
-        border: '1px solid #ccc',
-        padding: 12,
-        opacity: isStale ? 0.5 : 1,
-      }}
-    >
-      <h3>useObservable</h3>
-      <p style={{fontSize: 13, opacity: 0.8}}>
+    <article style={{opacity: isStale ? 0.5 : 1}}>
+      <h4>useObservable</h4>
+      <small>
         Deferred store updates. Previous results
         stay on screen (dimmed while stale) until
-        the new ones are ready — no fallback
-        flash.
-      </p>
+        the new ones are ready. No fallback flash.
+      </small>
       <Suspense
-        fallback={<p>Loading results…</p>}
+        fallback={
+          <p aria-busy="true">Loading results…</p>
+        }
       >
         <SlowResults keyword={keyword} />
       </Suspense>
-    </section>
+    </article>
   )
 }
 
 export default function App() {
   // Controlled input value must update synchronously.
   const keyword = useSyncObservable(keyword$, '')
-  const handleInput = useObservableEvent<
-    ChangeEvent<HTMLInputElement>,
-    any
-  >((input$) =>
-    input$.pipe(
-      map((e) => e.currentTarget.value),
-      tap((value) => keyword$.next(value)),
-    ),
-  )
 
   return (
     <div>
       <input
         type="search"
-        style={{width: '100%', marginBottom: 12}}
         value={keyword}
         placeholder="Type a keyword"
-        onChange={handleInput}
+        onChange={(e) =>
+          keyword$.next(e.currentTarget.value)
+        }
       />
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          alignItems: 'flex-start',
-        }}
-      >
-        <SyncPanel />
-        <DeferredPanel />
-      </div>
+      <SyncPanel />
+      <DeferredPanel />
     </div>
   )
 }

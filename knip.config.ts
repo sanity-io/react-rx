@@ -1,6 +1,9 @@
 import type {KnipConfig} from 'knip'
 
 const config: KnipConfig = {
+  // Forked demo app (github.com/rickhanlonii/async-react): kept close to
+  // upstream, not held to this repo's dead-code standards.
+  ignoreWorkspaces: ['async-react'],
   workspaces: {
     '.': {},
     'packages/react-rx': {
@@ -13,6 +16,9 @@ const config: KnipConfig = {
       project: ['src/**/*.{ts,tsx}', '*.{ts,tsx}'],
     },
     'website': {
+      // scripts/build-async-react-demo.mjs runs vite inside the async-react
+      // workspace via pnpm exec; it is that workspace's dependency.
+      ignoreBinaries: ['vite'],
       entry: [
         'src/app/**/*.{ts,tsx}',
         // Nextra sidebar/meta config (not imported; discovered by convention)
