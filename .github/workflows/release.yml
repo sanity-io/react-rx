@@ -18,3 +18,15 @@ jobs:
       contents: read # for checkout
       id-token: write # to enable use of OIDC for npm provenance
     secrets: inherit
+  keep-v4-release-from-latest:
+    name: Keep v4 release from becoming latest
+    needs: release
+    if: github.ref_name == 'v4'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: gh release edit "react-rx@$(node -p "require('./packages/react-rx/package.json').version")" --latest=false
+        env:
+          GH_TOKEN: ${{ github.token }}
