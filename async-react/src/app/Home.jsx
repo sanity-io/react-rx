@@ -1,4 +1,5 @@
-import { Suspense, use, ViewTransition } from "react";
+import { Suspense, use, useMemo, ViewTransition } from "react";
+import { useObservablePromise } from "react-rx";
 import * as Design from "@/design";
 import { useRouter } from "@/router/index.jsx";
 import * as data from "@/data/index.js";
@@ -23,20 +24,16 @@ function Lesson({ item, completeAction }) {
   );
 }
 
-function LessonList({ tab, search, completeAction }) {
+function LessonList({ lessonsPromise, completeAction }) {
   /**
-   * data.getLessons is a suspense-enabled data fetching function.
-   * It returns a cached promise that fetched the first time it's called
-   * with a given tab+search, then it returns the resolved data on subsequent calls.
+   * The lessons for the current tab+search arrive as a use()-compatible
+   * promise created from a react-rx stream (see Home below).
    *
-   * Since it's cached, there needs to be a way to clear the cache and re-fetch the data,
-   * like after a mutation like toggling complete. This is done with the data.revalidate() function,
-   * which is called in the completeAction below.
-   *
-   * The use(data.getLessons(...)) call here will suspend the component
-   * until the promise resolves, then return the resolved data.
+   * use(lessonsPromise) suspends this component until the first result.
+   * After that, the stream updates the promise in place: revalidations and
+   * background refetches render here without re-triggering Suspense.
    */
-  const lessons = use(data.getLessons(tab, search));
+  const lessons = use(lessonsPromise);
 
   if (lessons.length === 0) {
     return (
@@ -81,6 +78,16 @@ export default function Home() {
   const search = router.search.q || "";
   const tab = router.search.tab || "all";
 
+  /**
+   * data.getLessons$ is a cached react-rx stream per tab+search key.
+   * useObservablePromise turns it into a use()-compatible promise. The
+   * promise is created here, in a component that does not itself suspend,
+   * so Suspense retries always see the same promise identity.
+   */
+  const lessonsPromise = useObservablePromise(
+    useMemo(() => data.getLessons$(tab, search), [tab, search]),
+  );
+
   function searchAction(value) {
     /**
      * Since this is an Action we know this updates in a transition.
@@ -104,15 +111,12 @@ export default function Home() {
     await data.mutateToggle(id);
 
     /**
-     * After the mutation we need to revalidate the data cache.
-     * In this example app, our router and data layer are integrated,
-     * so when you call `refresh` on the current route, the data cache
-     * is automatically cleared so re-rendering the route re-fetches data.
-     *
-     * Note: We don't have to wrap this in startTransition because
-     * the router wraps these updates in a transition automatically.
+     * After the mutation, refetch the lessons streams. The visible list
+     * updates in place when the fresh data arrives (no Suspense fallback,
+     * by construction). Awaiting it keeps the action pending until the
+     * refetch is done, like awaiting a router refresh used to.
      */
-    router.refresh();
+    await data.refreshLessons(tab, search);
   }
   return (
     <>
@@ -139,8 +143,7 @@ export default function Home() {
         */}
         <Suspense fallback={<Design.FallbackList />}>
           <LessonList
-            tab={tab}
-            search={search}
+            lessonsPromise={lessonsPromise}
             completeAction={completeAction}
           />
         </Suspense>

@@ -1,6 +1,9 @@
 import type {KnipConfig} from 'knip'
 
 const config: KnipConfig = {
+  // Forked demo app (github.com/rickhanlonii/async-react): kept close to
+  // upstream, not held to this repo's dead-code standards.
+  ignoreWorkspaces: ['async-react'],
   workspaces: {
     '.': {},
     'packages/react-rx': {

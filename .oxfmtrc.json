@@ -6,12 +6,24 @@
   "bracketSpacing": false,
   "quoteProps": "consistent",
   "sortImports": true,
-  "sortPackageJson": {"sortScripts": true},
-  "ignorePatterns": ["dist/**", ".next/**", "pnpm-lock.yaml", "CHANGELOG.md"],
+  "sortPackageJson": {
+    "sortScripts": true
+  },
+  "ignorePatterns": [
+    "dist/**",
+    ".next/**",
+    "pnpm-lock.yaml",
+    "CHANGELOG.md",
+    "async-react/**"
+  ],
   "overrides": [
     {
-      "files": [".changeset/*.md"],
-      "options": {"singleQuote": false}
+      "files": [
+        ".changeset/*.md"
+      ],
+      "options": {
+        "singleQuote": false
+      }
     },
     {
       "files": [

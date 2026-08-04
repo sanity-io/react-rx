@@ -1,4 +1,5 @@
 packages:
+  - 'async-react'
   - 'packages/*'
   - 'website'
 
@@ -6,6 +7,7 @@ catalog:
   babel-plugin-react-compiler: ^1.0.0
 
 allowBuilds:
+  '@parcel/watcher': false
   es5-ext: false
   esbuild: false
   sharp: true
