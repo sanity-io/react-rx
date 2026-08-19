@@ -19,13 +19,6 @@ import {expect, test} from 'vitest'
 import type {UseObservableOptions} from '../types'
 import {useObservable} from '../useObservable'
 
-// Close the render-idle window opened by a paced delivery, so the next emission is delivered
-// synchronously again instead of coalescing with it (in jsdom: the setTimeout(0) fallback).
-const idle = () =>
-  act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 0))
-  })
-
 test('should subscribe immediately on component mount and unsubscribe on component unmount', async () => {
   let subscribed = false
   const observable = new Observable(() => {
@@ -214,22 +207,16 @@ test('should restart any completed observable on mount', async () => {
   expect(unsubscribeCount).toBe(2)
 })
 
-test('should update with values from observables', async () => {
+test('should update with values from observables', () => {
   const values$ = new Subject<string>()
   const {result, unmount} = renderHook(() => useObservable(values$))
 
   expect(result.current).toBe(undefined)
 
-  // An isolated emission is delivered synchronously (the paced leading edge).
   act(() => values$.next('something'))
   expect(result.current).toBe('something')
 
-  // A back-to-back emission lands inside the previous delivery's render-idle window and is held
-  // until the main thread goes idle again (in jsdom: the setTimeout(0) fallback).
   act(() => values$.next('otherthing'))
-  expect(result.current).toBe('something')
-
-  await idle()
   expect(result.current).toBe('otherthing')
   unmount()
 })
@@ -329,7 +316,7 @@ test('should return undefined if observable emits undefined, also when given ini
   unmount()
 })
 
-test('should return undefined if observable emits undefined, also when given initial value, and also when unsubscribe + resubscribe', async () => {
+test('should return undefined if observable emits undefined, also when given initial value, and also when unsubscribe + resubscribe', () => {
   // Deferred updates produce urgent+deferred render pairs, so we assert the sequence of
   // *distinct* committed values rather than every render pass (mountDeferredValueImpl /
   // updateDeferredValueImpl may also insert Object.is bail-out passes).
@@ -348,20 +335,14 @@ test('should return undefined if observable emits undefined, also when given ini
 
   const {unmount, rerender} = render(<ObservableComponent prefix="first" />)
   act(() => subject.next('foo'))
-  await idle()
   act(() => subject.next(undefined))
-  await idle()
   act(() => subject.next('bar'))
-  await idle()
 
   // now change the prefix
   rerender(<ObservableComponent prefix="second" />)
   act(() => subject.next('foo again'))
-  await idle()
   act(() => subject.next(undefined))
-  await idle()
   act(() => subject.next('bar again'))
-  await idle()
 
   const distinct: (string | undefined)[] = []
   for (const value of snapshots) {

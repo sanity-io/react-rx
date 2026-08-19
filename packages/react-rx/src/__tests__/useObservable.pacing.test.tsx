@@ -1,24 +1,25 @@
 import {act, render, renderHook} from '@testing-library/react'
 import {Component, type ReactNode} from 'react'
-import {mergeMap, of, Subject, throwError} from 'rxjs'
+import {from, mergeMap, of, Subject, throwError} from 'rxjs'
 import {expect, test, vi} from 'vitest'
 
 import {useObservable} from '../useObservable'
 import {useSyncObservable} from '../useSyncObservable'
 
 /**
- * Emission delivery in `useObservable` is paced to React's render cycle: a value is delivered
- * immediately when React is quiet (the leading edge stays synchronous), and while a delivered
- * value is still being rendered, newer emissions are held with only the latest delivered once
- * the main thread goes idle again. This bounds useSyncExternalStore-triggered restarts of
- * concurrent render passes to one per commit cycle, so a source that emits faster than a render
- * pass can complete no longer starves it forever.
+ * Emission delivery in `useObservable` is paced to React's render cycle: emissions are delivered
+ * synchronously while React cannot be rendering (no pending delivery, or arriving in the same
+ * microtask as the last delivery — React paints only the last value of a task either way), and
+ * emissions arriving across microtasks while a delivered value may still be rendering are held,
+ * with only the latest delivered once the main thread goes idle. This bounds
+ * useSyncExternalStore-triggered restarts of concurrent render passes to one per commit cycle,
+ * so a source that emits faster than a render pass can complete no longer starves it forever.
  *
  * jsdom has no `requestIdleCallback`, so these tests exercise the `setTimeout(0)` fallback: the
- * idle window closes on the next macrotask. That validates the pacing semantics (coalescing,
- * trailing delivery, snapshot consistency) but not the browser idle signal itself — the timing
- * of the real fix needs a browser, where `requestIdleCallback` fires only after an in-flight
- * pass commits.
+ * idle window closes on the next macrotask. That validates the pacing semantics (passthrough,
+ * coalescing, trailing delivery, snapshot consistency) but not the browser idle signal itself —
+ * the timing of the real fix needs a browser, where `requestIdleCallback` fires only after an
+ * in-flight pass commits.
  */
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -29,7 +30,13 @@ const idle = () =>
     await wait(0)
   })
 
-test('a burst of emissions delivers the first synchronously, holds the rest, then delivers only the latest once idle', async () => {
+/**
+ * End the passthrough phase of the last delivery without closing its render-idle window —
+ * emissions after this land in a later microtask and are held until {@link idle}.
+ */
+const nextMicrotask = () => Promise.resolve()
+
+test('a synchronous burst passes through: every value is delivered in the same task, like unpaced delivery', () => {
   const values$ = new Subject<string>()
   const {result, unmount} = renderHook(() => useObservable(values$, 'initial'))
 
@@ -38,36 +45,30 @@ test('a burst of emissions delivers the first synchronously, holds the rest, the
     values$.next('b')
     values$.next('c')
   })
-  // 'a' was the leading edge; 'b' and 'c' landed inside its render-idle window.
+  // All three were delivered synchronously (React paints only the last), no idle wait needed.
+  expect(result.current).toBe('c')
+
+  unmount()
+})
+
+test('emissions in a later microtask are held, then only the latest is delivered once idle', async () => {
+  const values$ = new Subject<string>()
+  const {result, unmount} = renderHook(() => useObservable(values$, 'initial'))
+
+  act(() => values$.next('a'))
+  expect(result.current).toBe('a')
+
+  // 'a' may still be rendering (its render-idle window is open); these arrive in a later
+  // microtask, so they are held with only the latest kept.
+  await nextMicrotask()
+  values$.next('b')
+  values$.next('c')
   expect(result.current).toBe('a')
 
   await idle()
   // Only the latest held value is delivered — 'b' is never rendered.
   expect(result.current).toBe('c')
 
-  unmount()
-})
-
-test('intermediate values in a burst are never rendered', async () => {
-  const values$ = new Subject<number>()
-  const rendered: number[] = []
-
-  function ObservableComponent() {
-    rendered.push(useObservable(values$, 0))
-    return null
-  }
-  const {unmount} = render(<ObservableComponent />)
-
-  act(() => {
-    for (let i = 1; i <= 10; i++) {
-      values$.next(i)
-    }
-  })
-  await idle()
-
-  expect(rendered).toContain(1) // leading edge
-  expect(rendered).toContain(10) // trailing delivery
-  expect(rendered).not.toContain(5) // coalesced away
   unmount()
 })
 
@@ -85,7 +86,29 @@ test('isolated emissions are delivered synchronously with no added latency', asy
   unmount()
 })
 
-test('useSyncObservable stays fully live while useObservable coalesces the same burst', async () => {
+test('a sync multi-value completing source never flashes back to an earlier value on mount', async () => {
+  // Regression test: the render-phase warm-up seeds the live snapshot with the last value ('b'),
+  // and the shared pipeline resets when the source completes. At commit the paced pipeline
+  // resubscribes and the burst replays — the replay must pass through so the paced snapshot ends
+  // at 'b' again, instead of delivering 'a' as a leading edge and flashing b -> a -> b.
+  const observable = from(['a', 'b'])
+  const rendered: string[] = []
+
+  function ObservableComponent() {
+    rendered.push(useObservable(observable, 'initial'))
+    return null
+  }
+  const {unmount} = render(<ObservableComponent />)
+  expect(rendered[0]).toBe('b')
+
+  await idle()
+  expect(rendered).not.toContain('a')
+  expect(rendered.every((value) => value === 'b')).toBe(true)
+
+  unmount()
+})
+
+test('useSyncObservable stays fully live while useObservable holds a cross-microtask emission', async () => {
   const values$ = new Subject<string>()
   const seen: Array<{sync: string; paced: string}> = []
 
@@ -98,6 +121,7 @@ test('useSyncObservable stays fully live while useObservable coalesces the same 
   const {unmount} = render(<ObservableComponent />)
 
   act(() => values$.next('a'))
+  await nextMicrotask()
   act(() => values$.next('b'))
   // The live hook delivered 'b' synchronously; the paced hook is still holding it.
   expect(seen.at(-1)).toEqual({sync: 'b', paced: 'a'})
@@ -114,7 +138,8 @@ test('all paced consumers of the same observable read one consistent paced snaps
   const second = renderHook(() => useObservable(values$, 'initial'))
 
   act(() => values$.next('a'))
-  act(() => values$.next('b'))
+  await nextMicrotask()
+  values$.next('b')
   expect(first.result.current).toBe('a')
   expect(second.result.current).toBe('a')
 
@@ -157,6 +182,7 @@ test('an error emitted while a value is in flight arrives as the trailing delive
   expect(container.textContent).toBe('v1')
 
   // The error lands inside v1's render-idle window: paced consumers keep rendering v1 for now.
+  await nextMicrotask()
   subject.next({error: true, message: 'Boom'})
   rerender(
     <Boundary>
@@ -180,10 +206,9 @@ test('a source that completes while a trailing value is held still delivers that
   const {result, unmount} = renderHook(() => useObservable(values$, 'initial'))
 
   act(() => values$.next('a'))
-  act(() => {
-    values$.next('b')
-    values$.complete()
-  })
+  await nextMicrotask()
+  values$.next('b')
+  values$.complete()
   expect(result.current).toBe('a')
 
   await idle()
@@ -199,14 +224,13 @@ test('a remount after the paced pipeline disconnects renders the latest live val
 
   const first = renderHook(() => useObservable(values$, 'initial'))
   act(() => values$.next('a'))
-  act(() => values$.next('b'))
+  await nextMicrotask()
+  values$.next('b')
   // 'b' is held in the paced pipeline when the only paced subscriber unmounts.
   expect(first.result.current).toBe('a')
   first.unmount()
 
-  await act(async () => {
-    await wait(0)
-  })
+  await idle()
   expect(keeper.result.current).toBe('b')
 
   // The paced pipeline reset on disconnect, so the remount must fall back to the live

@@ -44,12 +44,6 @@ describe.each(hooks)('$name', ({useHook}) => {
     expect(returnedValues.slice(afterMount).at(-1)).toBe(1)
     expect(returnedValues.slice(afterMount)).toContain(1)
 
-    // Close the render-idle window opened by the paced delivery of `1`, so `2` is delivered
-    // synchronously as a new leading edge instead of being held (no-op for useSyncObservable).
-    await act(async () => {
-      await wait(0)
-    })
-
     const afterOne = returnedValues.length
     act(() => subject.next(2))
     expect(returnedValues.slice(afterOne).at(-1)).toBe(2)

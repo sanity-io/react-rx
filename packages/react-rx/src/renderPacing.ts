@@ -1,5 +1,5 @@
-import {concat, defer, exhaustMap, finalize, Observable, of, Subject, throttle} from 'rxjs'
-import type {MonoTypeOperatorFunction, OperatorFunction} from 'rxjs'
+import {Observable} from 'rxjs'
+import type {MonoTypeOperatorFunction, Subscription} from 'rxjs'
 
 /**
  * Completes once the main thread goes idle again — i.e. after any in-flight React render pass
@@ -23,37 +23,81 @@ function renderIdle(): Observable<never> {
 }
 
 /**
- * The `rxjs-exhaustmap-with-trailing` implementation, minus its scheduler wrapping of the inner
- * observable. The scheduler guarded against re-entrancy when the inner completes synchronously
- * upon subscription, which cannot happen here — {@link paceToRenderIdle}'s inner always completes
- * asynchronously — and it has to go: the leading edge must stay synchronous so sources that emit
- * synchronously still deliver their first value during the mount render.
- */
-function exhaustMapWithTrailing<T, R>(
-  project: (value: T, index: number) => Observable<R>,
-): OperatorFunction<T, R> {
-  return (source) =>
-    defer(() => {
-      const release = new Subject<void>()
-      return source.pipe(
-        throttle(() => release, {leading: true, trailing: true}),
-        exhaustMap((value, index) => project(value, index).pipe(finalize(() => release.next()))),
-      )
-    })
-}
-
-/**
- * Paces emission delivery to React's render cycle: a value is delivered immediately when React
- * is quiet, and while a delivered value is still being rendered, newer emissions are held with
- * only the latest delivered once the main thread goes idle again (idle = the pass committed).
+ * Paces emission delivery to React's render cycle. Values are delivered synchronously while
+ * React cannot be rendering: when no delivery is pending, and for any further emissions in the
+ * same microtask as the last delivery (React batches them into one paint either way, so holding
+ * them would only expose an earlier value and delay the final one — this keeps synchronous
+ * bursts, like a cold source replaying on resubscription, behaving as if unpaced). Once the
+ * microtask drains, newer emissions are held with only the latest delivered when the main
+ * thread next goes idle (idle = any in-flight render pass committed).
  *
  * React must restart an in-flight concurrent render pass whenever a `useSyncExternalStore`
- * snapshot changes mid-pass, so a source that emits faster than the pass can complete starves it
- * forever. Pacing bounds those restarts to at most one per commit cycle — guaranteeing forward
- * progress under emission pressure — with zero added latency for isolated emissions.
+ * snapshot changes mid-pass, so a source that emits across tasks faster than the pass can
+ * complete starves it forever. Holding cross-task emissions until render-idle bounds those
+ * restarts to at most one per commit cycle — guaranteeing forward progress under emission
+ * pressure — with zero added latency for emissions arriving while React is quiet.
  *
  * @internal
  */
 export function paceToRenderIdle<T>(): MonoTypeOperatorFunction<T> {
-  return exhaustMapWithTrailing((value) => concat(of(value), renderIdle()))
+  return (source) =>
+    new Observable<T>((subscriber) => {
+      // Non-null from a delivery until the next render-idle: while set, cross-microtask
+      // emissions are held. `renderIdle` never completes synchronously, so the assignment in
+      // `deliver` always happens before `onIdle` can run.
+      let idleWindow: Subscription | null = null
+      // True from a delivery until the current microtask drains: emissions arriving
+      // synchronously with the last delivery pass through instead of being held.
+      let passthrough = false
+      let held: {value: T} | null = null
+      let sourceComplete = false
+
+      const onIdle = () => {
+        idleWindow = null
+        if (held) {
+          const {value} = held
+          held = null
+          deliver(value)
+        } else if (sourceComplete) {
+          subscriber.complete()
+        }
+      }
+
+      const deliver = (value: T) => {
+        if (!passthrough) {
+          passthrough = true
+          queueMicrotask(() => {
+            passthrough = false
+          })
+        }
+        if (!idleWindow) {
+          idleWindow = renderIdle().subscribe({complete: onIdle})
+        }
+        subscriber.next(value)
+      }
+
+      const subscription = source.subscribe({
+        next: (value) => {
+          if (idleWindow && !passthrough) {
+            held = {value}
+          } else {
+            deliver(value)
+          }
+        },
+        error: (error) => subscriber.error(error),
+        complete: () => {
+          sourceComplete = true
+          // With a held value, completion waits for the idle delivery in `onIdle` so the
+          // trailing value is not lost.
+          if (!held) {
+            subscriber.complete()
+          }
+        },
+      })
+
+      return () => {
+        subscription.unsubscribe()
+        idleWindow?.unsubscribe()
+      }
+    })
 }
