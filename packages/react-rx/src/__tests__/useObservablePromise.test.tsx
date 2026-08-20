@@ -15,6 +15,9 @@ import {
 } from 'rxjs'
 import {expect, test, vi} from 'vitest'
 
+// The TTL constants are imported through the package entry point on purpose: the test
+// asserts they remain part of the public API surface.
+import {DEFAULT_HOOK_TTL, DEFAULT_PRELOAD_TTL} from '../index'
 import {
   preloadObservablePromise,
   useObservablePromise,
@@ -1057,4 +1060,232 @@ test('memoized observable is stable across parent re-renders', async () => {
     screen.getByRole('button', {name: 'tick'}).click()
   })
   expect(subscriptions).toBe(1)
+})
+
+test('the default TTL constants are public API: DEFAULT_HOOK_TTL=500, DEFAULT_PRELOAD_TTL=5000', () => {
+  // Consumers (and this package's docs) rely on these retention defaults; changing
+  // them changes refetch behavior for every hook call without an explicit ttl.
+  expect(DEFAULT_HOOK_TTL).toBe(500)
+  expect(DEFAULT_PRELOAD_TTL).toBe(5000)
+})
+
+// ---------------------------------------------------------------------------
+// The WithReferencedAsset pattern, vendored from sanity
+// (packages/sanity/src/core/form/utils/WithReferencedAsset.tsx): swap to the NEVER
+// singleton and `disabled: true` when there is no document id, keep the placeholder up
+// for falsy emissions, and key the promise to the observable identity so a reference
+// change never shows the previous document's asset.
+// ---------------------------------------------------------------------------
+
+interface AssetReference {
+  _ref?: string
+}
+
+// Concrete asset type instead of sanity's generic parameter: the observable emitting
+// `null` for missing documents is part of the tested behavior, and the concrete union
+// lets the truthiness check below narrow it.
+interface AssetDoc {
+  title: string
+}
+
+function ReferencedAsset(props: {
+  promise: ObservablePromise<AssetDoc | null>
+  children: (assetDocument: AssetDoc) => ReactNode
+  waitPlaceholder?: ReactNode
+}) {
+  const asset = use(props.promise)
+  // observeAsset implementations emit null while the referenced document is missing or
+  // not yet indexed — keep the placeholder up for falsy emissions.
+  return <>{asset ? props.children(asset) : props.waitPlaceholder}</>
+}
+
+function WithReferencedAsset(props: {
+  reference: AssetReference
+  observeAsset: (assetId: string) => Observable<AssetDoc | null>
+  children: (assetDocument: AssetDoc) => ReactNode
+  waitPlaceholder?: ReactNode
+}) {
+  const {reference, children, observeAsset, waitPlaceholder} = props
+  const documentId = reference?._ref
+  // Never invoke `observeAsset` without an id: some implementations parse the id
+  // synchronously at call time and would throw during render.
+  const observable = useMemo(
+    () => (documentId ? observeAsset(documentId) : NEVER),
+    [documentId, observeAsset],
+  )
+  const promise = useObservablePromise(observable, {disabled: !documentId})
+  if (!documentId) {
+    return <>{waitPlaceholder}</>
+  }
+  return (
+    <Suspense fallback={waitPlaceholder}>
+      <ReferencedAsset promise={promise} waitPlaceholder={waitPlaceholder}>
+        {children}
+      </ReferencedAsset>
+    </Suspense>
+  )
+}
+
+function Placeholder() {
+  return <div data-testid="placeholder">wait</div>
+}
+
+function AssetTitle({title}: {title: string}) {
+  return <div data-testid="asset">{title}</div>
+}
+
+test('WithReferencedAsset without a reference: placeholder renders, observeAsset is never called, nothing fetches', async () => {
+  const observeAsset = vi.fn((id: string) => of({title: `asset ${id}`}))
+
+  const {rerender} = await renderAsync(
+    <WithReferencedAsset
+      reference={{}}
+      observeAsset={observeAsset}
+      waitPlaceholder={<Placeholder />}
+    >
+      {(asset) => <AssetTitle title={asset.title} />}
+    </WithReferencedAsset>,
+  )
+
+  expect(screen.getByTestId('placeholder')).toBeTruthy()
+  expect(screen.queryByTestId('asset')).toBeNull()
+  expect(observeAsset).not.toHaveBeenCalled()
+
+  // Re-renders keep hitting the NEVER + disabled path without starting anything.
+  rerender(
+    <WithReferencedAsset
+      reference={{}}
+      observeAsset={observeAsset}
+      waitPlaceholder={<Placeholder />}
+    >
+      {(asset) => <AssetTitle title={asset.title} />}
+    </WithReferencedAsset>,
+  )
+  expect(observeAsset).not.toHaveBeenCalled()
+})
+
+test('assigning a reference flips disabled off: suspends into the placeholder, then shows the asset', async () => {
+  const responses = new Map<string, Subject<{title: string} | null>>()
+  let sourceSubscriptions = 0
+  const observeAsset = vi.fn(
+    (id: string) =>
+      new Observable<{title: string} | null>((subscriber) => {
+        sourceSubscriptions++
+        if (!responses.has(id)) {
+          responses.set(id, new Subject())
+        }
+        const subscription = responses.get(id)!.subscribe(subscriber)
+        return () => subscription.unsubscribe()
+      }),
+  )
+
+  const view = await renderAsync(
+    <WithReferencedAsset
+      reference={{}}
+      observeAsset={observeAsset}
+      waitPlaceholder={<Placeholder />}
+    >
+      {(asset) => <AssetTitle title={asset.title} />}
+    </WithReferencedAsset>,
+  )
+  expect(observeAsset).not.toHaveBeenCalled()
+
+  // The reference gets a _ref: the observable swaps from NEVER to the real source and
+  // `disabled` flips to false in the same render.
+  await act(async () => {
+    view.rerender(
+      <WithReferencedAsset
+        reference={{_ref: 'image-1'}}
+        observeAsset={observeAsset}
+        waitPlaceholder={<Placeholder />}
+      >
+        {(asset) => <AssetTitle title={asset.title} />}
+      </WithReferencedAsset>,
+    )
+  })
+
+  expect(observeAsset).toHaveBeenCalledTimes(1)
+  expect(sourceSubscriptions).toBe(1)
+  // Pending: the Suspense boundary shows the placeholder.
+  expect(screen.getByTestId('placeholder')).toBeTruthy()
+  expect(screen.queryByTestId('asset')).toBeNull()
+
+  // A null emission (missing / not yet indexed document) fulfills the promise but the
+  // consumer keeps the placeholder up.
+  await act(async () => {
+    responses.get('image-1')!.next(null)
+  })
+  expect(screen.getByTestId('placeholder')).toBeTruthy()
+  expect(screen.queryByTestId('asset')).toBeNull()
+
+  // The real asset arrives: content swaps in with no re-suspension.
+  await act(async () => {
+    responses.get('image-1')!.next({title: 'first title'})
+  })
+  await waitFor(() => expect(screen.getByTestId('asset').textContent).toBe('first title'))
+
+  // Later emissions keep updating without going back to the placeholder.
+  await act(async () => {
+    responses.get('image-1')!.next({title: 'updated title'})
+  })
+  expect(screen.getByTestId('asset').textContent).toBe('updated title')
+  expect(screen.queryByTestId('placeholder')).toBeNull()
+
+  // Still a single observeAsset call / subscription for the whole lifecycle.
+  expect(observeAsset).toHaveBeenCalledTimes(1)
+  expect(sourceSubscriptions).toBe(1)
+})
+
+test('changing the reference never renders the previous asset under the new one', async () => {
+  const responses = new Map<string, Subject<{title: string} | null>>()
+  const observeAsset = vi.fn(
+    (id: string) =>
+      new Observable<{title: string} | null>((subscriber) => {
+        if (!responses.has(id)) {
+          responses.set(id, new Subject())
+        }
+        const subscription = responses.get(id)!.subscribe(subscriber)
+        return () => subscription.unsubscribe()
+      }),
+  )
+
+  const view = await renderAsync(
+    <WithReferencedAsset
+      reference={{_ref: 'image-1'}}
+      observeAsset={observeAsset}
+      waitPlaceholder={<Placeholder />}
+    >
+      {(asset) => <AssetTitle title={asset.title} />}
+    </WithReferencedAsset>,
+  )
+  await act(async () => {
+    responses.get('image-1')!.next({title: 'asset one'})
+  })
+  await waitFor(() => expect(screen.getByTestId('asset').textContent).toBe('asset one'))
+
+  // Point the reference at another document. The promise is keyed to the observable
+  // identity (and thereby the id), so the boundary re-suspends into the placeholder.
+  // React keeps the previously revealed content in the DOM but hides it
+  // (display: none) — the previous document's asset is never *visible* under the new
+  // reference.
+  await act(async () => {
+    view.rerender(
+      <WithReferencedAsset
+        reference={{_ref: 'image-2'}}
+        observeAsset={observeAsset}
+        waitPlaceholder={<Placeholder />}
+      >
+        {(asset) => <AssetTitle title={asset.title} />}
+      </WithReferencedAsset>,
+    )
+  })
+  expect(screen.getByTestId('placeholder')).toBeTruthy()
+  expect(screen.getByTestId('asset').style.display).toBe('none')
+
+  await act(async () => {
+    responses.get('image-2')!.next({title: 'asset two'})
+  })
+  await waitFor(() => expect(screen.getByTestId('asset').textContent).toBe('asset two'))
+  expect(screen.getByTestId('asset').style.display).not.toBe('none')
+  expect(observeAsset).toHaveBeenCalledTimes(2)
 })
