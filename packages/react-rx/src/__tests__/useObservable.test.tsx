@@ -266,13 +266,12 @@ test('falls back to the live value when the observable identity changes (deferra
   const timelineLengthBeforeSwitch = renderTimeline.length
   rerender(<ObservableComponent observable={subjectB} />)
 
-  // With an initialValue there is no render-phase warm-up, so the switch render shows the
-  // initialValue until the store subscription re-attaches on commit and delivers subjectB's
-  // synchronous emission. Crucially, the deferred snapshot belonging to the previous
-  // observable never renders under the new one.
-  expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('fallback')
+  // The render right after the identity change must reflect the new observable —
+  // replacement observables are warmed up during render even with an initialValue, so
+  // subjectB's synchronous emission is available immediately. It never shows the deferred
+  // snapshot belonging to the previous observable.
+  expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('initial for b')
   expect(renderTimeline.slice(timelineLengthBeforeSwitch)).not.toContain('value for a')
-  expect(renderTimeline.at(-1)).toBe('initial for b')
 
   act(() => subjectB.next('updated for b'))
   expect(renderTimeline.at(-1)).toBe('updated for b')

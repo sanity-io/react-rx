@@ -65,12 +65,18 @@ test('a new observable identity on every render stays stable when the source rep
   const frames: boolean[] = []
   const {rerender, unmount} = render(<CanInvitePane enabled grants$={grants$} frames={frames} />)
 
-  // The synchronous replay seeds every fresh identity's warm-up, so the value is right
-  // from the first frame and re-renders never flash the initialValue.
-  expect(frames[0]).toBe(true)
+  // With an initialValue the hook's *initial* observable is not probed during render, so
+  // the very first frame shows the initialValue (false); the commit-time subscription then
+  // delivers the synchronous replay. Every *replacement* identity created by a re-render is
+  // still warmed up during render — that is what lets this un-memoized pattern settle
+  // instead of looping (render initialValue → commit subscribe emits → forced re-render →
+  // fresh identity renders initialValue again → …).
+  expect(frames[0]).toBe(false)
+  expect(frames.at(-1)).toBe(true)
+  expect(frames.length).toBeLessThan(10)
   rerender(<CanInvitePane enabled grants$={grants$} frames={frames} />)
   rerender(<CanInvitePane enabled grants$={grants$} frames={frames} />)
-  expect(frames.every(Boolean)).toBe(true)
+  expect(frames.at(-1)).toBe(true)
 
   // A store update flows through even though each render subscribes a new identity —
   // and it must not trigger a render loop (each update re-renders, which rebuilds the
@@ -290,7 +296,7 @@ test('remounting within the teardown grace keeps the source alive and replays th
 // ---------------------------------------------------------------------------
 
 function DisabledProbe({source$}: {source$: Observable<string>}) {
-  useObservable(source$, 'initial', {disabled: true})
+  useObservable(source$, undefined, {disabled: true})
   return null
 }
 
@@ -299,6 +305,8 @@ test('the render-phase warm-up blip hits a cold source at most once per store en
   // makes the blip observable in isolation: subscribe during render, source teardown a
   // tick later. Consumers like bifur's WebSocket connection must tolerate this
   // momentary zero-subscriber gap — and react-rx must not repeat it on re-renders.
+  // The probe only runs when no initialValue is given; with one, the initial observable
+  // is never subscribed during render, so there is no blip at all.
   const events: string[] = []
   const source$ = new Observable<string>(() => {
     events.push('subscribe')

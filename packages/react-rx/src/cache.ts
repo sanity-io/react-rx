@@ -25,23 +25,23 @@ const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
  * cache is shared between `useObservable` and `useSyncObservable`, so both hooks reuse the same
  * entry and source subscription for the same observable.
  *
- * Callers without an `initialValue` (`hasInitialValue: false`) also warm the entry up so that a
- * synchronous emission (e.g. from `startWith`) is available on their first render. Callers with an
- * `initialValue` already have something to render, so for them the source is not subscribed during
- * render at all — the live store subscription picks up emissions once the hook commits.
+ * With `shouldWarmUp: true` the entry is also warmed up so that a synchronous emission (e.g. from
+ * `startWith`) is available on the caller's first render of it. The hooks request this for every
+ * observable except their initial one when an `initialValue` is provided — in that case there is
+ * already a value to render, so the source is not subscribed during render at all and the live
+ * store subscription picks up emissions once the hook commits.
  *
  * @internal
  */
 export function getOrCreateStore<ObservableType extends Observable<any>>(
   observable: ObservableType,
-  hasInitialValue: boolean,
+  shouldWarmUp: boolean,
 ): CacheRecord<ObservedValueOf<ObservableType>> {
   const cached = cache.get(observable)
   if (cached) {
-    // A consumer without an `initialValue` relies on synchronous emissions being available during
-    // its first render, so warm up entries created by callers that had an `initialValue` and
-    // therefore skipped it.
-    if (!hasInitialValue && !cached.warmedUp) {
+    // A consumer that relies on synchronous emissions being available during its first render may
+    // hit an entry created by a caller that skipped the warm-up — warm it up on its behalf.
+    if (shouldWarmUp && !cached.warmedUp) {
       warmUp(cached)
     }
     return cached
@@ -92,11 +92,11 @@ export function getOrCreateStore<ObservableType extends Observable<any>>(
   // on remount instead of re-subscribing the source.
   cache.set(observable, entry)
 
-  // Only warm up when the caller has no `initialValue` to render instead. The warm-up runs even when
-  // `disabled` is true — `disabled` only pauses the hooks' live store subscription. With an
-  // `initialValue` the warm-up is skipped, keeping subscribe-time side effects out of the render
-  // phase; the source is first subscribed when the store subscription starts on commit.
-  if (!hasInitialValue) {
+  // The warm-up runs even when `disabled` is true — `disabled` only pauses the hooks' live store
+  // subscription. When it is skipped (the hooks' initial observable with an `initialValue`),
+  // subscribe-time side effects stay out of the render phase; the source is first subscribed when
+  // the store subscription starts on commit.
+  if (shouldWarmUp) {
     warmUp(entry)
   }
 

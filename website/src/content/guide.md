@@ -39,7 +39,7 @@ function MyComponent(props) {
 The `initialValue` argument is optional, and it also decides how the hook treats observables that emit _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …):
 
 - **Without an `initialValue`**, the hook briefly subscribes during render so a synchronous emission can be returned from the very first render. If the observable only emits asynchronously, the value may be `undefined` initially.
-- **With an `initialValue`**, the observable is not subscribed during render at all. The first render shows the `initialValue`, and the subscription starts when the component commits — a synchronous emission then replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase whenever you already have a value to paint first.
+- **With an `initialValue`**, the hook's initial observable is not subscribed during render at all. The first render shows the `initialValue`, and the subscription starts when the component commits — a synchronous emission then replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase whenever you already have a value to paint first. If a later render swaps in a different observable, the replacement is warmed during render either way — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever.
 
 ```tsx
 import {useMemo} from 'react'
@@ -62,7 +62,7 @@ The difference between `useObservable` and `useSyncObservable` is how _updates_ 
 
 The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription.
 
-Important: when no `initialValue` is given, `disabled` does **not** skip the hook's warm-up subscription — both hooks still briefly subscribe during render so a synchronous emission can become the current snapshot, which means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`. With an `initialValue` there is no warm-up at all, so `disabled: true` guarantees zero subscriptions until it is re-enabled.
+Important: when no `initialValue` is given, `disabled` does **not** skip the hook's warm-up subscription — both hooks still briefly subscribe during render so a synchronous emission can become the current snapshot, which means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`. With an `initialValue` and a stable observable identity there is no warm-up at all, so `disabled: true` guarantees zero subscriptions until it is re-enabled.
 
 ```tsx
 import {useEffect, useState} from 'react'
@@ -83,7 +83,7 @@ function MyComponent(props) {
 }
 ```
 
-If the goal is to avoid _any_ subscription to a particular observable, the simplest option is to combine an `initialValue` with `disabled` — with an `initialValue` there is no render-phase warm-up, so nothing subscribes until `disabled` flips to `false`:
+If the goal is to avoid _any_ subscription to a particular observable, the simplest option is to combine an `initialValue` with `disabled` on a stable (memoized) observable — the initial observable is never warmed up, so nothing subscribes until `disabled` flips to `false`:
 
 ```tsx
 import {useMemo} from 'react'

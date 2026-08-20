@@ -1,4 +1,4 @@
-import {useCallback, useDeferredValue, useMemo, useSyncExternalStore} from 'react'
+import {useCallback, useDeferredValue, useMemo, useState, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore} from './cache'
@@ -16,15 +16,18 @@ import {EMPTY_OBJECT} from './utils'
  *
  * When no `initialValue` is given, the observable is briefly subscribed during render so a
  * synchronous emission (e.g. from `startWith`) can be returned from the very first render. With an
- * `initialValue` there is no render-phase subscription: the `initialValue` renders first and the
- * live subscription starts on commit, keeping subscribe-time side effects out of the render phase —
- * a synchronous emission then replaces the `initialValue` right after mount.
+ * `initialValue` the hook's initial observable is not subscribed during render: the `initialValue`
+ * renders first and the live subscription starts on commit, keeping subscribe-time side effects out
+ * of the render phase — a synchronous emission then replaces the `initialValue` right after mount.
+ * Replacement observables (a changed identity on a later render) are still warmed up during render
+ * even with an `initialValue`: rendering their synchronous emission immediately is what lets
+ * consumers that rebuild the observable on every render settle instead of re-rendering forever.
  *
  * The deferral is identity-coherent: unlike a bare `useDeferredValue(useObservable(...))`, the
  * observable identity and its value are deferred as one snapshot, and when the observable identity
  * changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live
- * value — typically the `initialValue`, or the new observable's synchronous emission when no
- * `initialValue` is given — so the previous identity's value never renders under the new one.
+ * value — typically the new observable's synchronous emission or the `initialValue` — so the
+ * previous identity's value never renders under the new one.
  *
  * On the server this hook renders exactly what the client's first paint will show (the resolved
  * `initialValue` when one is provided, else a synchronous emission when there is one, else nothing)
@@ -57,9 +60,17 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   const {disabled = false} = options
 
   const hasInitialValue = typeof initialValue !== 'undefined'
+  // The render-phase warm-up is only skipped for the hook's initial observable (and only when an
+  // `initialValue` provides something to render instead). Replacement observables are warmed even
+  // with an `initialValue`: their rendered snapshot must match what the commit-time store
+  // subscription delivers, or consumers that rebuild the observable on every render would loop
+  // (render `initialValue` → subscribe on commit → sync emission forces a re-render → a new
+  // identity renders `initialValue` again → …).
+  const [initialObservable] = useState(observable)
+  const shouldWarmUp = !hasInitialValue || observable !== initialObservable
   const instance = useMemo(
-    () => getOrCreateStore(observable, hasInitialValue),
-    [observable, hasInitialValue],
+    () => getOrCreateStore(observable, shouldWarmUp),
+    [observable, shouldWarmUp],
   )
 
   const subscribe = useCallback(
@@ -100,7 +111,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 
   // When the observable identity just changed, the deferred snapshot still
   // belongs to the previous observable. Fall back to the live value (typically
-  // the initialValue, or the new observable's sync emission when none is given)
-  // so the previous identity's value never renders under the new one.
+  // the new observable's sync emission or the initialValue) so the previous
+  // identity's value never renders under the new one.
   return deferredSnapshot.observable === observable ? deferredSnapshot.value : value
 }
