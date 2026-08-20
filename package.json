@@ -18,7 +18,7 @@
     "@changesets/cli": "^2.31.1",
     "knip": "^6.31.0",
     "oxfmt": "^0.61.0",
-    "oxlint": "^1.76.0",
+    "oxlint": "^1.79.0",
     "oxlint-tsgolint": "^7.0.2001",
     "typescript": "7.0.2"
   },

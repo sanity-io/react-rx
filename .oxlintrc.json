@@ -35,6 +35,11 @@
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "error",
     "react/jsx-key": "error",
+    "react/unsupported-syntax": "error",
+    "react/invariant": "error",
+    "react/rule-suppression": "error",
+    "react/syntax": "error",
+    "react/todo": "error",
     "eslint/no-console": ["error", {"allow": ["warn", "error"]}],
     "eslint/no-shadow": "off",
     "import/no-unassigned-import": ["error", {"allow": ["**/*.css"]}],
@@ -45,12 +50,6 @@
     {
       "files": ["website/**/*.{js,jsx,mjs,ts,tsx}"],
       "plugins": ["nextjs"]
-    },
-    {
-      "files": ["packages/react-rx/**/*.{js,jsx,mjs,ts,tsx}"],
-      "rules": {
-        "react/react-compiler": "error"
-      }
     }
   ]
 }

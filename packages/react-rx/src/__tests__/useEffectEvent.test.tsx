@@ -19,6 +19,7 @@ function expectLatestValue(useEvent: EffectEventHook, componentType: ComponentTy
 
     useEffect(() => {
       onEvent()
+      // oxlint-disable-next-line react/exhaustive-effect-dependencies -- extra `value` dep is intentional in this test
     }, [onEvent, value])
   }
 
