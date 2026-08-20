@@ -578,6 +578,7 @@ test('emitting an identical value does not re-render', () => {
   const values$ = new Subject<string>()
   let renderCount = 0
   function ObservableComponent() {
+    // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
     renderCount++
     useObservable(values$, 'same')
     return null

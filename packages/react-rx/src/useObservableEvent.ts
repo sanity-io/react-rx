@@ -15,6 +15,7 @@ export function useObservableEvent<T, U>(
   useEffect(() => {
     const subscription = calls$.pipe((observable) => onEvent(observable)).subscribe()
     return () => subscription.unsubscribe()
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- onEvent is a useEffectEvent callback
   }, [calls$])
 
   return call

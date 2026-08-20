@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -71,26 +71,24 @@
     "use-effect-event": "^2.0.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.7",
-    "@rolldown/plugin-babel": "^0.2.3",
     "@sanity/tsconfig": "^2.2.1",
-    "@sanity/tsdown-config": "^0.21.2",
+    "@sanity/tsdown-config": "^0.26.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "@vitejs/plugin-react": "^6.0.5",
-    "babel-plugin-react-compiler": "catalog:",
+    "@vitejs/plugin-react": "^6.1.0",
     "jsdom": "^30.0.1",
-    "publint": "^0.3.22",
+    "oxc-transform-react": "^0.145.0",
+    "publint": "^0.3.24",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "rxjs": "^7.8.2",
     "tsdown": "^0.22.14",
     "typescript": "7.0.2",
-    "vite": "^8.2.0",
-    "vitest": "^4.1.10"
+    "vite": "^8.2.1",
+    "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "react": "^19.2",
