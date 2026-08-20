@@ -96,6 +96,7 @@ test('suspends until the first emission, then shows data (fallback exactly once)
   function Parent() {
     const p = useObservablePromise(observable)
     return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
       <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
         <Reader promise={p} />
       </Suspense>
@@ -123,6 +124,7 @@ test('sync sources never show a Suspense fallback', async () => {
   function Parent() {
     const p = useObservablePromise(observable)
     return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
       <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
         <Reader promise={p} />
       </Suspense>
@@ -142,6 +144,7 @@ test('startWith(placeholder) fulfills instantly with the placeholder (use useObs
   function Parent() {
     const p = useObservablePromise(observable)
     return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
       <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
         <Reader promise={p} />
       </Suspense>
@@ -194,6 +197,7 @@ test('first emission keeps promise identity; later emissions swap without re-act
     const p = useObservablePromise(subject)
     identities.push(p)
     return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
       <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
         <Reader promise={p} />
       </Suspense>
@@ -233,6 +237,7 @@ test('Object.is-equal emission does not re-render the reader', async () => {
   let readerRenders = 0
 
   function CountingReader({promise}: {promise: Promise<string>}) {
+    // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
     readerRenders++
     const value = use(promise)
     return <div data-testid="value">{value}</div>
@@ -593,6 +598,7 @@ test('settled entry is evicted after one retention window, not two', async () =>
   function Parent() {
     const p = useObservablePromise(observable, {ttl: 40})
     return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
       <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
         <Reader promise={p} />
       </Suspense>
@@ -890,6 +896,7 @@ test('mount after preload settle within ttl renders with zero fallbacks', async 
   function Parent() {
     const p = useObservablePromise(observable)
     return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
       <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
         <Reader promise={p} />
       </Suspense>
@@ -938,6 +945,7 @@ test('BehaviorSubject is available synchronously without fallback', async () => 
   function Parent() {
     const p = useObservablePromise(subject)
     return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
       <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
         <Reader promise={p} />
       </Suspense>

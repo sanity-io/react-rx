@@ -22,6 +22,7 @@ describe.each(hooks)('$name', ({useHook}) => {
     let mountCount = 0
     function ObservableComponent() {
       useEffect(() => {
+        // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
         mountCount++
       }, [])
       const observedValue = useHook(observable)
