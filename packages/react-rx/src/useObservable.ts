@@ -20,10 +20,20 @@ import {EMPTY_OBJECT} from './utils'
  * value — typically the new observable's synchronous emission or the `initialValue` — so the
  * previous identity's value never renders under the new one.
  *
+ * Emission delivery is paced to React's render cycle: emissions are delivered synchronously
+ * while React cannot be rendering (nothing pending, or arriving in the same microtask as the
+ * last delivery — React paints only the last value of a task either way), and emissions
+ * arriving later while a delivered value may still be rendering are held, with only the latest
+ * delivered once the main thread goes idle again. Without this, a source that emits faster than
+ * a concurrent render pass (Suspense retry, lazy mount, transition) can complete would restart
+ * the pass on every emission and starve it forever. Cross-task bursts coalesce to one delivery
+ * per completed pass; synchronous bursts and isolated emissions are delivered as if unpaced.
+ *
  * On the server this hook renders exactly what the client's first paint will show (a synchronous
  * emission when there is one, else the resolved `initialValue`, else nothing) and never throws
- * for a missing `initialValue`. Prefer {@link useSyncObservable} for controlled inputs or when you
- * need the strict v4 server-snapshot contract.
+ * for a missing `initialValue`. Prefer {@link useSyncObservable} for controlled inputs, when every
+ * emission must be delivered synchronously, or when you need the strict v4 server-snapshot
+ * contract.
  *
  * @public
  */
@@ -58,23 +68,24 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
         return () => {}
       }
 
-      const subscription = instance.observable.subscribe(onStoreChange)
+      const subscription = instance.pacedObservable.subscribe(onStoreChange)
       return () => {
         subscription.unsubscribe()
       }
     },
-    [instance.observable, disabled],
+    [instance.pacedObservable, disabled],
   )
 
   const value = useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
-      return instance.getSnapshot(initialValue)
+      return instance.getPacedSnapshot(initialValue)
     },
     // Always provide getServerSnapshot so SSR never throws. The server renders
     // exactly what the client's first render will show (sync emission, else
-    // initialValue, else undefined).
-    () => instance.getSnapshot(initialValue),
+    // initialValue, else undefined). No subscription happens server-side, so the
+    // paced snapshot is the live snapshot there.
+    () => instance.getPacedSnapshot(initialValue),
   )
 
   // Defer identity and value as one snapshot so they can never tear — the

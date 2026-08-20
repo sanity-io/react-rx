@@ -11,8 +11,11 @@ import {EMPTY_OBJECT, getValue} from './utils'
  *
  * This is the v4 `useObservable` behavior. Prefer the deferred {@link useObservable} for most
  * reads. Reach for `useSyncObservable` when the value feeds a controlled input (or must stay
- * consistent within the same event), or when you need strict control over server markup: the
- * server renders the resolved `initialValue` and throws without one.
+ * consistent within the same event), when every emission must be delivered synchronously
+ * (`useObservable` holds cross-task bursts and delivers only the latest per render-idle
+ * window), or when
+ * you need strict control over server markup: the server renders the resolved `initialValue`
+ * and throws without one.
  *
  * **Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by
  * this hook replaces already-visible content with the nearest Suspense fallback — see the
