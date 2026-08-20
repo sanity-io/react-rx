@@ -17,6 +17,14 @@ export default defineConfig({
         plugins: [react()],
         test: {
           name: 'default',
+          typecheck: {
+            // The CLI `--typecheck` flag does not reach project configs, so the type
+            // tests (`*.test-d.ts`) must be enabled here to actually run. Only this
+            // project runs them — the react-compiler project only changes the runtime
+            // transform, which type tests never see.
+            enabled: true,
+            ignoreSourceErrors: true,
+          },
         },
       },
       {

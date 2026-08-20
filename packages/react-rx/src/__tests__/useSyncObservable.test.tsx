@@ -439,3 +439,35 @@ test('should return the actual value when the hook is disabled and then re-enabl
 
   unmount()
 })
+
+test('initialValue factories must be pure', () => {
+  const values$ = new Subject<string>()
+  let factoryCalls = 0
+  const factory = () => {
+    factoryCalls++
+    return 'initial'
+  }
+
+  const {result} = renderHook(() => useSyncObservable(values$, factory))
+  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
+  // when checking for tearing on commit.
+  expect(factoryCalls).toBeGreaterThanOrEqual(2)
+  expect(result.current).toBe('initial')
+  const callsBeforeEmit = factoryCalls
+
+  act(() => values$.next('emitted'))
+  expect(result.current).toBe('emitted')
+  // After didEmit, getSnapshot short-circuits and the factory is no longer called.
+  expect(factoryCalls).toBe(callsBeforeEmit)
+})
+
+test('SSR resolves a factory initialValue through getServerSnapshot', () => {
+  // The sync hook's getServerSnapshot resolves factories via getValue — a code path
+  // distinct from the client getSnapshot.
+  const observable = scheduled('async value', asyncScheduler)
+  function ObservableComponent() {
+    return <>{useSyncObservable(observable, () => 'factory initial')}</>
+  }
+
+  expect(renderToString(<ObservableComponent />)).toBe('factory initial')
+})
