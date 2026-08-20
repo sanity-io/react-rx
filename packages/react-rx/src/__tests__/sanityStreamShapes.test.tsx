@@ -63,16 +63,14 @@ test('a new observable identity on every render stays stable when the source rep
   })
 
   const frames: boolean[] = []
-  const {rerender, unmount} = render(
-    <CanInvitePane enabled grants$={grants$} frames={frames} />,
-  )
+  const {rerender, unmount} = render(<CanInvitePane enabled grants$={grants$} frames={frames} />)
 
   // The synchronous replay seeds every fresh identity's warm-up, so the value is right
   // from the first frame and re-renders never flash the initialValue.
   expect(frames[0]).toBe(true)
   rerender(<CanInvitePane enabled grants$={grants$} frames={frames} />)
   rerender(<CanInvitePane enabled grants$={grants$} frames={frames} />)
-  expect(frames.every((frame) => frame === true)).toBe(true)
+  expect(frames.every(Boolean)).toBe(true)
 
   // A store update flows through even though each render subscribes a new identity —
   // and it must not trigger a render loop (each update re-renders, which rebuilds the
@@ -96,12 +94,10 @@ test('the disabled branch (`of(false)` rebuilt every render) never subscribes th
   })
 
   const frames: boolean[] = []
-  const {rerender} = render(
-    <CanInvitePane enabled={false} grants$={grants$} frames={frames} />,
-  )
+  const {rerender} = render(<CanInvitePane enabled={false} grants$={grants$} frames={frames} />)
   rerender(<CanInvitePane enabled={false} grants$={grants$} frames={frames} />)
 
-  expect(frames.every((frame) => frame === false)).toBe(true)
+  expect(frames.every((frame) => !frame)).toBe(true)
   expect(storeSubscriptions).toBe(0)
 })
 
@@ -171,9 +167,7 @@ test('the NEVER singleton: consumers see their own initialValue and unmounting o
   await tick()
 
   const framesBeforeRerender = framesB.length
-  b.rerender(
-    <ObservableValueProbe observable={NEVER} initialValue="pending-b" frames={framesB} />,
-  )
+  b.rerender(<ObservableValueProbe observable={NEVER} initialValue="pending-b" frames={framesB} />)
   expect(framesB.length).toBeGreaterThan(framesBeforeRerender)
   expect(framesB.every((frame) => frame === 'pending-b')).toBe(true)
 
@@ -217,13 +211,7 @@ test('a take(1) source latches the first emission and ignores everything after c
 //  packages/sanity/src/structure/structureResolvers/__tests__/useResolvedPanes.test.tsx)
 // ---------------------------------------------------------------------------
 
-function EditStateProbe({
-  editState$,
-  frames,
-}: {
-  editState$: Observable<string>
-  frames: string[]
-}) {
+function EditStateProbe({editState$, frames}: {editState$: Observable<string>; frames: string[]}) {
   // `useEditState` reads synchronously: stale edit state paired with live selection
   // would tear (see the deferral-safety section below).
   frames.push(useSyncObservable(editState$)!)

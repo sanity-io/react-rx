@@ -66,8 +66,8 @@ function asLoadable<T>(): OperatorFunction<T, LoadableState<T>> {
   return (value$: Observable<T>) =>
     value$.pipe(
       map((value) => ({isLoading: false, value, error: null}) as const),
-      catchError(
-        (error): Observable<ErrorState> => of({isLoading: false, value: undefined, error}),
+      catchError((error): Observable<ErrorState> =>
+        of({isLoading: false, value: undefined, error}),
       ),
     )
 }
@@ -186,7 +186,7 @@ describe('createHookFromObservableFactory (vendored from sanity)', () => {
   test('returns the loading tuple first, then the loaded tuple', async () => {
     const observableFactory = (value: string) =>
       new Observable<string>((subscriber) => {
-        tick().then(() => {
+        void tick().then(() => {
           subscriber.next(`hello, ${value}`)
           subscriber.complete()
         })
@@ -205,13 +205,14 @@ describe('createHookFromObservableFactory (vendored from sanity)', () => {
   })
 
   test('with an initial value the first tuple is [initialValue, true]', async () => {
-    const observableFactory = vi.fn((value: string) =>
-      new Observable<string>((subscriber) => {
-        tick().then(() => {
-          subscriber.next(`hello, ${value}`)
-          subscriber.complete()
-        })
-      }),
+    const observableFactory = vi.fn(
+      (value: string) =>
+        new Observable<string>((subscriber) => {
+          void tick().then(() => {
+            subscriber.next(`hello, ${value}`)
+            subscriber.complete()
+          })
+        }),
     )
     const useHook = createHookFromObservableFactory(observableFactory, 'factory initial')
 
@@ -232,7 +233,7 @@ describe('createHookFromObservableFactory (vendored from sanity)', () => {
     const observableFactory = vi.fn(
       (value: string) =>
         new Observable<{value: string}>((subscriber) => {
-          tick().then(() => {
+          void tick().then(() => {
             subscriber.next({value: `hello, ${value}`})
             subscriber.complete()
           })

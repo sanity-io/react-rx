@@ -19,7 +19,7 @@ test('the returned callback returns void regardless of the pipeline output type'
 
 test('the handler must return an observable', () => {
   // @ts-expect-error - the handler must return an Observable
-  useObservableEvent((events$: Observable<string>) => 'not an observable')
+  useObservableEvent((_events$: Observable<string>) => 'not an observable')
 })
 
 test('void event streams produce a callback that can be called without arguments', () => {

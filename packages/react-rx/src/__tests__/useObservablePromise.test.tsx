@@ -1081,9 +1081,16 @@ interface AssetReference {
   _ref?: string
 }
 
-function ReferencedAsset<Asset>(props: {
-  promise: ObservablePromise<Asset>
-  children: (assetDocument: Asset) => ReactNode
+// Concrete asset type instead of sanity's generic parameter: the observable emitting
+// `null` for missing documents is part of the tested behavior, and the concrete union
+// lets the truthiness check below narrow it.
+interface AssetDoc {
+  title: string
+}
+
+function ReferencedAsset(props: {
+  promise: ObservablePromise<AssetDoc | null>
+  children: (assetDocument: AssetDoc) => ReactNode
   waitPlaceholder?: ReactNode
 }) {
   const asset = use(props.promise)
@@ -1092,10 +1099,10 @@ function ReferencedAsset<Asset>(props: {
   return <>{asset ? props.children(asset) : props.waitPlaceholder}</>
 }
 
-function WithReferencedAsset<Asset>(props: {
+function WithReferencedAsset(props: {
   reference: AssetReference
-  observeAsset: (assetId: string) => Observable<Asset>
-  children: (assetDocument: Asset) => ReactNode
+  observeAsset: (assetId: string) => Observable<AssetDoc | null>
+  children: (assetDocument: AssetDoc) => ReactNode
   waitPlaceholder?: ReactNode
 }) {
   const {reference, children, observeAsset, waitPlaceholder} = props

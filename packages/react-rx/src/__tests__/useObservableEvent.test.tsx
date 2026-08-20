@@ -206,19 +206,19 @@ test('events fired before the subscription effect runs are dropped (hot Subject,
   expect(seen).toEqual(['from-click'])
 })
 
-test('each hook instance gets its own isolated stream', () => {
-  const makeHook = (seen: number[]) => () =>
-    useObservableEvent((events$: Observable<number>) =>
-      events$.pipe(
-        scan((total, n) => total + n, 0),
-        tap((total) => seen.push(total)),
-      ),
-    )
+const makeAccumulatorHook = (seen: number[]) => () =>
+  useObservableEvent((events$: Observable<number>) =>
+    events$.pipe(
+      scan((total, n) => total + n, 0),
+      tap((total) => seen.push(total)),
+    ),
+  )
 
+test('each hook instance gets its own isolated stream', () => {
   const seenA: number[] = []
   const seenB: number[] = []
-  const hookA = renderHook(makeHook(seenA))
-  const hookB = renderHook(makeHook(seenB))
+  const hookA = renderHook(makeAccumulatorHook(seenA))
+  const hookB = renderHook(makeAccumulatorHook(seenB))
 
   act(() => hookA.result.current(1))
   act(() => hookB.result.current(10))
@@ -314,7 +314,7 @@ function SearchPane({queryLog}: {queryLog: string[]}) {
     (event$: Observable<ChangeEvent<HTMLInputElement>>) => {
       return event$.pipe(
         map((event) => event.target.value),
-        tap(setSearchInputValue),
+        tap((value) => setSearchInputValue(value)),
         debounce((value) => (value === '' ? of('') : timer(SEARCH_DEBOUNCE_MS))),
         tap((value) => {
           queryLog.push(value)
@@ -491,15 +491,15 @@ test('reference autocomplete: a newer search cancels the in-flight one (switchMa
   })
 })
 
-test('reference autocomplete: a failed search recovers to empty hits and later searches still work', () => {
-  const onSearch = (searchString: string) =>
-    searchString === 'fail'
-      ? new Observable<string[]>((subscriber) =>
-          subscriber.error(new Error(`search failed: ${searchString}`)),
-        )
-      : of([`hit-for-${searchString}`])
+const flakySearch = (searchString: string) =>
+  searchString === 'fail'
+    ? new Observable<string[]>((subscriber) =>
+        subscriber.error(new Error(`search failed: ${searchString}`)),
+      )
+    : of([`hit-for-${searchString}`])
 
-  const {result} = renderHook(() => useReferenceSearch(onSearch))
+test('reference autocomplete: a failed search recovers to empty hits and later searches still work', () => {
+  const {result} = renderHook(() => useReferenceSearch(flakySearch))
 
   act(() => result.current.onQueryChange('fail'))
   expect(result.current.searchState).toEqual({hits: [], searchString: 'fail', isLoading: false})
