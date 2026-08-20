@@ -9,6 +9,11 @@ const nextConfig = {
   compiler: {
     styledComponents: true,
   },
+  // Native React Compiler via Turbopack (no babel-plugin-react-compiler).
+  reactCompiler: true,
+  experimental: {
+    turbopackRustReactCompiler: true,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
