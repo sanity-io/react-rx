@@ -1,5 +1,11 @@
 # react-rx
 
+## 5.1.2
+
+### Patch Changes
+
+- [#491](https://github.com/sanity-io/react-rx/pull/491) [`db29f9b`](https://github.com/sanity-io/react-rx/commit/db29f9be50a77710bf49a04e2d1ab7ef8910a29a) Thanks [@stipsan](https://github.com/stipsan)! - perf: build with the React Compiler on oxc (`oxc-transform-react`, the native Rust port) instead of `babel-plugin-react-compiler`. The published output is unchanged — one compiler pass now handles React Compiler, TypeScript, and JSX natively, and babel is no longer part of the build or test pipeline.
+
 ## 5.1.1
 
 ### Patch Changes
