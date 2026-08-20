@@ -14,6 +14,10 @@ import {EMPTY_OBJECT, getValue} from './utils'
  * consistent within the same event), or when you need strict control over server markup: the
  * server renders the resolved `initialValue` and throws without one.
  *
+ * Like {@link useObservable}, the observable is only subscribed during render (to pick up
+ * synchronous emissions for the first render) when no `initialValue` is given; with an
+ * `initialValue` the subscription starts on commit.
+ *
  * **Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by
  * this hook replaces already-visible content with the nearest Suspense fallback — see the
  * [useSyncExternalStore caveats](https://react.dev/reference/react/useSyncExternalStore#caveats).
@@ -43,7 +47,11 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
 ): InitialValue | ObservedValueOf<ObservableType> {
   const {disabled = false} = options
 
-  const instance = useMemo(() => getOrCreateStore(observable), [observable])
+  const hasInitialValue = typeof initialValue !== 'undefined'
+  const instance = useMemo(
+    () => getOrCreateStore(observable, hasInitialValue),
+    [observable, hasInitialValue],
+  )
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -66,8 +74,6 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
     },
     // Strict v4 server contract: the server renders the resolved `initialValue`, and throws
     // (missing getServerSnapshot) without one — even when the observable emits synchronously.
-    typeof initialValue === 'undefined'
-      ? undefined
-      : () => getValue(initialValue) as ObservedValueOf<ObservableType>,
+    hasInitialValue ? () => getValue(initialValue) as ObservedValueOf<ObservableType> : undefined,
   )
 }

@@ -12,18 +12,24 @@ import {EMPTY_OBJECT} from './utils'
  * Urgent renders keep the previous value while a background render catches up — so children that
  * suspend on the returned value keep showing already-revealed content instead of the nearest
  * Suspense fallback. Mounts, remounts, and `<Activity>` reveals still render the current snapshot
- * synchronously (no initial-value flash).
+ * synchronously (no initial-value flash once a value has been emitted).
+ *
+ * When no `initialValue` is given, the observable is briefly subscribed during render so a
+ * synchronous emission (e.g. from `startWith`) can be returned from the very first render. With an
+ * `initialValue` there is no render-phase subscription: the `initialValue` renders first and the
+ * live subscription starts on commit, keeping subscribe-time side effects out of the render phase —
+ * a synchronous emission then replaces the `initialValue` right after mount.
  *
  * The deferral is identity-coherent: unlike a bare `useDeferredValue(useObservable(...))`, the
  * observable identity and its value are deferred as one snapshot, and when the observable identity
  * changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live
- * value — typically the new observable's synchronous emission or the `initialValue` — so the
- * previous identity's value never renders under the new one.
+ * value — typically the `initialValue`, or the new observable's synchronous emission when no
+ * `initialValue` is given — so the previous identity's value never renders under the new one.
  *
- * On the server this hook renders exactly what the client's first paint will show (a synchronous
- * emission when there is one, else the resolved `initialValue`, else nothing) and never throws
- * for a missing `initialValue`. Prefer {@link useSyncObservable} for controlled inputs or when you
- * need the strict v4 server-snapshot contract.
+ * On the server this hook renders exactly what the client's first paint will show (the resolved
+ * `initialValue` when one is provided, else a synchronous emission when there is one, else nothing)
+ * and never throws for a missing `initialValue`. Prefer {@link useSyncObservable} for controlled
+ * inputs or when you need the strict v4 server-snapshot contract.
  *
  * @public
  */
@@ -50,7 +56,11 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 ): InitialValue | ObservedValueOf<ObservableType> {
   const {disabled = false} = options
 
-  const instance = useMemo(() => getOrCreateStore(observable), [observable])
+  const hasInitialValue = typeof initialValue !== 'undefined'
+  const instance = useMemo(
+    () => getOrCreateStore(observable, hasInitialValue),
+    [observable, hasInitialValue],
+  )
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -72,8 +82,8 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
       return instance.getSnapshot(initialValue)
     },
     // Always provide getServerSnapshot so SSR never throws. The server renders
-    // exactly what the client's first render will show (sync emission, else
-    // initialValue, else undefined).
+    // exactly what the client's first render will show (the resolved initialValue
+    // when provided, else a sync emission, else undefined).
     () => instance.getSnapshot(initialValue),
   )
 
@@ -90,7 +100,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 
   // When the observable identity just changed, the deferred snapshot still
   // belongs to the previous observable. Fall back to the live value (typically
-  // the new observable's sync emission or the initialValue) so the previous
-  // identity's value never renders under the new one.
+  // the initialValue, or the new observable's sync emission when none is given)
+  // so the previous identity's value never renders under the new one.
   return deferredSnapshot.observable === observable ? deferredSnapshot.value : value
 }
