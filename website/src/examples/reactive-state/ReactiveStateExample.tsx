@@ -1,6 +1,6 @@
 import {useMemo, useState} from 'react'
 import {useObservable} from 'react-rx'
-import {map, startWith, timer} from 'rxjs'
+import {map, timer} from 'rxjs'
 
 export default function App() {
   const [delay, setDelay] = useState(500)
@@ -8,12 +8,14 @@ export default function App() {
     () =>
       timer(500, delay).pipe(
         map((n) => `Count: ${n}`),
-        startWith('Starting counter…'),
       ),
     [delay],
   )
 
-  const label = useObservable(observable)
+  const label = useObservable(
+    observable,
+    'Starting counter…',
+  )
   return (
     <>
       Counter interval (ms):{' '}

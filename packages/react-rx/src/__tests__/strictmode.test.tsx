@@ -25,7 +25,7 @@ describe.each(hooks)('$name', ({useHook}) => {
         // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
         mountCount++
       }, [])
-      const observedValue = useHook(observable)
+      const observedValue = useHook(observable, 0)
       returnedValues.push(observedValue)
       return <>{observedValue}</>
     }
@@ -35,7 +35,8 @@ describe.each(hooks)('$name', ({useHook}) => {
 
     // useObservable may schedule an Object.is bail-out deferred pass on mount
     // (useDeferredValue second arg is defined), so mount can produce more than two
-    // Strict Mode renders — all must still be the sync BehaviorSubject value.
+    // Strict Mode renders — all must still be 0 (the initialValue and the identical
+    // sync BehaviorSubject emission delivered on commit).
     expect(returnedValues.length).toBeGreaterThanOrEqual(2)
     expect(returnedValues.every((v) => v === 0)).toBe(true)
     const afterMount = returnedValues.length
@@ -66,7 +67,7 @@ describe.each(hooks)('$name', ({useHook}) => {
     })
 
     function ObservableComponent() {
-      useHook(observable)
+      useHook(observable, undefined)
       return null
     }
 
@@ -89,7 +90,7 @@ describe.each(hooks)('$name', ({useHook}) => {
 
     function ObservableComponent() {
       const memoObservable = useMemo(() => getObservable(), [])
-      useHook(memoObservable)
+      useHook(memoObservable, undefined)
       return null
     }
 
