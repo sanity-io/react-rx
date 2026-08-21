@@ -13,8 +13,10 @@ import {useSyncObservable} from '../useSyncObservable'
  *
  * - `<Activity mode="hidden">` tears down the `useSyncExternalStore` subscription and
  *   re-creates it on reveal, while React state / the last rendered UI are preserved.
- * - The render-phase warm-up probe still seeds synchronous emissions into the WeakMap
- *   cache even when Activity has not mounted a live subscription yet.
+ * - Without an `initialValue`, the render-phase warm-up probe still seeds synchronous
+ *   emissions into the WeakMap cache even when Activity has not mounted a live
+ *   subscription yet. With an `initialValue` there is no probe — a hidden mount performs
+ *   no subscription at all until it becomes visible.
  * - The cache entry keeps `didEmit` / `snapshot` across hidden re-renders, so revealed
  *   panes resume from the last emission instead of the `initialValue`.
  */
@@ -177,10 +179,12 @@ test('async fetch that resolves while Activity is hidden: value appears when bec
   expect(textOf('value')).toBe('fetched-while-hidden')
 })
 
-test('Activity initially hidden: no live subscription until visible; sync probe still seeds the snapshot', async () => {
+test('Activity initially hidden with an initial value: no subscription at all until visible (warm-up skipped)', async () => {
   let activeSubscriptions = 0
+  let totalSubscriptions = 0
   const observable = new Observable<string>((subscriber) => {
     activeSubscriptions++
+    totalSubscriptions++
     subscriber.next('sync')
     return () => {
       activeSubscriptions--
@@ -197,13 +201,15 @@ test('Activity initially hidden: no live subscription until visible; sync probe 
     </Activity>,
   )
 
-  // Eager render-time probe subscribed then the shared refcount dropped (no uSES listener yet).
+  // With an initialValue there is no render-phase probe, and a hidden Activity mounts no
+  // effects — the source has never been subscribed at all.
   await act(async () => {
     await Promise.resolve()
   })
+  expect(totalSubscriptions).toBe(0)
   expect(activeSubscriptions).toBe(0)
-  // Snapshot still holds the sync emission from the probe; DOM is display:none.
-  expect(textOf('value')).toBe('sync')
+  // The hidden DOM shows the initialValue; nothing has emitted yet.
+  expect(textOf('value')).toBe('initial')
   expect(screen.getByTestId('value').style.display).toBe('none')
 
   rerender(
@@ -215,6 +221,8 @@ test('Activity initially hidden: no live subscription until visible; sync probe 
     await Promise.resolve()
   })
 
+  // Becoming visible starts the live subscription; the sync emission replaces the initial.
+  expect(totalSubscriptions).toBeGreaterThan(0)
   expect(activeSubscriptions).toBeGreaterThan(0)
   expect(textOf('value')).toBe('sync')
 })

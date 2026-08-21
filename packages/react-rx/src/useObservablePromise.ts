@@ -19,12 +19,12 @@ export interface UseObservablePromiseOptions {
    * notifications for later emissions (the returned promise only advances when
    * this component re-renders for other reasons).
    *
-   * Unlike {@link useObservable}'s `disabled` (which still runs a warm-up probe),
-   * this fully prevents fetching. The returned promise is the shared cache
-   * entry's current promise: it stays pending until another consumer or
-   * {@link preloadObservablePromise} starts the source, or this component
-   * re-renders with `disabled: false` — at which point the same pending
-   * promise resolves.
+   * Unlike {@link useObservable}'s `disabled` (which still runs a warm-up probe
+   * when no `initialValue` is given), this fully prevents fetching. The
+   * returned promise is the shared cache entry's current promise: it stays
+   * pending until another consumer or {@link preloadObservablePromise} starts
+   * the source, or this component re-renders with `disabled: false` — at which
+   * point the same pending promise resolves.
    */
   disabled?: boolean
   /**
