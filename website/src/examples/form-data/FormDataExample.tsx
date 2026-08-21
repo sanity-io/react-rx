@@ -8,7 +8,6 @@ import {
   useSyncObservable,
 } from 'react-rx'
 import {
-  type Observable,
   map,
   scan,
   startWith,
@@ -74,7 +73,7 @@ function FormDataExample() {
     submit$.pipe(
       withLatestFrom(data$),
       map(([, formData]) => formData),
-      map((formData) =>
+      switchMap((formData) =>
         storage.set(STORAGE_KEY, formData).pipe(
           map(() => ({
             status: 'saved' as const,
@@ -99,11 +98,7 @@ function FormDataExample() {
     description: '',
   })
   const submitState = useObservable(
-    // @TODO investigate why this is necessary
-    submitState$ as unknown as Observable<{
-      status: 'saved' | 'saving' | 'unsaved'
-      result: FormValues | null
-    }>,
+    submitState$,
     {
       status: 'unsaved' as const,
       result: null,
