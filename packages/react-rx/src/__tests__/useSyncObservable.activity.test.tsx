@@ -13,10 +13,9 @@ import {useSyncObservable} from '../useSyncObservable'
  *
  * - `<Activity mode="hidden">` tears down the `useSyncExternalStore` subscription and
  *   re-creates it on reveal, while React state / the last rendered UI are preserved.
- * - Without an `initialValue`, the render-phase warm-up probe still seeds synchronous
- *   emissions into the WeakMap cache even when Activity has not mounted a live
- *   subscription yet. With an `initialValue` there is no probe — a hidden mount performs
- *   no subscription at all until it becomes visible.
+ * - The observable is never subscribed during render for its first paint — a hidden mount
+ *   performs no subscription at all until it becomes visible, and the (required)
+ *   `initialValue` is what the hidden tree renders until then.
  * - The cache entry keeps `didEmit` / `snapshot` across hidden re-renders, so revealed
  *   panes resume from the last emission instead of the `initialValue`.
  */
@@ -59,7 +58,7 @@ test('Activity hides and restores useSyncObservable subscriptions the same way i
   })
 
   function Child() {
-    return <div data-testid="value">{useSyncObservable(observable)}</div>
+    return <div data-testid="value">{useSyncObservable(observable, undefined)}</div>
   }
 
   render(
