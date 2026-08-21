@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - current
+      # Prerelease branch for the next major, in changesets pre mode (publishes to the `next` dist-tag)
+      - next
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
