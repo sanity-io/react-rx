@@ -14,9 +14,10 @@ const EMPTY_OPTIONS = {}
 /** @public */
 export interface UseObservablePromiseOptions {
   /**
-   * When `true`, this component starts neither the eager render-phase source
-   * subscription nor the live store subscription — i.e. no data fetching on
-   * behalf of this component.
+   * When `true`, this component does not start the live store subscription at
+   * commit — no data fetching on behalf of this component, and no re-render
+   * notifications for later emissions (the returned promise only advances when
+   * this component re-renders for other reasons).
    *
    * Unlike {@link useObservable}'s `disabled` (which still runs a warm-up probe),
    * this fully prevents fetching. The returned promise is the shared cache
@@ -57,6 +58,21 @@ export interface PreloadObservablePromiseOptions {
  * activates Suspense until the first emission, then updates synchronously for
  * later emissions without re-suspending.
  *
+ * Rendering never subscribes the source. The subscription starts when a
+ * non-`disabled` component that called the hook **commits**, or earlier via
+ * {@link preloadObservablePromise}. Two consequences:
+ *
+ * - A hidden `<Activity>` tree pre-rendering this hook is fully paused: no
+ *   fetching happens until it is revealed (effects mount) or something else
+ *   warms the entry. To pre-render hidden content *with* data, call the hook
+ *   in a visible parent and pass the promise into the hidden tree, where
+ *   `use(promise)` lets React suspend/resume the pre-render on its own terms.
+ * - A component that suspends on the promise it just created never commits,
+ *   so `use(useObservablePromise(obs$))` in a single component only settles
+ *   when the entry is warmed by {@link preloadObservablePromise} or shared
+ *   with another consumer. Prefer calling the hook in a component that does
+ *   not itself suspend, with `use()` in a child below a Suspense boundary.
+ *
  * @public
  */
 export function useObservablePromise<T>(
@@ -75,10 +91,12 @@ export function useObservablePromise<T>(
     [observable],
   )
 
-  // Per-render policy on the pinned entry: adopt the max ttl and eagerly start
-  // fetching unless disabled (required for Activity pre-rendering, where
-  // effects never run). Idempotent.
-  entry.ensure(ttl, !disabled)
+  // Per-render policy on the pinned entry is metadata only: adopt the max ttl
+  // across consumers. Fetching is commit-driven (the store subscription below)
+  // or explicit (preloadObservablePromise) — starting it here would make every
+  // render a side effect and would fetch on behalf of hidden <Activity>
+  // pre-renders, which must stay paused. Idempotent.
+  entry.adoptTtl(ttl)
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -97,9 +115,16 @@ export function useObservablePromise<T>(
 
 /**
  * Warm the promise cache outside of rendering (e.g. `onMouseEnter`, route
- * loaders). Creates or reuses the cache entry, starts the source subscription
- * immediately, and returns the same {@link ObservablePromise} the hook would
- * return for that observable. Not a hook — callable anywhere.
+ * loaders). Creates or reuses the cache entry, re-arms its retention window,
+ * starts the source subscription immediately, and returns the same
+ * {@link ObservablePromise} the hook would return for that observable. Not a
+ * hook — callable anywhere.
+ *
+ * This is the mechanism for starting a fetch before any consumer commits:
+ * hover/route preloads, data for `<Activity>` pre-renders, warming the next
+ * observable before swapping to it inside a transition, or the
+ * single-component `use(useObservablePromise(obs$))` form. Rendering never
+ * subscribes the source — only this function and committed consumers do.
  *
  * Pending entries are never timed out: a never-emitting source keeps the
  * promise pending and the subscription alive until it settles. Bound hang
@@ -113,7 +138,7 @@ export function preloadObservablePromise<T>(
 ): ObservablePromise<T> {
   const {ttl = DEFAULT_PRELOAD_TTL} = options
   const entry = getObservablePromiseEntry(observable)
-  entry.ensure(ttl, true, true)
+  entry.warm(ttl)
   return entry.getPromise()
 }
 

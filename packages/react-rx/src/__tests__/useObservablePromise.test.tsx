@@ -120,7 +120,7 @@ test('suspends until the first emission, then shows data (fallback exactly once)
   expect(fallbackCount).toBe(fallbacksAfterSuspend)
 })
 
-test('sync sources never show a Suspense fallback', async () => {
+test('sync sources fetch at commit: cold mount shows the fallback once, then the value', async () => {
   const observable = of('sync')
   let fallbackCount = 0
 
@@ -134,30 +134,39 @@ test('sync sources never show a Suspense fallback', async () => {
     )
   }
 
+  // Rendering never subscribes the source, so even a synchronously-emitting
+  // observable is pending during the first render pass — the fallback commits
+  // once, then the commit-time subscription settles the promise and the
+  // boundary retries. Preload (see the preload tests) to skip the fallback.
+  const {unmount} = await renderAsync(<Parent />)
+  expect(screen.getByTestId('value').textContent).toBe('sync')
+  expect(fallbackCount).toBeGreaterThanOrEqual(1)
+  const fallbacksAfterMount = fallbackCount
+  unmount()
+
+  // Within ttl the settled entry is reused: no new fallback on remount.
   await renderAsync(<Parent />)
   expect(screen.getByTestId('value').textContent).toBe('sync')
-  expect(fallbackCount).toBe(0)
+  expect(fallbackCount).toBe(fallbacksAfterMount)
 })
 
-test('startWith(placeholder) fulfills instantly with the placeholder (use useObservable for loading placeholders)', async () => {
+test('startWith(placeholder) fulfills at commit with the placeholder (use useObservable for loading placeholders)', async () => {
   // Use NEVER so only the startWith emission occurs (of()+startWith would sync-emit both).
   const observable = NEVER.pipe(startWith('placeholder'))
-  let fallbackCount = 0
 
   function Parent() {
     const p = useObservablePromise(observable)
     return (
-      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
-      <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
+      <Suspense fallback={<Fallback />}>
         <Reader promise={p} />
       </Suspense>
     )
   }
 
   await renderAsync(<Parent />)
-  // firstValueFrom semantics: startWith is the first emission.
+  // firstValueFrom semantics: startWith is the first emission, delivered by the
+  // commit-time subscription.
   expect(screen.getByTestId('value').textContent).toBe('placeholder')
-  expect(fallbackCount).toBe(0)
 })
 
 test('promise identity is stable across re-renders while pending', async () => {
@@ -630,7 +639,7 @@ test('settled entry is evicted after one retention window, not two', async () =>
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('second'))
 })
 
-test('observable swap re-suspends; useDeferredValue keeps previous content', async () => {
+test('observable swap with preload; useDeferredValue keeps previous content', async () => {
   let resolveA!: (value: string) => void
   let resolveB!: (value: string) => void
   const obsA = defer(
@@ -652,7 +661,16 @@ test('observable swap re-suspends; useDeferredValue keeps previous content', asy
     const p = useObservablePromise(deferred)
     return (
       <>
-        <button type="button" onClick={() => setObs(obsB)}>
+        <button
+          type="button"
+          onClick={() => {
+            // The deferred re-render suspends on the new entry and therefore
+            // never commits — it cannot start the fetch itself. Warming the
+            // target in the event handler is what lets the swap resolve.
+            void preloadObservablePromise(obsB)
+            setObs(obsB)
+          }}
+        >
           swap
         </button>
         <Suspense fallback={<Fallback />}>
@@ -681,7 +699,7 @@ test('observable swap re-suspends; useDeferredValue keeps previous content', asy
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('B'))
 })
 
-test('single-component use(useObservablePromise(obs$)) performs exactly one source subscription', async () => {
+test('single-component use(useObservablePromise(obs$)) never self-starts; preload starts the one fetch', async () => {
   let subscriptions = 0
   let resolve!: (value: string) => void
   const promise = new Promise<string>((r) => {
@@ -702,6 +720,16 @@ test('single-component use(useObservablePromise(obs$)) performs exactly one sour
       <Combined />
     </Suspense>,
   )
+  // A component that suspends on its own promise never commits, so its store
+  // subscription never starts — rendering alone must not trigger the source.
+  expect(subscriptions).toBe(0)
+  expect(screen.getByTestId('fallback')).toBeTruthy()
+
+  // preloadObservablePromise is the warm-up mechanism for this form: it starts
+  // the fetch on the shared entry the suspended consumer is already waiting on.
+  await act(async () => {
+    void preloadObservablePromise(observable)
+  })
   expect(subscriptions).toBe(1)
 
   await act(async () => {
@@ -781,6 +809,9 @@ test('flipping disabled to false starts the fetch and resolves the same promise 
 
 test('disabled component sharing a warmed entry gets the settled promise', async () => {
   const observable = of('warm')
+  // Settle the shared entry before anything renders — a disabled consumer
+  // performs no fetching of its own and only re-reads on its own re-renders.
+  void preloadObservablePromise(observable)
 
   function Warmed() {
     const p = useObservablePromise(observable)
@@ -941,23 +972,45 @@ test('preloaded-never-consumed entry unsubscribes and evicts after ttl', async (
   expect(active).toBe(1)
 })
 
-test('BehaviorSubject is available synchronously without fallback', async () => {
-  const subject = new BehaviorSubject('bs')
-  let fallbackCount = 0
+test('BehaviorSubject resolves at commit; preload it to render without a fallback', async () => {
+  // Cold mount: the current value is only read once the commit-time
+  // subscription runs, so the fallback shows for one pass.
+  const cold = new BehaviorSubject('bs-cold')
+  let coldFallbacks = 0
 
-  function Parent() {
-    const p = useObservablePromise(subject)
+  function ColdParent() {
+    const p = useObservablePromise(cold)
     return (
       // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
-      <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
+      <Suspense fallback={<Fallback onRender={() => coldFallbacks++} />}>
         <Reader promise={p} />
       </Suspense>
     )
   }
 
-  await renderAsync(<Parent />)
-  expect(screen.getByTestId('value').textContent).toBe('bs')
-  expect(fallbackCount).toBe(0)
+  const {unmount} = await renderAsync(<ColdParent />)
+  expect(screen.getByTestId('value').textContent).toBe('bs-cold')
+  expect(coldFallbacks).toBeGreaterThanOrEqual(1)
+  unmount()
+
+  // Preloaded: the entry settles synchronously before render — no fallback.
+  const warm = new BehaviorSubject('bs-warm')
+  void preloadObservablePromise(warm)
+  let warmFallbacks = 0
+
+  function WarmParent() {
+    const p = useObservablePromise(warm)
+    return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
+      <Suspense fallback={<Fallback onRender={() => warmFallbacks++} />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
+  }
+
+  await renderAsync(<WarmParent />)
+  expect(screen.getByTestId('value').textContent).toBe('bs-warm')
+  expect(warmFallbacks).toBe(0)
 })
 
 test('rapid emissions while suspended converge to the latest value', async () => {
