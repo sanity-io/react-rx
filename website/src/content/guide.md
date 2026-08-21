@@ -275,7 +275,7 @@ The `memo` is load-bearing: without it the subtree re-renders during the synchro
 
 **Preloading**
 
-Warm the cache outside of render (hover, route loaders, before a transition swap) with `preloadObservablePromise`. Calling it starts the source subscription immediately — it is the only way to start a fetch that is not tied to a component's commit, which makes it the tool for sync sources that should render without a fallback and for SSR (warm the entry in the request handler before rendering). Pending entries are never timed out — if the observable never emits or completes, the promise stays pending and the subscription stays alive until it settles (or the process tears down). Bound hang risk with RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when the preload can stall:
+Warm the cache outside of render (hover, route loaders, before a transition swap) with `preloadObservablePromise`. Calling it starts the source subscription immediately — it is the only way to start a fetch that is not tied to a component's commit, which also makes it the tool for sync sources that should render without a fallback. On the server it is a no-op (see below), so a preload in shared/isomorphic code only takes effect in the browser. Pending entries are never timed out — if the observable never emits or completes, the promise stays pending and the subscription stays alive until it settles (or the process tears down). Bound hang risk with RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when the preload can stall:
 
 ```tsx
 import {preloadObservablePromise, useObservablePromise} from 'react-rx'
@@ -292,6 +292,16 @@ function TabButton({users$, onSelect}) {
   )
 }
 ```
+
+**Server rendering and Server Components**
+
+react-rx is a **client-only** library — every export ships behind `'use client'`, and observables are **never subscribed on the server**. A server-started subscription has no unmount to tear it down, a never-settling source would keep it (and the response stream) alive forever, and the module-scope promise cache would be shared across requests. Concretely:
+
+- `useObservable` / `useSyncObservable` server-render like `useSyncExternalStore`: the server paints the server snapshot (documented per hook above) and the live subscription starts on the client.
+- `useObservablePromise` returns a pending promise on the server, so server rendering emits the Suspense fallback; the fetch starts on the client once the hydrated hook caller commits.
+- `preloadObservablePromise` is a no-op on the server: it returns an inert, forever-pending promise and subscribes nothing, so preloads in shared/isomorphic code (route loaders) only take effect in the browser.
+
+This is not the library for React Server Components or server-only data flows. Hooks imported from a Server Component are client references and cannot be called there. When you need server-fetched data, fetch it in the Server Component with async/await or RxJS [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) (same settle semantics as the hook's promise) and pass the value — or the un-awaited promise, for [`use()`](https://react.dev/reference/react/use#streaming-data-from-server-to-client) — as a prop into your client components.
 
 **Which hook when?**
 

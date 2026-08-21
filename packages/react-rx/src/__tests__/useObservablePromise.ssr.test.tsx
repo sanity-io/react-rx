@@ -1,3 +1,9 @@
+// @vitest-environment node
+//
+// Server rendering runs without a `window`, and react-rx is a client-only
+// library: on the server, observables are never subscribed. These tests run in
+// a node environment (like a real server) so that guarantee is exercised for
+// the hook and for preloadObservablePromise's server no-op.
 import {Suspense, use} from 'react'
 import {renderToString} from 'react-dom/server'
 import {defer, from, Observable} from 'rxjs'
@@ -34,7 +40,7 @@ test('renderToString shows the Suspense fallback for a pending promise', () => {
   expect(html).not.toContain('data-testid="value"')
 })
 
-test('renderToString never subscribes the source: sync observables need a preload to render data', () => {
+test('the server never subscribes the source: even sync observables render the fallback', () => {
   let subscriptions = 0
   const observable = new Observable<string>((subscriber) => {
     subscriptions++
@@ -42,20 +48,35 @@ test('renderToString never subscribes the source: sync observables need a preloa
     subscriber.complete()
   })
 
-  // Effects never run on the server and rendering never subscribes, so even a
-  // synchronously-emitting observable renders the fallback...
-  const cold = renderToString(<Owner observable={observable} />)
-  expect(subscriptions).toBe(0)
-  expect(cold).toContain('loading')
-  expect(cold).not.toContain('ssr-sync')
+  const html = renderToString(<Owner observable={observable} />)
 
-  // ...unless the entry is warmed before rendering (route loader, server
-  // request handler) — then the settled promise renders synchronously.
-  void preloadObservablePromise(observable)
-  const warm = renderToString(<Owner observable={observable} />)
-  expect(subscriptions).toBe(1)
-  expect(warm).toContain('ssr-sync')
-  expect(warm).not.toContain('loading')
+  // Rendering never subscribes, and on the server there is no commit to start
+  // the fetch afterwards — the fallback is what server rendering emits. The
+  // client starts the fetch after hydration, when the hook caller commits.
+  expect(subscriptions).toBe(0)
+  expect(html).toContain('loading')
+  expect(html).not.toContain('ssr-sync')
+})
+
+test('preloadObservablePromise is a no-op on the server', () => {
+  let subscriptions = 0
+  const observable = new Observable<string>((subscriber) => {
+    subscriptions++
+    subscriber.next('ssr-sync')
+    subscriber.complete()
+  })
+
+  // No subscription, no cache entry — just an inert pending promise. A
+  // preload in shared/isomorphic code only takes effect in the browser.
+  const preloaded = preloadObservablePromise(observable)
+  expect(subscriptions).toBe(0)
+  expect(preloaded.status).toBe('pending')
+
+  // Rendering after the "preload" still emits the fallback.
+  const html = renderToString(<Owner observable={observable} />)
+  expect(subscriptions).toBe(0)
+  expect(html).toContain('loading')
+  expect(html).not.toContain('ssr-sync')
 })
 
 test('getServerSnapshot is provided (no uSES missing-server-snapshot error)', () => {
