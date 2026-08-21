@@ -284,11 +284,6 @@ For cold observables you want to share across subscribers yourself, keep using R
 
 ### Handling events
 
-> [!WARNING]
->
-> `useObservableEvent` is deprecated. v7 removes it. It wraps the pattern below. See the [v6 to
-> v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
-
 `useObservableSubject` creates a `Subject` for the component and returns its observable side plus a stable handler that pushes events into it. Read the derived stream with whichever hook fits the read. This is the same mental model the upcoming [native Observable API](https://github.com/WICG/observable) builds on: events become observables, and state is derived from them.
 
 Here's a component that displays the current value from a range input. The pipeline's emissions _are_ the rendered value — no local `useState` mirror, no `tap`:

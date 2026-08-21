@@ -168,7 +168,7 @@ Creates an RxJS `Subject` scoped to the component instance and returns its two h
 
 Only the observable side of the `Subject` is exposed, so the pipeline cannot accidentally push into the stream and the handler cannot be subscribed. The handler is referentially stable, so it can be passed straight to event props or memoized children without `useCallback`. Read the observable with [`useObservable`](#useobservable) / [`useSyncObservable`](#usesyncobservable) when the pipeline produces something to render, or subscribe it in an effect for side-effect-only pipelines. Values emitted while nothing is subscribed are dropped, exactly like a `Subject`.
 
-This is the building block [`useObservableEvent`](#useobservableevent) is made of, and the recommended replacement for it: `useObservableEvent` is removed in v7 while `useObservableSubject` carries over unchanged, so call sites migrated to it need no further changes. See the [v6 → v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
+`useObservableEvent` was removed in v7; this hook is the replacement. Call sites migrated to it on v6.1 need no further changes. See the [v6 → v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
 
 **Signature**
 
@@ -223,61 +223,6 @@ function SaveSearchButton({term}: {term: string}) {
 }
 ```
 
-## useObservableEvent()
+## What happened to useObservableEvent()?
 
-> [!WARNING]
->
-> Deprecated. v7 removes `useObservableEvent`. Use [`useObservableSubject`](#useobservablesubject)
-> instead, as shown in [Handling events](/guide#handling-events). See the [v6 to v7 migration
-> guide](/migrate/v6-to-v7#useobservableevent-is-removed).
-
-A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.
-
-When the returned callback is invoked, its single argument is emitted into the observable. The pipeline you return is subscribed for the lifetime of the component, and unsubscribed on unmount.
-
-**Signature**
-
-```ts
-function useObservableEvent<T, U>(
-  handleEvent: (arg: Observable<T>) => Observable<U>,
-): (arg: T) => void
-```
-
-**Example**
-
-```tsx
-import {useState} from 'react'
-import {useObservableEvent} from 'react-rx'
-import {filter, map, tap} from 'rxjs'
-
-const ShowSliderValue = () => {
-  const [value, setValue] = useState(1)
-  const handleChange = useObservableEvent((value$) =>
-    value$.pipe(
-      // Ignore nullish values
-      filter(nonNullable),
-      // Cast to number
-      map((value) => Number(value)),
-      // Update local state
-      tap(setValue),
-    ),
-  )
-
-  return (
-    <>
-      <input
-        type="range"
-        value={value}
-        onChange={(event) => handleChange(event.currentTarget.value)}
-        min={1}
-        max={10}
-      />
-      <div>Value is: {value}</div>
-    </>
-  )
-}
-
-function nonNullable<T>(v: T): v is NonNullable<T> {
-  return v != null
-}
-```
+It was removed in v7. Use [`useObservableSubject`](#useobservablesubject) and read the derived stream with one of the other hooks — see [Handling events](/guide#handling-events) and the [v6 → v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
