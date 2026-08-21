@@ -2,9 +2,9 @@
 export interface UseObservableOptions {
   /**
    * Pause the active store subscription. While `true`, later emissions do not update the component
-   * and the last received value (or `initialValue`) is returned. The render-phase warm-up
-   * subscription still runs when no `initialValue` is given — pair an `initialValue` with
-   * `disabled: true` and the hook performs no subscriptions at all.
+   * and the last received value (or the resolved `initialValue`) is returned. A disabled hook
+   * performs no subscriptions at all — the render-phase warm-up for replacement observables is
+   * skipped too.
    */
   disabled?: boolean
 }

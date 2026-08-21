@@ -6,8 +6,9 @@
 
 Features:
 
-- Works well with Observables emitting values synchronously. You don't pay the re-render-on-mount tax.
+- Predictable first paint — the required `initialValue` renders first, and observables are never subscribed during render (no render-phase side effects, server included).
 - Non-blocking by default — `useObservable` defers store updates; reach for `useSyncObservable` for controlled inputs.
+- Suspense-ready — `useObservablePromise` turns an observable into a `use()`-compatible promise for when there is no meaningful initial value.
 - Lightweight. Implemented on top of a small React Hook based core.
 - Full TypeScript support.
 

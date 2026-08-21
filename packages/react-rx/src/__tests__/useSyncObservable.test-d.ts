@@ -4,13 +4,17 @@ import {expectTypeOf, test} from 'vitest'
 
 import {useSyncObservable} from '../useSyncObservable'
 
-test('useSyncObservable with no initial value can be undefined', () => {
+test('useSyncObservable requires an initialValue', () => {
   const observable = of('foo')
 
-  expectTypeOf(useSyncObservable(observable)).toEqualTypeOf<string | undefined>()
+  //@ts-expect-error - initialValue is required; use useObservablePromise when there is none
+  useSyncObservable(observable)
+})
 
-  //@ts-expect-error - because initial value is not given, we can't guarantee the observable emits a sync value, so it could be undefined
-  expectTypeOf(useSyncObservable(observable)).toEqualTypeOf<string>()
+test('an explicit undefined initialValue is valid and widens the return type', () => {
+  const observable = of('foo')
+
+  expectTypeOf(useSyncObservable(observable, undefined)).toEqualTypeOf<string | undefined>()
 })
 
 test('return type of useSyncObservable with initial value is not undefined', () => {
