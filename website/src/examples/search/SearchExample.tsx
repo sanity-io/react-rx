@@ -1,7 +1,6 @@
-import {ChangeEvent, useMemo} from 'react'
+import {useMemo} from 'react'
 import {
   useObservable,
-  useObservableEvent,
   useSyncObservable,
 } from 'react-rx'
 import {
@@ -11,7 +10,6 @@ import {
   Observable,
   Subject,
   switchMap,
-  tap,
   timer,
 } from 'rxjs'
 
@@ -57,17 +55,6 @@ const search = (
 }
 
 function SearchExample() {
-  // Handle input changes
-  const handleInput = useObservableEvent<
-    ChangeEvent<HTMLInputElement>,
-    any
-  >((input$) =>
-    input$.pipe(
-      map((e) => e.currentTarget.value),
-      tap((value) => keyword$.next(value)),
-    ),
-  )
-
   // Create search results stream
   const results$ = useMemo(
     () =>
@@ -106,7 +93,11 @@ function SearchExample() {
         style={{width: '100%'}}
         value={keyword}
         placeholder="Type a keyword to search"
-        onChange={handleInput}
+        onChange={(event) =>
+          keyword$.next(
+            event.currentTarget.value,
+          )
+        }
       />
       <div>
         The more characters you type, the faster

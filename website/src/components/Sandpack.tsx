@@ -72,12 +72,11 @@ export default function SandpackComponent({
         entry: '/App.tsx',
         dependencies: {
           /**
-           * In production we should always use the package on npm, which supports canaries
-           * while locally we use the build package
+           * In production we should always use the package on npm, which supports canaries,
+           * while locally we use the injected build, which has no runtime dependencies
+           * beyond the react and rxjs entries below
            */
-          ...(reactRxSource
-            ? reactRxPackageJson.dependencies
-            : {'react-rx': reactRxPackageJson.version}),
+          ...(reactRxSource ? {} : {'react-rx': reactRxPackageJson.version}),
           'rxjs': reactRxPackageJson.peerDependencies.rxjs,
           'react': reactRxPackageJson.devDependencies.react,
           'react-dom': reactRxPackageJson.devDependencies['react-dom'],
