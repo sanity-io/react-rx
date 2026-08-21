@@ -1,7 +1,7 @@
-import {useCallback, useDeferredValue, useMemo, useState, useSyncExternalStore} from 'react'
+import {useCallback, useDeferredValue, useMemo, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
-import {getOrCreateStore, needsWarmUp, trackSubscribed, type WarmUpTracker} from './cache'
+import {getOrCreateStore} from './cache'
 import type {UseObservableOptions} from './types'
 import {EMPTY_OBJECT, missingInitialValueError, UNSET_INITIAL_VALUE} from './utils'
 
@@ -22,20 +22,20 @@ import {EMPTY_OBJECT, missingInitialValueError, UNSET_INITIAL_VALUE} from './uti
  * show fallback UI while the observable is "loading", reach for {@link useObservablePromise} with
  * `use()` and Suspense instead.
  *
- * The observable is not subscribed during render: the `initialValue` renders first and the live
- * subscription starts on commit, keeping subscribe-time side effects out of the render phase — a
- * synchronous emission then replaces the `initialValue` right after mount. Only once the hook has
- * received an emission are replacement observables (a changed identity on a later render) warmed
- * up during render: rendering their synchronous emission immediately is what lets consumers that
- * rebuild the observable on every render settle instead of re-rendering forever. Identity churn
- * before the first emission (e.g. Strict Mode double renders or parent updates) and any identity
- * churn while `disabled` stay subscription-free.
+ * The observable is never subscribed during render: every render — the first one and every
+ * identity change alike — shows `initialValue` (or the shared entry's last emission) and the live
+ * subscription starts on commit, keeping subscribe-time side effects out of the render phase. A
+ * synchronous emission replaces the `initialValue` right after that commit. Keep the observable's
+ * identity stable across renders (`useMemo`, `useState`, module scope) — like
+ * `useSyncExternalStore`'s `subscribe`, an observable rebuilt on every render is re-subscribed on
+ * every render, and when it synchronously replays a value that differs from the `initialValue`
+ * this forces a render loop.
  *
  * The deferral is identity-coherent: unlike a bare `useDeferredValue(useObservable(...))`, the
  * observable identity and its value are deferred as one snapshot, and when the observable identity
  * changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live
- * value — typically the new observable's synchronous emission or the `initialValue` — so the
- * previous identity's value never renders under the new one.
+ * value — the `initialValue`, or the new observable's last emission when it is already live
+ * elsewhere — so the previous identity's value never renders under the new one.
  *
  * On the server this hook never subscribes the observable and renders the resolved `initialValue`
  * — exactly what the client's first paint will show. Prefer {@link useSyncObservable} for
@@ -68,30 +68,19 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   }
   const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
-  // The warm-up is skipped until this hook has received an emission; after that, replacement
-  // observables are warmed during render so that consumers that rebuild the observable on every
-  // render converge instead of looping — see `needsWarmUp`. The tracker is only ever written on
-  // commit (in `subscribe` below), never during render.
-  const [tracker] = useState((): WarmUpTracker => ({last: null}))
-  const shouldWarmUp = needsWarmUp(tracker, observable, disabled)
-  const instance = useMemo(
-    () => getOrCreateStore(observable, shouldWarmUp),
-    [observable, shouldWarmUp],
-  )
+  const instance = useMemo(() => getOrCreateStore(observable), [observable])
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       if (disabled) {
         return () => {}
       }
-      trackSubscribed(tracker, observable, instance)
-
       const subscription = instance.observable.subscribe(onStoreChange)
       return () => {
         subscription.unsubscribe()
       }
     },
-    [tracker, observable, instance, disabled],
+    [instance, disabled],
   )
 
   const value = useSyncExternalStore<ObservedValueOf<ObservableType>>(
@@ -100,7 +89,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
       return instance.getSnapshot(initialValue)
     },
     // The server renders exactly what the client's first render will show: the resolved
-    // initialValue (or an already-warm shared entry's snapshot).
+    // initialValue (or the last emission of a shared entry that is already live).
     () => instance.getSnapshot(initialValue),
   )
 
@@ -116,8 +105,9 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   const deferredSnapshot = useDeferredValue(snapshot, snapshot)
 
   // When the observable identity just changed, the deferred snapshot still
-  // belongs to the previous observable. Fall back to the live value (typically
-  // the new observable's sync emission or the initialValue) so the previous
-  // identity's value never renders under the new one.
+  // belongs to the previous observable. Fall back to the live value (the
+  // initialValue, or the new observable's last emission when it is already
+  // live elsewhere) so the previous identity's value never renders under the
+  // new one.
   return deferredSnapshot.observable === observable ? deferredSnapshot.value : value
 }

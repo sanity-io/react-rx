@@ -27,7 +27,8 @@ v5 makes that the library default:
 - **Controlled inputs** can lag or lose caret position under load if they keep using `useObservable` — switch those reads to `useSyncObservable`.
 - The **rendered value can briefly trail the store**, so imperative reads or equality checks against it can observe a stale value. Keep a sync read for write-path equality when needed.
 - **Render-count / test assertions** may see extra passes: one Object.is bail-out pass on mount when the snapshot is defined, and an urgent-plus-deferred pair per emission.
-- **`initialValue` is required since v7** for both hooks: any value works (`undefined` included — pass it explicitly; functions act as `useState`-style initializers), and omitting the argument throws during render — on the server too. The observable is never subscribed during (server or first client) render, so the server always paints the resolved `initialValue`. Observables without a meaningful initial value belong to `useObservablePromise` instead.
+- **`initialValue` is required since v7** for both hooks: any value works (`undefined` included — pass it explicitly; functions act as `useState`-style initializers), and omitting the argument throws during render — on the server too. The observable is never subscribed during render at all, so the server always paints the resolved `initialValue`. Observables without a meaningful initial value belong to `useObservablePromise` instead.
+- **Observable identities must be stable since v7** (`useMemo`, `useState`, module scope, or React Compiler memoization). There is no render-phase warm-up anymore: a fresh identity always renders the `initialValue` first and is re-subscribed at commit, so rebuilding the observable on every render over a source that synchronously replays a different value loops forever — the same stable-identity contract as `useSyncExternalStore`'s `subscribe`.
 
 ### Recommended: targeted migration
 

@@ -25,15 +25,15 @@ import {useSyncObservable} from '../useSyncObservable'
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 // ---------------------------------------------------------------------------
-// Un-memoized observables recreated on every render
+// Deriving the observable from a store
 // (packages/sanity/src/core/studio/components/navbar/useCanInviteMembers.ts)
 // ---------------------------------------------------------------------------
 
 /**
- * Mirrors `useCanInviteMembers`: the observable is rebuilt on every render —
- * `enabled ? store.getGrants().pipe(map(...)) : of(false)` — with no `useMemo`. The
- * store observable replays synchronously (sanity's grants store is cached), which is
- * what keeps the pattern stable.
+ * Mirrors `useCanInviteMembers` with the memoization the hooks require: the pipe over the grants
+ * store is derived with `useMemo`, so its identity is stable across re-renders. (Sanity's
+ * original rebuilt `enabled ? store.getGrants().pipe(map(...)) : of(false)` on every render —
+ * see the render-loop test below for why that needs the `useMemo` now.)
  */
 function CanInvitePane({
   enabled,
@@ -44,13 +44,34 @@ function CanInvitePane({
   grants$: Observable<string[]>
   frames: boolean[]
 }) {
-  const result$ = grants$.pipe(map((grants) => grants.includes('invite')))
-  const canInvite$ = enabled ? result$ : of(false)
+  const canInvite$ = useMemo(
+    () => (enabled ? grants$.pipe(map((grants) => grants.includes('invite'))) : of(false)),
+    [enabled, grants$],
+  )
   frames.push(useObservable(canInvite$, false))
   return null
 }
 
-test('a new observable identity on every render stays stable when the source replays synchronously', () => {
+/**
+ * Sanity's original, un-memoized shape — rebuilt on every render. Opted out of React Compiler
+ * ('use no memo'): the compiler would otherwise auto-memoize the pipe and hide exactly the
+ * identity churn these tests are about.
+ */
+function UnmemoizedCanInvitePane({
+  enabled,
+  grants$,
+}: {
+  enabled: boolean
+  grants$: Observable<string[]>
+}) {
+  'use no memo'
+  const result$ = grants$.pipe(map((grants) => grants.includes('invite')))
+  const canInvite$ = enabled ? result$ : of(false)
+  useObservable(canInvite$, false)
+  return null
+}
+
+test('a memoized pipe over a synchronously replaying source: initialValue first, then the replayed value', () => {
   let activeSubscriptions = 0
   const grantsSubject = new BehaviorSubject<string[]>(['invite'])
   const grants$ = new Observable<string[]>((subscriber) => {
@@ -65,12 +86,8 @@ test('a new observable identity on every render stays stable when the source rep
   const frames: boolean[] = []
   const {rerender, unmount} = render(<CanInvitePane enabled grants$={grants$} frames={frames} />)
 
-  // With an initialValue the hook's *initial* observable is not probed during render, so
-  // the very first frame shows the initialValue (false); the commit-time subscription then
-  // delivers the synchronous replay. Every *replacement* identity created by a re-render is
-  // still warmed up during render — that is what lets this un-memoized pattern settle
-  // instead of looping (render initialValue → commit subscribe emits → forced re-render →
-  // fresh identity renders initialValue again → …).
+  // The observable is not subscribed during render, so the very first frame shows the
+  // initialValue (false); the commit-time subscription then delivers the synchronous replay.
   expect(frames[0]).toBe(false)
   expect(frames.at(-1)).toBe(true)
   expect(frames.length).toBeLessThan(10)
@@ -78,9 +95,7 @@ test('a new observable identity on every render stays stable when the source rep
   rerender(<CanInvitePane enabled grants$={grants$} frames={frames} />)
   expect(frames.at(-1)).toBe(true)
 
-  // A store update flows through even though each render subscribes a new identity —
-  // and it must not trigger a render loop (each update re-renders, which rebuilds the
-  // observable, whose warm-up replays the same value and settles).
+  // A store update flows through the memoized identity without re-subscribing the source.
   const framesBeforeUpdate = frames.length
   act(() => grantsSubject.next([]))
   expect(frames.at(-1)).toBe(false)
@@ -88,30 +103,53 @@ test('a new observable identity on every render stays stable when the source rep
 
   unmount()
   return tick().then(() => {
-    // Every per-render subscription was cleaned up.
+    // The store subscription was cleaned up.
     expect(activeSubscriptions).toBe(0)
   })
 })
 
-test('the disabled branch (`of(false)` rebuilt every render) never subscribes the store and stays false', () => {
+test('rebuilding the observable on every render over a sync-replaying source no longer converges (render loop)', () => {
+  // The hooks never subscribe during render, so every fresh identity renders the initialValue;
+  // its commit-time subscription then replays a different value, forces a re-render, which
+  // rebuilds yet another fresh identity — a render loop that never converges (in an app React
+  // eventually aborts it with "Maximum update depth exceeded"). The source here stops
+  // disagreeing with the initialValue after 20 subscriptions so the loop stays observable
+  // without crashing the test renderer. The observable identity must be kept stable across
+  // renders (`useMemo`, `useState`, module scope, or React Compiler memoization) — the same
+  // contract as `useSyncExternalStore`'s `subscribe`.
+  let subscriptions = 0
+  const grants$ = new Observable<string[]>((subscriber) => {
+    subscriptions++
+    subscriber.next(subscriptions <= 20 ? ['invite'] : [])
+  })
+
+  render(<UnmemoizedCanInvitePane enabled grants$={grants$} />)
+
+  // Every forced re-render rebuilt and resubscribed a fresh pipe; the loop only ended because
+  // the source stopped disagreeing with the rendered initialValue (false).
+  expect(subscriptions).toBeGreaterThan(20)
+})
+
+test('the disabled branch (`of(false)` rebuilt every render) converges: it replays the rendered value', () => {
+  // Identity churn alone does not loop: each fresh `of(false)` is re-subscribed on commit, but
+  // the emission equals the rendered value (Object.is), so no re-render is forced and the churn
+  // settles. The grants store itself is never subscribed on this branch.
   let storeSubscriptions = 0
   const grants$ = new Observable<string[]>(() => {
     storeSubscriptions += 1
   })
 
-  const frames: boolean[] = []
-  const {rerender} = render(<CanInvitePane enabled={false} grants$={grants$} frames={frames} />)
-  rerender(<CanInvitePane enabled={false} grants$={grants$} frames={frames} />)
+  const {rerender} = render(<UnmemoizedCanInvitePane enabled={false} grants$={grants$} />)
+  rerender(<UnmemoizedCanInvitePane enabled={false} grants$={grants$} />)
 
-  expect(frames.every((frame) => !frame)).toBe(true)
   expect(storeSubscriptions).toBe(0)
 })
 
 /**
  * Mirrors the grants call site guarded by a closed menu: the piped observable is rebuilt on
- * every render (no `useMemo`) and the hook is `disabled` until the menu opens. Found while
- * testing the warm-up skip in sanity-io/sanity#14234: replacements were warmed on any
- * re-render, so a parent update fired the grants request during a render nobody needed.
+ * every render (no `useMemo`) and the hook is `disabled` until the menu opens. Historically the
+ * render-phase warm-up fired the grants request during renders nobody needed (found in
+ * sanity-io/sanity#14234) — a disabled hook now performs no subscriptions at all.
  */
 function ClosedMenuPane({label, grants$}: {label: string; grants$: Observable<string[]>}) {
   const canInvite$ = grants$.pipe(map((grants) => grants.includes('invite')))
@@ -120,9 +158,8 @@ function ClosedMenuPane({label, grants$}: {label: string; grants$: Observable<st
 }
 
 test('identity churn while disabled: the store is never subscribed (grants stay un-fetched until the menu opens)', () => {
-  // Before the hook has received an emission there is nothing a replacement warm-up could
-  // stabilize (no live subscription means no store-driven re-renders, hence no loop), so
-  // re-renders that rebuild the observable must not fire the grants request.
+  // A disabled hook never subscribes — during render or on commit — so re-renders that rebuild
+  // the observable must not fire the grants request.
   let storeSubscriptions = 0
   const grants$ = new Observable<string[]>(() => {
     storeSubscriptions += 1
@@ -332,9 +369,9 @@ test('remounting within the teardown grace keeps the source alive and replays th
 })
 
 // ---------------------------------------------------------------------------
-// Render-phase warm-up blip
+// Render-phase subscriptions
 // (packages/sanity/src/core/config/__tests__/bifurClientConnection.test.ts guards the
-//  WebSocket client against exactly this subscribe/unsubscribe blip)
+//  WebSocket client against subscribe/unsubscribe blips)
 // ---------------------------------------------------------------------------
 
 function DisabledProbe({source$}: {source$: Observable<string>}) {
@@ -343,11 +380,10 @@ function DisabledProbe({source$}: {source$: Observable<string>}) {
 }
 
 test('a disabled hook never probes the source: no render-phase blip at all', async () => {
-  // `disabled: true` skips both the live store subscription and the replacement warm-up, so
-  // consumers like bifur's WebSocket connection see zero subscriptions from disabled hooks.
-  // (Before initialValue became required, a disabled hook without one still ran the warm-up
-  // probe during render — the momentary subscribe/unsubscribe blip
-  // bifurClientConnection.test.ts guards against.)
+  // The hooks never subscribe during render, and `disabled: true` skips the commit-time store
+  // subscription too, so consumers like bifur's WebSocket connection see zero subscriptions
+  // from disabled hooks. (The momentary render-phase subscribe/unsubscribe blip that
+  // bifurClientConnection.test.ts guards against no longer exists at all.)
   const events: string[] = []
   const source$ = new Observable<string>(() => {
     events.push('subscribe')
@@ -367,16 +403,16 @@ test('a disabled hook never probes the source: no render-phase blip at all', asy
 })
 
 /** Kept at module scope so identity is stable across re-renders. */
-function ReplacementWarmUpProbe({observable}: {observable: Observable<string>}) {
+function IdentitySwapProbe({observable}: {observable: Observable<string>}) {
   useObservable(observable, 'initial')
   return null
 }
 
-test('a replacement warm-up probes the source once, bridged into the commit subscription without churn', () => {
-  // The render-phase warm-up now only runs for replacement observables after an emission. With a
-  // live consumer the probe's refCount blip is bridged by the asapScheduler grace into the
-  // commit-time store subscription, so the source sees exactly one uninterrupted subscription
-  // with no subscribe/unsubscribe churn in between — and re-renders never probe again.
+test('an identity swap subscribes the new source exactly once, at commit, with no churn', () => {
+  // Swapping to a cold source subscribes it once when the swap render commits — never during
+  // render — and re-renders with the same identity do not resubscribe. The source sees a single
+  // uninterrupted subscription with no subscribe/unsubscribe churn, the contract bifur's
+  // WebSocket connection relies on.
   const events: string[] = []
   const source$ = new Observable<string>((subscriber) => {
     events.push('subscribe')
@@ -387,15 +423,14 @@ test('a replacement warm-up probes the source once, bridged into the commit subs
   })
   const first$ = new BehaviorSubject('first')
 
-  const {rerender} = render(<ReplacementWarmUpProbe observable={first$} />)
+  const {rerender} = render(<IdentitySwapProbe observable={first$} />)
+  expect(events).toEqual([])
 
-  // first$ has emitted (sync BehaviorSubject emission on commit), so swapping identities warms
-  // the replacement during render.
-  rerender(<ReplacementWarmUpProbe observable={source$} />)
+  rerender(<IdentitySwapProbe observable={source$} />)
   expect(events).toEqual(['subscribe'])
 
-  rerender(<ReplacementWarmUpProbe observable={source$} />)
-  rerender(<ReplacementWarmUpProbe observable={source$} />)
+  rerender(<IdentitySwapProbe observable={source$} />)
+  rerender(<IdentitySwapProbe observable={source$} />)
   expect(events).toEqual(['subscribe'])
 })
 
