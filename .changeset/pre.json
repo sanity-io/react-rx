@@ -6,6 +6,8 @@
     "react-rx-website": "1.0.0"
   },
   "changesets": [
-    "no-render-phase-fetching"
+    "no-render-phase-fetching",
+    "remove-use-observable-event",
+    "require-initial-value"
   ]
 }
