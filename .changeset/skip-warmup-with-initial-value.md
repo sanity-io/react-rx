@@ -1,5 +1,5 @@
 ---
-'react-rx': major
+"react-rx": major
 ---
 
 Skip the render-phase warm-up subscription in `useObservable`/`useSyncObservable` when an `initialValue` is provided. The warm-up only exists so sync emissions (`startWith`, `of`, …) can render on the first paint — with an `initialValue` there's already a value to show, so the observable is now first subscribed on commit.

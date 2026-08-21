@@ -133,9 +133,7 @@ test('disabled with an initialValue never subscribes the source (zero subscripti
     subscriptions++
     return of('sync')
   })
-  const {result, unmount} = renderHook(() =>
-    useSyncObservable(source, 'initial', {disabled: true}),
-  )
+  const {result, unmount} = renderHook(() => useSyncObservable(source, 'initial', {disabled: true}))
   expect(result.current).toBe('initial')
   expect(subscriptions).toBe(0)
   unmount()
