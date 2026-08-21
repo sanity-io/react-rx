@@ -52,6 +52,10 @@ function slowFib(n: number): number {
   return slowFib(n - 1) + slowFib(n - 2)
 }
 
+function CounterValue({promise, index}: {promise: ObservablePromise<number>; index: number}) {
+  return <span data-testid={`c-${index}`}>{use(promise)}</span>
+}
+
 function Counter({
   count$,
   index,
@@ -61,10 +65,17 @@ function Counter({
   index: number
   waste?: number
 }) {
-  const value = use(useObservablePromise(count$))
+  // Hook caller above the boundary, use() reader below it — the sanctioned
+  // shape, so the caller can commit (starting/holding the subscription) even
+  // while the reader suspends.
+  const promise = useObservablePromise(count$)
   // Artificial expensive render to widen the concurrent window.
   slowFib(waste)
-  return <span data-testid={`c-${index}`}>{value}</span>
+  return (
+    <Suspense fallback={null}>
+      <CounterValue promise={promise} index={index} />
+    </Suspense>
+  )
 }
 
 function readAll(): number[] {

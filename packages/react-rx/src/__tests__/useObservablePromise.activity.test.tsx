@@ -8,9 +8,19 @@ import {useObservablePromise} from '../useObservablePromise'
 /**
  * Documents how `useObservablePromise` interacts with React 19.2's `<Activity>`.
  *
- * Unlike `useObservable` (built on `useSyncExternalStore` + effects), this hook
- * returns a Promise read with `use()`, which Activity pre-rendering *does*
- * detect — so hidden boundaries can start fetching before they become visible.
+ * Rendering never subscribes the source, so a hidden pre-render on its own
+ * triggers no fetching. The two supported shapes are:
+ *
+ * - Call the hook in a visible component and pass the promise into the hidden
+ *   tree, where `use(promise)` lets React pre-render and suspend/resume on its
+ *   own schedule — the visible owner's commit is what starts the fetch.
+ * - Call the hook inside the hidden tree: it stays fully paused (no
+ *   subscription) until the tree is revealed and effects mount.
+ *
+ * In both shapes the `<Suspense>` boundary sits between the hook caller and
+ * the `use()` reader — the hook caller must be able to commit while the reader
+ * suspends. `preloadObservablePromise` is the explicit warm-up for anything
+ * else.
  *
  * @see https://react.dev/reference/react/Activity#pre-rendering-content-thats-likely-to-become-visible
  */
@@ -28,8 +38,19 @@ function Fallback({onRender}: {onRender?: () => void}) {
   return <div data-testid="fallback">loading</div>
 }
 
-function ToggleActivity({children}: {children: ReactNode}) {
-  const [mode, setMode] = useState<'visible' | 'hidden'>('visible')
+function Reader({promise}: {promise: Promise<string>}) {
+  const value = use(promise)
+  return <div data-testid="value">{value}</div>
+}
+
+function ToggleActivity({
+  children,
+  initialMode = 'visible',
+}: {
+  children: ReactNode
+  initialMode?: 'visible' | 'hidden'
+}) {
+  const [mode, setMode] = useState<'visible' | 'hidden'>(initialMode)
   return (
     <>
       <button
@@ -49,7 +70,63 @@ async function toggle() {
   })
 }
 
-test('hidden Activity pre-render starts the source subscription without effects', async () => {
+test('parent-owned promise: hidden Activity pre-renders with the fetch the visible parent started', async () => {
+  let subscriptions = 0
+  let resolve!: (value: string) => void
+  const promise = new Promise<string>((r) => {
+    resolve = r
+  })
+  const observable = defer(() => {
+    subscriptions++
+    return from(promise)
+  })
+  let fallbackCount = 0
+
+  // The intended composition: the hook lives in a component that stays
+  // visible and commits (starting the fetch); the promise is handed to a
+  // component inside the <Activity> boundary, which reads it with use() so
+  // React can pre-render in the background and suspend only if the observable
+  // has not emitted yet.
+  function App({mode}: {mode: 'visible' | 'hidden'}) {
+    const p = useObservablePromise(observable)
+    return (
+      <Activity mode={mode}>
+        {/* oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas */}
+        <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
+          <Reader promise={p} />
+        </Suspense>
+      </Activity>
+    )
+  }
+
+  const {rerender} = await renderAsync(<App mode="hidden" />)
+
+  // The visible parent committed, so the fetch is in flight even though the
+  // Activity content is hidden.
+  expect(subscriptions).toBe(1)
+
+  await act(async () => {
+    resolve('prefetched')
+    await promise
+  })
+
+  // Still hidden — the pre-render completed with the data (display:none DOM).
+  await waitFor(() => {
+    expect(screen.queryByTestId('value')?.textContent).toBe('prefetched')
+  })
+  const fallbacksWhileHidden = fallbackCount
+
+  await act(async () => {
+    rerender(<App mode="visible" />)
+  })
+
+  // Reveal shows the pre-rendered content without re-activating Suspense.
+  expect(screen.getByTestId('value').textContent).toBe('prefetched')
+  expect(fallbackCount).toBe(fallbacksWhileHidden)
+  expect(subscriptions).toBe(1)
+})
+
+test('hook inside a hidden Activity stays paused; reveal mounts effects and starts the fetch', async () => {
   let subscriptions = 0
   let resolve!: (value: string) => void
   const promise = new Promise<string>((r) => {
@@ -60,75 +137,38 @@ test('hidden Activity pre-render starts the source subscription without effects'
     return from(promise)
   })
 
-  function Child() {
-    const value = use(useObservablePromise(observable))
-    return <div data-testid="value">{value}</div>
+  // The hook caller does not suspend itself: it commits on reveal, which is
+  // what starts the fetch. The Suspense boundary lives between the hook and
+  // the use() consumer.
+  function Owner() {
+    const p = useObservablePromise(observable)
+    return (
+      <Suspense fallback={<Fallback />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
   }
 
   await renderAsync(
-    <Activity mode="hidden">
-      <Suspense fallback={<Fallback />}>
-        <Child />
-      </Suspense>
-    </Activity>,
+    <ToggleActivity initialMode="hidden">
+      <Owner />
+    </ToggleActivity>,
   )
 
-  // Eager render-phase resolver starts the fetch even while hidden.
+  // Hidden: pre-rendered but paused — no subscription, no fetching.
+  expect(subscriptions).toBe(0)
+
+  // Reveal: effects mount, the store subscription starts the source.
+  await toggle()
   expect(subscriptions).toBe(1)
+  expect(screen.getByTestId('fallback')).toBeTruthy()
 
   await act(async () => {
-    resolve('prefetched')
+    resolve('revealed')
     await promise
   })
-
-  // Still hidden — content may be in the DOM with display:none once resolved.
-  await waitFor(() => {
-    const el = screen.queryByTestId('value')
-    expect(el?.textContent).toBe('prefetched')
-  })
-})
-
-test('promise that resolves while hidden appears without fallback on reveal', async () => {
-  let resolve!: (value: string) => void
-  const promise = new Promise<string>((r) => {
-    resolve = r
-  })
-  const observable = defer(() => from(promise))
-  let fallbackCount = 0
-
-  function Child() {
-    const value = use(useObservablePromise(observable))
-    return <div data-testid="value">{value}</div>
-  }
-
-  const {rerender} = await renderAsync(
-    <Activity mode="hidden">
-      <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
-        <Child />
-      </Suspense>
-    </Activity>,
-  )
-
-  await act(async () => {
-    resolve('ready')
-    await promise
-  })
-  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('ready'))
-  const fallbacksWhileHidden = fallbackCount
-
-  await act(async () => {
-    rerender(
-      <Activity mode="visible">
-        <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
-          <Child />
-        </Suspense>
-      </Activity>,
-    )
-  })
-
-  expect(screen.getByTestId('value').textContent).toBe('ready')
-  // Reveal must not re-activate Suspense.
-  expect(fallbackCount).toBe(fallbacksWhileHidden)
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('revealed'))
+  expect(subscriptions).toBe(1)
 })
 
 test('visible Activity hide/show preserves fulfilled value across toggles', async () => {
@@ -138,16 +178,18 @@ test('visible Activity hide/show preserves fulfilled value across toggles', asyn
   })
   const observable = defer(() => from(promise))
 
-  function Child() {
-    const value = use(useObservablePromise(observable, {ttl: 500}))
-    return <div data-testid="value">{value}</div>
+  function Owner() {
+    const p = useObservablePromise(observable, {ttl: 500})
+    return (
+      <Suspense fallback={<Fallback />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
   }
 
   await renderAsync(
     <ToggleActivity>
-      <Suspense fallback={<Fallback />}>
-        <Child />
-      </Suspense>
+      <Owner />
     </ToggleActivity>,
   )
 
@@ -176,16 +218,19 @@ test('entry evicted while hidden: reveal shows the cached value without fallback
   })
   let fallbackCount = 0
 
-  function Child() {
-    const value = use(useObservablePromise(observable, {ttl: 40}))
-    return <div data-testid="value">{value}</div>
+  function Owner() {
+    const p = useObservablePromise(observable, {ttl: 40})
+    return (
+      // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
+      <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
   }
 
   await renderAsync(
     <ToggleActivity>
-      <Suspense fallback={<Fallback onRender={() => fallbackCount++} />}>
-        <Child />
-      </Suspense>
+      <Owner />
     </ToggleActivity>,
   )
   await act(async () => {
@@ -220,16 +265,18 @@ test('long-lived source: share retention keeps the connection during ttl, so hid
     return () => sub.unsubscribe()
   })
 
-  function Child() {
-    const value = use(useObservablePromise(observable, {ttl: 200}))
-    return <div data-testid="value">{value}</div>
+  function Owner() {
+    const p = useObservablePromise(observable, {ttl: 200})
+    return (
+      <Suspense fallback={<Fallback />}>
+        <Reader promise={p} />
+      </Suspense>
+    )
   }
 
   await renderAsync(
     <ToggleActivity>
-      <Suspense fallback={<Fallback />}>
-        <Child />
-      </Suspense>
+      <Owner />
     </ToggleActivity>,
   )
 
