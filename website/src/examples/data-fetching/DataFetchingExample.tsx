@@ -60,8 +60,12 @@ function Profile({
   )
 }
 
-function LiveClock() {
-  const label = use(useObservablePromise(clock$))
+function LiveClock({
+  promise,
+}: {
+  promise: ObservablePromise<string>
+}) {
+  const label = use(promise)
   return (
     <p style={{fontSize: 14, opacity: 0.8}}>
       {label}
@@ -71,11 +75,17 @@ function LiveClock() {
 
 export default function DataFetchingExample() {
   const [id, setId] = useState('alpha')
-  // Create the promise in a parent that does not suspend, so Suspense retries
-  // always see the same promise identity (see React's use() caching guidance).
+  // Create the promises in a parent that does
+  // not suspend: the fetch starts when the hook
+  // caller commits (a component suspended on
+  // its own promise never commits), and
+  // Suspense retries always see the same
+  // promise identity.
   const promise = useObservablePromise(
     fetchUser$(id),
   )
+  const clockPromise =
+    useObservablePromise(clock$)
 
   return (
     <div
@@ -110,7 +120,7 @@ export default function DataFetchingExample() {
       </Suspense>
       <hr style={{margin: '16px 0'}} />
       <Suspense fallback={null}>
-        <LiveClock />
+        <LiveClock promise={clockPromise} />
       </Suspense>
       <p
         style={{

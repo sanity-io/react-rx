@@ -1,7 +1,11 @@
 import {useCallback, useMemo, useSyncExternalStore} from 'react'
 import {type Observable} from 'rxjs'
 
-import {type ObservablePromise} from './observablePromise'
+import {
+  asObservablePromise,
+  ObservablePromiseImpl,
+  type ObservablePromise,
+} from './observablePromise'
 import {
   DEFAULT_HOOK_TTL,
   DEFAULT_PRELOAD_TTL,
@@ -11,20 +15,30 @@ import {
 
 const EMPTY_OPTIONS = {}
 
+/**
+ * react-rx is a client-only library: observables are never subscribed on the
+ * server. A server-started subscription has no unmount to tear it down, a
+ * never-settling source would keep it (and the response stream) alive
+ * forever, and the module-scope cache would be shared across requests.
+ * `window` exists in browsers and React Native but not in server/edge
+ * runtimes.
+ */
+const IS_SERVER = typeof window === 'undefined'
+
 /** @public */
 export interface UseObservablePromiseOptions {
   /**
-   * When `true`, this component starts neither the eager render-phase source
-   * subscription nor the live store subscription — i.e. no data fetching on
-   * behalf of this component.
+   * When `true`, this component does not start the live store subscription at
+   * commit — no data fetching on behalf of this component, and no re-render
+   * notifications for later emissions (the returned promise only advances when
+   * this component re-renders for other reasons).
    *
    * Unlike {@link useObservable}'s `disabled` (which still runs a warm-up probe
-   * when no `initialValue` is given), this fully prevents fetching. The returned
-   * promise is the shared cache
-   * entry's current promise: it stays pending until another consumer or
-   * {@link preloadObservablePromise} starts the source, or this component
-   * re-renders with `disabled: false` — at which point the same pending
-   * promise resolves.
+   * when no `initialValue` is given), this fully prevents fetching. The
+   * returned promise is the shared cache entry's current promise: it stays
+   * pending until another consumer or {@link preloadObservablePromise} starts
+   * the source, or this component re-renders with `disabled: false` — at which
+   * point the same pending promise resolves.
    */
   disabled?: boolean
   /**
@@ -58,6 +72,35 @@ export interface PreloadObservablePromiseOptions {
  * activates Suspense until the first emission, then updates synchronously for
  * later emissions without re-suspending.
  *
+ * The returned promise is meant to be passed as a prop to a child component
+ * that reads it with React's `use()`, with a `<Suspense>` boundary **between**
+ * this component and that child. The boundary placement is load-bearing:
+ * rendering never subscribes the source — the fetch starts when the component
+ * calling this hook commits (or via {@link preloadObservablePromise}) — and a
+ * suspended component never commits. Without a boundary in between, the
+ * child's suspension propagates to the hook caller itself and the fetch can
+ * never start.
+ *
+ * For the same reason, never call `use()` on the promise in the same
+ * component that called this hook: the component suspends on its own pending
+ * promise before the commit that would start the fetch — wrong usage in the
+ * same way as `use()`-ing a promise created during your own render, and
+ * intentionally not guarded against.
+ *
+ * A hidden `<Activity>` tree pre-rendering this hook is fully paused: no
+ * fetching happens until it is revealed (effects mount) or something else
+ * warms the entry. To pre-render hidden content *with* data, call the hook in
+ * a visible parent and pass the promise into the hidden tree, where
+ * `use(promise)` lets React suspend/resume the pre-render on its own terms.
+ *
+ * Client components only. On the server the observable is never subscribed —
+ * the promise stays pending, server rendering emits the Suspense fallback,
+ * and the fetch starts on the client once the hydrated component commits
+ * ({@link preloadObservablePromise} is likewise a no-op on the server).
+ * react-rx is not a library for React Server Components or server-only data
+ * flows; there, fetch with async/await or RxJS `firstValueFrom` and pass the
+ * promise as a prop for `use()`.
+ *
  * @public
  */
 export function useObservablePromise<T>(
@@ -76,10 +119,12 @@ export function useObservablePromise<T>(
     [observable],
   )
 
-  // Per-render policy on the pinned entry: adopt the max ttl and eagerly start
-  // fetching unless disabled (required for Activity pre-rendering, where
-  // effects never run). Idempotent.
-  entry.ensure(ttl, !disabled)
+  // Per-render policy on the pinned entry is metadata only: adopt the max ttl
+  // across consumers. Fetching is commit-driven (the store subscription below)
+  // or explicit (preloadObservablePromise) — starting it here would make every
+  // render a side effect and would fetch on behalf of hidden <Activity>
+  // pre-renders, which must stay paused. Idempotent.
+  entry.adoptTtl(ttl)
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -98,9 +143,21 @@ export function useObservablePromise<T>(
 
 /**
  * Warm the promise cache outside of rendering (e.g. `onMouseEnter`, route
- * loaders). Creates or reuses the cache entry, starts the source subscription
- * immediately, and returns the same {@link ObservablePromise} the hook would
- * return for that observable. Not a hook — callable anywhere.
+ * loaders). Creates or reuses the cache entry, re-arms its retention window,
+ * starts the source subscription immediately, and returns the same
+ * {@link ObservablePromise} the hook would return for that observable. Not a
+ * hook — callable anywhere.
+ *
+ * This is the mechanism for starting a fetch before any consumer commits:
+ * hover/route preloads, data for `<Activity>` pre-renders, or warming the
+ * next observable before swapping to it inside a transition. Rendering never
+ * subscribes the source — only this function and committed consumers do.
+ *
+ * On the server this is a no-op: it returns an inert, forever-pending promise
+ * and neither subscribes the observable nor touches the cache. react-rx never
+ * subscribes observables on the server (see {@link useObservablePromise}), so
+ * a preload in shared/isomorphic code (e.g. a route loader) only takes effect
+ * in the browser.
  *
  * Pending entries are never timed out: a never-emitting source keeps the
  * promise pending and the subscription alive until it settles. Bound hang
@@ -112,9 +169,12 @@ export function preloadObservablePromise<T>(
   observable: Observable<T>,
   options: PreloadObservablePromiseOptions = EMPTY_OPTIONS,
 ): ObservablePromise<T> {
+  if (IS_SERVER) {
+    return asObservablePromise(new ObservablePromiseImpl<T>())
+  }
   const {ttl = DEFAULT_PRELOAD_TTL} = options
   const entry = getObservablePromiseEntry(observable)
-  entry.ensure(ttl, true, true)
+  entry.warm(ttl)
   return entry.getPromise()
 }
 
