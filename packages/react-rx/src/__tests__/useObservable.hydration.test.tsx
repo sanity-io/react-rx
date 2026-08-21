@@ -114,19 +114,22 @@ test('hydration is clean for both hooks when the observable has not emitted (ini
   expect(screen.getByTestId('deferred-value').textContent).toBe('initial')
 })
 
-test('useObservable: deterministic sync-emitting observable + initialValue hydrates cleanly against server HTML showing the emission', async () => {
+test('useObservable: sync-emitting observable + initialValue server-renders the initialValue and hydrates cleanly', async () => {
   const observable = of('sync')
 
   function App() {
     return <div data-testid="value">{useObservable(observable, 'initial')}</div>
   }
 
+  // With an initialValue there is no render-phase warm-up, so the server paints the
+  // initialValue — matching the client's first paint.
   const html = renderToString(<App />)
-  expect(html).toContain('sync')
-  expect(html).not.toContain('initial')
+  expect(html).toContain('initial')
+  expect(html).not.toContain('sync')
 
   await hydrate(<App />, html)
   expect(hydrationErrors()).toEqual([])
+  // The live subscription after hydration delivers the sync emission.
   expect(screen.getByTestId('value').textContent).toBe('sync')
 })
 
@@ -146,9 +149,9 @@ test('useObservable: async observable without initialValue server-renders nothin
   expect(screen.getByTestId('value').textContent).toBe('')
 })
 
-test('useObservable: a NON-deterministic sync emission surfaces a hydration mismatch', async () => {
-  // Documentation test: snapshot-based getServerSnapshot no longer masks per-subscription
-  // non-determinism the way an initialValue-based getServerSnapshot did.
+test('useObservable: a NON-deterministic sync emission without an initialValue surfaces a hydration mismatch', async () => {
+  // Documentation test: without an initialValue the warm-up subscribes on both the server and
+  // the client, so per-subscription non-determinism shows up as a hydration mismatch.
   // React 19 may report the mismatch via console.error and/or as an uncaught exception;
   // either signal counts.
   let n = 0
@@ -157,7 +160,7 @@ test('useObservable: a NON-deterministic sync emission surfaces a hydration mism
   })
 
   function App() {
-    return <div data-testid="value">{useObservable(observable, 'initial')}</div>
+    return <div data-testid="value">{useObservable(observable)}</div>
   }
 
   const html = renderToString(<App />)
@@ -180,6 +183,26 @@ test('useObservable: a NON-deterministic sync emission surfaces a hydration mism
     /hydrat|did not match|Text content does not match/i.test(String(err)),
   )
   expect(sawConsoleMismatch || sawUncaughtMismatch).toBe(true)
+})
+
+test('useObservable: an initialValue avoids the warm-up, so a NON-deterministic sync emission hydrates cleanly', async () => {
+  let n = 0
+  const observable = new Observable<string>((subscriber) => {
+    subscriber.next(`emit-${n++}`)
+  })
+
+  function App() {
+    return <div data-testid="value">{useObservable(observable, 'initial')}</div>
+  }
+
+  // The server never subscribes: it paints the initialValue.
+  const html = renderToString(<App />)
+  expect(html).toContain('initial')
+
+  await hydrate(<App />, html)
+  expect(hydrationErrors()).toEqual([])
+  // The first (and only) subscription happens on the client, after hydration.
+  expect(screen.getByTestId('value').textContent).toBe('emit-0')
 })
 
 test('useSyncObservable: an emission right after hydration that suspends replaces server-rendered content with the fallback', async () => {

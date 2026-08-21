@@ -19,6 +19,9 @@ import {useObservable} from '../useObservable'
  * or renders that throw before commit (synchronously erroring sources). In those cases the entry retained
  * the last snapshot/error for as long as the source observable object itself stayed alive, and a
  * poisoned entry replayed its stale error on later mounts instead of re-subscribing.
+ *
+ * Note: the eager warm-up subscription only runs for consumers without an `initialValue` — with one,
+ * the source is never subscribed during render — so these scenarios omit the `initialValue`.
  */
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -60,9 +63,10 @@ test('releases the last snapshot of a synchronously completing observable used b
 
   await forceGC()
 
-  // While disabled, the hook still performs its eager render-phase warm-up subscription (disabled only
-  // pauses the live store subscription), but nothing re-triggers teardown after that — so the entry
-  // created during render must already have been evicted, releasing the snapshot.
+  // While disabled, the hook (given no initialValue) still performs its eager render-phase warm-up
+  // subscription (disabled only pauses the live store subscription), but nothing re-triggers teardown
+  // after that — so the entry created during render must already have been evicted, releasing the
+  // snapshot.
   expect(snapshotRef!.deref()).toBeUndefined()
   // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
   // only have been released through eviction, not by the key getting collected.
@@ -78,13 +82,14 @@ test('releases the last snapshot of a synchronously completing observable after 
   })
 
   function ObservableComponent() {
-    useObservable(source, 'server value')
+    useObservable(source)
     return null
   }
 
   // On the server there is no commit phase and no store subscription, only the eager subscription made
-  // during render — the cache entry must not outlive it, or every unique observable rendered by a
-  // long-lived server process would keep its last snapshot alive.
+  // during render when no initialValue is given — the cache entry must not outlive it, or every unique
+  // observable rendered by a long-lived server process would keep its last snapshot alive. (With an
+  // initialValue the source is never subscribed during server rendering at all.)
   renderToString(<ObservableComponent />)
 
   await forceGC()
@@ -104,13 +109,14 @@ test('re-subscribes a synchronously erroring observable on a later mount instead
   })
 
   function ObservableComponent() {
-    return <>{useObservable(source, 'initial')}</>
+    return <>{useObservable(source)}</>
   }
 
-  // First mount: the source errors synchronously during the eager render-phase subscription, so the
-  // render throws before commit and no store subscription ever runs that could clean up the cache
-  // entry created for the errored source. The source keeps failing for the whole mount, which keeps
-  // the test agnostic to how many render attempts React makes before surfacing the error.
+  // First mount (no initialValue, so the warm-up runs): the source errors synchronously during the
+  // eager render-phase subscription, so the render throws before commit and no store subscription
+  // ever runs that could clean up the cache entry created for the errored source. The source keeps
+  // failing for the whole mount, which keeps the test agnostic to how many render attempts React
+  // makes before surfacing the error.
   expect(() => render(<ObservableComponent />)).toThrow('transient error')
   const failedSubscriptions = subscriptions
   expect(failedSubscriptions).toBeGreaterThan(0)

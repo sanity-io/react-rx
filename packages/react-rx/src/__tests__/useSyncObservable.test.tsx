@@ -3,6 +3,7 @@ import {useMemo} from 'react'
 import {renderToString} from 'react-dom/server'
 import {
   asyncScheduler,
+  defer,
   map,
   Observable,
   of,
@@ -98,6 +99,46 @@ test('should have sync values from an observable as initial value', () => {
   const observable = of('something sync')
   const {result} = renderHook(() => useSyncObservable(observable))
   expect(result.current).toBe('something sync')
+})
+
+test('an initialValue skips the render-phase warm-up: the initialValue paints first, the sync emission follows after mount', () => {
+  // With an initialValue there is nothing to warm up for — the source is first subscribed by
+  // the live store subscription on commit, keeping subscribe-time side effects out of the
+  // render phase.
+  let subscriptions = 0
+  const source = defer(() => {
+    subscriptions++
+    return of('sync')
+  })
+  const seen: Array<{value: unknown; subscriptionsAtRender: number}> = []
+  function ObservableComponent() {
+    const value = useSyncObservable(source, 'initial')
+    seen.push({value, subscriptionsAtRender: subscriptions})
+    return null
+  }
+  render(<ObservableComponent />)
+  // The first render happened before any subscription — no render-phase side effects.
+  expect(seen[0]).toEqual({value: 'initial', subscriptionsAtRender: 0})
+  // The store subscription on commit delivers the sync emission right after mount.
+  expect(seen.at(-1)!.value).toBe('sync')
+  expect(subscriptions).toBe(1)
+})
+
+test('disabled with an initialValue never subscribes the source (zero subscriptions)', () => {
+  // Without an initialValue, `disabled` still runs the warm-up subscription; with one, there
+  // is no render-phase warm-up and `disabled` pauses the store subscription — so nothing ever
+  // subscribes the source.
+  let subscriptions = 0
+  const source = defer(() => {
+    subscriptions++
+    return of('sync')
+  })
+  const {result, unmount} = renderHook(() =>
+    useSyncObservable(source, 'initial', {disabled: true}),
+  )
+  expect(result.current).toBe('initial')
+  expect(subscriptions).toBe(0)
+  unmount()
 })
 
 test('should have undefined as initial value from delayed observables', () => {
@@ -321,8 +362,9 @@ test('should throw during SSR if no initial value is defined', () => {
 })
 
 test('SSR renders the initialValue even when the observable emits synchronously', () => {
-  // Contrast with `useObservable`, whose getServerSnapshot returns the live snapshot so
-  // synchronous emissions win over initialValue on the server too (uSES getServerSnapshot).
+  // Neither hook subscribes during render when an initialValue is given, so both paint the
+  // initialValue on the server. The remaining contrast with `useObservable` is the strict v4
+  // contract: `useSyncObservable` throws without an initialValue, `useObservable` does not.
   const observable = of('sync')
   function ObservableComponent() {
     const observedValue = useSyncObservable(observable, 'initial')

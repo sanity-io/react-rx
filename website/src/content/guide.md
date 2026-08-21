@@ -36,27 +36,33 @@ function MyComponent(props) {
 }
 ```
 
-The `initialValue` argument is optional. If it is omitted, the value returned from `useObservable` may be `undefined` initially. If the observable emits a value _synchronously_ at subscription time, that value will be used as the initial value, and any `initialValue` passed as argument to `useObservable` will be ignored on the first render (mounts and `<Activity>` reveals are not deferred):
+The `initialValue` argument is optional, and it also decides how the hook treats observables that emit _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …):
+
+- **Without an `initialValue`**, the hook briefly subscribes during render so a synchronous emission can be returned from the very first render. If the observable only emits asynchronously, the value may be `undefined` initially.
+- **With an `initialValue`**, the observable is not subscribed during render at all. The first render shows the `initialValue`, and the subscription starts when the component commits — a synchronous emission then replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase whenever you already have a value to paint first. Once the hook has received an emission, a later render that swaps in a different observable warms the replacement during render — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever.
 
 ```tsx
 import {useMemo} from 'react'
 import {useObservable} from 'react-rx'
 import {of} from 'rxjs'
 
-// This component will never render "Hello mars!" since the observable emits "world" synchronously.
+// The observable emits "world" synchronously and no initialValue is given, so this
+// component renders "Hello world!" from the very first render — never an empty value.
 function MyComponent(props) {
   const observable = useMemo(() => of('world'), [])
-  const planet = useObservable(observable, 'mars')
+  const planet = useObservable(observable)
 
   return <>Hello {planet}!</>
 }
 ```
 
-The difference between `useObservable` and `useSyncObservable` is how _updates_ propagate (deferred vs synchronous), not the first render. On the server, `useObservable` paints what the first client render will show (here `"world"`), while `useSyncObservable` would paint the `initialValue` (`"mars"`).
+Had this component passed an `initialValue` — `useObservable(observable, 'mars')` — the first render would show `"mars"`, with `"world"` taking over right after mount once the live subscription delivers the synchronous emission.
+
+The difference between `useObservable` and `useSyncObservable` is how _updates_ propagate (deferred vs synchronous), not the first render. On the server, `useObservable` paints what the first client render will show — a synchronous emission when no `initialValue` is given (here `"world"`), else the resolved `initialValue` — and never throws, while `useSyncObservable` always paints the `initialValue` and throws without one.
 
 The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription.
 
-Important: `disabled` does **not** skip the hook's initial warm-up subscription. Both hooks always briefly subscribe during render so a synchronous emission can become the current snapshot. That means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`.
+Important: when no `initialValue` is given, `disabled` does **not** skip the hook's warm-up subscription — both hooks still briefly subscribe during render so a synchronous emission can become the current snapshot, which means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`. With an `initialValue` there is no warm-up at all while disabled, so `disabled: true` guarantees zero subscriptions until it is re-enabled — even when the observable is rebuilt on every render.
 
 ```tsx
 import {useEffect, useState} from 'react'
@@ -77,7 +83,30 @@ function MyComponent(props) {
 }
 ```
 
-If the goal is to avoid _any_ subscription to a particular observable, do not use `disabled`. Pass a different observable instead — for example swap in `of(null)` until you are ready to fetch:
+If the goal is to avoid _any_ subscription to a particular observable, the simplest option is to combine an `initialValue` with `disabled` — the observable is never warmed up while disabled, so nothing subscribes until `disabled` flips to `false`:
+
+```tsx
+import {useMemo} from 'react'
+import {useObservable} from 'react-rx'
+import {fromFetch} from 'rxjs/fetch'
+
+function Users({shouldFetch}: {shouldFetch: boolean}) {
+  const users$ = useMemo(
+    () =>
+      fromFetch('https://api.github.com/users?per_page=5', {
+        selector: (response) => response.json(),
+      }),
+    [],
+  )
+  // With an initialValue there is no render-phase warm-up, so the request is
+  // guaranteed not to fire until `shouldFetch` becomes true.
+  const users = useObservable(users$, null, {disabled: !shouldFetch})
+
+  return <pre>{JSON.stringify(users, null, 2)}</pre>
+}
+```
+
+When you cannot provide an `initialValue` (you want the synchronous emission on the first render), `disabled` alone is not enough — the warm-up subscribe would still fire the request. In that case pass a different observable instead, for example swap in `of(null)` until you are ready to fetch:
 
 ```tsx
 import {useMemo} from 'react'
@@ -86,9 +115,6 @@ import {of} from 'rxjs'
 import {fromFetch} from 'rxjs/fetch'
 
 function Users({shouldFetch}: {shouldFetch: boolean}) {
-  // Prefer swapping the observable over `{disabled: !shouldFetch}`:
-  // `disabled` still performs the render-phase warm-up subscribe, which would
-  // fire the request even when `shouldFetch` is false.
   const users$ = useMemo(
     () =>
       shouldFetch
@@ -98,7 +124,7 @@ function Users({shouldFetch}: {shouldFetch: boolean}) {
         : of(null),
     [shouldFetch],
   )
-  const users = useObservable(users$, null)
+  const users = useObservable(users$)
 
   return <pre>{JSON.stringify(users, null, 2)}</pre>
 }
@@ -196,7 +222,7 @@ useObservablePromise(observable$, {
 })
 ```
 
-Unlike `useObservable`'s `disabled` (which still runs a warm-up probe), `disabled: true` here fully prevents fetching on behalf of this component. The returned promise is still the shared cache entry — a sibling or `preloadObservablePromise` can warm it.
+Unlike `useObservable`'s `disabled` (which still runs a warm-up probe when no `initialValue` is given), `disabled: true` here fully prevents fetching on behalf of this component. The returned promise is still the shared cache entry — a sibling or `preloadObservablePromise` can warm it.
 
 `ttl` controls how long a settled value stays reusable after unmount. Remount within the window reuses the promise (no refetch, no fallback). After it expires, the next mount refetches. Eviction only affects future consumers: components that are still mounted keep their value — hiding an `<Activity>` tree longer than `ttl` never drops what it already rendered.
 

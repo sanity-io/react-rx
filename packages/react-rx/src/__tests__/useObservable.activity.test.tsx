@@ -13,9 +13,11 @@ import {useObservable} from '../useObservable'
  * When the boundary becomes visible again, subscriptions are re-created while
  * React state / the last rendered UI are preserved.
  *
- * Because `useObservable` also eagerly probes the observable during render to
- * pick up synchronous emissions, sync sources can still populate the snapshot
- * even when Activity has not yet mounted a live subscription.
+ * When no `initialValue` is given, `useObservable` also eagerly probes the
+ * observable during render to pick up synchronous emissions, so sync sources
+ * can still populate the snapshot even when Activity has not yet mounted a
+ * live subscription. With an `initialValue` there is no render-phase probe —
+ * a hidden mount performs no subscription at all until it becomes visible.
  *
  * While hidden, children can still re-render from new props (lower priority).
  * The WeakMap cache entry for a stable observable keeps `didEmit` / `snapshot`,
@@ -156,7 +158,7 @@ test('sync observable (of/from) without initial value: hide keeps last value, sh
   expect(textOf('value')).toBe('sync')
 })
 
-test('sync observable with initial value: sync emission wins over initial, including across Activity toggles', async () => {
+test('sync observable with initial value: sync emission replaces the initial right after mount, and sticks across Activity toggles', async () => {
   const observable = of('sync')
 
   function Child() {
@@ -169,6 +171,8 @@ test('sync observable with initial value: sync emission wins over initial, inclu
     </ToggleActivity>,
   )
 
+  // With an initialValue there is no render-phase probe: the first render paints 'initial',
+  // and the store subscription on commit delivers the sync emission before this assertion.
   expect(textOf('value')).toBe('sync')
 
   await toggle()
@@ -318,10 +322,12 @@ test('async fetch that resolves while Activity is hidden: value appears when bec
   expect(textOf('value')).toBe('fetched-while-hidden')
 })
 
-test('Activity initially hidden: no live subscription until visible; sync probe still seeds the snapshot', async () => {
+test('Activity initially hidden with an initial value: no subscription at all until visible (warm-up skipped)', async () => {
   let activeSubscriptions = 0
+  let totalSubscriptions = 0
   const observable = new Observable<string>((subscriber) => {
     activeSubscriptions++
+    totalSubscriptions++
     subscriber.next('sync')
     return () => {
       activeSubscriptions--
@@ -338,13 +344,15 @@ test('Activity initially hidden: no live subscription until visible; sync probe 
     </Activity>,
   )
 
-  // Eager render-time probe subscribed then the shared refcount dropped (no uSES listener yet).
+  // With an initialValue there is no render-phase probe, and a hidden Activity mounts no
+  // effects — the source has never been subscribed at all.
   await act(async () => {
     await Promise.resolve()
   })
+  expect(totalSubscriptions).toBe(0)
   expect(activeSubscriptions).toBe(0)
-  // Snapshot still holds the sync emission from the probe; DOM is display:none.
-  expect(textOf('value')).toBe('sync')
+  // The hidden DOM shows the initialValue; nothing has emitted yet.
+  expect(textOf('value')).toBe('initial')
   expect(screen.getByTestId('value').style.display).toBe('none')
 
   rerender(
@@ -356,11 +364,13 @@ test('Activity initially hidden: no live subscription until visible; sync probe 
     await Promise.resolve()
   })
 
+  // Becoming visible starts the live subscription; the sync emission replaces the initial.
+  expect(totalSubscriptions).toBeGreaterThan(0)
   expect(activeSubscriptions).toBeGreaterThan(0)
   expect(textOf('value')).toBe('sync')
 })
 
-test('Activity initially hidden with async observable and initial value: stays at initial until visible and resolved', async () => {
+test('Activity initially hidden with async observable and initial value: never subscribes while hidden, stays at initial until visible and resolved', async () => {
   let resolve!: (value: string) => void
   const promise = new Promise<string>((r) => {
     resolve = r
@@ -384,17 +394,17 @@ test('Activity initially hidden with async observable and initial value: stays a
   await act(async () => {
     await Promise.resolve()
   })
-  // Eager probe subscribed once (and tore down); no lasting listener while hidden.
-  expect(subscriptionCount).toBeGreaterThanOrEqual(1)
-  const subscriptionsWhileHidden = subscriptionCount
+  // With an initialValue there is no render-phase probe: a hidden mount performs no
+  // subscription — and starts no fetch — at all.
+  expect(subscriptionCount).toBe(0)
   expect(textOf('value')).toBe('initial')
 
   await act(async () => {
     resolve('fetched')
     await promise
   })
-  // Still initial — the probe's subscription was already torn down before resolve.
-  expect(subscriptionCount).toBe(subscriptionsWhileHidden)
+  // Still initial — nothing is subscribed while hidden.
+  expect(subscriptionCount).toBe(0)
   expect(textOf('value')).toBe('initial')
 
   rerender(
@@ -406,8 +416,8 @@ test('Activity initially hidden with async observable and initial value: stays a
     await Promise.resolve()
   })
 
-  // Becoming visible re-subscribes; `from(resolvedPromise)` emits synchronously.
-  expect(subscriptionCount).toBeGreaterThan(subscriptionsWhileHidden)
+  // Becoming visible subscribes; `from(resolvedPromise)` emits synchronously.
+  expect(subscriptionCount).toBeGreaterThan(0)
   expect(textOf('value')).toBe('fetched')
 })
 

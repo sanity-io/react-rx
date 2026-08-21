@@ -18,8 +18,9 @@ export interface UseObservablePromiseOptions {
    * subscription nor the live store subscription — i.e. no data fetching on
    * behalf of this component.
    *
-   * Unlike {@link useObservable}'s `disabled` (which still runs a warm-up probe),
-   * this fully prevents fetching. The returned promise is the shared cache
+   * Unlike {@link useObservable}'s `disabled` (which still runs a warm-up probe
+   * when no `initialValue` is given), this fully prevents fetching. The returned
+   * promise is the shared cache
    * entry's current promise: it stays pending until another consumer or
    * {@link preloadObservablePromise} starts the source, or this component
    * re-renders with `disabled: false` — at which point the same pending

@@ -1,7 +1,7 @@
-import {useCallback, useMemo, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useState, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
-import {getOrCreateStore} from './cache'
+import {getOrCreateStore, needsWarmUp, trackSubscribed, type WarmUpTracker} from './cache'
 import type {UseObservableOptions} from './types'
 import {EMPTY_OBJECT, getValue} from './utils'
 
@@ -13,6 +13,12 @@ import {EMPTY_OBJECT, getValue} from './utils'
  * reads. Reach for `useSyncObservable` when the value feeds a controlled input (or must stay
  * consistent within the same event), or when you need strict control over server markup: the
  * server renders the resolved `initialValue` and throws without one.
+ *
+ * Like {@link useObservable}, the observable is only subscribed during render (to pick up
+ * synchronous emissions for the first render) when no `initialValue` is given; with an
+ * `initialValue` the subscription starts on commit. Once the hook has received an emission,
+ * replacement observables on later renders are warmed up during render either way, so consumers
+ * that rebuild the observable on every render settle instead of re-rendering forever.
  *
  * **Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by
  * this hook replaces already-visible content with the nearest Suspense fallback — see the
@@ -43,20 +49,31 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
 ): InitialValue | ObservedValueOf<ObservableType> {
   const {disabled = false} = options
 
-  const instance = useMemo(() => getOrCreateStore(observable), [observable])
+  const hasInitialValue = typeof initialValue !== 'undefined'
+  // With an `initialValue` the warm-up is skipped until this hook has received an emission; after
+  // that, replacement observables are warmed during render again so that consumers that rebuild
+  // the observable on every render converge instead of looping — see `needsWarmUp`. The tracker is
+  // only ever written on commit (in `subscribe` below), never during render.
+  const [tracker] = useState((): WarmUpTracker => ({last: null}))
+  const shouldWarmUp = needsWarmUp(tracker, observable, hasInitialValue, disabled)
+  const instance = useMemo(
+    () => getOrCreateStore(observable, shouldWarmUp),
+    [observable, shouldWarmUp],
+  )
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       if (disabled) {
         return () => {}
       }
+      trackSubscribed(tracker, observable, instance)
 
       const subscription = instance.observable.subscribe(onStoreChange)
       return () => {
         subscription.unsubscribe()
       }
     },
-    [instance.observable, disabled],
+    [tracker, observable, instance, disabled],
   )
 
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(
@@ -66,8 +83,6 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
     },
     // Strict v4 server contract: the server renders the resolved `initialValue`, and throws
     // (missing getServerSnapshot) without one — even when the observable emits synchronously.
-    typeof initialValue === 'undefined'
-      ? undefined
-      : () => getValue(initialValue) as ObservedValueOf<ObservableType>,
+    hasInitialValue ? () => getValue(initialValue) as ObservedValueOf<ObservableType> : undefined,
   )
 }
