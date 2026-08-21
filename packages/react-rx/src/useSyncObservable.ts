@@ -1,7 +1,7 @@
-import {useCallback, useMemo, useState, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
-import {getOrCreateStore, needsWarmUp, trackSubscribed, type WarmUpTracker} from './cache'
+import {getOrCreateStore} from './cache'
 import type {UseObservableOptions} from './types'
 import {EMPTY_OBJECT, getValue, missingInitialValueError, UNSET_INITIAL_VALUE} from './utils'
 
@@ -21,10 +21,13 @@ import {EMPTY_OBJECT, getValue, missingInitialValueError, UNSET_INITIAL_VALUE} f
  * meaningful initial value, or you want to show fallback UI while the observable is "loading",
  * reach for {@link useObservablePromise} with `use()` and Suspense instead.
  *
- * Like {@link useObservable}, the observable is not subscribed during render: the `initialValue`
- * renders first and the live subscription starts on commit. Once the hook has received an
- * emission, replacement observables on later renders are warmed up during render, so consumers
- * that rebuild the observable on every render settle instead of re-rendering forever.
+ * Like {@link useObservable}, the observable is never subscribed during render: every render —
+ * the first one and every identity change alike — shows `initialValue` (or the shared entry's
+ * last emission) and the live subscription starts on commit. Keep the observable's identity
+ * stable across renders (`useMemo`, `useState`, module scope) — like `useSyncExternalStore`'s
+ * `subscribe`, an observable rebuilt on every render is re-subscribed on every render, and when
+ * it synchronously replays a value that differs from the `initialValue` this forces a render
+ * loop.
  *
  * **Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by
  * this hook replaces already-visible content with the nearest Suspense fallback — see the
@@ -57,30 +60,19 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   }
   const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
-  // The warm-up is skipped until this hook has received an emission; after that, replacement
-  // observables are warmed during render so that consumers that rebuild the observable on every
-  // render converge instead of looping — see `needsWarmUp`. The tracker is only ever written on
-  // commit (in `subscribe` below), never during render.
-  const [tracker] = useState((): WarmUpTracker => ({last: null}))
-  const shouldWarmUp = needsWarmUp(tracker, observable, disabled)
-  const instance = useMemo(
-    () => getOrCreateStore(observable, shouldWarmUp),
-    [observable, shouldWarmUp],
-  )
+  const instance = useMemo(() => getOrCreateStore(observable), [observable])
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       if (disabled) {
         return () => {}
       }
-      trackSubscribed(tracker, observable, instance)
-
       const subscription = instance.observable.subscribe(onStoreChange)
       return () => {
         subscription.unsubscribe()
       }
     },
-    [tracker, observable, instance, disabled],
+    [instance, disabled],
   )
 
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(

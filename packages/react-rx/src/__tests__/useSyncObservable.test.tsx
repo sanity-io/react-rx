@@ -79,8 +79,8 @@ test('a sync emission replaces an explicit undefined initialValue right after mo
 })
 
 test('the observable is never subscribed during render: the initialValue paints first, the sync emission follows after mount', () => {
-  // There is nothing to warm up on mount — the source is first subscribed by the live store
-  // subscription on commit, keeping subscribe-time side effects out of the render phase.
+  // The source is first subscribed by the live store subscription on commit, keeping
+  // subscribe-time side effects out of the render phase.
   let subscriptions = 0
   const source = defer(() => {
     subscriptions++
@@ -101,8 +101,8 @@ test('the observable is never subscribed during render: the initialValue paints 
 })
 
 test('disabled never subscribes the source (zero subscriptions)', () => {
-  // There is no render-phase warm-up on mount, and `disabled` pauses the store subscription —
-  // so nothing ever subscribes the source.
+  // Nothing subscribes during render, and `disabled` pauses the store subscription — so nothing
+  // ever subscribes the source.
   let subscriptions = 0
   const source = defer(() => {
     subscriptions++
