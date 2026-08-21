@@ -29,7 +29,7 @@ test('should subscribe immediately on component mount and unsubscribe on compone
 
   expect(subscribed).toBe(false)
 
-  const {unmount} = renderHook(() => useSyncObservable(observable))
+  const {unmount} = renderHook(() => useSyncObservable(observable, undefined))
   expect(subscribed).toBe(true)
 
   unmount()
@@ -45,14 +45,14 @@ test('should only subscribe once when given same observable on re-renders', asyn
 
   expect(subscriptionCount).toBe(0)
 
-  const {unmount, rerender} = renderHook(() => useSyncObservable(observable))
+  const {unmount, rerender} = renderHook(() => useSyncObservable(observable, undefined))
   expect(subscriptionCount).toBe(1)
   rerender()
   expect(subscriptionCount).toBe(1)
   unmount()
   await Promise.resolve()
 
-  renderHook(() => useSyncObservable(observable))
+  renderHook(() => useSyncObservable(observable, undefined))
   expect(subscriptionCount).toBe(2)
 })
 
@@ -69,42 +69,18 @@ test('should not return undefined during render if initial value is given', () =
   expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
 })
 
-test('should not return undefined during render if observable is sync', () => {
-  const observable = of('initial value')
-
-  const returnedValues: unknown[] = []
-  function ObservableComponent() {
-    const observedValue = useSyncObservable(observable)
-    returnedValues.push(observedValue)
-    return <>{observedValue}</>
-  }
-  render(<ObservableComponent />)
-  expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
-})
-
-test('should return undefined during first render if observable is async', () => {
-  const observable = scheduled('async value', asyncScheduler)
-
-  const returnedValues: unknown[] = []
-  function ObservableComponent() {
-    const observedValue = useSyncObservable(observable)
-    returnedValues.push(observedValue)
-    return <>{observedValue}</>
-  }
-  render(<ObservableComponent />)
-  expect(returnedValues).toEqual(expect.arrayContaining([undefined]))
-})
-
-test('should have sync values from an observable as initial value', () => {
+test('a sync emission replaces an explicit undefined initialValue right after mount', () => {
+  // The observable is never subscribed during render: the first render shows the (undefined)
+  // initialValue, and the store subscription on commit delivers the sync emission before
+  // renderHook returns.
   const observable = of('something sync')
-  const {result} = renderHook(() => useSyncObservable(observable))
+  const {result} = renderHook(() => useSyncObservable(observable, undefined))
   expect(result.current).toBe('something sync')
 })
 
-test('an initialValue skips the render-phase warm-up: the initialValue paints first, the sync emission follows after mount', () => {
-  // With an initialValue there is nothing to warm up for — the source is first subscribed by
-  // the live store subscription on commit, keeping subscribe-time side effects out of the
-  // render phase.
+test('the observable is never subscribed during render: the initialValue paints first, the sync emission follows after mount', () => {
+  // There is nothing to warm up on mount — the source is first subscribed by the live store
+  // subscription on commit, keeping subscribe-time side effects out of the render phase.
   let subscriptions = 0
   const source = defer(() => {
     subscriptions++
@@ -124,10 +100,9 @@ test('an initialValue skips the render-phase warm-up: the initialValue paints fi
   expect(subscriptions).toBe(1)
 })
 
-test('disabled with an initialValue never subscribes the source (zero subscriptions)', () => {
-  // Without an initialValue, `disabled` still runs the warm-up subscription; with one, there
-  // is no render-phase warm-up and `disabled` pauses the store subscription — so nothing ever
-  // subscribes the source.
+test('disabled never subscribes the source (zero subscriptions)', () => {
+  // There is no render-phase warm-up on mount, and `disabled` pauses the store subscription —
+  // so nothing ever subscribes the source.
   let subscriptions = 0
   const source = defer(() => {
     subscriptions++
@@ -141,7 +116,7 @@ test('disabled with an initialValue never subscribes the source (zero subscripti
 
 test('should have undefined as initial value from delayed observables', () => {
   const {result, unmount} = renderHook(() =>
-    useSyncObservable(scheduled('something async', asyncScheduler)),
+    useSyncObservable(scheduled('something async', asyncScheduler), undefined),
   )
   expect(result.current).toBeUndefined()
   unmount()
@@ -177,15 +152,15 @@ test('should share the observable between each concurrent subscribing hook', asy
   const observable = new Observable<number>((subscriber) => {
     subscriber.next(subscribeCount++)
   })
-  const firstHook = renderHook(() => useSyncObservable(observable))
+  const firstHook = renderHook(() => useSyncObservable(observable, undefined))
   expect(firstHook.result.current).toBe(0)
-  const secondHook = renderHook(() => useSyncObservable(observable))
+  const secondHook = renderHook(() => useSyncObservable(observable, undefined))
   expect(secondHook.result.current).toBe(0)
   firstHook.unmount()
   secondHook.unmount()
   await Promise.resolve()
 
-  const thirdHook = renderHook(() => useSyncObservable(observable))
+  const thirdHook = renderHook(() => useSyncObservable(observable, undefined))
   expect(thirdHook.result.current).toBe(1)
   thirdHook.unmount()
 })
@@ -234,7 +209,7 @@ test('should restart any completed observable on mount', async () => {
   firstHook.unmount()
   await Promise.resolve()
 
-  const secondHook = renderHook(() => useSyncObservable(observable))
+  const secondHook = renderHook(() => useSyncObservable(observable, undefined))
   expect(secondHook.result.current).toBe(undefined)
   expect(subscribeCount).toBe(2)
   expect(unsubscribeCount).toBe(1)
@@ -246,7 +221,7 @@ test('should restart any completed observable on mount', async () => {
 
 test('should update with values from observables', () => {
   const values$ = new Subject<string>()
-  const {result, unmount} = renderHook(() => useSyncObservable(values$))
+  const {result, unmount} = renderHook(() => useSyncObservable(values$, undefined))
 
   expect(result.current).toBe(undefined)
 
@@ -347,22 +322,9 @@ test('should support SSR if an initial value is given', () => {
   expect(renderToString(<ObservableComponent />)).toBe('initial value')
 })
 
-test('should throw during SSR if no initial value is defined', () => {
-  const observable = scheduled('async value', asyncScheduler)
-  function ObservableComponent() {
-    const observedValue = useSyncObservable(observable)
-    return <>{observedValue}</>
-  }
-
-  expect(() => renderToString(<ObservableComponent />)).toThrowErrorMatchingInlineSnapshot(
-    `[Error: Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering.]`,
-  )
-})
-
 test('SSR renders the initialValue even when the observable emits synchronously', () => {
-  // Neither hook subscribes during render when an initialValue is given, so both paint the
-  // initialValue on the server. The remaining contrast with `useObservable` is the strict v4
-  // contract: `useSyncObservable` throws without an initialValue, `useObservable` does not.
+  // Neither hook subscribes during render, so both paint the resolved initialValue on the
+  // server (and both throw when it is omitted — see requiredInitialValue.test.tsx).
   const observable = of('sync')
   function ObservableComponent() {
     const observedValue = useSyncObservable(observable, 'initial')

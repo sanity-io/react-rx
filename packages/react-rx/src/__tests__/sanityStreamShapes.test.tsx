@@ -262,7 +262,7 @@ test('a take(1) source latches the first emission and ignores everything after c
 function EditStateProbe({editState$, frames}: {editState$: Observable<string>; frames: string[]}) {
   // `useEditState` reads synchronously: stale edit state paired with live selection
   // would tear (see the deferral-safety section below).
-  frames.push(useSyncObservable(editState$)!)
+  frames.push(useSyncObservable(editState$, undefined)!)
   return null
 }
 
@@ -342,13 +342,12 @@ function DisabledProbe({source$}: {source$: Observable<string>}) {
   return null
 }
 
-test('the render-phase warm-up blip hits a cold source at most once per store entry', async () => {
-  // With `disabled: true` no live store subscription follows the warm-up probe, which
-  // makes the blip observable in isolation: subscribe during render, source teardown a
-  // tick later. Consumers like bifur's WebSocket connection must tolerate this
-  // momentary zero-subscriber gap — and react-rx must not repeat it on re-renders.
-  // The probe only runs when no initialValue is given; with one, the initial observable
-  // is never subscribed during render, so there is no blip at all.
+test('a disabled hook never probes the source: no render-phase blip at all', async () => {
+  // `disabled: true` skips both the live store subscription and the replacement warm-up, so
+  // consumers like bifur's WebSocket connection see zero subscriptions from disabled hooks.
+  // (Before initialValue became required, a disabled hook without one still ran the warm-up
+  // probe during render — the momentary subscribe/unsubscribe blip
+  // bifurClientConnection.test.ts guards against.)
   const events: string[] = []
   const source$ = new Observable<string>(() => {
     events.push('subscribe')
@@ -358,23 +357,26 @@ test('the render-phase warm-up blip hits a cold source at most once per store en
   })
 
   const {rerender} = render(<DisabledProbe source$={source$} />)
-  expect(events).toEqual(['subscribe'])
+  rerender(<DisabledProbe source$={source$} />)
+  rerender(<DisabledProbe source$={source$} />)
 
   await act(async () => {
     await tick()
   })
-  expect(events).toEqual(['subscribe', 'unsubscribe'])
-
-  // The WeakMap entry survives the blip, so re-renders do not probe again.
-  rerender(<DisabledProbe source$={source$} />)
-  rerender(<DisabledProbe source$={source$} />)
-  expect(events).toEqual(['subscribe', 'unsubscribe'])
+  expect(events).toEqual([])
 })
 
-test('a mounted hook bridges the warm-up gap: the source sees a single uninterrupted subscription', () => {
-  // The counterpart: with a live subscriber the probe's refCount blip is bridged by
-  // the asapScheduler grace, so the source is subscribed exactly once with no
-  // subscribe/unsubscribe churn in between.
+/** Kept at module scope so identity is stable across re-renders. */
+function ReplacementWarmUpProbe({observable}: {observable: Observable<string>}) {
+  useObservable(observable, 'initial')
+  return null
+}
+
+test('a replacement warm-up probes the source once, bridged into the commit subscription without churn', () => {
+  // The render-phase warm-up now only runs for replacement observables after an emission. With a
+  // live consumer the probe's refCount blip is bridged by the asapScheduler grace into the
+  // commit-time store subscription, so the source sees exactly one uninterrupted subscription
+  // with no subscribe/unsubscribe churn in between — and re-renders never probe again.
   const events: string[] = []
   const source$ = new Observable<string>((subscriber) => {
     events.push('subscribe')
@@ -383,13 +385,17 @@ test('a mounted hook bridges the warm-up gap: the source sees a single uninterru
       events.push('unsubscribe')
     }
   })
+  const first$ = new BehaviorSubject('first')
 
-  function Probe() {
-    useObservable(source$)
-    return null
-  }
-  render(<Probe />)
+  const {rerender} = render(<ReplacementWarmUpProbe observable={first$} />)
 
+  // first$ has emitted (sync BehaviorSubject emission on commit), so swapping identities warms
+  // the replacement during render.
+  rerender(<ReplacementWarmUpProbe observable={source$} />)
+  expect(events).toEqual(['subscribe'])
+
+  rerender(<ReplacementWarmUpProbe observable={source$} />)
+  rerender(<ReplacementWarmUpProbe observable={source$} />)
   expect(events).toEqual(['subscribe'])
 })
 
@@ -417,8 +423,8 @@ function SyncSelectionProbe({
   selection$: Observable<string | undefined>
   frames: SelectionFrame[]
 }) {
-  const name = useSyncObservable(selection$)
-  const releases = useSyncObservable(releases$)!
+  const name = useSyncObservable(selection$, undefined)
+  const releases = useSyncObservable(releases$, [])
   frames.push({name, resolved: name !== undefined && releases.includes(name) ? name : undefined})
   return null
 }
@@ -438,8 +444,8 @@ function DeferredSelectionProbe({
   selection$: Observable<string | undefined>
   frames: SelectionFrame[]
 }) {
-  const name = useSyncObservable(selection$)
-  const releases = useObservable(releases$)!
+  const name = useSyncObservable(selection$, undefined)
+  const releases = useObservable(releases$, [])
   frames.push({name, resolved: name !== undefined && releases.includes(name) ? name : undefined})
   return null
 }
@@ -495,8 +501,8 @@ function MixedSyncDeferredProbe({
   releases$: Observable<string[]>
   frames: CrossFrame[]
 }) {
-  const active = useSyncObservable(releases$)!
-  const all = useObservable(releases$)!
+  const active = useSyncObservable(releases$, [])
+  const all = useObservable(releases$, [])
   frames.push({active, all})
   return null
 }
@@ -508,8 +514,8 @@ function AllSyncProbe({
   releases$: Observable<string[]>
   frames: CrossFrame[]
 }) {
-  const active = useSyncObservable(releases$)!
-  const all = useSyncObservable(releases$)!
+  const active = useSyncObservable(releases$, [])
+  const all = useSyncObservable(releases$, [])
   frames.push({active, all})
   return null
 }

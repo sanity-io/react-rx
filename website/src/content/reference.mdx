@@ -6,26 +6,32 @@ A React hook that returns the current/latest value from an observable. Store upd
 
 The deferral is **identity-coherent**: unlike a bare `useDeferredValue(useObservable(...))`, the observable identity and its value are deferred as one snapshot, and when the observable identity changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live value — typically the new observable's synchronous emission or the `initialValue` — so the previous identity's value never renders under the new one.
 
-Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash once a value has been emitted). When no `initialValue` is given, the hook briefly subscribes during render so a synchronous emission (e.g. from `startWith`) is available from the very first render; with an `initialValue` the observable is not subscribed during render — the `initialValue` paints first and the live subscription starts on commit, keeping subscribe-time side effects out of the render phase. Once the hook has received an emission, replacement observables on later renders are warmed during render again — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever; before the first emission (and always while `disabled`), identity churn stays subscription-free. On the server, this hook renders exactly what the client's first paint will show (the resolved `initialValue` when one is provided, else a synchronous emission when there is one, else nothing) and never throws for a missing `initialValue`.
+`initialValue` is **required**: it is what renders until the observable emits. Every value is a valid initial value — `undefined` included, pass it explicitly — and omitting the argument throws during render. Functions act as initializers, exactly like `useState`: pass `() => value` to compute the initial value lazily, and an initializer returning the function when the initial value should be a function itself. When there is no meaningful initial value, use [`useObservablePromise`](#useobservablepromise) instead.
 
-Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs or strict SSR control.
+Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash once a value has been emitted). The observable is not subscribed during render — the `initialValue` paints first and the live subscription starts on commit, keeping subscribe-time side effects out of the render phase. Once the hook has received an emission, replacement observables on later renders are warmed during render — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever; before the first emission (and always while `disabled`), identity churn stays subscription-free. On the server, this hook renders the resolved `initialValue` — exactly what the client's first paint will show — and never subscribes the observable.
+
+Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs.
 
 **Signature**
 
 ```ts
-function useObservable<T>(observable$: Observable<T>): T | undefined
 function useObservable<T>(
   observable$: Observable<T>,
   initialValue: T | (() => T),
   options?: UseObservableOptions,
 ): T
+function useObservable<T, InitialValue>(
+  observable$: Observable<T>,
+  initialValue: InitialValue | (() => InitialValue),
+  options?: UseObservableOptions,
+): T | InitialValue
 
 interface UseObservableOptions {
   disabled?: boolean
 }
 ```
 
-`disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). When no `initialValue` is given the render-phase warm-up subscription still runs; with an `initialValue` there is no warm-up while disabled, so `disabled: true` means zero subscriptions — see the [guide](/guide).
+`disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). A disabled hook performs no subscriptions at all — `disabled: true` means zero subscriptions until it is re-enabled — see the [guide](/guide).
 
 **Example**
 
@@ -46,19 +52,25 @@ function MyComponent() {
 
 A React hook that returns the current/latest value from an observable **synchronously** via [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore). This is the v4 `useObservable` behavior.
 
-Use it when the value feeds a controlled input (or must stay consistent within the same event), or when you need strict control over server markup: the server renders the resolved `initialValue` and throws without one.
+Use it when the value feeds a controlled input, or must stay consistent within the same event.
+
+`initialValue` is **required** and follows the same rules as [`useObservable`](#useobservable): every value is valid (`undefined` included), functions act as `useState`-style initializers, and omitting the argument throws during render. The server always renders the resolved `initialValue`.
 
 **Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by this hook replaces already-visible content with the nearest Suspense fallback — see the [useSyncExternalStore caveats](https://react.dev/reference/react/useSyncExternalStore#caveats). Compare the two hooks in the [Suspense example](/examples/suspense).
 
 **Signature**
 
 ```ts
-function useSyncObservable<T>(observable$: Observable<T>): T | undefined
 function useSyncObservable<T>(
   observable$: Observable<T>,
   initialValue: T | (() => T),
   options?: UseObservableOptions,
 ): T
+function useSyncObservable<T, InitialValue>(
+  observable$: Observable<T>,
+  initialValue: InitialValue | (() => InitialValue),
+  options?: UseObservableOptions,
+): T | InitialValue
 ```
 
 **Example**

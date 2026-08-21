@@ -4,7 +4,6 @@ import {
   distinctUntilChanged,
   map,
   type Observable,
-  startWith,
   switchMap,
   timer,
 } from 'rxjs'
@@ -19,11 +18,10 @@ export function Ticker(props: {
         switchMap((tick) =>
           timer(300).pipe(map(() => tick)),
         ),
-        startWith(0),
       ),
     [props.observable],
   )
-  const tick = useObservable(observable)
+  const tick = useObservable(observable, 0)
 
   return <p>Delayed tick: {tick}</p>
 }
