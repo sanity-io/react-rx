@@ -5,6 +5,21 @@ import {expect, test} from 'vitest'
 
 import {preloadObservablePromise, useObservablePromise} from '../useObservablePromise'
 
+function Reader({promise}: {promise: Promise<string>}) {
+  const value = use(promise)
+  return <div data-testid="value">{value}</div>
+}
+
+/** The sanctioned shape: hook caller above the boundary, use() reader below. */
+function Owner({observable}: {observable: Observable<string>}) {
+  const promise = useObservablePromise(observable)
+  return (
+    <Suspense fallback={<div data-testid="fallback">loading</div>}>
+      <Reader promise={promise} />
+    </Suspense>
+  )
+}
+
 test('renderToString shows the Suspense fallback for a pending promise', () => {
   const observable = defer(
     () =>
@@ -13,16 +28,7 @@ test('renderToString shows the Suspense fallback for a pending promise', () => {
       }),
   )
 
-  function Child() {
-    const value = use(useObservablePromise(observable))
-    return <div data-testid="value">{value}</div>
-  }
-
-  const html = renderToString(
-    <Suspense fallback={<div data-testid="fallback">loading</div>}>
-      <Child />
-    </Suspense>,
-  )
+  const html = renderToString(<Owner observable={observable} />)
 
   expect(html).toContain('loading')
   expect(html).not.toContain('data-testid="value"')
@@ -36,20 +42,9 @@ test('renderToString never subscribes the source: sync observables need a preloa
     subscriber.complete()
   })
 
-  function Child() {
-    const value = use(useObservablePromise(observable))
-    return <div data-testid="value">{value}</div>
-  }
-
-  const ui = (
-    <Suspense fallback={<div>loading</div>}>
-      <Child />
-    </Suspense>
-  )
-
   // Effects never run on the server and rendering never subscribes, so even a
   // synchronously-emitting observable renders the fallback...
-  const cold = renderToString(ui)
+  const cold = renderToString(<Owner observable={observable} />)
   expect(subscriptions).toBe(0)
   expect(cold).toContain('loading')
   expect(cold).not.toContain('ssr-sync')
@@ -57,7 +52,7 @@ test('renderToString never subscribes the source: sync observables need a preloa
   // ...unless the entry is warmed before rendering (route loader, server
   // request handler) — then the settled promise renders synchronously.
   void preloadObservablePromise(observable)
-  const warm = renderToString(ui)
+  const warm = renderToString(<Owner observable={observable} />)
   expect(subscriptions).toBe(1)
   expect(warm).toContain('ssr-sync')
   expect(warm).not.toContain('loading')
@@ -66,18 +61,6 @@ test('renderToString never subscribes the source: sync observables need a preloa
 test('getServerSnapshot is provided (no uSES missing-server-snapshot error)', () => {
   const observable = from(['server'])
 
-  function Child() {
-    // Calling the hook during SSR exercises getServerSnapshot.
-    const promise = useObservablePromise(observable)
-    const value = use(promise)
-    return <span>{value}</span>
-  }
-
-  expect(() =>
-    renderToString(
-      <Suspense fallback={<div>loading</div>}>
-        <Child />
-      </Suspense>,
-    ),
-  ).not.toThrow()
+  // Calling the hook during SSR exercises getServerSnapshot.
+  expect(() => renderToString(<Owner observable={observable} />)).not.toThrow()
 })

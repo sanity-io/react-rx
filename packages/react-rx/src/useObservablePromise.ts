@@ -58,20 +58,26 @@ export interface PreloadObservablePromiseOptions {
  * activates Suspense until the first emission, then updates synchronously for
  * later emissions without re-suspending.
  *
- * Rendering never subscribes the source. The subscription starts when a
- * non-`disabled` component that called the hook **commits**, or earlier via
- * {@link preloadObservablePromise}. Two consequences:
+ * The returned promise is meant to be passed as a prop to a child component
+ * that reads it with React's `use()`, with a `<Suspense>` boundary **between**
+ * this component and that child. The boundary placement is load-bearing:
+ * rendering never subscribes the source — the fetch starts when the component
+ * calling this hook commits (or via {@link preloadObservablePromise}) — and a
+ * suspended component never commits. Without a boundary in between, the
+ * child's suspension propagates to the hook caller itself and the fetch can
+ * never start.
  *
- * - A hidden `<Activity>` tree pre-rendering this hook is fully paused: no
- *   fetching happens until it is revealed (effects mount) or something else
- *   warms the entry. To pre-render hidden content *with* data, call the hook
- *   in a visible parent and pass the promise into the hidden tree, where
- *   `use(promise)` lets React suspend/resume the pre-render on its own terms.
- * - A component that suspends on the promise it just created never commits,
- *   so `use(useObservablePromise(obs$))` in a single component only settles
- *   when the entry is warmed by {@link preloadObservablePromise} or shared
- *   with another consumer. Prefer calling the hook in a component that does
- *   not itself suspend, with `use()` in a child below a Suspense boundary.
+ * For the same reason, never call `use()` on the promise in the same
+ * component that called this hook: the component suspends on its own pending
+ * promise before the commit that would start the fetch — wrong usage in the
+ * same way as `use()`-ing a promise created during your own render, and
+ * intentionally not guarded against.
+ *
+ * A hidden `<Activity>` tree pre-rendering this hook is fully paused: no
+ * fetching happens until it is revealed (effects mount) or something else
+ * warms the entry. To pre-render hidden content *with* data, call the hook in
+ * a visible parent and pass the promise into the hidden tree, where
+ * `use(promise)` lets React suspend/resume the pre-render on its own terms.
  *
  * @public
  */
@@ -121,10 +127,10 @@ export function useObservablePromise<T>(
  * hook — callable anywhere.
  *
  * This is the mechanism for starting a fetch before any consumer commits:
- * hover/route preloads, data for `<Activity>` pre-renders, warming the next
- * observable before swapping to it inside a transition, or the
- * single-component `use(useObservablePromise(obs$))` form. Rendering never
- * subscribes the source — only this function and committed consumers do.
+ * hover/route preloads, SSR request handlers, data for `<Activity>`
+ * pre-renders, or warming the next observable before swapping to it inside a
+ * transition. Rendering never subscribes the source — only this function and
+ * committed consumers do.
  *
  * Pending entries are never timed out: a never-emitting source keeps the
  * promise pending and the subscription alive until it settles. Bound hang

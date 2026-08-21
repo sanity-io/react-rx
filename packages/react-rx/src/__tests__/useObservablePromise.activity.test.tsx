@@ -3,7 +3,7 @@ import {Activity, Suspense, use, useState, type ReactNode} from 'react'
 import {defer, from, Observable, Subject} from 'rxjs'
 import {expect, test} from 'vitest'
 
-import {preloadObservablePromise, useObservablePromise} from '../useObservablePromise'
+import {useObservablePromise} from '../useObservablePromise'
 
 /**
  * Documents how `useObservablePromise` interacts with React 19.2's `<Activity>`.
@@ -17,7 +17,10 @@ import {preloadObservablePromise, useObservablePromise} from '../useObservablePr
  * - Call the hook inside the hidden tree: it stays fully paused (no
  *   subscription) until the tree is revealed and effects mount.
  *
- * `preloadObservablePromise` is the explicit warm-up for anything else.
+ * In both shapes the `<Suspense>` boundary sits between the hook caller and
+ * the `use()` reader — the hook caller must be able to commit while the reader
+ * suspends. `preloadObservablePromise` is the explicit warm-up for anything
+ * else.
  *
  * @see https://react.dev/reference/react/Activity#pre-rendering-content-thats-likely-to-become-visible
  */
@@ -66,55 +69,6 @@ async function toggle() {
     screen.getByRole('button', {name: 'toggle'}).click()
   })
 }
-
-test('hidden Activity pre-render never starts the source; preload is the warm-up mechanism', async () => {
-  let subscriptions = 0
-  let resolve!: (value: string) => void
-  const promise = new Promise<string>((r) => {
-    resolve = r
-  })
-  const observable = defer(() => {
-    subscriptions++
-    return from(promise)
-  })
-
-  function Child() {
-    const value = use(useObservablePromise(observable))
-    return <div data-testid="value">{value}</div>
-  }
-
-  await renderAsync(
-    <ToggleActivity initialMode="hidden">
-      <Suspense fallback={<Fallback />}>
-        <Child />
-      </Suspense>
-    </ToggleActivity>,
-  )
-
-  // The hidden pre-render suspends on the pending promise without touching the
-  // observable — it stays paused/unsubscribed.
-  expect(subscriptions).toBe(0)
-  expect(screen.queryByTestId('value')).toBeNull()
-
-  // Revealing does not help this single-component form either: the component
-  // suspends on its own promise before it can commit a subscription.
-  await toggle()
-  expect(subscriptions).toBe(0)
-  expect(screen.getByTestId('fallback')).toBeTruthy()
-
-  // Explicitly warming the entry starts the (single) fetch and resumes the
-  // suspended tree.
-  await act(async () => {
-    void preloadObservablePromise(observable)
-  })
-  expect(subscriptions).toBe(1)
-  await act(async () => {
-    resolve('warmed')
-    await promise
-  })
-  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('warmed'))
-  expect(subscriptions).toBe(1)
-})
 
 test('parent-owned promise: hidden Activity pre-renders with the fetch the visible parent started', async () => {
   let subscriptions = 0

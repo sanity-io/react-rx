@@ -33,11 +33,13 @@ async function renderAsync(ui: ReactNode) {
 }
 
 /**
- * The counters read the promise in the same component that calls the hook, so
- * they suspend on it before they can commit a subscription — the entry must be
- * settled up front. Preloading a BehaviorSubject settles it synchronously and
- * keeps the shared connection alive for the test duration, matching how a real
- * app would warm a store before mounting an expensive subtree.
+ * Settle the counter store before anything mounts: the tearing checks below
+ * measure store consistency across many readers (not Suspense fallback churn),
+ * and the mount-during-transition tests emit into the store before any
+ * consumer commits — the preload's shared connection is what keeps the cached
+ * promise current until then. Preloading a BehaviorSubject settles it
+ * synchronously, matching how a real app would warm a store before mounting an
+ * expensive subtree.
  */
 function warmedCounterStore(initial = 0) {
   const count$ = new BehaviorSubject(initial)
@@ -50,6 +52,10 @@ function slowFib(n: number): number {
   return slowFib(n - 1) + slowFib(n - 2)
 }
 
+function CounterValue({promise, index}: {promise: ObservablePromise<number>; index: number}) {
+  return <span data-testid={`c-${index}`}>{use(promise)}</span>
+}
+
 function Counter({
   count$,
   index,
@@ -59,10 +65,17 @@ function Counter({
   index: number
   waste?: number
 }) {
-  const value = use(useObservablePromise(count$))
+  // Hook caller above the boundary, use() reader below it — the sanctioned
+  // shape, so the caller can commit (starting/holding the subscription) even
+  // while the reader suspends.
+  const promise = useObservablePromise(count$)
   // Artificial expensive render to widen the concurrent window.
   slowFib(waste)
-  return <span data-testid={`c-${index}`}>{value}</span>
+  return (
+    <Suspense fallback={null}>
+      <CounterValue promise={promise} index={index} />
+    </Suspense>
+  )
 }
 
 function readAll(): number[] {
@@ -293,18 +306,23 @@ function DeferredSection({promise, waste}: {promise: ObservablePromise<number>; 
   return <SlowList promise={deferred} waste={waste} />
 }
 
+function ImmediateValue({promise}: {promise: ObservablePromise<number>}) {
+  return <span data-testid="immediate">{use(promise)}</span>
+}
+
 function InterruptibleApp({count$, waste}: {count$: BehaviorSubject<number>; waste: number}) {
   const promise = useObservablePromise(count$)
-  const immediate = use(promise)
   const [urgent, setUrgent] = useState(0)
   return (
     <>
       <button type="button" onClick={() => setUrgent((n) => n + 1)}>
         urgent
       </button>
-      <span data-testid="immediate">{immediate}</span>
       <span data-testid="urgent">{urgent}</span>
-      <DeferredSection promise={promise} waste={waste} />
+      <Suspense fallback={null}>
+        <ImmediateValue promise={promise} />
+        <DeferredSection promise={promise} waste={waste} />
+      </Suspense>
     </>
   )
 }

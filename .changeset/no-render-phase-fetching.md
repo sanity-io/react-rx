@@ -12,7 +12,7 @@ Previously the hook eagerly started the source subscription in the render phase 
 
 Migration notes:
 
-- The single-component form `use(useObservablePromise(obs$))` no longer self-starts: the component suspends on its own promise before it can commit, so the promise only settles once the entry is warmed by `preloadObservablePromise` or by another consumer of the same observable. Prefer calling the hook in a component that does not itself suspend, with `use()` in a child below a Suspense boundary.
+- `use(useObservablePromise(obs$))` in a single component — never a supported pattern — now deadlocks: the component suspends on its own pending promise before the commit that would start the fetch, the same wrong usage as `use()`-ing a promise created during your own render, and it is intentionally not guarded against. The promise is meant to be passed as a prop to a child that reads it with `use()`, with a `<Suspense>` boundary **between** the hook caller and that child so the caller can commit while the child suspends.
 - Synchronously-emitting sources (`of`, `BehaviorSubject`, replayed `shareReplay`) now resolve at the hook caller's commit instead of during render, so a cold mount shows one Suspense fallback pass. Preload the observable to render them without a fallback.
 - Swapping to a new observable inside `startTransition` / behind `useDeferredValue` requires warming the new observable first (for example `preloadObservablePromise` in the event handler): a transition render that suspends never commits, so it can no longer start the fetch.
 - Server rendering never subscribes the source. Warm entries with `preloadObservablePromise` before rendering to emit data instead of fallbacks.

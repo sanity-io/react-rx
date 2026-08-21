@@ -699,47 +699,6 @@ test('observable swap with preload; useDeferredValue keeps previous content', as
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('B'))
 })
 
-test('single-component use(useObservablePromise(obs$)) never self-starts; preload starts the one fetch', async () => {
-  let subscriptions = 0
-  let resolve!: (value: string) => void
-  const promise = new Promise<string>((r) => {
-    resolve = r
-  })
-  const observable = defer(() => {
-    subscriptions++
-    return from(promise)
-  })
-
-  function Combined() {
-    const value = use(useObservablePromise(observable))
-    return <div data-testid="value">{value}</div>
-  }
-
-  await renderAsync(
-    <Suspense fallback={<Fallback />}>
-      <Combined />
-    </Suspense>,
-  )
-  // A component that suspends on its own promise never commits, so its store
-  // subscription never starts — rendering alone must not trigger the source.
-  expect(subscriptions).toBe(0)
-  expect(screen.getByTestId('fallback')).toBeTruthy()
-
-  // preloadObservablePromise is the warm-up mechanism for this form: it starts
-  // the fetch on the shared entry the suspended consumer is already waiting on.
-  await act(async () => {
-    void preloadObservablePromise(observable)
-  })
-  expect(subscriptions).toBe(1)
-
-  await act(async () => {
-    resolve('once')
-    await promise
-  })
-  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('once'))
-  expect(subscriptions).toBe(1)
-})
-
 test('disabled: true from mount performs zero source subscriptions', async () => {
   let subscriptions = 0
   const observable = new Observable<string>((subscriber) => {
