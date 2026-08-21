@@ -6,7 +6,7 @@ A React hook that returns the current/latest value from an observable. Store upd
 
 The deferral is **identity-coherent**: unlike a bare `useDeferredValue(useObservable(...))`, the observable identity and its value are deferred as one snapshot, and when the observable identity changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live value — typically the new observable's synchronous emission or the `initialValue` — so the previous identity's value never renders under the new one.
 
-Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash once a value has been emitted). When no `initialValue` is given, the hook briefly subscribes during render so a synchronous emission (e.g. from `startWith`) is available from the very first render; with an `initialValue` the hook's initial observable is not subscribed during render — the `initialValue` paints first and the live subscription starts on commit, keeping subscribe-time side effects out of the render phase. Replacement observables on later renders are warmed during render either way, so components that rebuild the observable on every render settle instead of re-rendering forever. On the server, this hook renders exactly what the client's first paint will show (the resolved `initialValue` when one is provided, else a synchronous emission when there is one, else nothing) and never throws for a missing `initialValue`.
+Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash once a value has been emitted). When no `initialValue` is given, the hook briefly subscribes during render so a synchronous emission (e.g. from `startWith`) is available from the very first render; with an `initialValue` the observable is not subscribed during render — the `initialValue` paints first and the live subscription starts on commit, keeping subscribe-time side effects out of the render phase. Once the hook has received an emission, replacement observables on later renders are warmed during render again — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever; before the first emission (and always while `disabled`), identity churn stays subscription-free. On the server, this hook renders exactly what the client's first paint will show (the resolved `initialValue` when one is provided, else a synchronous emission when there is one, else nothing) and never throws for a missing `initialValue`.
 
 Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs or strict SSR control.
 
@@ -25,7 +25,7 @@ interface UseObservableOptions {
 }
 ```
 
-`disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). When no `initialValue` is given the render-phase warm-up subscription still runs; with an `initialValue` and a stable observable identity there is no warm-up, so `disabled: true` means zero subscriptions — see the [guide](/guide).
+`disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). When no `initialValue` is given the render-phase warm-up subscription still runs; with an `initialValue` there is no warm-up while disabled, so `disabled: true` means zero subscriptions — see the [guide](/guide).
 
 **Example**
 

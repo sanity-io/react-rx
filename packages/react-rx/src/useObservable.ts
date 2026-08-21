@@ -1,7 +1,7 @@
 import {useCallback, useDeferredValue, useMemo, useState, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
-import {getOrCreateStore} from './cache'
+import {getOrCreateStore, needsWarmUp, trackSubscribed, type WarmUpTracker} from './cache'
 import type {UseObservableOptions} from './types'
 import {EMPTY_OBJECT} from './utils'
 
@@ -16,12 +16,14 @@ import {EMPTY_OBJECT} from './utils'
  *
  * When no `initialValue` is given, the observable is briefly subscribed during render so a
  * synchronous emission (e.g. from `startWith`) can be returned from the very first render. With an
- * `initialValue` the hook's initial observable is not subscribed during render: the `initialValue`
- * renders first and the live subscription starts on commit, keeping subscribe-time side effects out
- * of the render phase — a synchronous emission then replaces the `initialValue` right after mount.
- * Replacement observables (a changed identity on a later render) are still warmed up during render
- * even with an `initialValue`: rendering their synchronous emission immediately is what lets
- * consumers that rebuild the observable on every render settle instead of re-rendering forever.
+ * `initialValue` the observable is not subscribed during render: the `initialValue` renders first
+ * and the live subscription starts on commit, keeping subscribe-time side effects out of the
+ * render phase — a synchronous emission then replaces the `initialValue` right after mount. Only
+ * once the hook has received an emission are replacement observables (a changed identity on a
+ * later render) warmed up during render again: rendering their synchronous emission immediately is
+ * what lets consumers that rebuild the observable on every render settle instead of re-rendering
+ * forever. Identity churn before the first emission (e.g. Strict Mode double renders or parent
+ * updates) and any identity churn while `disabled` stay subscription-free.
  *
  * The deferral is identity-coherent: unlike a bare `useDeferredValue(useObservable(...))`, the
  * observable identity and its value are deferred as one snapshot, and when the observable identity
@@ -60,14 +62,12 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   const {disabled = false} = options
 
   const hasInitialValue = typeof initialValue !== 'undefined'
-  // The render-phase warm-up is only skipped for the hook's initial observable (and only when an
-  // `initialValue` provides something to render instead). Replacement observables are warmed even
-  // with an `initialValue`: their rendered snapshot must match what the commit-time store
-  // subscription delivers, or consumers that rebuild the observable on every render would loop
-  // (render `initialValue` → subscribe on commit → sync emission forces a re-render → a new
-  // identity renders `initialValue` again → …).
-  const [initialObservable] = useState(observable)
-  const shouldWarmUp = !hasInitialValue || observable !== initialObservable
+  // With an `initialValue` the warm-up is skipped until this hook has received an emission; after
+  // that, replacement observables are warmed during render again so that consumers that rebuild
+  // the observable on every render converge instead of looping — see `needsWarmUp`. The tracker is
+  // only ever written on commit (in `subscribe` below), never during render.
+  const [tracker] = useState((): WarmUpTracker => ({last: null}))
+  const shouldWarmUp = needsWarmUp(tracker, observable, hasInitialValue, disabled)
   const instance = useMemo(
     () => getOrCreateStore(observable, shouldWarmUp),
     [observable, shouldWarmUp],
@@ -78,13 +78,14 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
       if (disabled) {
         return () => {}
       }
+      trackSubscribed(tracker, observable, instance)
 
       const subscription = instance.observable.subscribe(onStoreChange)
       return () => {
         subscription.unsubscribe()
       }
     },
-    [instance.observable, disabled],
+    [tracker, observable, instance, disabled],
   )
 
   const value = useSyncExternalStore<ObservedValueOf<ObservableType>>(

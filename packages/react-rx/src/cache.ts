@@ -20,6 +20,70 @@ interface CacheRecord<T> {
 const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
 
 /**
+ * Per-hook record of the entry the hook last subscribed on commit, kept in a stable container
+ * created with `useState`. `trackSubscribed` writes it during the commit phase (inside the
+ * `useSyncExternalStore` subscribe callback), never during render.
+ *
+ * @internal
+ */
+export interface WarmUpTracker {
+  last: {observable: Observable<any>; state: ObservableState<any>} | null
+}
+
+/**
+ * Decide whether a hook must warm up `observable` during render.
+ *
+ * Without an `initialValue` the answer is always yes: synchronous emissions (e.g. from
+ * `startWith`) must be renderable from the very first render — even while `disabled`, which only
+ * pauses the live store subscription.
+ *
+ * With an `initialValue` the warm-up is only needed for a replacement observable after the entry
+ * the hook last subscribed has emitted. From that point on, a store update forces a re-render, and
+ * if that render swaps in a fresh identity whose rendered snapshot (the `initialValue`) differs
+ * from what the commit-time subscription delivers, `useSyncExternalStore` forces another render —
+ * consumers that rebuild the observable on every render would loop forever. Warming the
+ * replacement makes its rendered snapshot match the subscription and the loop converges.
+ *
+ * Before the first emission no store update can force a re-render, so identity churn from Strict
+ * Mode double renders or parent updates stays subscription-free. The same holds for the entire
+ * time a hook is `disabled` — without a live store subscription there is nothing to loop — so with
+ * an `initialValue`, `disabled: true` performs no subscriptions at all, memoized or not.
+ *
+ * @internal
+ */
+export function needsWarmUp(
+  tracker: WarmUpTracker,
+  observable: Observable<any>,
+  hasInitialValue: boolean,
+  disabled: boolean,
+): boolean {
+  if (!hasInitialValue) {
+    return true
+  }
+  if (disabled) {
+    return false
+  }
+  const last = tracker.last
+  return last !== null && last.observable !== observable && last.state.didEmit
+}
+
+/**
+ * Record which entry the hook subscribed on commit. Only live subscriptions are tracked: a
+ * `disabled` hook records nothing, so its identity churn keeps rendering without warm-ups (it
+ * cannot receive store updates, hence cannot loop). Hidden `<Activity>` trees and server renders
+ * never reach this either, keeping them subscription-free during render as well.
+ *
+ * @internal
+ */
+export function trackSubscribed(
+  tracker: WarmUpTracker,
+  observable: Observable<any>,
+  entry: CacheRecord<any>,
+): void {
+  tracker.last = {observable, state: entry.state}
+}
+
+/**
  * Returns the external-store adapter for `observable` — a notifier observable plus a `getSnapshot`
  * suitable for `useSyncExternalStore` — creating a shared cache entry if there isn't one yet. The
  * cache is shared between `useObservable` and `useSyncObservable`, so both hooks reuse the same
