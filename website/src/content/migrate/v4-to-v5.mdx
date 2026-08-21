@@ -27,7 +27,7 @@ v5 makes that the library default:
 - **Controlled inputs** can lag or lose caret position under load if they keep using `useObservable` — switch those reads to `useSyncObservable`.
 - The **rendered value can briefly trail the store**, so imperative reads or equality checks against it can observe a stale value. Keep a sync read for write-path equality when needed.
 - **Render-count / test assertions** may see extra passes: one Object.is bail-out pass on mount when the snapshot is defined, and an urgent-plus-deferred pair per emission.
-- **SSR** no longer throws when `initialValue` is omitted: without one, the server renders a synchronous emission (or nothing). Non-deterministic sync emissions can then surface hydration mismatches, and synchronously erroring observables fail the server render instead of exploding at hydration. With an `initialValue` the server keeps painting it, as in v4 — since v5.2 the hook's initial observable is not subscribed during render in that case.
+- **SSR** no longer throws when `initialValue` is omitted: without one, the server renders a synchronous emission (or nothing). Non-deterministic sync emissions can then surface hydration mismatches, and synchronously erroring observables fail the server render instead of exploding at hydration. With an `initialValue` the server keeps painting it, as in v4 — since v6 the observable is not subscribed during render at all in that case.
 
 ### Recommended: targeted migration
 
