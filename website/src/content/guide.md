@@ -11,7 +11,8 @@ npm i react-rx rxjs
 ### Which one should I use?
 
 - **Default to `useObservable`** — store updates are deferred, so previews, validation, lists, and other chrome stay responsive and play nicely with Suspense.
-- **Reach for `useSyncObservable`** only when the value feeds a controlled input (caret/IME breakage or lost keystrokes under load) or must be read back synchronously in the same event. It is also the hook with the strict v4 SSR contract (server renders the `initialValue`, throws without one).
+- **Reach for `useSyncObservable`** only when the value feeds a controlled input (caret/IME breakage or lost keystrokes under load) or must be read back synchronously in the same event.
+- **Reach for `useObservablePromise`** when the observable has no meaningful initial value, or you want fallback UI while waiting for the first emission — it returns a `use()`-compatible promise for Suspense.
 
 See [Suspense & deferred values](/examples/suspense) for a side-by-side demo, and the [v4 → v5 migration guide](/migrate/v4-to-v5) if you are upgrading.
 
@@ -36,33 +37,30 @@ function MyComponent(props) {
 }
 ```
 
-The `initialValue` argument is optional, and it also decides how the hook treats observables that emit _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …):
+The `initialValue` argument is **required**: it is what the component renders until the observable emits. Every value is a valid initial value — `undefined` included, pass it explicitly — and omitting the argument throws during render. Functions act as initializers, exactly like `useState`: pass `() => value` to compute the initial value lazily, and an initializer returning the function when the initial value should be a function itself.
 
-- **Without an `initialValue`**, the hook briefly subscribes during render so a synchronous emission can be returned from the very first render. If the observable only emits asynchronously, the value may be `undefined` initially.
-- **With an `initialValue`**, the observable is not subscribed during render at all. The first render shows the `initialValue`, and the subscription starts when the component commits — a synchronous emission then replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase whenever you already have a value to paint first. Once the hook has received an emission, a later render that swaps in a different observable warms the replacement during render — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever.
+The observable is never subscribed during render. The first render shows the `initialValue`, and the subscription starts when the component commits — an observable that emits _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …) replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase. Once the hook has received an emission, a later render that swaps in a different observable warms the replacement during render — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever.
 
 ```tsx
 import {useMemo} from 'react'
 import {useObservable} from 'react-rx'
 import {of} from 'rxjs'
 
-// The observable emits "world" synchronously and no initialValue is given, so this
-// component renders "Hello world!" from the very first render — never an empty value.
+// The first render shows "mars"; the synchronous emission "world" takes over
+// right after mount, once the live subscription delivers it.
 function MyComponent(props) {
   const observable = useMemo(() => of('world'), [])
-  const planet = useObservable(observable)
+  const planet = useObservable(observable, 'mars')
 
   return <>Hello {planet}!</>
 }
 ```
 
-Had this component passed an `initialValue` — `useObservable(observable, 'mars')` — the first render would show `"mars"`, with `"world"` taking over right after mount once the live subscription delivers the synchronous emission.
+If there is no initial value that makes sense for your observable — or you want to show fallback UI while the observable is "loading" — that is what [`useObservablePromise`](#useobservablepromise) is for: it returns a `use()`-compatible promise that suspends until the first emission instead of painting a placeholder value.
 
-The difference between `useObservable` and `useSyncObservable` is how _updates_ propagate (deferred vs synchronous), not the first render. On the server, `useObservable` paints what the first client render will show — a synchronous emission when no `initialValue` is given (here `"world"`), else the resolved `initialValue` — and never throws, while `useSyncObservable` always paints the `initialValue` and throws without one.
+The difference between `useObservable` and `useSyncObservable` is how _updates_ propagate (deferred vs synchronous), not the first render. On the server both hooks render the resolved `initialValue` — exactly what the first client paint will show — and neither ever subscribes the observable there.
 
-The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription.
-
-Important: when no `initialValue` is given, `disabled` does **not** skip the hook's warm-up subscription — both hooks still briefly subscribe during render so a synchronous emission can become the current snapshot, which means cold observables with subscribe-time side effects (for example `fromFetch`) still run that work even when `disabled` is `true`. With an `initialValue` there is no warm-up at all while disabled, so `disabled: true` guarantees zero subscriptions until it is re-enabled — even when the observable is rebuilt on every render.
+The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription. A disabled hook performs no subscriptions at all — even when the observable is rebuilt on every render — so `disabled: true` guarantees zero subscriptions until it is re-enabled.
 
 ```tsx
 import {useEffect, useState} from 'react'
@@ -83,7 +81,7 @@ function MyComponent(props) {
 }
 ```
 
-If the goal is to avoid _any_ subscription to a particular observable, the simplest option is to combine an `initialValue` with `disabled` — the observable is never warmed up while disabled, so nothing subscribes until `disabled` flips to `false`:
+That guarantee makes `disabled` the tool for gating observables with subscribe-time side effects:
 
 ```tsx
 import {useMemo} from 'react'
@@ -98,39 +96,14 @@ function Users({shouldFetch}: {shouldFetch: boolean}) {
       }),
     [],
   )
-  // With an initialValue there is no render-phase warm-up, so the request is
-  // guaranteed not to fire until `shouldFetch` becomes true.
+  // Nothing subscribes during render, and `disabled` skips the commit-time
+  // subscription too — the request is guaranteed not to fire until
+  // `shouldFetch` becomes true.
   const users = useObservable(users$, null, {disabled: !shouldFetch})
 
   return <pre>{JSON.stringify(users, null, 2)}</pre>
 }
 ```
-
-When you cannot provide an `initialValue` (you want the synchronous emission on the first render), `disabled` alone is not enough — the warm-up subscribe would still fire the request. In that case pass a different observable instead, for example swap in `of(null)` until you are ready to fetch:
-
-```tsx
-import {useMemo} from 'react'
-import {useObservable} from 'react-rx'
-import {of} from 'rxjs'
-import {fromFetch} from 'rxjs/fetch'
-
-function Users({shouldFetch}: {shouldFetch: boolean}) {
-  const users$ = useMemo(
-    () =>
-      shouldFetch
-        ? fromFetch('https://api.github.com/users?per_page=5', {
-            selector: (response) => response.json(),
-          })
-        : of(null),
-    [shouldFetch],
-  )
-  const users = useObservable(users$)
-
-  return <pre>{JSON.stringify(users, null, 2)}</pre>
-}
-```
-
-Because the fetch observable is only created (and therefore only ever subscribed) when `shouldFetch` is true, this guarantees zero subscriptions to `fromFetch` until then.
 
 ### useSyncObservable()
 
@@ -246,7 +219,7 @@ useObservablePromise(observable$, {
 })
 ```
 
-Unlike `useObservable`'s `disabled` (which still runs a warm-up probe when no `initialValue` is given), `disabled: true` here fully prevents fetching on behalf of this component: it skips the commit-time store subscription, so it also receives no re-render notifications for later emissions. The returned promise is still the shared cache entry — a sibling or `preloadObservablePromise` can warm it.
+Like `useObservable`'s `disabled`, `disabled: true` fully prevents fetching on behalf of this component: it skips the commit-time store subscription, so it also receives no re-render notifications for later emissions. The returned promise is still the shared cache entry — a sibling or `preloadObservablePromise` can warm it.
 
 `ttl` controls how long a settled value stays reusable after unmount. Remount within the window reuses the promise (no refetch, no fallback). After it expires, the next mount refetches. Eviction only affects future consumers: components that are still mounted keep their value — hiding an `<Activity>` tree longer than `ttl` never drops what it already rendered.
 
@@ -297,7 +270,7 @@ function TabButton({users$, onSelect}) {
 
 react-rx is a **client-only** library — every export ships behind `'use client'`, and observables are **never subscribed on the server**. A server-started subscription has no unmount to tear it down, a never-settling source would keep it (and the response stream) alive forever, and the module-scope promise cache would be shared across requests. Concretely:
 
-- `useObservable` / `useSyncObservable` server-render like `useSyncExternalStore`: the server paints the server snapshot (documented per hook above) and the live subscription starts on the client.
+- `useObservable` / `useSyncObservable` server-render like `useSyncExternalStore`: the server paints the resolved `initialValue` and the live subscription starts on the client.
 - `useObservablePromise` returns a pending promise on the server, so server rendering emits the Suspense fallback; the fetch starts on the client once the hydrated hook caller commits.
 - `preloadObservablePromise` is a no-op on the server: it returns an inert, forever-pending promise and subscribes nothing, so preloads in shared/isomorphic code (route loaders) only take effect in the browser.
 
@@ -305,12 +278,12 @@ This is not the library for React Server Components or server-only data flows. H
 
 **Which hook when?**
 
-| Need                                                   | Hook                   |
-| ------------------------------------------------------ | ---------------------- |
-| Live values, timers, subjects, optional `initialValue` | `useObservable`        |
-| Controlled inputs / synchronous store updates          | `useSyncObservable`    |
-| Async data + Suspense / Activity pre-render            | `useObservablePromise` |
-| Event → observable pipelines                           | `useObservableEvent`   |
+| Need                                                | Hook                   |
+| --------------------------------------------------- | ---------------------- |
+| Live values, timers, subjects (with `initialValue`) | `useObservable`        |
+| Controlled inputs / synchronous store updates       | `useSyncObservable`    |
+| No meaningful `initialValue`, Suspense, Activity    | `useObservablePromise` |
+| Event → observable pipelines                        | `useObservableEvent`   |
 
 For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
 

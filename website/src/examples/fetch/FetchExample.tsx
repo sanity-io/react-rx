@@ -49,7 +49,7 @@ function FetchExample() {
   )
 
   const currentUrl = useObservable(url$, '')
-  const response = useObservable(response$)
+  const response = useObservable(response$, null)
 
   return (
     <div>
