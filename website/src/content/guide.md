@@ -134,9 +134,9 @@ function SearchField() {
 
 Use this when you want **Suspense-powered data fetching** instead of tracking loading state in the stream.
 
-`useObservable` is built on `useSyncExternalStore`. That is great for live values, but it cannot activate a [`Suspense`](https://react.dev/reference/react/Suspense#what-activates-a-suspense-boundary) boundary, and React 19.2 [`Activity`](https://react.dev/reference/react/Activity#pre-rendering-content-thats-likely-to-become-visible) pre-rendering only fetches data read with `use(promise)`.
+`useObservable` is built on `useSyncExternalStore`. That is great for live values, but it cannot activate a [`Suspense`](https://react.dev/reference/react/Suspense#what-activates-a-suspense-boundary) boundary, and React 19.2 [`Activity`](https://react.dev/reference/react/Activity#pre-rendering-content-thats-likely-to-become-visible) pre-rendering can only wait on data read with `use(promise)`.
 
-`useObservablePromise` returns an instrumented Promise you pass to React's `use()`. The hook itself does **not** suspend — the consumer decides where the Suspense boundary lives:
+`useObservablePromise` returns an instrumented Promise you pass to React's `use()`. The hook itself does **not** suspend, and rendering never subscribes the source — the fetch starts when a component that called the hook **commits** (or when you call `preloadObservablePromise`). Call the hook in a component that does not itself suspend, and read the promise with `use()` in a child below a Suspense boundary:
 
 ```tsx
 import {Suspense, use, useMemo} from 'react'
@@ -166,11 +166,13 @@ function UsersList({promise}: {promise: Promise<unknown>}) {
 }
 ```
 
-Prefer creating the promise in a parent that does **not** suspend (as above), so Suspense retries always see the same promise identity. The single-component form also works when the observable identity is stable across retries (module-level cache, or a shared `WeakMap` keyed by request):
+The split matters: a component that suspends on the promise it just created never commits, so it can never start its own fetch. The single-component form only settles once something else warms the shared entry — `preloadObservablePromise` before render, or another consumer of the same observable:
 
 ```tsx
 function UsersList({users$}) {
-  // `users$` must be referentially stable for the in-flight request
+  // Only settles if the entry was warmed (preloadObservablePromise, or a
+  // committed consumer of the same observable). `users$` must be
+  // referentially stable for the in-flight request.
   const users = use(useObservablePromise(users$))
   return <pre>{JSON.stringify(users, null, 2)}</pre>
 }
@@ -178,14 +180,33 @@ function UsersList({users$}) {
 
 **Semantics**
 
+- Rendering never subscribes the source. The fetch starts when a non-`disabled` hook caller commits, or when `preloadObservablePromise` is called — hidden [`Activity`](https://react.dev/reference/react/Activity) pre-renders and suspended renders never trigger fetching.
 - Suspends until the observable's **first** emission (`firstValueFrom` semantics).
 - Later emissions update the UI **without** re-showing the Suspense fallback.
-- Sync sources (`of`, `BehaviorSubject`, replayed `shareReplay`) never flash a fallback.
+- Sync sources (`of`, `BehaviorSubject`, replayed `shareReplay`) resolve during the hook caller's commit, so a cold mount still shows one fallback pass. Preload the observable (or share an already-settled entry) to render them without a fallback.
 - Errors reject the promise and surface through the nearest Error Boundary. Prefer `catchError` on the _inner_ observable when you want graceful degradation instead of a boundary.
 - Completing without emitting rejects with RxJS `EmptyError`.
-- Swapping to a **different** observable returns a new pending promise, so the fallback shows again. To keep the previous content visible instead, change the observable inside [`startTransition`](https://react.dev/reference/react/startTransition) or read the promise through [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) — both also give you a staleness signal (`isPending`, or `deferredPromise !== promise`) to dim stale content while the new data loads.
+- Swapping to a **different** observable returns a new pending promise, so the fallback shows again. To keep the previous content visible instead, warm the next observable with `preloadObservablePromise` in the event handler, then change it inside [`startTransition`](https://react.dev/reference/react/startTransition) or read the promise through [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) — both also give you a staleness signal (`isPending`, or `deferredPromise !== promise`) to dim stale content while the new data loads. The preload is required: a transition or deferred render that suspends on the new entry never commits, so it cannot start the fetch itself.
 
-**Not for `startWith` placeholders.** Because the first emission unblocks Suspense, `startWith('loading')` fulfills immediately with `"loading"`. For placeholder / loading-value patterns, use `useObservable` instead.
+**Activity**
+
+A hidden `<Activity>` tree that calls the hook is fully paused — no subscription, no fetching — until it is revealed and effects mount. To pre-render hidden content _with_ data, own the promise in a visible component and pass it into the hidden tree, where `use(promise)` lets React pre-render in the background and suspend only while the observable has not emitted yet:
+
+```tsx
+function PrerenderedTab({tab, active}) {
+  // Visible owner: its commit starts the fetch.
+  const promise = useObservablePromise(fetchTab$(tab))
+  return (
+    <Activity mode={active ? 'visible' : 'hidden'}>
+      <Suspense fallback={<Spinner />}>
+        <TabPanel promise={promise} />
+      </Suspense>
+    </Activity>
+  )
+}
+```
+
+**Not for `startWith` placeholders.** Because the first emission unblocks Suspense, `startWith('loading')` fulfills with `"loading"`. For placeholder / loading-value patterns, use `useObservable` instead.
 
 **Options**
 
@@ -196,7 +217,7 @@ useObservablePromise(observable$, {
 })
 ```
 
-Unlike `useObservable`'s `disabled` (which still runs a warm-up probe), `disabled: true` here fully prevents fetching on behalf of this component. The returned promise is still the shared cache entry — a sibling or `preloadObservablePromise` can warm it.
+Unlike `useObservable`'s `disabled` (which still runs a warm-up probe), `disabled: true` here fully prevents fetching on behalf of this component: it skips the commit-time store subscription, so it also receives no re-render notifications for later emissions. The returned promise is still the shared cache entry — a sibling or `preloadObservablePromise` can warm it.
 
 `ttl` controls how long a settled value stays reusable after unmount. Remount within the window reuses the promise (no refetch, no fallback). After it expires, the next mount refetches. Eviction only affects future consumers: components that are still mounted keep their value — hiding an `<Activity>` tree longer than `ttl` never drops what it already rendered.
 
@@ -221,7 +242,7 @@ The `memo` is load-bearing: without it the subtree re-renders during the synchro
 
 **Preloading**
 
-Warm the cache outside of render (hover, route loaders) with `preloadObservablePromise`. Calling it starts the source subscription immediately. Pending entries are never timed out — if the observable never emits or completes, the promise stays pending and the subscription stays alive until it settles (or the process tears down). Bound hang risk with RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when the preload can stall:
+Warm the cache outside of render (hover, route loaders, before a transition swap) with `preloadObservablePromise`. Calling it starts the source subscription immediately — it is the only way to start a fetch that is not tied to a component's commit, which makes it the mechanism for the single-component `use(useObservablePromise(obs$))` form, for sync sources that should render without a fallback, and for SSR (warm the entry in the request handler before rendering). Pending entries are never timed out — if the observable never emits or completes, the promise stays pending and the subscription stays alive until it settles (or the process tears down). Bound hang risk with RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when the preload can stall:
 
 ```tsx
 import {preloadObservablePromise, useObservablePromise} from 'react-rx'
