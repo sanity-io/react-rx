@@ -33,33 +33,25 @@ export interface WarmUpTracker {
 /**
  * Decide whether a hook must warm up `observable` during render.
  *
- * Without an `initialValue` the answer is always yes: synchronous emissions (e.g. from
- * `startWith`) must be renderable from the very first render — even while `disabled`, which only
- * pauses the live store subscription.
- *
- * With an `initialValue` the warm-up is only needed for a replacement observable after the entry
- * the hook last subscribed has emitted. From that point on, a store update forces a re-render, and
- * if that render swaps in a fresh identity whose rendered snapshot (the `initialValue`) differs
- * from what the commit-time subscription delivers, `useSyncExternalStore` forces another render —
- * consumers that rebuild the observable on every render would loop forever. Warming the
- * replacement makes its rendered snapshot match the subscription and the loop converges.
+ * The warm-up is only needed for a replacement observable after the entry the hook last
+ * subscribed has emitted. From that point on, a store update forces a re-render, and if that
+ * render swaps in a fresh identity whose rendered snapshot (the `initialValue`) differs from what
+ * the commit-time subscription delivers, `useSyncExternalStore` forces another render — consumers
+ * that rebuild the observable on every render would loop forever. Warming the replacement makes
+ * its rendered snapshot match the subscription and the loop converges.
  *
  * Before the first emission no store update can force a re-render, so identity churn from Strict
  * Mode double renders or parent updates stays subscription-free. The same holds for the entire
- * time a hook is `disabled` — without a live store subscription there is nothing to loop — so with
- * an `initialValue`, `disabled: true` performs no subscriptions at all, memoized or not.
+ * time a hook is `disabled` — without a live store subscription there is nothing to loop — so a
+ * `disabled` hook performs no subscriptions at all, memoized or not.
  *
  * @internal
  */
 export function needsWarmUp(
   tracker: WarmUpTracker,
   observable: Observable<any>,
-  hasInitialValue: boolean,
   disabled: boolean,
 ): boolean {
-  if (!hasInitialValue) {
-    return true
-  }
   if (disabled) {
     return false
   }
@@ -90,10 +82,10 @@ export function trackSubscribed(
  * entry and source subscription for the same observable.
  *
  * With `shouldWarmUp: true` the entry is also warmed up so that a synchronous emission (e.g. from
- * `startWith`) is available on the caller's first render of it. The hooks request this for every
- * observable except their initial one when an `initialValue` is provided — in that case there is
- * already a value to render, so the source is not subscribed during render at all and the live
- * store subscription picks up emissions once the hook commits.
+ * `startWith`) is available on the caller's first render of it. The hooks only request this for
+ * replacement observables after they have received an emission (see `needsWarmUp`) — otherwise
+ * there is always an `initialValue` to render, so the source is not subscribed during render at
+ * all and the live store subscription picks up emissions once the hook commits.
  *
  * @internal
  */
@@ -156,8 +148,7 @@ export function getOrCreateStore<ObservableType extends Observable<any>>(
   // on remount instead of re-subscribing the source.
   cache.set(observable, entry)
 
-  // The warm-up runs even when `disabled` is true — `disabled` only pauses the hooks' live store
-  // subscription. When it is skipped (the hooks' initial observable with an `initialValue`),
+  // When the warm-up is skipped (everything except replacement observables after an emission),
   // subscribe-time side effects stay out of the render phase; the source is first subscribed when
   // the store subscription starts on commit.
   if (shouldWarmUp) {

@@ -3,13 +3,17 @@ import {expectTypeOf, test} from 'vitest'
 
 import {useObservable} from '../useObservable'
 
-test('useObservable with no initial value can be undefined', () => {
+test('useObservable requires an initialValue', () => {
   const observable = of('foo')
 
-  expectTypeOf(useObservable(observable)).toEqualTypeOf<string | undefined>()
+  //@ts-expect-error - initialValue is required; use useObservablePromise when there is none
+  useObservable(observable)
+})
 
-  //@ts-expect-error - because initial value is not given, we can't guarantee the observable emits a sync value, so it could be undefined
-  expectTypeOf(useObservable(observable)).toEqualTypeOf<string>()
+test('an explicit undefined initialValue is valid and widens the return type', () => {
+  const observable = of('foo')
+
+  expectTypeOf(useObservable(observable, undefined)).toEqualTypeOf<string | undefined>()
 })
 
 test('return type of useObservable with initial value is not undefined', () => {
@@ -24,4 +28,12 @@ test('useObservable with initial value if a different type returns a union of th
   expectTypeOf(useObservable(observable, 1)).toEqualTypeOf<string | number>()
   expectTypeOf(useObservable(observable, () => 1)).toEqualTypeOf<string | number>()
   expectTypeOf(useObservable(observable, 'foo')).toEqualTypeOf<string>()
+})
+
+const double = (n: number) => n * 2
+
+test('a function initial value is provided through an initializer, like useState', () => {
+  const observable = of((n: number) => n + 1)
+
+  expectTypeOf(useObservable(observable, () => double)).toEqualTypeOf<(n: number) => number>()
 })

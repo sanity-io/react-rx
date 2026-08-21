@@ -84,7 +84,7 @@ function SearchExample() {
   // Controlled input value must update synchronously.
   const keyword = useSyncObservable(keyword$, '')
   // Results are deferred by default via useObservable (no manual useDeferredValue).
-  const results = useObservable(results$)
+  const results = useObservable(results$, null)
 
   return (
     <>

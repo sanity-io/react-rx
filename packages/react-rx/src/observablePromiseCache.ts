@@ -19,9 +19,9 @@ import {
 
 /**
  * Default retention (ms) when the hook does not pass `ttl`.
- * Long enough to bridge suspend → Suspense retry → commit and StrictMode
- * double effects, so the single-component `use(useObservablePromise(...))`
- * pattern performs exactly one source subscription.
+ * Long enough to bridge commit-time subscribe/unsubscribe gaps — StrictMode
+ * double effects, suspend → Suspense retry → commit, quick unmount/remount —
+ * so they collapse into a single source subscription instead of refetching.
  */
 export const DEFAULT_HOOK_TTL = 500
 
@@ -56,16 +56,21 @@ type Outcome<T> = {ok: true; value: T} | {ok: false; error: unknown}
  */
 export interface ObservablePromiseEntry<T> {
   /**
-   * Adopt `ttl` (entries keep the max across consumers) and optionally start
-   * the eager resolver subscription. Idempotent — safe on every render.
-   *
-   * Pass `renewGrace: true` only for intentional touches (e.g. preload): that
-   * re-arms the eviction/share grace window from now. Idle renders from mounted
-   * but non-subscribed consumers (`disabled`, hidden `<Activity>`) must omit it
-   * so parent re-renders cannot keep the entry alive forever — pinning already
-   * preserves the mounted value after a real eviction.
+   * Adopt `ttl` into the retention policy (entries keep the max across
+   * consumers). Pure metadata — never starts the source and never re-arms the
+   * eviction/share grace window, so idle renders from mounted but
+   * non-subscribed consumers (`disabled`, hidden `<Activity>`) cannot keep the
+   * entry alive forever. Idempotent — safe on every render, including hidden
+   * `<Activity>` pre-renders and renders that end up suspending.
    */
-  ensure(ttl: number, startResolver: boolean, renewGrace?: boolean): void
+  adoptTtl(ttl: number): void
+  /**
+   * Intentional warm-up (`preloadObservablePromise`): adopt `ttl`, re-arm the
+   * eviction/share grace window from now, and start the source subscription if
+   * the entry has not settled yet. This is the only render-independent way to
+   * start a fetch — the hook itself only subscribes when a consumer commits.
+   */
+  warm(ttl: number): void
   getPromise(): ObservablePromise<T>
   subscribe(onStoreChange: () => void): () => void
 }
@@ -155,8 +160,9 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
     source,
     current: new ObservablePromiseImpl<T>(),
     settled: false,
-    // Every consumer calls `ensure` right after get-or-create, which sets the
-    // real retention. No subscription can start before that.
+    // Every consumer adopts its ttl right after get-or-create (`adoptTtl` from
+    // the hook, `warm` from preload), which sets the real retention. No
+    // subscription can start before that.
     retentionMs: 0,
     liveCount: 0,
     sourceTerminated: false,
@@ -208,22 +214,27 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
   )
 
   entry.handle = {
-    ensure: (ttl, startResolver, renewGrace = false) => {
+    adoptTtl: (ttl) => {
+      // The hook calls this on every render — including disabled consumers and
+      // hidden <Activity> trees that have no live store subscription — so it
+      // must not reset the ttl clock or bounce share, or the entry/connection
+      // could live forever. Pinning already keeps the mounted value after
+      // eviction.
       entry.retentionMs = Math.max(entry.retentionMs, ttl)
-      // Only intentional touches (preload) renew the grace window. The hook
-      // calls ensure on every render — including disabled consumers and hidden
-      // <Activity> trees that have no live store subscription — and must not
-      // reset the ttl clock or bounce share, or the entry/connection can live
-      // forever. Pinning already keeps the mounted value after eviction.
-      if (renewGrace && entry.evictionTimer !== null) {
+    },
+    warm: (ttl) => {
+      entry.retentionMs = Math.max(entry.retentionMs, ttl)
+      // Re-arm the grace window from now: reschedule a pending eviction and
+      // bounce share's disconnect timer so the renewed retention also covers
+      // the shared connection (emissions during the window keep updating the
+      // cached promise).
+      if (entry.evictionTimer !== null) {
         scheduleEviction(entry as CacheEntry<unknown>)
         if (!entry.sourceTerminated) {
           entry.shared$.subscribe().unsubscribe()
         }
       }
-      if (startResolver) {
-        ensureResolver(entry)
-      }
+      ensureResolver(entry)
     },
     getPromise: () => asObservablePromise(entry.current),
     subscribe: (onStoreChange: () => void) => {
@@ -280,8 +291,8 @@ function ensureResolver<T>(entry: CacheEntry<T>): void {
 
 /**
  * Get or create the cache entry for `source` and return its stable handle.
- * Consumers call `handle.ensure(...)` immediately after to apply their
- * retention/fetch policy.
+ * Consumers apply their retention policy immediately after (`adoptTtl` from
+ * the hook, `warm` from preload).
  *
  * @internal
  */

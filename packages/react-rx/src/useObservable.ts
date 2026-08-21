@@ -3,7 +3,7 @@ import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore, needsWarmUp, trackSubscribed, type WarmUpTracker} from './cache'
 import type {UseObservableOptions} from './types'
-import {EMPTY_OBJECT} from './utils'
+import {EMPTY_OBJECT, missingInitialValueError, UNSET_INITIAL_VALUE} from './utils'
 
 /**
  * Subscribe to an observable and return its latest value, with store updates deferred via
@@ -14,16 +14,22 @@ import {EMPTY_OBJECT} from './utils'
  * Suspense fallback. Mounts, remounts, and `<Activity>` reveals still render the current snapshot
  * synchronously (no initial-value flash once a value has been emitted).
  *
- * When no `initialValue` is given, the observable is briefly subscribed during render so a
- * synchronous emission (e.g. from `startWith`) can be returned from the very first render. With an
- * `initialValue` the observable is not subscribed during render: the `initialValue` renders first
- * and the live subscription starts on commit, keeping subscribe-time side effects out of the
- * render phase — a synchronous emission then replaces the `initialValue` right after mount. Only
- * once the hook has received an emission are replacement observables (a changed identity on a
- * later render) warmed up during render again: rendering their synchronous emission immediately is
- * what lets consumers that rebuild the observable on every render settle instead of re-rendering
- * forever. Identity churn before the first emission (e.g. Strict Mode double renders or parent
- * updates) and any identity churn while `disabled` stay subscription-free.
+ * `initialValue` is required: it is what renders until the observable emits. Every value is a
+ * valid initial value, `undefined` included — pass it explicitly; omitting the argument throws
+ * during render. Functions act as initializers, exactly like `useState`: pass `() => value` to
+ * compute the initial value lazily, and an initializer returning the function when the initial
+ * value should be a function itself. When there is no meaningful initial value, or you want to
+ * show fallback UI while the observable is "loading", reach for {@link useObservablePromise} with
+ * `use()` and Suspense instead.
+ *
+ * The observable is not subscribed during render: the `initialValue` renders first and the live
+ * subscription starts on commit, keeping subscribe-time side effects out of the render phase — a
+ * synchronous emission then replaces the `initialValue` right after mount. Only once the hook has
+ * received an emission are replacement observables (a changed identity on a later render) warmed
+ * up during render: rendering their synchronous emission immediately is what lets consumers that
+ * rebuild the observable on every render settle instead of re-rendering forever. Identity churn
+ * before the first emission (e.g. Strict Mode double renders or parent updates) and any identity
+ * churn while `disabled` stay subscription-free.
  *
  * The deferral is identity-coherent: unlike a bare `useDeferredValue(useObservable(...))`, the
  * observable identity and its value are deferred as one snapshot, and when the observable identity
@@ -31,10 +37,9 @@ import {EMPTY_OBJECT} from './utils'
  * value — typically the new observable's synchronous emission or the `initialValue` — so the
  * previous identity's value never renders under the new one.
  *
- * On the server this hook renders exactly what the client's first paint will show (the resolved
- * `initialValue` when one is provided, else a synchronous emission when there is one, else nothing)
- * and never throws for a missing `initialValue`. Prefer {@link useSyncObservable} for controlled
- * inputs or when you need the strict v4 server-snapshot contract.
+ * On the server this hook never subscribes the observable and renders the resolved `initialValue`
+ * — exactly what the client's first paint will show. Prefer {@link useSyncObservable} for
+ * controlled inputs or when the value must stay consistent within the same event.
  *
  * @public
  */
@@ -44,10 +49,6 @@ export function useObservable<ObservableType extends Observable<any>>(
   options?: UseObservableOptions,
 ): ObservedValueOf<ObservableType>
 /** @public */
-export function useObservable<ObservableType extends Observable<any>>(
-  observable: ObservableType,
-): undefined | ObservedValueOf<ObservableType>
-/** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
   initialValue: InitialValue | (() => InitialValue),
@@ -56,18 +57,23 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
 /** @public */
 export function useObservable<ObservableType extends Observable<any>, InitialValue>(
   observable: ObservableType,
-  initialValue?: InitialValue | (() => InitialValue),
-  options: UseObservableOptions = EMPTY_OBJECT,
+  ...args: [initialValue?: InitialValue | (() => InitialValue), options?: UseObservableOptions]
 ): InitialValue | ObservedValueOf<ObservableType> {
-  const {disabled = false} = options
+  // `undefined` (like every other value) is a valid `initialValue`, so a missing argument is
+  // detected by arity and modeled with a sentinel no caller can pass.
+  const initialValue =
+    args.length === 0 ? UNSET_INITIAL_VALUE : (args[0] as InitialValue | (() => InitialValue))
+  if (initialValue === UNSET_INITIAL_VALUE) {
+    throw missingInitialValueError('useObservable')
+  }
+  const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
-  const hasInitialValue = typeof initialValue !== 'undefined'
-  // With an `initialValue` the warm-up is skipped until this hook has received an emission; after
-  // that, replacement observables are warmed during render again so that consumers that rebuild
-  // the observable on every render converge instead of looping — see `needsWarmUp`. The tracker is
-  // only ever written on commit (in `subscribe` below), never during render.
+  // The warm-up is skipped until this hook has received an emission; after that, replacement
+  // observables are warmed during render so that consumers that rebuild the observable on every
+  // render converge instead of looping — see `needsWarmUp`. The tracker is only ever written on
+  // commit (in `subscribe` below), never during render.
   const [tracker] = useState((): WarmUpTracker => ({last: null}))
-  const shouldWarmUp = needsWarmUp(tracker, observable, hasInitialValue, disabled)
+  const shouldWarmUp = needsWarmUp(tracker, observable, disabled)
   const instance = useMemo(
     () => getOrCreateStore(observable, shouldWarmUp),
     [observable, shouldWarmUp],
@@ -93,9 +99,8 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
     () => {
       return instance.getSnapshot(initialValue)
     },
-    // Always provide getServerSnapshot so SSR never throws. The server renders
-    // exactly what the client's first render will show (the resolved initialValue
-    // when provided, else a sync emission, else undefined).
+    // The server renders exactly what the client's first render will show: the resolved
+    // initialValue (or an already-warm shared entry's snapshot).
     () => instance.getSnapshot(initialValue),
   )
 
