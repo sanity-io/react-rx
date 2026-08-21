@@ -34,30 +34,35 @@ async function forceGC() {
   }
 }
 
+function Reader({promise}: {promise: Promise<string>}) {
+  const value = use(promise)
+  return <div data-testid="v">{value}</div>
+}
+
+function PayloadReader({promise}: {promise: Promise<{payload: string}>}) {
+  return <>{use(promise).payload.length}</>
+}
+
 test('sync termination does not leave a poisoned cache entry', async () => {
   const observable = of('sync')
 
-  function Child() {
-    const value = use(useObservablePromise(observable, {ttl: 20}))
-    return <div data-testid="v">{value}</div>
+  function Owner() {
+    const p = useObservablePromise(observable, {ttl: 20})
+    return (
+      <Suspense fallback={<div>loading</div>}>
+        <Reader promise={p} />
+      </Suspense>
+    )
   }
 
-  const {unmount} = await renderAsync(
-    <Suspense fallback={<div>loading</div>}>
-      <Child />
-    </Suspense>,
-  )
+  const {unmount} = await renderAsync(<Owner />)
   expect(screen.getByTestId('v').textContent).toBe('sync')
   unmount()
   await wait(40)
 
   // Remount after eviction should succeed (fresh subscription), not replay a
   // stale error or hang.
-  await renderAsync(
-    <Suspense fallback={<div>loading</div>}>
-      <Child />
-    </Suspense>,
-  )
+  await renderAsync(<Owner />)
   expect(screen.getByTestId('v').textContent).toBe('sync')
 })
 
@@ -89,17 +94,17 @@ test('releases the settled value and promise after unmount and ttl expiry', asyn
     return of(value)
   })
 
-  function Child() {
+  function Owner() {
     const promise = useObservablePromise(source, {ttl: 20})
     promiseRefs.push(new WeakRef(promise))
-    return <>{use(promise).payload.length}</>
+    return (
+      <Suspense fallback={null}>
+        <PayloadReader promise={promise} />
+      </Suspense>
+    )
   }
 
-  const {unmount} = await renderAsync(
-    <Suspense fallback={null}>
-      <Child />
-    </Suspense>,
-  )
+  const {unmount} = await renderAsync(<Owner />)
   unmount()
   // Let the eviction timer fire, releasing the cache entry (which retains both
   // the instrumented promise and, through it, the settled value).
@@ -146,16 +151,16 @@ test('unmount after async settle allows remount after ttl to refetch', async () 
     )
   })
 
-  function Child() {
-    const value = use(useObservablePromise(observable, {ttl: 40}))
-    return <div data-testid="v">{value}</div>
+  function Owner() {
+    const p = useObservablePromise(observable, {ttl: 40})
+    return (
+      <Suspense fallback={<div data-testid="fallback">loading</div>}>
+        <Reader promise={p} />
+      </Suspense>
+    )
   }
 
-  const {unmount} = await renderAsync(
-    <Suspense fallback={<div>loading</div>}>
-      <Child />
-    </Suspense>,
-  )
+  const {unmount} = await renderAsync(<Owner />)
   await act(async () => {
     resolvers[0]!('one')
   })
@@ -163,11 +168,7 @@ test('unmount after async settle allows remount after ttl to refetch', async () 
   unmount()
   await wait(70)
 
-  await renderAsync(
-    <Suspense fallback={<div data-testid="fallback">loading</div>}>
-      <Child />
-    </Suspense>,
-  )
+  await renderAsync(<Owner />)
   expect(screen.getByTestId('fallback')).toBeTruthy()
   expect(subscriptions).toBe(2)
   await act(async () => {

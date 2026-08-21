@@ -1,19 +1,15 @@
 import {use} from 'react'
-import {useMemo} from 'react'
-import {useObservablePromise} from 'react-rx'
-
-import {fetchTab$} from './api'
+import {type ObservablePromise} from 'react-rx'
 
 export default function TabPanel({
-  tab,
+  promise,
 }: {
-  tab: string
+  promise: ObservablePromise<{
+    tab: string
+    body: string
+  }>
 }) {
-  const data$ = useMemo(
-    () => fetchTab$(tab),
-    [tab],
-  )
-  const data = use(useObservablePromise(data$))
+  const data = use(promise)
 
   return (
     <div
