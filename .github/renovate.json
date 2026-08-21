@@ -9,11 +9,6 @@
       "semanticCommitType": "chore"
     },
     {
-      "matchPackageNames": ["use-effect-event"],
-      "rangeStrategy": "bump",
-      "semanticCommitType": "fix"
-    },
-    {
       "matchPackageNames": ["oxlint", "oxlint-tsgolint"],
       "groupName": "oxlint",
       "semanticCommitType": "chore"
