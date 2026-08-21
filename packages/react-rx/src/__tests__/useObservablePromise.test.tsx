@@ -1,5 +1,5 @@
 import {act, render, screen, waitFor} from '@testing-library/react'
-import {Component, Suspense, use, useDeferredValue, useMemo, useState, type ReactNode} from 'react'
+import {Component, Suspense, use, useMemo, useState, type ReactNode} from 'react'
 import {
   BehaviorSubject,
   defer,
@@ -639,65 +639,9 @@ test('settled entry is evicted after one retention window, not two', async () =>
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('second'))
 })
 
-test('observable swap with preload; useDeferredValue keeps previous content', async () => {
-  let resolveA!: (value: string) => void
-  let resolveB!: (value: string) => void
-  const obsA = defer(
-    () =>
-      new Promise<string>((r) => {
-        resolveA = r
-      }),
-  )
-  const obsB = defer(
-    () =>
-      new Promise<string>((r) => {
-        resolveB = r
-      }),
-  )
-
-  function Parent() {
-    const [obs, setObs] = useState(obsA)
-    const deferred = useDeferredValue(obs)
-    const p = useObservablePromise(deferred)
-    return (
-      <>
-        <button
-          type="button"
-          onClick={() => {
-            // The deferred re-render suspends on the new entry and therefore
-            // never commits — it cannot start the fetch itself. Warming the
-            // target in the event handler is what lets the swap resolve.
-            void preloadObservablePromise(obsB)
-            setObs(obsB)
-          }}
-        >
-          swap
-        </button>
-        <Suspense fallback={<Fallback />}>
-          <Reader promise={p} />
-        </Suspense>
-      </>
-    )
-  }
-
-  await renderAsync(<Parent />)
-  await act(async () => {
-    resolveA('A')
-  })
-  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('A'))
-
-  await act(async () => {
-    screen.getByRole('button', {name: 'swap'}).click()
-  })
-  // Deferred value still A while B loads — previous content stays.
-  expect(screen.getByTestId('value').textContent).toBe('A')
-
-  await act(async () => {
-    resolveB('B')
-    await wait(0)
-  })
-  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('B'))
-})
+// Swapping observables inside startTransition / behind useDeferredValue is
+// covered in useObservablePromise.transitions.test.tsx: a suspended
+// transition render never commits, so the target must be preloaded.
 
 test('disabled: true from mount performs zero source subscriptions', async () => {
   let subscriptions = 0
