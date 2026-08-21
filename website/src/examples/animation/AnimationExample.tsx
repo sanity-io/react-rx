@@ -1,15 +1,11 @@
 import bezier from 'bezier-easing'
 import {useMemo} from 'react'
-import {
-  useObservable,
-  useObservableEvent,
-} from 'react-rx'
+import {useObservable} from 'react-rx'
 import {
   map,
   startWith,
   Subject,
   switchMap,
-  tap,
   timer,
 } from 'rxjs'
 import {styled} from 'styled-components'
@@ -28,16 +24,6 @@ function easeCustom(n: number) {
 type EasingName = keyof typeof EASINGS
 
 function AnimationExample() {
-  // Handle easing changes
-  const handleEasingChange = useObservableEvent<
-    EasingName,
-    any
-  >((change$) =>
-    change$.pipe(
-      tap((easing) => easing$.next(easing)),
-    ),
-  )
-
   // Create animation stream
   const animation$ = useMemo(
     () =>
@@ -93,7 +79,7 @@ function AnimationExample() {
                 }
                 key={easingName}
                 onChange={() =>
-                  handleEasingChange(
+                  easing$.next(
                     easingName as EasingName,
                   )
                 }
