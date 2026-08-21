@@ -39,7 +39,9 @@ function MyComponent(props) {
 
 The `initialValue` argument is **required**: it is what the component renders until the observable emits. Every value is a valid initial value — `undefined` included, pass it explicitly — and omitting the argument throws during render. Functions act as initializers, exactly like `useState`: pass `() => value` to compute the initial value lazily, and an initializer returning the function when the initial value should be a function itself.
 
-The observable is never subscribed during render. The first render shows the `initialValue`, and the subscription starts when the component commits — an observable that emits _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …) replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase. Once the hook has received an emission, a later render that swaps in a different observable warms the replacement during render — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever.
+The observable is never subscribed during render. Every render — the first one and every identity change alike — shows the `initialValue` (or the shared entry's last emission), and the subscription starts when the component commits — an observable that emits _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …) replaces the `initialValue` right after that commit. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase.
+
+Keep the observable's identity stable across renders (`useMemo`, `useState`, module scope, or React Compiler memoization). Like `useSyncExternalStore`'s `subscribe`, an observable rebuilt on every render is re-subscribed on every render — and when it synchronously replays a value that differs from the `initialValue`, the resulting re-render builds yet another identity and the component loops forever.
 
 ```tsx
 import {useMemo} from 'react'
@@ -271,12 +273,12 @@ This is not the library for React Server Components or server-only data flows. H
 
 **Which hook when?**
 
-| Need                                                | Hook                                     |
-| --------------------------------------------------- | ---------------------------------------- |
-| Live values, timers, subjects (with `initialValue`) | `useObservable`                          |
-| Controlled inputs / synchronous store updates       | `useSyncObservable`                      |
-| No meaningful `initialValue`, Suspense, Activity    | `useObservablePromise`                   |
-| Events pushed from handlers                         | a `Subject` piped into one of the above  |
+| Need                                                | Hook                                    |
+| --------------------------------------------------- | --------------------------------------- |
+| Live values, timers, subjects (with `initialValue`) | `useObservable`                         |
+| Controlled inputs / synchronous store updates       | `useSyncObservable`                     |
+| No meaningful `initialValue`, Suspense, Activity    | `useObservablePromise`                  |
+| Events pushed from handlers                         | a `Subject` piped into one of the above |
 
 For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
 

@@ -178,7 +178,7 @@ test('async fetch that resolves while Activity is hidden: value appears when bec
   expect(textOf('value')).toBe('fetched-while-hidden')
 })
 
-test('Activity initially hidden with an initial value: no subscription at all until visible (warm-up skipped)', async () => {
+test('Activity initially hidden: no subscription at all until visible', async () => {
   let activeSubscriptions = 0
   let totalSubscriptions = 0
   const observable = new Observable<string>((subscriber) => {

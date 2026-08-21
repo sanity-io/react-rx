@@ -290,8 +290,7 @@ describe('createHookFromObservableFactory (vendored from sanity)', () => {
     const {rerender} = render(<TestComponent />)
 
     // `useObservable` and `useSyncObservable` share one store entry per observable —
-    // the warm-up probe and both live subscriptions all reuse a single source
-    // subscription.
+    // both live subscriptions reuse a single source subscription.
     expect(activeSubscriptions).toBe(1)
     expect(totalSubscriptions).toBe(1)
 
