@@ -121,7 +121,7 @@ test('useObservable: sync-emitting observable + initialValue server-renders the 
     return <div data-testid="value">{useObservable(observable, 'initial')}</div>
   }
 
-  // With an initialValue there is no render-phase warm-up, so the server paints the
+  // The observable is never subscribed during render, so the server paints the
   // initialValue — matching the client's first paint.
   const html = renderToString(<App />)
   expect(html).toContain('initial')
@@ -150,10 +150,10 @@ test('useObservable: async observable with an undefined initialValue server-rend
 })
 
 test('useObservable: a NON-deterministic sync emission with an undefined initialValue hydrates cleanly (the server never subscribes)', async () => {
-  // Before initialValue became required, omitting it made the warm-up subscribe on both the
-  // server and the client, so per-subscription non-determinism showed up as a hydration
-  // mismatch. Now nothing subscribes during (server or first client) render: both paint the
-  // undefined initialValue, and the first subscription happens on the client after hydration.
+  // Before initialValue became required, omitting it made the hooks subscribe during render on
+  // both the server and the client, so per-subscription non-determinism showed up as a
+  // hydration mismatch. Now nothing subscribes during render: both paint the undefined
+  // initialValue, and the first subscription happens on the client after hydration.
   let n = 0
   const observable = new Observable<string>((subscriber) => {
     subscriber.next(`emit-${n++}`)
