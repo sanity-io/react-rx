@@ -1,16 +1,41 @@
 # Migrating from v6 to v7
 
-v7 removes the `useObservableEvent` hook. This page covers why, and how to migrate each usage shape.
+v7 has two breaking changes, both pushing in the same direction — `useObservable` and `useSyncObservable` subscriptions are strictly commit-driven, and event handling uses plain RxJS instead of a library-specific hook:
 
-## Why it was removed
+1. [`initialValue` is now required](#initialvalue-is-now-required) in `useObservable` and `useSyncObservable`, and the render-phase warm-up is gone.
+2. [`useObservableEvent` is removed](#useobservableevent-is-removed).
+
+Requirements are unchanged from v5: React `^19.2`, RxJS `^7.2`, Node `>=22.12`, ESM-only.
+
+## initialValue is now required
+
+The initial value is what renders until the observable emits. Omitting the argument is now a type error, and since JavaScript callers can bypass the types, the hooks also throw during render when it is missing.
+
+```tsx
+// Before (v6) — implicitly undefined until the first emission
+const users = useObservable(users$)
+
+// After (v7) — pass the initial value explicitly
+const users = useObservable(users$, undefined)
+```
+
+Every value is valid, `undefined` included — it just has to be passed explicitly. Functions act as initializers, exactly like `useState`: `useObservable(value$, () => expensiveInitial())` computes lazily, and to use a function itself as the initial value, pass an initializer that returns it.
+
+### What you may notice
+
+- **No render-phase warm-up.** Without an `initialValue`, v6 briefly subscribed during render so a synchronous emission (`of`, `startWith`, a `BehaviorSubject`, …) could win the very first paint. In v7 the observable is never subscribed during render: the `initialValue` renders first and the synchronous emission replaces it right after the commit. If an observable has no initial value that makes sense — you want fallback UI while it "loads" — that is `useObservablePromise` with `use()` and Suspense.
+- **Observable identities must be stable across renders** (`useMemo`, `useState`, module scope — or React Compiler memoization, which does this automatically). Like `useSyncExternalStore`'s `subscribe`, an observable rebuilt on every render is torn down and re-subscribed on every render. Previously the warm-up let that pattern converge; now, when such a source synchronously replays a value that differs from the `initialValue`, every commit forces a re-render that builds yet another identity and the component loops until React aborts with "Maximum update depth exceeded".
+- **Identity swaps render the `initialValue` for one pass.** Swapping to a new observable no longer surfaces its synchronous emission during the swap render; the emission arrives right after the swap commits.
+- **`disabled: true` now always guarantees zero subscriptions.** Previously the warm-up probe still subscribed once when no `initialValue` was given.
+- **Server rendering is uniform.** Both hooks render the resolved `initialValue` and never subscribe the observable on the server. `useSyncObservable` can no longer hit React's "Missing getServerSnapshot" error, and non-deterministic synchronous emissions can no longer cause hydration mismatches.
+
+## useObservableEvent is removed
 
 `useObservableEvent` was layers of abstraction over a plain RxJS `Subject`: it created one internally, returned `subject.next` as a stable callback, and subscribed the pipeline you returned in an effect. The same thing is expressed directly with a `Subject` you own — fewer moving parts, no library-specific event concept to learn, and a mental model that carries straight over to the upcoming [native Observable API](https://github.com/WICG/observable).
 
 The removal also drops the hook's `use-effect-event` dependency, leaving `react-rx` with no runtime dependencies beyond its `react` and `rxjs` peers.
 
-## Migration
-
-Create a `Subject`, call `subject.next(...)` where you previously called the returned handler, and move the pipeline to where its output is consumed.
+To migrate, create a `Subject`, call `subject.next(...)` where you previously called the returned handler, and move the pipeline to where its output is consumed.
 
 ### Pipelines that updated state
 
@@ -69,7 +94,7 @@ useEffect(() => {
 const handleSave = (term: string) => saves$.next(term)
 ```
 
-## Semantics to be aware of
+### Semantics to be aware of
 
 - `useObservableEvent` subscribed its pipeline in an effect after mount, so events fired before that were dropped. A `Subject` read through the hooks starts its live subscription on commit as well, and event handlers can only fire after mount — no change in practice.
 - The returned handler was referentially stable. An inline `(v) => subject$.next(v)` is a new function per render; if a memoized child needs a stable callback, wrap it in `useCallback` or pass the subject itself down.
