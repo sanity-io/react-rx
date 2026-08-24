@@ -77,9 +77,14 @@ function ProfileSwitcher({
     useState<(typeof NAMES)[number]>('Ada')
   const [isPending, startTransition] =
     useTransition()
-  // Same Map-cached instance the click handler preloads — identity is the key.
+  // Same Map-cached instance the click handler preloads — identity is the
+  // key. The long ttl keeps settled profiles retained for the whole demo
+  // session; with the default 500ms retention, a profile you swapped away
+  // from would evict shortly after losing its subscriber and need fetching
+  // (so: preloading) again.
   const promise = useObservablePromise(
     fetchProfile$(name),
+    {ttl: 60_000},
   )
 
   return (

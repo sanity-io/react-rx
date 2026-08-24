@@ -8,7 +8,7 @@ Watch it happen:
 
 1. Leave the checkbox **off** and click **Grace** — the pending timer climbs forever and no fetch ever starts. This is the deadlock.
 2. Tick the checkbox and click **Grace** again — `preloadObservablePromise` in the click handler starts the fetch immediately, the suspended transition retries when it resolves, and the swap commits. A preload rescues an already-wedged transition, too.
-3. Untick the checkbox and click **Ada** — already-settled observables never wedge: the transition reads a resolved promise and commits instantly. The trap is only ever the _first_ fetch of an observable behind a suspending transition.
+3. Untick the checkbox and click **Ada** — settled observables don't wedge: the transition reads a resolved promise and commits instantly. The trap is only ever an _unfetched_ observable behind a suspending transition. Note that "settled" depends on retention: the example passes `ttl: 60_000` to keep loaded profiles warm for the whole session, while with the default 500ms retention a profile would evict shortly after you swap away from it and the next swap back would need fetching — and therefore preloading — again.
 
 <Example />
 
