@@ -116,6 +116,13 @@ export const exampleManifests = {
     files: {'/App.tsx': 'TodoApp.example.tsx'},
     dependencies: {'styled-components': 'latest'},
   },
+  'transitions': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/ProfileCard.tsx': 'ProfileCard.tsx',
+      '/api.ts': 'api.ts',
+    },
+  },
 } satisfies Record<string, ExampleManifest>
 
 export type ExampleName =

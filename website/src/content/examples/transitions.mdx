@@ -1,0 +1,23 @@
+import Example from '@/examples/transitions'
+
+# Transitions: a cautionary tale
+
+Rendering never starts a fetch: `useObservablePromise` subscribes its source when the calling component **commits**, or when `preloadObservablePromise` is called. Transitions are where that rule bites, because a transition render that suspends **never commits**. Swap in a never-fetched observable inside `startTransition` (or behind `useDeferredValue`) and the app deadlocks politely: the transition render suspends on a promise that nothing has started, the commit that would start the fetch never happens, and `isPending` stays `true` forever. No error, no fallback — the UI just keeps showing the old content.
+
+Watch it happen:
+
+1. Leave the checkbox **off** and click **Grace** — the pending timer climbs forever and no fetch ever starts. This is the deadlock.
+2. Tick the checkbox and click **Grace** again — `preloadObservablePromise` in the click handler starts the fetch immediately, the suspended transition retries when it resolves, and the swap commits. A preload rescues an already-wedged transition, too.
+3. Untick the checkbox and click **Ada** — already-settled observables never wedge: the transition reads a resolved promise and commits instantly. The trap is only ever the _first_ fetch of an observable behind a suspending transition.
+
+<Example />
+
+## The preload must be the same instance
+
+`preloadObservablePromise(fetchProfile$(name))` in the handler and `useObservablePromise(fetchProfile$(name))` in render must receive the **same observable instance** — react-rx keys its promise cache by identity. That is why `fetchProfile$` keeps one observable per profile in a `Map`: a factory that built a fresh observable on every call would warm one cache entry while the transition render suspends on another, and the deadlock would remain.
+
+The same rule everywhere:
+
+- **`startTransition` swaps** — preload in the event handler (this example).
+- **`useDeferredValue`** — the deferred re-render is a transition render too: same deadlock, same fix, preload wherever the value change originates.
+- **Hover and route preloads** — see [Activity and preload](/examples/activity) for warming caches before a click or reveal.
