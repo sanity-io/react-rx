@@ -78,8 +78,13 @@ function ProfileSwitcher({
   const [isPending, startTransition] =
     useTransition()
   // Same Map-cached instance the click handler preloads — identity is the key.
+  // The long ttl keeps settled profiles cached for the whole walkthrough: with
+  // the default 500ms, Ada's entry would be evicted moments after Grace
+  // commits, and step 3 (switching back without a preload) would suspend on a
+  // fresh pending entry and deadlock instead of committing instantly.
   const promise = useObservablePromise(
     fetchProfile$(name),
+    {ttl: 60_000},
   )
 
   return (
