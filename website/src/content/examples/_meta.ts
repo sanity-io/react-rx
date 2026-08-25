@@ -10,5 +10,5 @@ export default {
   'suspense': 'Suspense & deferred values',
   'data-fetching': 'Suspense data fetching',
   'activity': 'Activity and preload',
-  'transitions': 'Transitions (cautionary tale)',
+  'transitions': 'Transitions and refetching',
 }
