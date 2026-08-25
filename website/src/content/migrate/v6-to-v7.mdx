@@ -32,7 +32,7 @@ Call sites that already pass an `initialValue` are unaffected, including their r
 
 ## useObservablePromise fetches start at commit
 
-The hook no longer subscribes the source observable during render. Previously rendering — including hidden `<Activity>` pre-renders — triggered fetching as a side effect. Fetching is now strictly commit-driven or explicit: the source subscription starts when a non-`disabled` component that called the hook **commits**, or when `preloadObservablePromise` is called.
+The hook no longer subscribes the source observable during mounting renders. Previously any render — including hidden `<Activity>` pre-renders — triggered fetching as a side effect. Fetching now has three triggers: a non-`disabled` component that called the hook **commits**; an already-**live** consumer re-renders with a **new observable** (`startTransition` / `useDeferredValue` swaps — the swap render starts the new source so the suspended transition can settle and commit); or `preloadObservablePromise` is called.
 
 What to change:
 
@@ -62,7 +62,7 @@ function UsersList({promise}: {promise: Promise<unknown>}) {
 
 - **Hidden `<Activity>` trees no longer fetch.** A hidden tree that calls the hook is fully paused — no subscription until it is revealed and effects mount. To pre-render hidden content _with_ data, call the hook in a visible parent and pass the promise into the hidden tree, where `use(promise)` lets React pre-render and suspend on its own terms. See the [Activity and preload example](/examples/activity).
 - **Synchronously-emitting sources show one fallback pass on a cold mount** (`of`, `BehaviorSubject`, replayed `shareReplay`): they now resolve at the hook caller's commit instead of during render. Preload the observable to render them without a fallback.
-- **Swapping observables inside `startTransition` / behind `useDeferredValue` requires warming the new observable first** (for example `preloadObservablePromise` in the event handler): a transition render that suspends never commits, so it can no longer start the fetch.
+- **Swapping observables inside `startTransition` / behind `useDeferredValue` needs no preloading.** A consumer that is already live starts the swapped-in source during the transition render itself — React's canonical [client-side refetch pattern](https://react.dev/reference/react/use#re-fetching-data-in-client-components): previous content stays visible while the new data loads, and the swap commits when it settles. `preloadObservablePromise` remains useful for warming ahead of the swap (for example on hover), so the transition can commit with no pending period. See the [Transitions and refetching example](/examples/transitions).
 - **On the server, `preloadObservablePromise` is a no-op** (an inert pending promise; no subscription, no cache entry) — react-rx never subscribes observables on the server. Server rendering emits the Suspense fallback and the fetch starts after hydration. For React Server Components or server-only flows, fetch with async/await or RxJS [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) and pass the promise or value down as a prop.
 
 ## useObservableEvent is removed

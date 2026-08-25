@@ -4,10 +4,7 @@ import {
   useState,
   useTransition,
 } from 'react'
-import {
-  preloadObservablePromise,
-  useObservablePromise,
-} from 'react-rx'
+import {useObservablePromise} from 'react-rx'
 
 import {
   fetchProfile$,
@@ -22,11 +19,8 @@ function Spinner() {
 }
 
 /**
- * Mounted only while a transition is pending, so the clock starts at zero on
- * mount and the effect manages nothing but the interval. Without the preload
- * it climbs forever: the transition render suspends on a promise that nothing
- * has started, a suspended transition never commits, and only a commit (or a
- * preload) starts the fetch.
+ * Mounted only while a transition is pending — the window where the
+ * swapped-in profile is still fetching and the previous one stays visible.
  */
 function PendingTimer() {
   const [elapsed, setElapsed] = useState(0)
@@ -68,20 +62,14 @@ function TransitionStatus({
   )
 }
 
-function ProfileSwitcher({
-  withPreload,
-}: {
-  withPreload: boolean
-}) {
+function ProfileSwitcher() {
   const [name, setName] =
     useState<(typeof NAMES)[number]>('Ada')
   const [isPending, startTransition] =
     useTransition()
-  // Same Map-cached instance the click handler preloads — identity is the
-  // key. The long ttl keeps settled profiles retained for the whole demo
-  // session; with the default 500ms retention, a profile you swapped away
-  // from would evict shortly after losing its subscriber and need fetching
-  // (so: preloading) again.
+  // The Map-stable identity is what routes every render to the same cache
+  // entry; the long ttl keeps settled profiles retained for the whole demo
+  // session so swapping back commits instantly.
   const promise = useObservablePromise(
     fetchProfile$(name),
     {ttl: 60_000},
@@ -95,18 +83,11 @@ function ProfileSwitcher({
             key={candidate}
             type="button"
             onClick={() => {
-              if (withPreload) {
-                // The fix: start the fetch NOW, in the event handler, so the
-                // transition render suspends on an in-flight promise and can
-                // commit once it resolves.
-                void preloadObservablePromise(
-                  fetchProfile$(candidate),
-                )
-              }
-              // The trap: without the preload, swapping to a never-fetched
-              // observable suspends this transition render on a promise that
-              // nothing has started — and it never commits, so the fetch
-              // never starts.
+              // React's canonical refetch pattern, no preloading required:
+              // this consumer is live, so the transition render that swaps in
+              // the new observable also starts its fetch. The old profile
+              // stays visible while it loads, and the swap commits when the
+              // fetch settles.
               startTransition(() => {
                 setName(candidate)
               })
@@ -129,8 +110,6 @@ function ProfileSwitcher({
 }
 
 export default function App() {
-  const [withPreload, setWithPreload] =
-    useState(false)
   const [epoch, setEpoch] = useState(0)
 
   return (
@@ -145,30 +124,12 @@ export default function App() {
         Swap observables inside a transition
       </h2>
       <p style={{fontSize: 14}}>
-        Each profile fetch takes ~1.5s. With the
-        checkbox off, switching to a profile that
-        has never loaded wedges the transition
-        forever. Ticking the checkbox and clicking
-        again rescues it.
+        Each profile fetch takes ~1.5s. Switching
+        profiles inside a transition keeps the
+        previous profile visible while the next
+        one loads — only the initial mount shows
+        the Suspense fallback.
       </p>
-      <label
-        style={{
-          display: 'block',
-          marginBottom: 8,
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={withPreload}
-          onChange={(event) =>
-            setWithPreload(
-              event.currentTarget.checked,
-            )
-          }
-        />{' '}
-        <code>preloadObservablePromise</code> in
-        the click handler
-      </label>
       <button
         type="button"
         onClick={() => {
@@ -179,10 +140,7 @@ export default function App() {
       >
         Reset demo (forget all profiles)
       </button>
-      <ProfileSwitcher
-        key={epoch}
-        withPreload={withPreload}
-      />
+      <ProfileSwitcher key={epoch} />
     </div>
   )
 }
