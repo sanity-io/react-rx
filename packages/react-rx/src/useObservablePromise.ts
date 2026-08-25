@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useRef, useSyncExternalStore} from 'react'
 import {type Observable} from 'rxjs'
 
 import {
@@ -74,11 +74,25 @@ export interface PreloadObservablePromiseOptions {
  * The returned promise is meant to be passed as a prop to a child component
  * that reads it with React's `use()`, with a `<Suspense>` boundary **between**
  * this component and that child. The boundary placement is load-bearing:
- * rendering never subscribes the source — the fetch starts when the component
- * calling this hook commits (or via {@link preloadObservablePromise}) — and a
- * suspended component never commits. Without a boundary in between, the
- * child's suspension propagates to the hook caller itself and the fetch can
- * never start.
+ * mounting renders never subscribe the source — the fetch starts when the
+ * component calling this hook commits (or via
+ * {@link preloadObservablePromise}) — and a suspended component never
+ * commits. Without a boundary in between, the child's suspension propagates
+ * to the hook caller itself and the fetch can never start.
+ *
+ * Swapping to a new observable on a consumer that is already live follows
+ * React's canonical refetch pattern: change the observable inside
+ * [`startTransition`](https://react.dev/reference/react/use#re-fetching-data-in-client-components)
+ * (or behind `useDeferredValue`) and the previous content stays visible while
+ * the new data loads — no preload required. A suspended transition render
+ * never commits, so for exactly this case the hook starts the new source
+ * during that render (the live-swap eager start): only consumers that are
+ * currently committed, visible, and subscribed qualify, which is what keeps
+ * mounts, server rendering, `disabled` consumers, and hidden `<Activity>`
+ * pre-renders fully lazy. A transition abandoned after the swap render can
+ * therefore have started a fetch nobody consumes — the entry settles and
+ * evicts after `ttl`, but bound never-settling sources with RxJS `timeout`
+ * just as you would for {@link preloadObservablePromise}.
  *
  * For the same reason, never call `use()` on the promise in the same
  * component that called this hook: the component suspends on its own pending
@@ -119,18 +133,42 @@ export function useObservablePromise<T>(
   )
 
   // Per-render policy on the pinned entry is metadata only: adopt the max ttl
-  // across consumers. Fetching is commit-driven (the store subscription below)
-  // or explicit (preloadObservablePromise) — starting it here would make every
-  // render a side effect and would fetch on behalf of hidden <Activity>
-  // pre-renders, which must stay paused. Idempotent.
+  // across consumers. Idempotent.
   entry.adoptTtl(ttl)
+
+  // Whether this hook instance currently holds a live store subscription.
+  // Written only in the commit phase (subscribe/teardown below — teardown
+  // includes <Activity> hide, which unmounts effects). Read during render
+  // solely to trigger the idempotent live-swap start; it never affects render
+  // output, so renders stay idempotent.
+  const live = useRef(false)
+
+  // Live-swap eager start. Fetching is commit-driven (the store subscription
+  // below), explicit (preloadObservablePromise), or — exactly here — render-
+  // driven for a consumer that is already committed and subscribed and is
+  // being re-rendered to a new observable. That render is how React's
+  // canonical "swap the source inside startTransition / behind
+  // useDeferredValue" refetch pattern asks for data, and it suspends before
+  // any commit could start the fetch; without this it would deadlock. Fresh
+  // mounts, server renders, disabled consumers, and hidden <Activity>
+  // pre-renders have no live subscription, so they never fetch from render.
+  //
+  // oxlint-disable-next-line react/refs -- deliberate store-primitive pattern: the flag is written only in the commit phase and read here to trigger an idempotent external start; render output never depends on it, so renders stay idempotent.
+  if (!disabled && live.current) {
+    entry.ensureStarted()
+  }
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       if (disabled) {
         return () => {}
       }
-      return entry.subscribe(onStoreChange)
+      live.current = true
+      const unsubscribe = entry.subscribe(onStoreChange)
+      return () => {
+        live.current = false
+        unsubscribe()
+      }
     },
     [entry, disabled],
   )
@@ -147,10 +185,12 @@ export function useObservablePromise<T>(
  * {@link ObservablePromise} the hook would return for that observable. Not a
  * hook — callable anywhere.
  *
- * This is the mechanism for starting a fetch before any consumer commits:
- * hover/route preloads, data for `<Activity>` pre-renders, or warming the
- * next observable before swapping to it inside a transition. Rendering never
- * subscribes the source — only this function and committed consumers do.
+ * This is the mechanism for starting a fetch before any consumer is live:
+ * hover/route preloads, data for `<Activity>` pre-renders, or having a swap
+ * target already in flight (or settled) before a transition swaps to it —
+ * transitions themselves no longer require it, since a live consumer's swap
+ * render starts the new source (see {@link useObservablePromise}), but a
+ * preload on hover means the swap can commit with no pending period at all.
  *
  * On the server this is a no-op: it returns an inert, forever-pending promise
  * and neither subscribes the observable nor touches the cache. react-rx never

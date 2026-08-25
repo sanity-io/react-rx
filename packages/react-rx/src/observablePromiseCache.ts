@@ -67,10 +67,21 @@ export interface ObservablePromiseEntry<T> {
   /**
    * Intentional warm-up (`preloadObservablePromise`): adopt `ttl`, re-arm the
    * eviction/share grace window from now, and start the source subscription if
-   * the entry has not settled yet. This is the only render-independent way to
-   * start a fetch — the hook itself only subscribes when a consumer commits.
+   * the entry has not settled yet. One of the two render-independent ways to
+   * start a fetch, next to the commit-time store subscription; `ensureStarted`
+   * is the render-time third trigger for live-consumer swaps.
    */
   warm(ttl: number): void
+  /**
+   * Start the source subscription if the entry is pending and idle — no live
+   * subscribers, no resolver in flight, source not terminated — without
+   * touching retention. Backs the hook's live-swap eager start: a consumer
+   * that is already committed and subscribed re-rendering to a new observable
+   * (`startTransition` / `useDeferredValue` swaps) starts the new source
+   * during that render, so the suspended transition can settle and commit.
+   * Idempotent; a no-op for settled, running, or already-subscribed entries.
+   */
+  ensureStarted(): void
   getPromise(): ObservablePromise<T>
   subscribe(onStoreChange: () => void): () => void
 }
@@ -233,6 +244,16 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
         if (!entry.sourceTerminated) {
           entry.shared$.subscribe().unsubscribe()
         }
+      }
+      ensureResolver(entry)
+    },
+    ensureStarted: () => {
+      // Entries that are already running (live store subscribers) or that can
+      // never emit again (terminated source) must not gain a resolver: after
+      // the last real subscriber leaves, a resolver on a never-settling source
+      // would hold the shared connection open forever.
+      if (entry.liveCount > 0 || entry.sourceTerminated) {
+        return
       }
       ensureResolver(entry)
     },
