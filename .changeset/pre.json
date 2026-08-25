@@ -6,6 +6,7 @@
     "react-rx-website": "1.0.0"
   },
   "changesets": [
+    "live-swap-eager-start",
     "no-render-phase-fetching",
     "remove-render-phase-warmup",
     "remove-use-observable-event",
