@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useState, useSyncExternalStore} from 'react'
+import {useCallback, useEffect, useMemo, useState, useSyncExternalStore} from 'react'
 import {type Observable} from 'rxjs'
 
 import {
@@ -136,17 +136,29 @@ export function useObservablePromise<T>(
   // across consumers. Idempotent.
   entry.adoptTtl(ttl)
 
-  // Whether this hook instance currently holds a live store subscription —
-  // committed, visible, and not `disabled` (hiding an <Activity> tree
-  // unmounts effects, which tears the subscription down and clears this).
-  // Tracked as state, not a ref: the flag is read during render to decide the
-  // live-swap start below, and state is how a render reads commit-phase facts
-  // without breaking the rules. React applies the fiber's pending updates
-  // before re-rendering it, so a hidden tree's swap render observes `false`
-  // even when the hide and the swap land in the same batch. The extra render
-  // this costs is bounded: `setLive` bails whenever the value is unchanged,
-  // so it re-renders once after the first commit and once per hide/reveal.
+  // Whether this hook instance is a live consumer — committed, visible, and
+  // not `disabled`. Tracked by a plain visibility effect, deliberately not by
+  // the `useSyncExternalStore` subscribe cycle (subscribe is specified as
+  // subscription-only, and React re-invokes it on its own schedule) and not
+  // by a ref (state is how a render reads commit-phase facts without
+  // breaking the rules). Effects unmount on <Activity> hide and remount on
+  // reveal, so hiding clears the flag; React applies a fiber's pending
+  // updates before re-rendering it, so a hidden tree's swap render observes
+  // `false` even when the hide and the swap land in the same batch. The
+  // extra render this costs is bounded: `setLive` bails whenever the value
+  // is unchanged, so it re-renders once after the first commit and once per
+  // hide/reveal or `disabled` edge.
   const [live, setLive] = useState(false)
+  useEffect(() => {
+    if (disabled) {
+      return
+    }
+    // oxlint-disable-next-line react/set-state-in-effect -- the rule's own exception: this synchronizes React state with an external fact (this fiber's commit/visibility lifecycle) that only effects can observe, and the resulting extra render is a single bounded pass per mount/hide/reveal edge.
+    setLive(true)
+    return () => {
+      setLive(false)
+    }
+  }, [disabled])
 
   // Live-swap eager start. Fetching is commit-driven (the store subscription
   // below), explicit (preloadObservablePromise), or — exactly here — render-
@@ -168,12 +180,7 @@ export function useObservablePromise<T>(
       if (disabled) {
         return () => {}
       }
-      setLive(true)
-      const unsubscribe = entry.subscribe(onStoreChange)
-      return () => {
-        setLive(false)
-        unsubscribe()
-      }
+      return entry.subscribe(onStoreChange)
     },
     [entry, disabled],
   )
