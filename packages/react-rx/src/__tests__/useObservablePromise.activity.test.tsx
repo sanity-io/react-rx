@@ -340,6 +340,48 @@ test('swapping the observable while hidden stays paused: hiding tears down the l
   await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('B'))
 })
 
+test('hiding and swapping in the same update stays paused: the swap must not fetch for a tree that is being hidden', async () => {
+  const a = trackedObservable()
+  const b = trackedObservable()
+
+  const {rerender} = await renderAsync(
+    <Activity mode="visible">
+      <SwappableOwner obs={a.observable} />
+    </Activity>,
+  )
+  expect(a.subscriptions).toBe(1)
+  await act(async () => {
+    a.resolve('A')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('A'))
+
+  // One update changes BOTH the Activity mode and the observable. Whatever
+  // order React renders and commits internally, the net effect must not start
+  // a fetch on behalf of newly hidden content.
+  await act(async () => {
+    rerender(
+      <Activity mode="hidden">
+        <SwappableOwner obs={b.observable} />
+      </Activity>,
+    )
+  })
+  expect(b.subscriptions).toBe(0)
+
+  // Reveal starts it via the commit-time store subscription, as usual.
+  await act(async () => {
+    rerender(
+      <Activity mode="visible">
+        <SwappableOwner obs={b.observable} />
+      </Activity>,
+    )
+  })
+  expect(b.subscriptions).toBe(1)
+  await act(async () => {
+    b.resolve('B')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('B'))
+})
+
 test('long-lived source: share retention keeps the connection during ttl, so hidden emissions update the cache', async () => {
   const subject = new Subject<string>()
   let subscriptions = 0
