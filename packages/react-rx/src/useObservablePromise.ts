@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useRef, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useState, useSyncExternalStore} from 'react'
 import {type Observable} from 'rxjs'
 
 import {
@@ -136,12 +136,17 @@ export function useObservablePromise<T>(
   // across consumers. Idempotent.
   entry.adoptTtl(ttl)
 
-  // Whether this hook instance currently holds a live store subscription.
-  // Written only in the commit phase (subscribe/teardown below — teardown
-  // includes <Activity> hide, which unmounts effects). Read during render
-  // solely to trigger the idempotent live-swap start; it never affects render
-  // output, so renders stay idempotent.
-  const live = useRef(false)
+  // Whether this hook instance currently holds a live store subscription —
+  // committed, visible, and not `disabled` (hiding an <Activity> tree
+  // unmounts effects, which tears the subscription down and clears this).
+  // Tracked as state, not a ref: the flag is read during render to decide the
+  // live-swap start below, and state is how a render reads commit-phase facts
+  // without breaking the rules. React applies the fiber's pending updates
+  // before re-rendering it, so a hidden tree's swap render observes `false`
+  // even when the hide and the swap land in the same batch. The extra render
+  // this costs is bounded: `setLive` bails whenever the value is unchanged,
+  // so it re-renders once after the first commit and once per hide/reveal.
+  const [live, setLive] = useState(false)
 
   // Live-swap eager start. Fetching is commit-driven (the store subscription
   // below), explicit (preloadObservablePromise), or — exactly here — render-
@@ -152,9 +157,9 @@ export function useObservablePromise<T>(
   // any commit could start the fetch; without this it would deadlock. Fresh
   // mounts, server renders, disabled consumers, and hidden <Activity>
   // pre-renders have no live subscription, so they never fetch from render.
-  //
-  // oxlint-disable-next-line react/refs -- deliberate store-primitive pattern: the flag is written only in the commit phase and read here to trigger an idempotent external start; render output never depends on it, so renders stay idempotent.
-  if (!disabled && live.current) {
+  // `ensureStarted` is idempotent, so render replays (StrictMode, retries)
+  // are harmless.
+  if (!disabled && live) {
     entry.ensureStarted()
   }
 
@@ -163,10 +168,10 @@ export function useObservablePromise<T>(
       if (disabled) {
         return () => {}
       }
-      live.current = true
+      setLive(true)
       const unsubscribe = entry.subscribe(onStoreChange)
       return () => {
-        live.current = false
+        setLive(false)
         unsubscribe()
       }
     },
