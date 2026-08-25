@@ -10,6 +10,7 @@
     "no-render-phase-fetching",
     "remove-render-phase-warmup",
     "remove-use-observable-event",
-    "require-initial-value"
+    "require-initial-value",
+    "state-based-live-swap-gate"
   ]
 }
