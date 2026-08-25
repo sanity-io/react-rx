@@ -8,8 +8,9 @@ import {useObservablePromise} from '../useObservablePromise'
 /**
  * Documents how `useObservablePromise` interacts with React 19.2's `<Activity>`.
  *
- * Rendering never subscribes the source, so a hidden pre-render on its own
- * triggers no fetching. The two supported shapes are:
+ * Hidden trees are never "live" (no committed store subscription — hiding
+ * tears it down), so hidden pre-renders trigger no fetching: neither on mount
+ * nor via the live-swap eager start. The two supported shapes are:
  *
  * - Call the hook in a visible component and pass the promise into the hidden
  *   tree, where `use(promise)` lets React pre-render and suspend/resume on its
@@ -41,6 +42,36 @@ function Fallback({onRender}: {onRender?: () => void}) {
 function Reader({promise}: {promise: Promise<string>}) {
   const value = use(promise)
   return <div data-testid="value">{value}</div>
+}
+
+/** A cold source whose subscription count and settlement are observable. */
+function trackedObservable() {
+  let resolve!: (value: string) => void
+  const promise = new Promise<string>((r) => {
+    resolve = r
+  })
+  let subscriptions = 0
+  const observable = defer(() => {
+    subscriptions++
+    return from(promise)
+  })
+  return {
+    observable,
+    resolve,
+    get subscriptions() {
+      return subscriptions
+    },
+  }
+}
+
+/** Hook caller with a swappable source; the boundary sits below the hook. */
+function SwappableOwner({obs}: {obs: Observable<string>}) {
+  const p = useObservablePromise(obs)
+  return (
+    <Suspense fallback={<Fallback />}>
+      <Reader promise={p} />
+    </Suspense>
+  )
 }
 
 function ToggleActivity({
@@ -254,6 +285,59 @@ test('entry evicted while hidden: reveal shows the cached value without fallback
   expect(fallbackCount).toBe(fallbacksBeforeHide)
   // The source completed after its single emission — reveal must not refetch.
   expect(subscriptions).toBe(1)
+})
+
+test('swapping the observable while hidden stays paused: hiding tears down the live subscription, so the swap render must not eager-start', async () => {
+  const a = trackedObservable()
+  const b = trackedObservable()
+
+  // Visible first: the consumer commits, subscribes, and becomes "live" — the
+  // state that qualifies for the live-swap eager start.
+  const {rerender} = await renderAsync(
+    <Activity mode="visible">
+      <SwappableOwner obs={a.observable} />
+    </Activity>,
+  )
+  expect(a.subscriptions).toBe(1)
+  await act(async () => {
+    a.resolve('A')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('A'))
+
+  // Hide: effects unmount, the store subscription is torn down — the consumer
+  // is no longer live.
+  await act(async () => {
+    rerender(
+      <Activity mode="hidden">
+        <SwappableOwner obs={a.observable} />
+      </Activity>,
+    )
+  })
+
+  // Swap the observable while hidden. The hidden pre-render runs the hook with
+  // the new identity, but with no live subscription it must stay fully paused.
+  await act(async () => {
+    rerender(
+      <Activity mode="hidden">
+        <SwappableOwner obs={b.observable} />
+      </Activity>,
+    )
+  })
+  expect(b.subscriptions).toBe(0)
+
+  // Reveal: effects mount, the commit-time store subscription starts the fetch.
+  await act(async () => {
+    rerender(
+      <Activity mode="visible">
+        <SwappableOwner obs={b.observable} />
+      </Activity>,
+    )
+  })
+  expect(b.subscriptions).toBe(1)
+  await act(async () => {
+    b.resolve('B')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('B'))
 })
 
 test('long-lived source: share retention keeps the connection during ttl, so hidden emissions update the cache', async () => {
