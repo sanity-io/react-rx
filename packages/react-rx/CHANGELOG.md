@@ -1,5 +1,11 @@
 # react-rx
 
+## 7.0.0-next.4
+
+### Patch Changes
+
+- [#515](https://github.com/sanity-io/react-rx/pull/515) [`832add9`](https://github.com/sanity-io/react-rx/commit/832add902d381441e6da442e64226987e5f230fa) Thanks [@stipsan](https://github.com/stipsan)! - Track `useObservablePromise`'s live-swap gate with React state instead of a ref. No behavior change: the flag is written from the store subscription's commit-phase setup/teardown and read as regular state during render, which removes the ref-read-in-render rules exception and lets the React Compiler optimize the hook again. State-queue ordering also guarantees a hidden tree's swap render observes the torn-down subscription even when a hide and a swap land in the same update batch.
+
 ## 7.0.0-next.3
 
 ### Major Changes
