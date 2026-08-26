@@ -248,10 +248,9 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
       ensureResolver(entry)
     },
     ensureStarted: () => {
-      // Entries that are already running (live store subscribers) or that can
-      // never emit again (terminated source) must not gain a resolver: after
-      // the last real subscriber leaves, a resolver on a never-settling source
-      // would hold the shared connection open forever.
+      // Running or terminated entries must not gain a resolver: on a
+      // never-settling source it would outlive the last real subscriber and
+      // hold the shared connection open forever.
       if (entry.liveCount > 0 || entry.sourceTerminated) {
         return
       }
