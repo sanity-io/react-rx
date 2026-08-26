@@ -166,6 +166,46 @@ test('startTransition swap works without preload: the live consumer’s transiti
   expect(b.subscriptions).toBe(1)
 })
 
+test('swapping while the initial fetch is still pending starts the new source', async () => {
+  const a = trackedObservable()
+  const b = trackedObservable()
+
+  function Parent() {
+    const [isPending, startTransition] = useTransition()
+    const [obs, setObs] = useState(a.observable)
+    const promise = useObservablePromise(obs)
+    return (
+      <>
+        <button type="button" onClick={() => startTransition(() => setObs(b.observable))}>
+          swap
+        </button>
+        <span data-testid="pending">{String(isPending)}</span>
+        <Suspense fallback={<Fallback />}>
+          <Reader promise={promise} />
+        </Suspense>
+      </>
+    )
+  }
+
+  await renderAsync(<Parent />)
+  // The mount commit started a's fetch; nothing has resolved yet, so the
+  // fallback is showing and the consumer is live.
+  expect(a.subscriptions).toBe(1)
+  expect(screen.getByTestId('fallback')).toBeTruthy()
+
+  await act(async () => {
+    screen.getByRole('button', {name: 'swap'}).click()
+  })
+  expect(b.subscriptions).toBe(1)
+
+  await act(async () => {
+    b.resolve('B')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('B'))
+  expect(screen.getByTestId('pending').textContent).toBe('false')
+  expect(b.subscriptions).toBe(1)
+})
+
 test('superseded transition: swapping again mid-flight starts the newer target and the earlier one settles into the shared cache without committing', async () => {
   const a = trackedObservable()
   const b = trackedObservable()

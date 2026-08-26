@@ -1,4 +1,11 @@
-import {useCallback, useEffect, useMemo, useState, useSyncExternalStore} from 'react'
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import {type Observable} from 'rxjs'
 
 import {
@@ -146,9 +153,19 @@ export function useObservablePromise<T>(
     if (disabled) {
       return
     }
-    // oxlint-disable-next-line react/set-state-in-effect -- synchronizes with an external fact (this fiber's commit/visibility lifecycle) that only effects observe; the extra render is one bounded pass per mount/hide/reveal edge.
-    setLive(true)
+    // Non-urgent by design: the flag only needs to be true by the time a
+    // later swap render reads it, and the swaps that need it are transitions
+    // themselves, which React entangles with this pending update. Marking it
+    // a transition keeps the extra render off the urgent path.
+    startTransition(() => {
+      setLive(true)
+    })
     return () => {
+      // Deliberately synchronous: hiding an <Activity> tree must clear the
+      // flag before any later render of the hidden fiber. A sync update is
+      // applied ahead of every subsequent render lane; a transition update
+      // could be skipped and rebased by an urgent or offscreen render, which
+      // would let a hidden swap render fetch.
       setLive(false)
     }
   }, [disabled])
