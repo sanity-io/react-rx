@@ -1,3 +1,9 @@
+// The router coordinates through object identity: refresh() re-renders every
+// consumer by replacing the routerState object with a same-valued copy. The
+// React Compiler memoizes the context value on its primitive fields, which
+// turns refresh() into a no-op, so this file opts out of compilation.
+'use no memo'
+
 import {
   useState,
   createContext,
