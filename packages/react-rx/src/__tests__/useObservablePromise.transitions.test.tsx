@@ -327,6 +327,47 @@ test('disabled consumers never eager-start: swapping the observable fetches noth
   expect(screen.getByTestId('status').textContent).toBe('pending')
 })
 
+test('enabling a disabled consumer inside a transition starts the fetch from that render', async () => {
+  const a = trackedObservable()
+
+  function Parent() {
+    const [isPending, startTransition] = useTransition()
+    const [disabled, setDisabled] = useState(true)
+    const promise = useObservablePromise(a.observable, {disabled})
+    return (
+      <>
+        <button type="button" onClick={() => startTransition(() => setDisabled(false))}>
+          enable
+        </button>
+        <span data-testid="pending">{String(isPending)}</span>
+        <Suspense fallback={<Fallback />}>
+          <Reader promise={promise} />
+        </Suspense>
+      </>
+    )
+  }
+
+  await renderAsync(<Parent />)
+  // Disabled: mounted and visible, but nothing fetches.
+  expect(a.subscriptions).toBe(0)
+  expect(screen.getByTestId('fallback')).toBeTruthy()
+
+  await act(async () => {
+    screen.getByRole('button', {name: 'enable'}).click()
+  })
+  // The enable render is a transition that suspends on the pending promise,
+  // so it can never commit to start the fetch itself. The consumer is
+  // committed and visible, so the swap render starts the source.
+  expect(a.subscriptions).toBe(1)
+
+  await act(async () => {
+    a.resolve('A')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('A'))
+  expect(screen.getByTestId('pending').textContent).toBe('false')
+  expect(a.subscriptions).toBe(1)
+})
+
 test('preloading in the event handler still works and shares the connection with the swap render (single subscription)', async () => {
   const a = trackedObservable()
   const b = trackedObservable()
