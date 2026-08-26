@@ -105,8 +105,10 @@ function reduceWanted(wanted, event) {
           (lesson) => lesson.id === id && lesson.complete === complete,
         ),
       );
-    default:
+    default: {
+      /** @type {never} */ (event);
       return wanted;
+    }
   }
 }
 

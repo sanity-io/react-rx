@@ -2,7 +2,7 @@
 
 A fork of [rickhanlonii/async-react](https://github.com/rickhanlonii/async-react), the final state of the React Conf 2025 [Async React talk](https://youtu.be/B_2E96URooA), adapted to [react-rx](https://react-rx.dev): the data layer is RxJS observables read through `useObservablePromise`, and optimistic state lives in an observable store instead of `useOptimistic`.
 
-The original app is deployed at https://async-react.dev/. The router, the design system, the network debugger, and the UX are unchanged — that is the point. Three files differ from upstream: `src/data/index.js`, `src/app/Home.jsx`, and `src/design/CompleteButton.jsx`.
+The original app is deployed at https://async-react.dev/. The router, the design system, the network debugger, and the UX are unchanged — that is the point. The adaptation lives in three source files: `src/data/index.js`, `src/app/Home.jsx`, and `src/design/CompleteButton.jsx`. Packaging moved to pnpm (`package.json`, lockfile, `tsconfig.json`, `vite.config.js`), and one misplaced upstream `eslint-disable` in the router was fixed.
 
 ## Setup
 
@@ -79,7 +79,7 @@ export function setComplete(id, complete) {
 }
 ```
 
-`useLessons` reads the intent below the Suspense boundary and merges it into the canonical list, and an effect retires an intent only when a render commits server data that agrees with it. That timing rule is what makes the flash-back unrepresentable: the check flips in the same event tick as the click, holds through the POST and the refetch, and the retirement lands in the commit that already shows the same value. If the POST fails, the `abandon` event reverts exactly what the click set.
+`useLessons` reads the intent below the Suspense boundary and merges it into the canonical list, and an effect retires an intent only when a render commits server data that agrees with it. That timing rule is what makes the flash-back unrepresentable: the check flips in the same event tick as the click, holds through the POST and the refetch, and the retirement lands in the commit that already shows the same value. If the POST fails, the `abandon` event reverts exactly what the click set — catch the action's rejection to watch it happen; like upstream, the demo ships no error boundary, so an uncaught action error unmounts the tree.
 
 `CompleteButton` renders `complete` directly and keeps its pending shimmer through the action transition — the design system still owns feedback, and the product code got smaller:
 
