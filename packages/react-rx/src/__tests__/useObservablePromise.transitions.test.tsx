@@ -51,7 +51,7 @@ function Reader({promise}: {promise: Promise<string>}) {
 /** Disabled consumer that surfaces the shared promise's status as text. */
 function DisabledConsumer({obs}: {obs: Observable<string>}) {
   const promise = useObservablePromise(obs, {disabled: true})
-  return <span data-testid="status">{(promise as {status: string}).status}</span>
+  return <span data-testid="status">{promise.status}</span>
 }
 
 /** A cold source whose subscription count and settlement are observable. */
