@@ -1,9 +1,24 @@
+import type {Dispatch, ReactNode, SetStateAction} from 'react'
+
 import {CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card'
 import {Field, FieldDescription, FieldGroup, FieldLabel} from '@/components/ui/field'
 import {Input} from '@/components/ui/input'
 import {Separator} from '@/components/ui/separator'
 
-export default function LoginForm({fields, setFields, children}) {
+export interface LoginFields {
+  username: string
+  password: string
+}
+
+export default function LoginForm({
+  fields,
+  setFields,
+  children,
+}: {
+  fields: LoginFields
+  setFields: Dispatch<SetStateAction<LoginFields>>
+  children: ReactNode
+}) {
   return (
     <>
       <CardHeader>

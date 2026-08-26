@@ -1,6 +1,16 @@
 import * as fuzzy from 'fast-fuzzy'
 
-const lessons = [
+export type LessonIcon = 'lightbulb' | 'shuffle' | 'zap' | 'hourglass' | 'fastforward' | 'puzzle'
+
+export interface Lesson {
+  id: string
+  title: string
+  description: string
+  icon: LessonIcon
+  complete: boolean
+}
+
+const lessons: Lesson[] = [
   {
     id: '1',
     title: 'Intro',
@@ -45,7 +55,11 @@ const lessons = [
   },
 ]
 
-export async function getLessons(tab, search, delay) {
+export async function getLessons(
+  tab: string | undefined,
+  search: string | undefined,
+  delay: number,
+): Promise<Lesson[]> {
   let filteredLessons = [...lessons]
   if (tab === 'wip') {
     filteredLessons = lessons.filter((lesson) => !lesson.complete)
@@ -66,17 +80,20 @@ export async function getLessons(tab, search, delay) {
   })
 }
 
-export async function postLessonToggle(id, delay) {
+export async function postLessonToggle(id: string, delay: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const lesson = lessons.find((lesson) => lesson.id === id)
+      const lesson = lessons.find((candidate) => candidate.id === id)
+      if (!lesson) {
+        throw new Error(`Unknown lesson id: ${id}`)
+      }
       lesson.complete = !lesson.complete
       resolve()
     }, delay)
   })
 }
 
-export async function postLogin(delay) {
+export async function postLogin(delay: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve()

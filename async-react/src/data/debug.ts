@@ -1,26 +1,22 @@
-import * as fakeServer from './fake-data.js'
+import {
+  createDebuggingState,
+  isApiPath,
+  type ApiPath,
+  type DebugRequest,
+  type DebuggingState,
+} from './debugging'
+import * as fakeServer from './fake-data'
 
-let debuggingState = {
-  '/lessons': {
-    delay: localStorage.getItem('/lessons') || 0,
-    requests: [],
-  },
-  '/lesson/:id/toggle': {
-    delay: localStorage.getItem('/lesson/:id/toggle') || 0,
-    requests: [],
-  },
-  '/login': {
-    delay: localStorage.getItem('/login') || 0,
-    requests: [],
-  },
-}
+let debuggingState: DebuggingState = createDebuggingState()
 
 let requestId = 0
 
-function getRequestConfig(url) {
+function getRequestConfig(url: string): {path: ApiPath; delay: number} {
   const pathname = getPathPattern(url)
-  const state = debuggingState[pathname]
-  return {path: pathname, delay: state.delay}
+  if (!isApiPath(pathname)) {
+    throw new Error(`No debugging state registered for ${pathname}`)
+  }
+  return {path: pathname, delay: debuggingState[pathname].delay}
 }
 
 function notifyDebugging() {
@@ -30,13 +26,23 @@ function notifyDebugging() {
 
 const HOST = `http://localhost:8080`
 
-let clientOrServerFetch = globalThis.fetch
+// The fake server resolves plain values rather than real Responses, so only the
+// part of the Response contract this module actually uses is modelled here.
+interface JsonResponse {
+  json: () => Promise<unknown>
+}
 
-function parseUrl(url) {
+type DelayedFetch = (url: URL, options?: RequestInit) => Promise<JsonResponse>
+
+let clientOrServerFetch: DelayedFetch = globalThis.fetch
+
+type RequestParams = Record<string, string>
+
+function parseUrl(url: URL): {endpoint: string; params: RequestParams | undefined} {
   const u = new URL(url, 'http://localhost')
   const segments = u.pathname.split('/').filter(Boolean)
   const endpoint = segments[segments.length - 1]
-  const params = {}
+  const params: RequestParams = {}
 
   // If the path is like /lesson/123/toggle, extract id
   if (
@@ -56,19 +62,26 @@ function parseUrl(url) {
   return {endpoint, params: Object.keys(params).length ? params : undefined}
 }
 
+function parseDelay(value: string | undefined): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
 if (import.meta.env.VITE_USE_REAL_SERVER !== 'true') {
   clientOrServerFetch = (url) => {
     const {endpoint, params} = parseUrl(url)
     if (endpoint === 'lessons') {
-      return fakeServer.getLessons(params?.tab, params?.search, params?.delay).then((data) => {
-        return {json: () => Promise.resolve(data)}
-      })
+      return fakeServer
+        .getLessons(params?.tab, params?.search, parseDelay(params?.delay))
+        .then((data) => {
+          return {json: () => Promise.resolve(data)}
+        })
     } else if (endpoint === 'toggle' && params?.id) {
-      return fakeServer.postLessonToggle(params.id, params?.delay).then((data) => {
+      return fakeServer.postLessonToggle(params.id, parseDelay(params?.delay)).then((data) => {
         return {json: () => Promise.resolve(data)}
       })
     } else if (endpoint === 'login') {
-      return fakeServer.postLogin(params?.delay).then((data) => {
+      return fakeServer.postLogin(parseDelay(params?.delay)).then((data) => {
         return {json: () => Promise.resolve(data)}
       })
     } else {
@@ -77,7 +90,7 @@ if (import.meta.env.VITE_USE_REAL_SERVER !== 'true') {
   }
 }
 
-export function delayedFetch(url, options) {
+export function delayedFetch(url: string, options?: RequestInit): Promise<unknown> {
   const {delay, path} = getRequestConfig(url)
   const request = addRequest(path, {
     id: requestId,
@@ -85,7 +98,6 @@ export function delayedFetch(url, options) {
     start: Date.now(),
     done: false,
     delay: delay,
-    resolve: null,
   })
 
   const delayedUrl = new URL(url, HOST)
@@ -96,26 +108,24 @@ export function delayedFetch(url, options) {
       markRequestDone(request)
       return response.json()
     })
-    .catch((e) => {
+    .catch((e: unknown) => {
       markRequestDone(request)
       throw e
     })
 }
 
-function addRequest(type, request) {
+function addRequest(type: ApiPath, request: DebugRequest): DebugRequest {
   debuggingState[type].requests.push(request)
   notifyDebugging()
   return request
 }
 
-function markRequestDone(request) {
-  if (request) {
-    request.done = true
-    notifyDebugging()
-  }
+function markRequestDone(request: DebugRequest) {
+  request.done = true
+  notifyDebugging()
 }
 
-function getPathPattern(url) {
+function getPathPattern(url: string): string {
   const {pathname} = new URL(url, HOST)
   return pathname
     .split('/')
@@ -133,6 +143,6 @@ function getPathPattern(url) {
 window.addEventListener('debugging-set-delay', ({detail}) => {
   const {id, value} = detail
   debuggingState[id].delay = value
-  localStorage.setItem(id, value)
+  localStorage.setItem(id, String(value))
   notifyDebugging()
 })

@@ -5,8 +5,8 @@ import {Skeleton} from '@/components/ui/skeleton'
 
 function FallbackListItem() {
   return (
-    <Item variant="ghost">
-      <ItemMedia className="h-12 w-12" variant="ghost">
+    <Item>
+      <ItemMedia className="h-12 w-12">
         <Skeleton className="h-[40px] w-[40px]" />
       </ItemMedia>
       <ItemContent>

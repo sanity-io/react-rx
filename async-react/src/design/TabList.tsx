@@ -1,14 +1,22 @@
 import {startTransition} from 'react'
-import {useOptimistic} from 'react'
+import {useOptimistic, type ReactNode} from 'react'
 
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs'
 
-import ButtonShimmer from './ButtonShimmer.jsx'
+import ButtonShimmer from './ButtonShimmer'
 
-export default function TabList({activeTab, changeAction, children}) {
+export default function TabList({
+  activeTab,
+  changeAction,
+  children,
+}: {
+  activeTab: string
+  changeAction: (value: string) => void | Promise<void>
+  children: ReactNode
+}) {
   const [optimisticTab, setActiveTab] = useOptimistic(activeTab)
 
-  function onTabClick(newValue) {
+  function onTabClick(newValue: string) {
     startTransition(async () => {
       setActiveTab(newValue)
       await changeAction(newValue)

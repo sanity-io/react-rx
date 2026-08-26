@@ -1,4 +1,6 @@
 import {Lightbulb, Shuffle, Zap, Hourglass, FastForward, Puzzle} from 'lucide-react'
+import type {LucideIcon} from 'lucide-react'
+import type {ReactNode} from 'react'
 
 import {ItemGroup} from '@/components/ui/item'
 import {
@@ -9,8 +11,9 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
+import type {Lesson, LessonIcon} from '@/data/fake-data'
 
-const ICONS = {
+const ICONS: Record<LessonIcon, LucideIcon> = {
   lightbulb: Lightbulb,
   shuffle: Shuffle,
   zap: Zap,
@@ -19,11 +22,11 @@ const ICONS = {
   puzzle: Puzzle,
 }
 
-export function LessonCard({item, children}) {
+export function LessonCard({item, children}: {item: Lesson; children: ReactNode}) {
   const Icon = ICONS[item.icon]
   return (
     <Item className="pl-4">
-      <ItemMedia className="h-12 w-12" variant="ghost">
+      <ItemMedia className="h-12 w-12">
         <Icon className="size-6" size="34px" />
       </ItemMedia>
       <ItemContent>
@@ -35,6 +38,6 @@ export function LessonCard({item, children}) {
   )
 }
 
-export function List({children}) {
+export function List({children}: {children: ReactNode}) {
   return <ItemGroup className="px-4">{children}</ItemGroup>
 }

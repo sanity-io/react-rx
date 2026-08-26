@@ -3,22 +3,41 @@
 // to view clean React Performance Tracks without
 // the debugger being part of the trace.
 
-function clamp(x) {
+import {
+  createDebuggingState,
+  type ApiDebugState,
+  type ApiPath,
+  type DebuggingState,
+} from './data/debugging'
+
+function clamp(x: number) {
   return Math.max(0, Math.min(1, x))
 }
 
+interface PathChange {
+  from: string
+  to: string
+  type?: NavigationType | null
+}
+
+// Wrapped so the feature check stays a plain boolean; `'navigation' in window`
+// inline would narrow `window` to never for the History fallback below.
+function supportsNavigationApi(): boolean {
+  return 'navigation' in window
+}
+
 // Call: const off = onPathChange(({ from, to }) => { ... });
-function onPathChange(cb) {
+function onPathChange(cb: (change: PathChange) => void) {
   let prevPath = location.pathname
 
-  if ('navigation' in window) {
+  if (supportsNavigationApi()) {
     // Post-commit signal; fires after the URL actually changes.
-    const handler = (e) => {
+    const handler = (e: NavigationCurrentEntryChangeEvent) => {
       const to = new URL(navigation.currentEntry?.url ?? location.href)
       if (to.pathname !== prevPath) {
         const old = prevPath
         prevPath = to.pathname
-        cb({from: old, to: to.pathname, type: e?.navigationType})
+        cb({from: old, to: to.pathname, type: e.navigationType})
       }
     }
     navigation.addEventListener('currententrychange', handler)
@@ -40,15 +59,19 @@ function onPathChange(cb) {
   window.addEventListener('popstate', onPop)
   window.addEventListener('hashchange', onHash)
 
-  const origPush = history.pushState.bind(history)
-  const origReplace = history.replaceState.bind(history)
-  history.pushState = function () {
-    const ret = origPush.apply(this, arguments)
+  // Deliberately unbound: the patched versions below forward whatever `this`
+  // the caller used, and the cleanup reinstalls the untouched originals.
+  // oxlint-disable-next-line typescript/unbound-method
+  const origPush = history.pushState
+  // oxlint-disable-next-line typescript/unbound-method
+  const origReplace = history.replaceState
+  history.pushState = function (this: History, ...args: Parameters<History['pushState']>) {
+    const ret = origPush.apply(this, args)
     fireIfChanged()
     return ret
   }
-  history.replaceState = function () {
-    const ret = origReplace.apply(this, arguments)
+  history.replaceState = function (this: History, ...args: Parameters<History['replaceState']>) {
+    const ret = origReplace.apply(this, args)
     fireIfChanged()
     return ret
   }
@@ -61,8 +84,19 @@ function onPathChange(cb) {
   }
 }
 
-function TimedProgress({startMs, delayMs, onDone, height = '6px'}) {
-  const container = document.createElement('div')
+interface ProgressElement extends HTMLDivElement {
+  _cleanup?: () => void
+}
+
+interface TimedProgressProps {
+  startMs: number
+  delayMs: number
+  onDone?: () => void
+  height?: string
+}
+
+function TimedProgress({startMs, delayMs, onDone, height = '6px'}: TimedProgressProps) {
+  const container: ProgressElement = document.createElement('div')
   container.setAttribute('role', 'progressbar')
   container.setAttribute('aria-valuemin', '0')
   container.setAttribute('aria-valuemax', '100')
@@ -108,8 +142,15 @@ function TimedProgress({startMs, delayMs, onDone, height = '6px'}) {
   return container
 }
 
-function NetworkRequest({label, id, api, row}) {
-  let requestsDiv
+interface NetworkRequestProps {
+  label: string
+  id: ApiPath
+  api: ApiDebugState
+  row?: HTMLDivElement
+}
+
+function NetworkRequest({label, id, api, row}: NetworkRequestProps) {
+  let requestsDiv: HTMLDivElement
   if (!row) {
     row = document.createElement('div')
     row.className = 'network-row'
@@ -126,10 +167,10 @@ function NetworkRequest({label, id, api, row}) {
     input.min = '0'
     input.max = '3000'
     input.step = '50'
-    input.value = api.delay
-    input.addEventListener('input', (e) => {
-      setDelay(id, e.target.value)
-      span.textContent = e.target.value + 'ms'
+    input.value = String(api.delay)
+    input.addEventListener('input', () => {
+      setDelay(id, input.value)
+      span.textContent = input.value + 'ms'
     })
     controls.appendChild(span)
     controls.appendChild(input)
@@ -140,11 +181,15 @@ function NetworkRequest({label, id, api, row}) {
     row.appendChild(header)
   } else {
     const controls = row.querySelector('.network-controls')
-    const span = controls.querySelector('span')
-    const input = controls.querySelector('input')
+    const span = controls?.querySelector('span')
+    const input = controls?.querySelector('input')
+    const existingRequests = row.querySelector('.network-row-requests')
+    if (!span || !input || !(existingRequests instanceof HTMLDivElement)) {
+      throw new Error('Expected the network row to keep its controls and requests container')
+    }
     span.textContent = api.delay + 's'
-    input.value = api.delay
-    requestsDiv = row.querySelector('.network-row-requests')
+    input.value = String(api.delay)
+    requestsDiv = existingRequests
     requestsDiv.innerHTML = ''
   }
 
@@ -174,19 +219,12 @@ function NetworkRequest({label, id, api, row}) {
 function Debugger() {
   const container = document.createElement('div')
   container.className = 'debugger'
-  let requests = {
-    '/lessons': {delay: localStorage.getItem('/lessons') || 0, requests: []},
-    '/lesson/:id/toggle': {
-      delay: localStorage.getItem('/lesson/:id/toggle') || 0,
-      requests: [],
-    },
-    '/login': {delay: localStorage.getItem('/login') || 0, requests: []},
-  }
+  let requests: DebuggingState = createDebuggingState()
 
-  let rows = {}
+  let rows: Partial<Record<ApiPath, HTMLDivElement>> = {}
 
   function render() {
-    let apis
+    let apis: {label: string; id: ApiPath}[]
     if (window.location.pathname === '/login') {
       apis = [
         {label: 'GET /lessons', id: '/lessons'},
@@ -199,19 +237,21 @@ function Debugger() {
       ]
     }
     apis.forEach(({label, id}) => {
-      if (!rows[id]) {
-        rows[id] = NetworkRequest({
+      const existingRow = rows[id]
+      if (!existingRow) {
+        const created = NetworkRequest({
           label,
           id,
           api: requests[id],
         })
-        container.appendChild(rows[id])
+        rows[id] = created
+        container.appendChild(created)
       } else {
         NetworkRequest({
           label,
           id,
           api: requests[id],
-          row: rows[id],
+          row: existingRow,
         })
       }
     })
@@ -230,7 +270,7 @@ function Debugger() {
   return container
 }
 
-function setDelay(id, value) {
+function setDelay(id: ApiPath, value: string) {
   const event = new CustomEvent('debugging-set-delay', {
     detail: {id, value: Number(value)},
   })

@@ -1,16 +1,22 @@
 import {SearchIcon} from 'lucide-react'
-import {startTransition, useOptimistic} from 'react'
+import {startTransition, useOptimistic, type ChangeEvent} from 'react'
 
 import {InputGroup, InputGroupAddon, InputGroupInput} from '@/components/ui/input-group'
 import {Spinner} from '@/components/ui/spinner'
 import {cn} from '@/lib/utils'
 
-import ButtonShimmer from './ButtonShimmer.jsx'
+import ButtonShimmer from './ButtonShimmer'
 
-export default function SearchInput({value, changeAction}) {
+export default function SearchInput({
+  value,
+  changeAction,
+}: {
+  value: string
+  changeAction: (value: string) => void | Promise<void>
+}) {
   const [inputValue, setInputValue] = useOptimistic(value)
   const isPending = inputValue !== value
-  function handleChange(e) {
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const newValue = e.target.value
     startTransition(async () => {
       setInputValue(newValue)

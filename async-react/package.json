@@ -7,7 +7,7 @@
     "build": "vite build",
     "dev": "vite",
     "preview": "vite preview",
-    "server": "nodemon server.js",
+    "server": "node --watch server.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
@@ -29,11 +29,11 @@
   },
   "devDependencies": {
     "@tsconfig/vite-react": "^8.1.1",
+    "@types/express": "^5.0.6",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.0",
-    "nodemon": "^3.1.10",
     "oxc-transform-react": "^0.147.0",
     "typescript": "6.0.3",
     "vite": "^8.2.2"

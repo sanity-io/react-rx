@@ -1,4 +1,4 @@
-import React, {ViewTransition} from 'react'
+import {ViewTransition, type ReactNode} from 'react'
 import {createRoot} from 'react-dom/client'
 
 import './index.css'
@@ -7,9 +7,9 @@ import './debugger.css'
 import Home from '@/app/Home'
 import Login from '@/app/Login'
 import {Card, CardContent} from '@/components/ui/card'
-import {Router, useRouter} from '@/router/index.jsx'
+import {Router, useRouter} from '@/router/index'
 
-function Layout({children}) {
+function Layout({children}: {children: ReactNode}) {
   return (
     <>
       <a
@@ -40,7 +40,7 @@ function AppRouter() {
     <>
       {url === '/' && (
         <ViewTransition key={url} default="none" enter="auto" exit="auto">
-          <Layout heading={<div>Course Lessons</div>}>
+          <Layout>
             <Home />
           </Layout>
         </ViewTransition>
@@ -68,5 +68,9 @@ export default function App() {
   )
 }
 
-const root = createRoot(document.getElementById('root'), {})
+const container = document.getElementById('root')
+if (!container) {
+  throw new Error('Expected the document to contain a #root element')
+}
+const root = createRoot(container, {})
 root.render(<App />)

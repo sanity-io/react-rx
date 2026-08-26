@@ -1,6 +1,8 @@
+import type {ReactNode} from 'react'
+
 import {cn} from '@/lib/utils'
 
-export default function ButtonShimmer({isPending, long}) {
+export default function ButtonShimmer({isPending, long}: {isPending?: boolean; long?: boolean}) {
   return (
     <span
       className={cn(
@@ -14,7 +16,13 @@ export default function ButtonShimmer({isPending, long}) {
   )
 }
 
-export function IconButtonShimmer({isPending, children}) {
+export function IconButtonShimmer({
+  isPending,
+  children,
+}: {
+  isPending?: boolean
+  children: ReactNode
+}) {
   return (
     <div
       className={cn(

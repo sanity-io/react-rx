@@ -4,13 +4,28 @@ import {
   use,
   useLayoutEffect,
   useEffect,
-  useCallback,
-  useMemo,
   startTransition,
   addTransitionType,
+  type ReactNode,
 } from 'react'
 
-import {revalidate} from '../data/index.js'
+import {revalidate} from '../data/index'
+
+type SearchParams = Record<string, string>
+
+interface RouterContextValue {
+  url: string
+  search: SearchParams
+  navigate: (url: string) => void
+  setParams: (key: string, value: string) => void
+  refresh: () => void
+}
+
+interface RouterState {
+  pendingNav: () => void
+  url: string
+  search: SearchParams
+}
 
 // There are two example routers here.
 // One uses the Navigation API and the other uses window.history,
@@ -25,30 +40,34 @@ import {revalidate} from '../data/index.js'
 // We call the pendingNav callback in the intercept handler
 // to tell the browser to commit the navigation after React has updated the DOM.
 // This allows the browser to wait to reset focus/scroll until after the transition is done.
-function navigationNavigate(url) {
-  window.navigation.navigate(url)
-}
-
-function navigationSetParams(key, value) {
-  const newParams = parseSearchParams(document.location.search)
-  if (value !== '') {
-    newParams[key] = value
-  } else {
-    delete newParams[key]
-  }
-  const newUrlParams = new URLSearchParams(newParams).toString()
-
-  window.navigation.navigate(document.location.pathname + (newUrlParams ? `?${newUrlParams}` : ''))
-}
-
-function NavigationRouter({children}) {
-  const [routerState, setRouterState] = useState(() => ({
+function NavigationRouter({children}: {children: ReactNode}) {
+  const [routerState, setRouterState] = useState<RouterState>(() => ({
     pendingNav: () => {},
     url: document.location.pathname,
     search: parseSearchParams(document.location.search),
   }))
 
-  const refresh = useCallback(() => {
+  // Kept inline so both routers expose navigate/setParams/refresh the same way.
+  // oxlint-disable-next-line unicorn/consistent-function-scoping
+  function navigate(url: string) {
+    window.navigation.navigate(url)
+  }
+
+  function setParams(key: string, value: string) {
+    const newParams = parseSearchParams(document.location.search)
+    if (value !== '') {
+      newParams[key] = value
+    } else {
+      delete newParams[key]
+    }
+    const newUrlParams = new URLSearchParams(newParams).toString()
+
+    window.navigation.navigate(
+      document.location.pathname + (newUrlParams ? `?${newUrlParams}` : ''),
+    )
+  }
+
+  function refresh() {
     revalidate()
     startTransition(() => {
       setRouterState((prev) => {
@@ -57,15 +76,16 @@ function NavigationRouter({children}) {
         }
       })
     })
-  }, [])
+  }
 
   useEffect(() => {
-    function handleNavigate(event) {
-      if (!event.canIntercept) {
+    function handleNavigate(event: NavigateEvent) {
+      const currentEntry = window.navigation.currentEntry
+      if (!event.canIntercept || !currentEntry) {
         return
       }
       const navigationType = event.navigationType
-      const previousIndex = window.navigation.currentEntry.index
+      const previousIndex = currentEntry.index
       const currURL = new URL(location.href)
       const newURL = new URL(event.destination.url)
 
@@ -78,7 +98,9 @@ function NavigationRouter({children}) {
 
       event.intercept({
         handler() {
-          let promise
+          // startTransition runs its scope synchronously, so the promise is
+          // always assigned before it is returned.
+          let promise!: Promise<void>
           startTransition(() => {
             addTransitionType('navigation-' + navigationType)
             if (navigationType === 'traverse') {
@@ -94,7 +116,7 @@ function NavigationRouter({children}) {
               setRouterState({
                 url: newURL.pathname,
                 search: parseSearchParams(newURL.search),
-                pendingNav: resolve,
+                pendingNav: () => resolve(),
               })
             })
           })
@@ -116,34 +138,37 @@ function NavigationRouter({children}) {
     pendingNav()
   }, [pendingNav])
 
-  const contextValue = useMemo(
-    () => ({
-      url: routerState.url,
-      search: routerState.search,
-      navigate: navigationNavigate,
-      setParams: navigationSetParams,
-      refresh,
-      isPending: false,
-      params: {},
-    }),
-    [routerState.url, routerState.search, refresh],
+  return (
+    <RouterContext
+      // Deliberately not memoized: refresh() replaces routerState with an
+      // equal-valued copy, so a fresh value identity is the only thing that
+      // re-renders consumers after the data cache is cleared.
+      // oxlint-disable-next-line react/jsx-no-constructed-context-values
+      value={{
+        url: routerState.url,
+        search: routerState.search,
+        navigate,
+        setParams,
+        refresh,
+      }}
+    >
+      {children}
+    </RouterContext>
   )
-
-  return <RouterContext value={contextValue}>{children}</RouterContext>
 }
 
 // For the History API, we just call history.pushState in the pendingNav callback.
 // This means the URL in the address bar only updates after React has updated the DOM.
 // This isn't ideal, but it's the best we can do without the Navigation API.
 // We also listen to 'popstate' events to handle back/forward navigations.
-function HistoryRouter({children}) {
-  const [routerState, setRouterState] = useState({
+function HistoryRouter({children}: {children: ReactNode}) {
+  const [routerState, setRouterState] = useState<RouterState>({
     pendingNav: () => {},
     url: document.location.pathname,
     search: parseSearchParams(document.location.search),
   })
 
-  const navigate = useCallback((url) => {
+  function navigate(url: string) {
     startTransition(() => {
       setRouterState(() => {
         return {
@@ -155,9 +180,9 @@ function HistoryRouter({children}) {
         }
       })
     })
-  }, [])
+  }
 
-  const setParams = useCallback((key, value) => {
+  function setParams(key: string, value: string) {
     startTransition(() => {
       setRouterState((prev) => {
         const newParams = {...prev.search}
@@ -176,9 +201,9 @@ function HistoryRouter({children}) {
         }
       })
     })
-  }, [])
+  }
 
-  const refresh = useCallback(() => {
+  function refresh() {
     revalidate()
     startTransition(() => {
       setRouterState((prev) => {
@@ -187,7 +212,7 @@ function HistoryRouter({children}) {
         }
       })
     })
-  }, [])
+  }
 
   useEffect(() => {
     function handlePopState() {
@@ -217,18 +242,21 @@ function HistoryRouter({children}) {
     pendingNav()
   }, [pendingNav])
 
-  const contextValue = useMemo(
-    () => ({
-      url: routerState.url,
-      search: routerState.search,
-      navigate,
-      setParams,
-      refresh,
-    }),
-    [routerState.url, routerState.search, navigate, setParams, refresh],
+  return (
+    <RouterContext
+      // Deliberately not memoized, for the same reason as NavigationRouter.
+      // oxlint-disable-next-line react/jsx-no-constructed-context-values
+      value={{
+        url: routerState.url,
+        search: routerState.search,
+        navigate,
+        setParams,
+        refresh,
+      }}
+    >
+      {children}
+    </RouterContext>
   )
-
-  return <RouterContext value={contextValue}>{children}</RouterContext>
 }
 
 let SelectedRouter = HistoryRouter
@@ -238,7 +266,7 @@ if (typeof navigation === 'object') {
 
 export const Router = SelectedRouter
 
-const RouterContext = createContext({
+const RouterContext = createContext<RouterContextValue>({
   url: '/',
   search: {},
   navigate: () => {},
@@ -250,9 +278,9 @@ export function useRouter() {
   return use(RouterContext)
 }
 
-function parseSearchParams(queryString) {
+function parseSearchParams(queryString: string): SearchParams {
   const params = new URLSearchParams(queryString.startsWith('?') ? queryString : `?${queryString}`)
-  const result = {}
+  const result: SearchParams = {}
   for (const [key, value] of params.entries()) {
     result[key] = value
   }

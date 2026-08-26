@@ -1,10 +1,11 @@
 import {useState} from 'react'
 
-import {login, prefetchLessons} from '@/data/index.js'
+import {login, prefetchLessons} from '@/data/index'
 import * as Design from '@/design'
-import {useRouter} from '@/router/index.jsx'
+import type {LoginFields} from '@/design/LoginForm'
+import {useRouter} from '@/router/index'
 
-const initialFieldData = {
+const initialFieldData: LoginFields = {
   username: 'hi@react.dev',
   password: 'reactisgoodactually',
 }
@@ -20,7 +21,7 @@ export default function Login() {
      * the action will be true until both the POST, and the navigation
      * after it is done.
      */
-    await login(fields.username, fields.password)
+    await login()
 
     /**
      * Here we're pre-fetching the lessons data before navigating to

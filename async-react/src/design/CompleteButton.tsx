@@ -4,9 +4,15 @@ import {useOptimistic} from 'react'
 
 import {cn} from '@/lib/utils'
 
-import PendingButton from './PendingButton.jsx'
+import PendingButton from './PendingButton'
 
-export default function CompleteButton({complete, action}) {
+export default function CompleteButton({
+  complete,
+  action,
+}: {
+  complete: boolean
+  action: () => Promise<void>
+}) {
   const [optimisticComplete, setOptimisticComplete] = useOptimistic(complete)
 
   function clickAction() {

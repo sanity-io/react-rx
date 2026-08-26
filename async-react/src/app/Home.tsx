@@ -1,10 +1,17 @@
 import {Suspense, use, ViewTransition} from 'react'
 
-import * as data from '@/data/index.js'
+import type {Lesson as LessonItem} from '@/data/fake-data'
+import * as data from '@/data/index'
 import * as Design from '@/design'
-import {useRouter} from '@/router/index.jsx'
+import {useRouter} from '@/router/index'
 
-function Lesson({item, completeAction}) {
+function Lesson({
+  item,
+  completeAction,
+}: {
+  item: LessonItem
+  completeAction: (id: string) => Promise<void>
+}) {
   async function action() {
     await completeAction(item.id)
   }
@@ -21,7 +28,15 @@ function Lesson({item, completeAction}) {
   )
 }
 
-function LessonList({tab, search, completeAction}) {
+function LessonList({
+  tab,
+  search,
+  completeAction,
+}: {
+  tab: string
+  search: string
+  completeAction: (id: string) => Promise<void>
+}) {
   /**
    * data.getLessons is a suspense-enabled data fetching function.
    * It returns a cached promise that fetched the first time it's called
@@ -60,7 +75,7 @@ function LessonList({tab, search, completeAction}) {
           <ViewTransition key={item.id}>
             <div>
               <ViewTransition default="none">
-                <Lesson id={item.id} item={item} completeAction={completeAction} />
+                <Lesson item={item} completeAction={completeAction} />
               </ViewTransition>
             </div>
           </ViewTransition>
@@ -75,20 +90,20 @@ export default function Home() {
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
 
-  function searchAction(value) {
+  function searchAction(value: string) {
     /**
      * Since this is an Action we know this updates in a transition.
      */
     router.setParams('q', value)
   }
-  function tabAction(value) {
+  function tabAction(value: string) {
     /**
      * Since this is an Action we know this updates in a transition.
      */
     router.setParams('tab', value)
   }
 
-  async function completeAction(id) {
+  async function completeAction(id: string) {
     /**
      * Since we're in an Action we know we're in a transition.
      * This means we can await a mutation, and the pending state of
