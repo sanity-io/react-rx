@@ -72,6 +72,9 @@ importers:
       '@eslint/js':
         specifier: ^9.36.0
         version: 9.39.5
+      '@tsconfig/vite-react':
+        specifier: ^8.1.1
+        version: 8.1.1
       '@types/react':
         specifier: ^19.1.16
         version: 19.2.18
@@ -1037,6 +1040,9 @@ packages:
     resolution: {integrity: sha512-yYU8cogLeSh/ms2jh8Fj7jaba/EWa7Ja6GoUqYZaraEuCI5YS6ms6ObZgjjedm+jm6XZjdNRWBpPP6Z86oOxcw==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
+
+  '@tsconfig/vite-react@8.1.1':
+    resolution: {integrity: sha512-TdLtRE9INt7aupEC2yhem6y4RN8T+B4oa2OUYsay0ioxSDl8Q4yaq0k2yc86Gb2BEHjKp4RUxgIzqOTk4IQ8dQ==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -2882,6 +2888,8 @@ snapshots:
       '@tailwindcss/oxide': 4.3.3
       tailwindcss: 4.3.3
       vite: 7.3.6(jiti@2.7.0)(lightningcss@1.32.0)
+
+  '@tsconfig/vite-react@8.1.1': {}
 
   '@types/babel__core@7.20.5':
     dependencies:

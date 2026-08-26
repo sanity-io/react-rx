@@ -1,15 +1,15 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-   
-  ],
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@tsconfig/vite-react/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "allowJs": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
-  }
+    },
+    // Overriding "types" replaces the base's list, so vite/client is repeated.
+    // react/experimental loads the ViewTransition/addTransitionType typings
+    // that match the pinned react@experimental build.
+    "types": ["vite/client", "react/experimental"]
+  },
+  "include": ["src/**/*", "*.js"]
 }
