@@ -58,7 +58,6 @@ export function useLessonsPromise(tab, search) {
   });
 }
 
-/** The only entrance to the intent store. */
 const events$ = new Subject();
 
 /** What the user asked for but has not seen yet, by lesson id. */
@@ -107,13 +106,10 @@ function reduceWanted(wanted, event) {
         ),
       );
     default:
-      // events$ is private to this module, so an unknown type is a bug here
-      // rather than input. Keep the read path alive.
       return wanted;
   }
 }
 
-/** Pure projection keeps list membership canonical during the pending window. */
 function applyWanted(lessons, wanted) {
   if (!wanted || wanted.size === 0) return lessons;
   return lessons.map((lesson) =>
