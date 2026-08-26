@@ -20,6 +20,20 @@ jobs:
       - run: pnpm lint
       - run: pnpm knip --reporter github-actions
 
+  demo:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm install --frozen-lockfile
+        working-directory: async-react
+      - run: node_modules/.bin/tsc --noEmit -p async-react/tsconfig.json
+      - run: pnpm lint
+        working-directory: async-react
+      - run: pnpm build
+        working-directory: async-react
+
   test:
     needs: build
     runs-on: ${{ matrix.os }}
