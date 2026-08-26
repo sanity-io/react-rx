@@ -12,5 +12,9 @@ export default defineConfig({
       // eslint-disable-next-line no-undef
       "@": path.resolve(__dirname, "./src"),
     },
+    // react-rx is linked from ../packages/react-rx and compiled from source;
+    // its sibling node_modules has its own react/rxjs copies. Dedupe so the
+    // app bundles exactly one of each.
+    dedupe: ["react", "react-dom", "rxjs"],
   },
 });

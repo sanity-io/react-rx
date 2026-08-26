@@ -8,6 +8,7 @@
   },
   "ignorePatterns": [
     "**/dist",
+    "async-react",
     "website/.next",
     "website/next-env.d.ts",
     "website/public/_pagefind"

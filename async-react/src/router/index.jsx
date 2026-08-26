@@ -251,8 +251,7 @@ const RouterContext = createContext({
   refresh: () => {},
 });
 
-// eslint-disable-next-line react-refresh/only-export-components
-// TODO: fix this - not sure why I can't export a hook with this rule.
+// eslint-disable-next-line react-refresh/only-export-components -- the router module intentionally exports both the provider and its hook
 export function useRouter() {
   return use(RouterContext);
 }
