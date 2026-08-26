@@ -81,16 +81,27 @@ export function useLessons(promise) {
   return applyWanted(lessons, wanted);
 }
 
+/** One POST per lesson: the endpoint toggles, so overlapping requests cannot
+ * stay aligned with the absolute overlay. */
+const inFlight = new Map();
+
 /** Record intent before the POST so the check flips in the same event tick.
  * Drop it before rethrowing a failure so the action rejects with data restored. */
 export function setComplete(id, complete) {
+  const existing = inFlight.get(id);
+  if (existing) return existing;
+
   events$.next({ type: "want", id, complete });
-  return delayedFetch(`/lesson/${id}/toggle`, { method: "POST" }).catch(
-    (error) => {
+  const request = delayedFetch(`/lesson/${id}/toggle`, { method: "POST" })
+    .catch((error) => {
       events$.next({ type: "abandon", id });
       throw error;
-    },
-  );
+    })
+    .finally(() => {
+      inFlight.delete(id);
+    });
+  inFlight.set(id, request);
+  return request;
 }
 
 /** @type {(wanted: Wanted, event: StoreEvent) => Wanted} */
