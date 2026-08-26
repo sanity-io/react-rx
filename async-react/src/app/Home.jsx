@@ -1,42 +1,32 @@
-import { Suspense, use, ViewTransition } from "react";
+import { Suspense, ViewTransition } from "react";
 import * as Design from "@/design";
 import { useRouter } from "@/router/index.jsx";
 import * as data from "@/data/index.js";
 
 function Lesson({ item, completeAction }) {
-  async function action() {
-    await completeAction(item.id);
-  }
   return (
     <Design.LessonCard item={item}>
       {/* 
           Design.CompleteButton is using the action prop pattern to automatically
-          update the completed state while the action is pending. If the action to
-          toggle complete takes longer than 150ms, it automatically shows a loading
-          state on the button, so the user knows their action is being processed.
+          show a loading state if the toggle takes longer than 150ms. It renders
+          item.complete directly because the list already carries what the user
+          asked for.
       */}
       <Design.CompleteButton
         complete={item.complete}
-        action={action}
+        action={(complete) => completeAction(item.id, complete)}
       ></Design.CompleteButton>
     </Design.LessonCard>
   );
 }
 
-function LessonList({ tab, search, completeAction }) {
+function LessonList({ lessonsPromise, completeAction }) {
   /**
-   * data.getLessons is a suspense-enabled data fetching function.
-   * It returns a cached promise that fetched the first time it's called
-   * with a given tab+search, then it returns the resolved data on subsequent calls.
-   *
-   * Since it's cached, there needs to be a way to clear the cache and re-fetch the data,
-   * like after a mutation like toggling complete. This is done with the data.revalidate() function,
-   * which is called in the completeAction below.
-   *
-   * The use(data.getLessons(...)) call here will suspend the component
-   * until the promise resolves, then return the resolved data.
+   * The promise suspends until canonical data arrives. data.useLessons also
+   * reads pending intent synchronously below this Suspense boundary, so an
+   * optimistic re-render cannot re-run the observable lookup in Home and suspend.
    */
-  const lessons = use(data.getLessons(tab, search));
+  const lessons = data.useLessons(lessonsPromise);
 
   if (lessons.length === 0) {
     return (
@@ -80,6 +70,11 @@ export default function Home() {
   const router = useRouter();
   const search = router.search.q || "";
   const tab = router.search.tab || "all";
+  /**
+   * One observable identity per tab+search lets a router transition hold the
+   * current list while react-rx fetches the next one.
+   */
+  const lessonsPromise = data.useLessonsPromise(tab, search);
 
   function searchAction(value) {
     /**
@@ -94,14 +89,13 @@ export default function Home() {
     router.setParams("tab", value);
   }
 
-  async function completeAction(id) {
+  async function completeAction(id, complete) {
     /**
-     * Since we're in an Action we know we're in a transition.
-     * This means we can await a mutation, and the pending state of
-     * the action will be true until the mutation, and all the updates
-     * after it are done.
+     * Since we're in an Action we know we're in a transition. setComplete has
+     * already recorded the user's intent, so the check has flipped. Awaiting
+     * keeps the pending state active through the mutation and later updates.
      */
-    await data.mutateToggle(id);
+    await data.setComplete(id, complete);
 
     /**
      * After the mutation we need to revalidate the data cache.
@@ -139,8 +133,7 @@ export default function Home() {
         */}
         <Suspense fallback={<Design.FallbackList />}>
           <LessonList
-            tab={tab}
-            search={search}
+            lessonsPromise={lessonsPromise}
             completeAction={completeAction}
           />
         </Suspense>

@@ -1,29 +1,16 @@
 import { CircleCheckBig } from "lucide-react";
-import { startTransition } from "react";
 import PendingButton from "./PendingButton.jsx";
-import { useOptimistic } from "react";
-import { cn } from "@/lib/utils";
 
 export default function CompleteButton({ complete, action }) {
-  const [optimisticComplete, setOptimisticComplete] = useOptimistic(complete);
-
-  function clickAction() {
-    startTransition(async () => {
-      setOptimisticComplete(!optimisticComplete);
-      await action();
-    });
-  }
-
+  /**
+   * No useOptimistic here: the list this button renders already shows what the
+   * user asked for, because the store merges intent into the data. The design
+   * system still owns the delayed loading state, via PendingButton.
+   * `action` takes the value the user asked for, like changeAction elsewhere.
+   */
   return (
-    <PendingButton action={clickAction}>
-      {optimisticComplete ? (
-        <CircleCheckBig
-          className={cn({ "text-chart-2": optimisticComplete })}
-          size={48}
-        />
-      ) : (
-        <div></div>
-      )}
+    <PendingButton action={() => action(!complete)}>
+      {complete ? <CircleCheckBig className="text-chart-2" size={48} /> : <div />}
     </PendingButton>
   );
 }
