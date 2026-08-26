@@ -9,13 +9,13 @@ View the app: https://async-react.dev/
 Install:
 
 ```bash
-yarn
+pnpm install
 ```
 
 Run the frontend:
 
 ```bash
-yarn dev
+pnpm --filter async-react dev
 ```
 
 Optional: you can use a real backend by updating `.env` to:
@@ -27,7 +27,7 @@ VITE_USE_REAL_SERVER=true
 And run the backend:
 
 ```
-yarn server
+pnpm --filter async-react server
 ```
 
 This is useful when viewing React Performance Tracks because you can see the real network requests.

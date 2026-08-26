@@ -1,7 +1,7 @@
 import {startTransition} from 'react'
 import {useOptimistic} from 'react'
 
-import {Tabs, TabsList, TabsTrigger} from '@/components//ui/tabs'
+import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs'
 
 import ButtonShimmer from './ButtonShimmer.jsx'
 

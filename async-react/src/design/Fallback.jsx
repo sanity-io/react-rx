@@ -1,6 +1,6 @@
 import {ViewTransition} from 'react'
 
-import {Item, ItemActions, ItemContent, ItemMedia, ItemTitle} from '@/components//ui/item'
+import {Item, ItemActions, ItemContent, ItemMedia, ItemTitle} from '@/components/ui/item'
 import {Skeleton} from '@/components/ui/skeleton'
 
 function FallbackListItem() {

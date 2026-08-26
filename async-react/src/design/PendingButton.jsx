@@ -1,6 +1,6 @@
 import {useTransition} from 'react'
 
-import {Button} from '@/components//ui/button'
+import {Button} from '@/components/ui/button'
 
 import {IconButtonShimmer} from './ButtonShimmer.jsx'
 

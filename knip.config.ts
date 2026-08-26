@@ -1,15 +1,10 @@
 import type {KnipConfig} from 'knip'
 
 const config: KnipConfig = {
-  ignoreIssues: {
-    'async-react/src/components/ui/**': ['exports'],
-    'async-react/src/data/debug.jsx': ['exports'],
-    'async-react/src/design/**': ['exports'],
-  },
   workspaces: {
     '.': {},
     'async-react': {
-      entry: ['src/main.jsx', 'server.js', 'vite.config.js'],
+      entry: ['src/main.jsx', 'src/debugger.js', 'server.js', 'vite.config.ts'],
       project: ['src/**/*.{js,jsx,ts,tsx}', '*.{js,ts}'],
       paths: {'@/*': ['./src/*']},
       ignoreDependencies: ['tailwindcss', 'tw-animate-css'],
