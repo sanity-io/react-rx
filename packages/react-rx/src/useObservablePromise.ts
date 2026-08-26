@@ -137,40 +137,29 @@ export function useObservablePromise<T>(
   entry.adoptTtl(ttl)
 
   // Whether this hook instance is a live consumer — committed, visible, and
-  // not `disabled`. Tracked by a plain visibility effect, deliberately not by
-  // the `useSyncExternalStore` subscribe cycle (subscribe is specified as
-  // subscription-only, and React re-invokes it on its own schedule) and not
-  // by a ref (state is how a render reads commit-phase facts without
-  // breaking the rules). Effects unmount on <Activity> hide and remount on
-  // reveal, so hiding clears the flag; React applies a fiber's pending
-  // updates before re-rendering it, so a hidden tree's swap render observes
-  // `false` even when the hide and the swap land in the same batch. The
-  // extra render this costs is bounded: `setLive` bails whenever the value
-  // is unchanged, so it re-renders once after the first commit and once per
-  // hide/reveal or `disabled` edge.
+  // not `disabled`. Effects unmount on <Activity> hide and remount on reveal,
+  // so hiding clears the flag; because React applies a fiber's pending
+  // updates before re-rendering it, a hidden tree's swap render observes
+  // `false` even when the hide and the swap land in the same batch.
   const [live, setLive] = useState(false)
   useEffect(() => {
     if (disabled) {
       return
     }
-    // oxlint-disable-next-line react/set-state-in-effect -- the rule's own exception: this synchronizes React state with an external fact (this fiber's commit/visibility lifecycle) that only effects can observe, and the resulting extra render is a single bounded pass per mount/hide/reveal edge.
+    // oxlint-disable-next-line react/set-state-in-effect -- synchronizes with an external fact (this fiber's commit/visibility lifecycle) that only effects observe; the extra render is one bounded pass per mount/hide/reveal edge.
     setLive(true)
     return () => {
       setLive(false)
     }
   }, [disabled])
 
-  // Live-swap eager start. Fetching is commit-driven (the store subscription
-  // below), explicit (preloadObservablePromise), or — exactly here — render-
-  // driven for a consumer that is already committed and subscribed and is
-  // being re-rendered to a new observable. That render is how React's
-  // canonical "swap the source inside startTransition / behind
-  // useDeferredValue" refetch pattern asks for data, and it suspends before
-  // any commit could start the fetch; without this it would deadlock. Fresh
-  // mounts, server renders, disabled consumers, and hidden <Activity>
-  // pre-renders have no live subscription, so they never fetch from render.
-  // `ensureStarted` is idempotent, so render replays (StrictMode, retries)
-  // are harmless.
+  // Live-swap eager start: a live consumer re-rendered to a new observable
+  // starts the new source during that render. This is how React's canonical
+  // "swap the source inside startTransition / behind useDeferredValue"
+  // refetch pattern asks for data — the swap render suspends before any
+  // commit could start the fetch, so without this it would deadlock. Mounts,
+  // server renders, disabled consumers, and hidden <Activity> pre-renders
+  // are not live and never fetch from render.
   if (!disabled && live) {
     entry.ensureStarted()
   }
