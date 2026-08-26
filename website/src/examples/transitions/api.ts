@@ -17,10 +17,10 @@ const BIOS: Record<string, string> = {
 /**
  * One cold, fetch-like observable per profile, with visible latency.
  *
- * The Map-stable identity is load-bearing: react-rx keys its promise cache by
- * observable identity, so every render asking for the same profile must get
- * the SAME instance — a factory that built a fresh observable per call would
- * give each render its own never-shared cache entry.
+ * The Map matters: react-rx keys its promise cache by observable identity,
+ * so every render asking for the same profile must get the SAME instance.
+ * A factory that built a fresh observable per call would give each render
+ * its own never-shared cache entry.
  */
 let cache = new Map<string, Observable<Profile>>()
 
