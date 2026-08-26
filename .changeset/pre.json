@@ -11,6 +11,7 @@
     "remove-render-phase-warmup",
     "remove-use-observable-event",
     "require-initial-value",
-    "state-based-live-swap-gate"
+    "state-based-live-swap-gate",
+    "visibility-effect-live-flag"
   ]
 }
