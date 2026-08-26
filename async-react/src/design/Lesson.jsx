@@ -1,4 +1,6 @@
-import { ItemGroup } from "@/components/ui/item";
+import {Lightbulb, Shuffle, Zap, Hourglass, FastForward, Puzzle} from 'lucide-react'
+
+import {ItemGroup} from '@/components/ui/item'
 import {
   Item,
   ItemActions,
@@ -6,16 +8,7 @@ import {
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from "@/components/ui/item";
-
-import {
-  Lightbulb,
-  Shuffle,
-  Zap,
-  Hourglass,
-  FastForward,
-  Puzzle,
-} from "lucide-react";
+} from '@/components/ui/item'
 
 const ICONS = {
   lightbulb: Lightbulb,
@@ -24,10 +17,10 @@ const ICONS = {
   hourglass: Hourglass,
   fastforward: FastForward,
   puzzle: Puzzle,
-};
+}
 
-export function LessonCard({ item, children }) {
-  const Icon = ICONS[item.icon];
+export function LessonCard({item, children}) {
+  const Icon = ICONS[item.icon]
   return (
     <Item className="pl-4">
       <ItemMedia className="h-12 w-12" variant="ghost">
@@ -39,9 +32,9 @@ export function LessonCard({ item, children }) {
       </ItemContent>
       <ItemActions>{children}</ItemActions>
     </Item>
-  );
+  )
 }
 
-export function List({ children }) {
-  return <ItemGroup className="px-4">{children}</ItemGroup>;
+export function List({children}) {
+  return <ItemGroup className="px-4">{children}</ItemGroup>
 }

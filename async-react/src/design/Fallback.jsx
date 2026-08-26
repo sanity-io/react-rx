@@ -1,14 +1,9 @@
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemMedia,
-  ItemTitle,
-} from "@/components//ui/item";
-import { ViewTransition } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import {ViewTransition} from 'react'
 
-export function FallbackListItem() {
+import {Item, ItemActions, ItemContent, ItemMedia, ItemTitle} from '@/components//ui/item'
+import {Skeleton} from '@/components/ui/skeleton'
+
+function FallbackListItem() {
   return (
     <Item variant="ghost">
       <ItemMedia className="h-12 w-12" variant="ghost">
@@ -26,7 +21,7 @@ export function FallbackListItem() {
         </div>
       </ItemActions>
     </Item>
-  );
+  )
 }
 
 export default function FallbackList() {
@@ -51,5 +46,5 @@ export default function FallbackList() {
         </div>
       </div>
     </ViewTransition>
-  );
+  )
 }

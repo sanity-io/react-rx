@@ -1,16 +1,17 @@
-import { useRouter } from "@/router/index.jsx";
-import { login, prefetchLessons } from "@/data/index.js";
-import { useState, ViewTransition } from "react";
-import * as Design from "@/design";
+import {useState} from 'react'
+
+import {login, prefetchLessons} from '@/data/index.js'
+import * as Design from '@/design'
+import {useRouter} from '@/router/index.jsx'
 
 const initialFieldData = {
-  username: "hi@react.dev",
-  password: "reactisgoodactually",
-};
+  username: 'hi@react.dev',
+  password: 'reactisgoodactually',
+}
 
 export default function Login() {
-  const router = useRouter();
-  const [fields, setFields] = useState(initialFieldData);
+  const router = useRouter()
+  const [fields, setFields] = useState(initialFieldData)
 
   async function submitAction() {
     /**
@@ -19,7 +20,7 @@ export default function Login() {
      * the action will be true until both the POST, and the navigation
      * after it is done.
      */
-    await login(fields.username, fields.password);
+    await login(fields.username, fields.password)
 
     /**
      * Here we're pre-fetching the lessons data before navigating to
@@ -28,7 +29,7 @@ export default function Login() {
      * without the data, and the login will navigate to the page with fallbacks
      * while the data finishes loading.
      */
-    await prefetchLessons();
+    await prefetchLessons()
     /**
      * This will navigate to a new page. Since the page is new, the transition
      * will complete to the suspended fallback state. Typically, you could
@@ -36,7 +37,7 @@ export default function Login() {
      * you cannot load the new page until after the login is done, since
      * the resources to load are behind an auth wall.
      */
-    router.navigate("/");
+    router.navigate('/')
   }
   return (
     <Design.LoginForm fields={fields} setFields={setFields}>
@@ -46,5 +47,5 @@ export default function Login() {
       */}
       <Design.Button action={submitAction}>Login</Design.Button>
     </Design.LoginForm>
-  );
+  )
 }

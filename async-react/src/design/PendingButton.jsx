@@ -1,19 +1,21 @@
-import { Button } from "@/components//ui/button";
-import { IconButtonShimmer } from "./ButtonShimmer.jsx";
-import { useTransition } from "react";
+import {useTransition} from 'react'
 
-export default function PendingButton({ action, onClick, loading, children }) {
-  const [_isPending, transition] = useTransition();
-  const isPending = action != null ? _isPending : loading;
+import {Button} from '@/components//ui/button'
+
+import {IconButtonShimmer} from './ButtonShimmer.jsx'
+
+export default function PendingButton({action, onClick, loading, children}) {
+  const [_isPending, transition] = useTransition()
+  const isPending = action != null ? _isPending : loading
 
   function handleClick(e) {
-    e.preventDefault();
+    e.preventDefault()
     if (action) {
       transition(async () => {
-        await action();
-      });
-    } else {
-      onClick && onClick(e);
+        await action()
+      })
+    } else if (onClick) {
+      onClick(e)
     }
   }
 
@@ -26,5 +28,5 @@ export default function PendingButton({ action, onClick, loading, children }) {
     >
       <IconButtonShimmer isPending={isPending}>{children}</IconButtonShimmer>
     </Button>
-  );
+  )
 }

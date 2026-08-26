@@ -4,10 +4,13 @@ import {
   use,
   useLayoutEffect,
   useEffect,
+  useCallback,
+  useMemo,
   startTransition,
   addTransitionType,
-} from "react";
-import { revalidate } from "../data/index.js";
+} from 'react'
+
+import {revalidate} from '../data/index.js'
 
 // There are two example routers here.
 // One uses the Navigation API and the other uses window.history,
@@ -22,71 +25,69 @@ import { revalidate } from "../data/index.js";
 // We call the pendingNav callback in the intercept handler
 // to tell the browser to commit the navigation after React has updated the DOM.
 // This allows the browser to wait to reset focus/scroll until after the transition is done.
-function NavigationRouter({ children }) {
+function navigationNavigate(url) {
+  window.navigation.navigate(url)
+}
+
+function navigationSetParams(key, value) {
+  const newParams = parseSearchParams(document.location.search)
+  if (value !== '') {
+    newParams[key] = value
+  } else {
+    delete newParams[key]
+  }
+  const newUrlParams = new URLSearchParams(newParams).toString()
+
+  window.navigation.navigate(document.location.pathname + (newUrlParams ? `?${newUrlParams}` : ''))
+}
+
+function NavigationRouter({children}) {
   const [routerState, setRouterState] = useState(() => ({
     pendingNav: () => {},
     url: document.location.pathname,
     search: parseSearchParams(document.location.search),
-  }));
+  }))
 
-  function navigate(url) {
-    window.navigation.navigate(url);
-  }
-
-  function setParams(key, value) {
-    const newParams = parseSearchParams(document.location.search);
-    if (value !== "") {
-      newParams[key] = value;
-    } else {
-      delete newParams[key];
-    }
-    const newUrlParams = new URLSearchParams(newParams).toString();
-
-    window.navigation.navigate(
-      document.location.pathname + (newUrlParams ? `?${newUrlParams}` : ""),
-    );
-  }
-
-  function refresh() {
-    revalidate();
+  const refresh = useCallback(() => {
+    revalidate()
     startTransition(() => {
       setRouterState((prev) => {
         return {
           ...prev,
-        };
-      });
-    });
-  }
+        }
+      })
+    })
+  }, [])
 
   useEffect(() => {
     function handleNavigate(event) {
       if (!event.canIntercept) {
-        return;
+        return
       }
-      const navigationType = event.navigationType;
-      const previousIndex = window.navigation.currentEntry.index;
-      const currURL = new URL(location.href);
-      const newURL = new URL(event.destination.url);
+      const navigationType = event.navigationType
+      const previousIndex = window.navigation.currentEntry.index
+      const currURL = new URL(location.href)
+      const newURL = new URL(event.destination.url)
 
       // If only the search params or hash are changing we want to
       // avoid the default focus reset that would happen.
       // The app can always reset focus manually if needed.
       const onlyParamsOrHash =
         newURL.pathname === currURL.pathname &&
-        (newURL.search !== currURL.search || newURL.hash !== currURL.hash);
+        (newURL.search !== currURL.search || newURL.hash !== currURL.hash)
 
       event.intercept({
         handler() {
-          let promise;
+          let promise
           startTransition(() => {
-            addTransitionType("navigation-" + navigationType);
-            if (navigationType === "traverse") {
+            addTransitionType('navigation-' + navigationType)
+            if (navigationType === 'traverse') {
               // For traverse types it's useful to distinguish going back or forward.
-              const nextIndex = event.destination.index;
+              const nextIndex = event.destination.index
               if (nextIndex > previousIndex) {
-                addTransitionType("navigation-forward");
+                addTransitionType('navigation-forward')
               } else if (nextIndex < previousIndex) {
-                addTransitionType("navigation-back");
+                addTransitionType('navigation-back')
               }
             }
             promise = new Promise((resolve) => {
@@ -94,104 +95,99 @@ function NavigationRouter({ children }) {
                 url: newURL.pathname,
                 search: parseSearchParams(newURL.search),
                 pendingNav: resolve,
-              });
-            });
-          });
-          return promise;
+              })
+            })
+          })
+          return promise
         },
-        focusReset: onlyParamsOrHash ? "manual" : "after-transition",
-      });
+        focusReset: onlyParamsOrHash ? 'manual' : 'after-transition',
+      })
     }
 
-    window.navigation.addEventListener("navigate", handleNavigate);
+    window.navigation.addEventListener('navigate', handleNavigate)
     return () => {
-      window.navigation.removeEventListener("navigate", handleNavigate);
-    };
-  }, []);
+      window.navigation.removeEventListener('navigate', handleNavigate)
+    }
+  }, [])
 
-  const pendingNav = routerState.pendingNav;
+  const pendingNav = routerState.pendingNav
 
   useLayoutEffect(() => {
-    pendingNav();
-  }, [pendingNav]);
+    pendingNav()
+  }, [pendingNav])
 
-  return (
-    <RouterContext
-      value={{
-        url: routerState.url,
-        search: routerState.search,
-        navigate,
-        setParams,
-        refresh,
-        isPending: false,
-        params: {},
-      }}
-    >
-      {children}
-    </RouterContext>
-  );
+  const contextValue = useMemo(
+    () => ({
+      url: routerState.url,
+      search: routerState.search,
+      navigate: navigationNavigate,
+      setParams: navigationSetParams,
+      refresh,
+      isPending: false,
+      params: {},
+    }),
+    [routerState.url, routerState.search, refresh],
+  )
+
+  return <RouterContext value={contextValue}>{children}</RouterContext>
 }
 
 // For the History API, we just call history.pushState in the pendingNav callback.
 // This means the URL in the address bar only updates after React has updated the DOM.
 // This isn't ideal, but it's the best we can do without the Navigation API.
 // We also listen to 'popstate' events to handle back/forward navigations.
-function HistoryRouter({ children }) {
+function HistoryRouter({children}) {
   const [routerState, setRouterState] = useState({
     pendingNav: () => {},
     url: document.location.pathname,
     search: parseSearchParams(document.location.search),
-  });
+  })
 
-  function navigate(url) {
+  const navigate = useCallback((url) => {
     startTransition(() => {
       setRouterState(() => {
         return {
           url,
           search: {},
           pendingNav() {
-            window.history.pushState({}, "", url);
+            window.history.pushState({}, '', url)
           },
-        };
-      });
-    });
-  }
+        }
+      })
+    })
+  }, [])
 
-  function setParams(key, value) {
+  const setParams = useCallback((key, value) => {
     startTransition(() => {
       setRouterState((prev) => {
-        const newParams = { ...prev.search };
-        if (value !== "") {
-          newParams[key] = value;
+        const newParams = {...prev.search}
+        if (value !== '') {
+          newParams[key] = value
         } else {
-          delete newParams[key];
+          delete newParams[key]
         }
         return {
           url: prev.url,
           search: newParams,
           pendingNav() {
-            const newUrlParams = new URLSearchParams(newParams).toString();
-            window.history.pushState(
-              {},
-              "",
-              prev.url + (newUrlParams ? `?${newUrlParams}` : ""),
-            );
+            const newUrlParams = new URLSearchParams(newParams).toString()
+            window.history.pushState({}, '', prev.url + (newUrlParams ? `?${newUrlParams}` : ''))
           },
-        };
-      });
-    });
-  }
+        }
+      })
+    })
+  }, [])
 
-  function refresh() {
-    revalidate();
+  const refresh = useCallback(() => {
+    revalidate()
     startTransition(() => {
       setRouterState((prev) => {
         return {
           ...prev,
-        };
-      });
-    });
-  }
+        }
+      })
+    })
+  }, [])
 
   useEffect(() => {
     function handlePopState() {
@@ -206,64 +202,59 @@ function HistoryRouter({ children }) {
           pendingNav() {
             // Noop. URL has already updated.
           },
-        });
-      });
+        })
+      })
     }
-    window.addEventListener("popstate", handlePopState);
+    window.addEventListener('popstate', handlePopState)
     return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [])
 
-  const pendingNav = routerState.pendingNav;
+  const pendingNav = routerState.pendingNav
 
   useLayoutEffect(() => {
-    pendingNav();
-  }, [pendingNav]);
+    pendingNav()
+  }, [pendingNav])
 
-  return (
-    <RouterContext
-      value={{
-        url: routerState.url,
-        search: routerState.search,
-        navigate,
-        setParams,
-        refresh,
-      }}
-    >
-      {children}
-    </RouterContext>
-  );
+  const contextValue = useMemo(
+    () => ({
+      url: routerState.url,
+      search: routerState.search,
+      navigate,
+      setParams,
+      refresh,
+    }),
+    [routerState.url, routerState.search, navigate, setParams, refresh],
+  )
+
+  return <RouterContext value={contextValue}>{children}</RouterContext>
 }
 
-let SelectedRouter = HistoryRouter;
-if (typeof navigation === "object") {
-  SelectedRouter = NavigationRouter;
+let SelectedRouter = HistoryRouter
+if (typeof navigation === 'object') {
+  SelectedRouter = NavigationRouter
 }
 
-export const Router = SelectedRouter;
+export const Router = SelectedRouter
 
 const RouterContext = createContext({
-  url: "/",
+  url: '/',
   search: {},
   navigate: () => {},
   setParams: () => {},
   refresh: () => {},
-});
+})
 
-// eslint-disable-next-line react-refresh/only-export-components
-// TODO: fix this - not sure why I can't export a hook with this rule.
 export function useRouter() {
-  return use(RouterContext);
+  return use(RouterContext)
 }
 
 function parseSearchParams(queryString) {
-  const params = new URLSearchParams(
-    queryString.startsWith("?") ? queryString : `?${queryString}`,
-  );
-  const result = {};
+  const params = new URLSearchParams(queryString.startsWith('?') ? queryString : `?${queryString}`)
+  const result = {}
   for (const [key, value] of params.entries()) {
-    result[key] = value;
+    result[key] = value
   }
-  return result;
+  return result
 }

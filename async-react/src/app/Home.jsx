@@ -1,29 +1,27 @@
-import { Suspense, use, ViewTransition } from "react";
-import * as Design from "@/design";
-import { useRouter } from "@/router/index.jsx";
-import * as data from "@/data/index.js";
+import {Suspense, use, ViewTransition} from 'react'
 
-function Lesson({ item, completeAction }) {
+import * as data from '@/data/index.js'
+import * as Design from '@/design'
+import {useRouter} from '@/router/index.jsx'
+
+function Lesson({item, completeAction}) {
   async function action() {
-    await completeAction(item.id);
+    await completeAction(item.id)
   }
   return (
     <Design.LessonCard item={item}>
-      {/* 
+      {/*
           Design.CompleteButton is using the action prop pattern to automatically
           update the completed state while the action is pending. If the action to
           toggle complete takes longer than 150ms, it automatically shows a loading
           state on the button, so the user knows their action is being processed.
       */}
-      <Design.CompleteButton
-        complete={item.complete}
-        action={action}
-      ></Design.CompleteButton>
+      <Design.CompleteButton complete={item.complete} action={action}></Design.CompleteButton>
     </Design.LessonCard>
-  );
+  )
 }
 
-function LessonList({ tab, search, completeAction }) {
+function LessonList({tab, search, completeAction}) {
   /**
    * data.getLessons is a suspense-enabled data fetching function.
    * It returns a cached promise that fetched the first time it's called
@@ -36,14 +34,14 @@ function LessonList({ tab, search, completeAction }) {
    * The use(data.getLessons(...)) call here will suspend the component
    * until the promise resolves, then return the resolved data.
    */
-  const lessons = use(data.getLessons(tab, search));
+  const lessons = use(data.getLessons(tab, search))
 
   if (lessons.length === 0) {
     return (
       <ViewTransition key="empty" default="none" enter="auto" exit="auto">
         <Design.EmptyList />
       </ViewTransition>
-    );
+    )
   }
 
   return (
@@ -62,36 +60,32 @@ function LessonList({ tab, search, completeAction }) {
           <ViewTransition key={item.id}>
             <div>
               <ViewTransition default="none">
-                <Lesson
-                  id={item.id}
-                  item={item}
-                  completeAction={completeAction}
-                />
+                <Lesson id={item.id} item={item} completeAction={completeAction} />
               </ViewTransition>
             </div>
           </ViewTransition>
         ))}
       </Design.List>
     </ViewTransition>
-  );
+  )
 }
 
 export default function Home() {
-  const router = useRouter();
-  const search = router.search.q || "";
-  const tab = router.search.tab || "all";
+  const router = useRouter()
+  const search = router.search.q || ''
+  const tab = router.search.tab || 'all'
 
   function searchAction(value) {
     /**
      * Since this is an Action we know this updates in a transition.
      */
-    router.setParams("q", value);
+    router.setParams('q', value)
   }
   function tabAction(value) {
     /**
      * Since this is an Action we know this updates in a transition.
      */
-    router.setParams("tab", value);
+    router.setParams('tab', value)
   }
 
   async function completeAction(id) {
@@ -101,7 +95,7 @@ export default function Home() {
      * the action will be true until the mutation, and all the updates
      * after it are done.
      */
-    await data.mutateToggle(id);
+    await data.mutateToggle(id)
 
     /**
      * After the mutation we need to revalidate the data cache.
@@ -112,7 +106,7 @@ export default function Home() {
      * Note: We don't have to wrap this in startTransition because
      * the router wraps these updates in a transition automatically.
      */
-    router.refresh();
+    router.refresh()
   }
   return (
     <>
@@ -138,13 +132,9 @@ export default function Home() {
            the optimistic/pending states will be used to show loading instead.
         */}
         <Suspense fallback={<Design.FallbackList />}>
-          <LessonList
-            tab={tab}
-            search={search}
-            completeAction={completeAction}
-          />
+          <LessonList tab={tab} search={search} completeAction={completeAction} />
         </Suspense>
       </Design.TabList>
     </>
-  );
+  )
 }
