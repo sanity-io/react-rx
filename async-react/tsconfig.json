@@ -1,19 +1,11 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@tsconfig/vite-react/tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "noEmit": true,
     "paths": {
       "@/*": ["./src/*"]
     },
-    "skipLibCheck": true,
-    "strict": true,
-    "target": "ES2022",
     "types": ["react/canary", "vite/client", "node"]
   },
   "include": ["src/**/*", "vite.config.ts", "server.js"]
