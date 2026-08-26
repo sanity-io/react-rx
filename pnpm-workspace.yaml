@@ -15,6 +15,8 @@ minimumReleaseAgeExclude:
   - 'oxlint'
   - 'oxlint-tsgolint'
   - '@vitejs/plugin-react@6.1.0'
+  - '@types/react-dom@19.2.5'
+  - 'next@16.3.3'
 
 # nextra-theme-docs 4.6.1 Layout breaks on zod 4.4.x (children stripped before safeParse).
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).
