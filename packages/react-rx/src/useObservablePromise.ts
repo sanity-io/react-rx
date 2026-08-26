@@ -143,16 +143,15 @@ export function useObservablePromise<T>(
   // across consumers. Idempotent.
   entry.adoptTtl(ttl)
 
-  // Whether this hook instance is a live consumer — committed, visible, and
-  // not `disabled`. Effects unmount on <Activity> hide and remount on reveal,
-  // so hiding clears the flag; because React applies a fiber's pending
-  // updates before re-rendering it, a hidden tree's swap render observes
-  // `false` even when the hide and the swap land in the same batch.
+  // Whether this hook instance is committed and visible. Effects unmount on
+  // <Activity> hide and remount on reveal, so hiding clears the flag; because
+  // React applies a fiber's pending updates before re-rendering it, a hidden
+  // tree's swap render observes `false` even when the hide and the swap land
+  // in the same batch. `disabled` is deliberately not part of this: it is
+  // enforced at the consumption sites below, which also lets a transition
+  // that flips `disabled` off start its fetch from that same render.
   const [live, setLive] = useState(false)
   useEffect(() => {
-    if (disabled) {
-      return
-    }
     // Non-urgent by design: the flag only needs to be true by the time a
     // later swap render reads it, and the swaps that need it are transitions
     // themselves, which React entangles with this pending update. Marking it
@@ -168,7 +167,7 @@ export function useObservablePromise<T>(
       // would let a hidden swap render fetch.
       setLive(false)
     }
-  }, [disabled])
+  }, [])
 
   // Live-swap eager start: a live consumer re-rendered to a new observable
   // starts the new source during that render. This is how React's canonical
