@@ -1,12 +1,14 @@
 import type {KnipConfig} from 'knip'
 
 const config: KnipConfig = {
-  // Vendored fork of rickhanlonii/async-react. It is its own pnpm workspace
-  // root (not a monorepo member) and keeps upstream's eslint setup, so the
-  // monorepo's lint/knip gates skip it.
-  ignore: ['async-react/**'],
   workspaces: {
     '.': {},
+    'async-react': {
+      entry: ['src/main.tsx', 'src/debugger.ts', 'server.ts', 'vite.config.ts'],
+      project: ['src/**/*.{ts,tsx}', '*.ts'],
+      paths: {'@/*': ['./src/*']},
+      ignoreDependencies: ['tailwindcss', 'tw-animate-css'],
+    },
     'packages/react-rx': {
       entry: [
         'src/index.ts',

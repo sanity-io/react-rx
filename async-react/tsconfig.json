@@ -2,14 +2,12 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@tsconfig/vite-react/tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
+    "strict": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "paths": {
       "@/*": ["./src/*"]
     },
-    // Overriding "types" replaces the base's list, so vite/client is repeated.
-    // react/experimental loads the ViewTransition/addTransitionType typings
-    // that match the pinned react@experimental build.
-    "types": ["vite/client", "react/experimental"]
+    "types": ["react/canary", "vite/client", "node"]
   },
-  "include": ["src/**/*", "*.js"]
+  "include": ["src/**/*", "vite.config.ts", "server.ts"]
 }

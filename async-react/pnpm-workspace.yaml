@@ -1,6 +1,0 @@
-# Marks this vendored demo as its own pnpm workspace root, separate from the
-# monorepo. It runs react@experimental (ViewTransition/addTransitionType), and
-# sharing the monorepo's dependency graph would let its deps shift peer
-# resolution (vite/esbuild/react dedupe) under the library's toolchain.
-allowBuilds:
-  esbuild: false
