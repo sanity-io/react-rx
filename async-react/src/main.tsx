@@ -1,4 +1,4 @@
-import {Github} from 'lucide-react'
+import {GithubIcon} from 'lucide-react'
 import {ViewTransition, type ReactNode} from 'react'
 import {createRoot} from 'react-dom/client'
 
@@ -20,7 +20,7 @@ function Layout({children}: {children: ReactNode}) {
         aria-label="GitHub"
         className="absolute top-4 right-4 hidden md:block"
       >
-        <Github />
+        <GithubIcon />
       </a>
       <div className="root flex-1 w-[475px] h-full overflow-hidden">
         <Card className="h-[610px] gap-2 flex flex-col border-solid border rounded-lg">
