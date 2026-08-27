@@ -14,7 +14,7 @@ function Layout({children}: {children: ReactNode}) {
   return (
     <>
       <a
-        href="https://github.com/rickhanlonii/async-react"
+        href="https://github.com/sanity-io/react-rx/tree/current/async-react"
         target="_blank"
         rel="noreferrer"
         aria-label="GitHub"
