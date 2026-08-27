@@ -92,6 +92,7 @@ export default function Home() {
   const router = useRouter()
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
+  const revision = router.revision
 
   function searchAction(value) {
     router.setParams('q', value)
@@ -108,7 +109,12 @@ export default function Home() {
       <Design.SearchInput value={search} changeAction={searchAction} />
       <Design.TabList activeTab={tab} changeAction={tabAction}>
         <Suspense fallback={<Design.FallbackList />}>
-          <LessonList tab={tab} search={search} completeAction={completeAction} />
+          <LessonList
+            tab={tab}
+            search={search}
+            revision={revision}
+            completeAction={completeAction}
+          />
         </Suspense>
       </Design.TabList>
     </>
