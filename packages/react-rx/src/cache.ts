@@ -1,8 +1,6 @@
 import {asapScheduler, catchError, finalize, map, of, share, tap, timer} from 'rxjs'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
-import {getValue} from './utils'
-
 interface ObservableState<T> {
   didEmit: boolean
   snapshot?: T
@@ -24,8 +22,11 @@ const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
  * entry and source subscription for the same observable.
  *
  * Creating the entry performs no subscription: the source is never subscribed during render.
- * `getSnapshot` returns the resolved `initialValue` until the store subscription (started on
- * commit) delivers the first emission into the entry's state.
+ * `getSnapshot` returns the caller-resolved `initialValue` until the store subscription
+ * (started on commit) delivers the first emission into the entry's state. Hooks must pass an
+ * already-resolved snapshot: `useSyncExternalStore` requires `Object.is`-stable getSnapshot
+ * results, so re-invoking an initializer that returns a new object would loop until React
+ * hits maximum update depth.
  *
  * @internal
  */
@@ -69,9 +70,7 @@ export function getOrCreateStore<ObservableType extends Observable<any>>(
       if (state.error) {
         throw state.error
       }
-      return (
-        state.didEmit ? state.snapshot : getValue(initialValue)
-      ) as ObservedValueOf<ObservableType>
+      return (state.didEmit ? state.snapshot : initialValue) as ObservedValueOf<ObservableType>
     },
   }
 

@@ -409,9 +409,9 @@ test('initialValue factories must be pure', () => {
   }
 
   const {result} = renderHook(() => useSyncObservable(values$, factory))
-  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
-  // when checking for tearing on commit.
-  expect(factoryCalls).toBeGreaterThanOrEqual(2)
+  // Like useState, the initializer runs once and the result is reused for every
+  // getSnapshot read until the source emits.
+  expect(factoryCalls).toBe(1)
   expect(result.current).toBe('initial')
   const callsBeforeEmit = factoryCalls
 
@@ -422,7 +422,7 @@ test('initialValue factories must be pure', () => {
 })
 
 test('SSR resolves a factory initialValue through getServerSnapshot', () => {
-  // The sync hook's getServerSnapshot resolves factories via getValue — a code path
+  // The sync hook's getServerSnapshot returns the once-resolved factory result — a code path
   // distinct from the client getSnapshot.
   const observable = scheduled('async value', asyncScheduler)
   function ObservableComponent() {

@@ -1,9 +1,9 @@
-import {useCallback, useDeferredValue, useMemo, useSyncExternalStore} from 'react'
+import {useCallback, useDeferredValue, useMemo, useState, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore} from './cache'
 import type {UseObservableOptions} from './types'
-import {EMPTY_OBJECT, missingInitialValueError, UNSET_INITIAL_VALUE} from './utils'
+import {EMPTY_OBJECT, getValue, missingInitialValueError, UNSET_INITIAL_VALUE} from './utils'
 
 /**
  * Subscribe to an observable and return its latest value, with store updates deferred via
@@ -68,6 +68,12 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   }
   const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
+  // Resolve function initializers once, like useState. getSnapshot is called during render and
+  // again after subscribe to detect tearing; a fresh object from a re-run initializer would fail
+  // Object.is and loop until maximum update depth.
+  const [lazyInitial] = useState(() => getValue(initialValue))
+  const resolvedInitial = typeof initialValue === 'function' ? lazyInitial : initialValue
+
   const instance = useMemo(() => getOrCreateStore(observable), [observable])
 
   const subscribe = useCallback(
@@ -86,11 +92,11 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   const value = useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
-      return instance.getSnapshot(initialValue)
+      return instance.getSnapshot(resolvedInitial)
     },
     // The server renders exactly what the client's first render will show: the resolved
     // initialValue (or the last emission of a shared entry that is already live).
-    () => instance.getSnapshot(initialValue),
+    () => instance.getSnapshot(resolvedInitial),
   )
 
   // Defer identity and value as one snapshot so they can never tear — the

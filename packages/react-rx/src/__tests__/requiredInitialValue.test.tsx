@@ -92,4 +92,22 @@ describe.each(hooks)('$name: initialValue is required', ({name, useHook}) => {
     expect(result.current).toBe(triple)
     unmount()
   })
+
+  test('an initializer returning a new object is Object.is-stable and does not exceed maximum update depth', () => {
+    const values$ = new Subject<{label: string}>()
+    const {result, rerender, unmount} = renderHook(() =>
+      useHook(values$, () => ({label: 'pending'})),
+    )
+
+    expect(result.current).toEqual({label: 'pending'})
+    const first = result.current
+    rerender()
+    // Re-running the initializer would yield a new object, fail Object.is in
+    // useSyncExternalStore, and loop until "Maximum update depth exceeded".
+    expect(result.current).toBe(first)
+
+    act(() => values$.next({label: 'emitted'}))
+    expect(result.current).toEqual({label: 'emitted'})
+    unmount()
+  })
 })

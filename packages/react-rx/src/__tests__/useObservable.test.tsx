@@ -585,9 +585,9 @@ test('initialValue factories must be pure', () => {
   }
 
   const {result} = renderHook(() => useObservable(values$, factory))
-  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
-  // when checking for tearing on commit.
-  expect(factoryCalls).toBeGreaterThanOrEqual(2)
+  // Like useState, the initializer runs once and the result is reused for every
+  // getSnapshot read until the source emits.
+  expect(factoryCalls).toBe(1)
   expect(result.current).toBe('initial')
   const callsBeforeEmit = factoryCalls
 
