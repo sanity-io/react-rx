@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import {Suspense, ViewTransition} from 'react'
+=======
+import {Suspense, use, ViewTransition} from 'react'
+>>>>>>> origin/current
 
 import type {Lesson as LessonItem} from '@/data/fake-data'
 import * as data from '@/data/index'
@@ -10,8 +14,16 @@ function Lesson({
   completeAction,
 }: {
   item: LessonItem
+<<<<<<< HEAD
   completeAction: (id: string, complete: boolean) => Promise<void>
 }) {
+=======
+  completeAction: (id: string) => Promise<void>
+}) {
+  async function action() {
+    await completeAction(item.id)
+  }
+>>>>>>> origin/current
   return (
     <Design.LessonCard item={item}>
       {/*
@@ -20,15 +32,20 @@ function Lesson({
           item.complete directly because the list already carries what the user
           asked for.
       */}
+<<<<<<< HEAD
       <Design.CompleteButton
         complete={item.complete}
         action={(complete) => completeAction(item.id, complete)}
       ></Design.CompleteButton>
+=======
+      <Design.CompleteButton complete={item.complete} action={action}></Design.CompleteButton>
+>>>>>>> origin/current
     </Design.LessonCard>
   )
 }
 
 function LessonList({
+<<<<<<< HEAD
   lessonsPromise,
   completeAction,
 }: {
@@ -41,6 +58,31 @@ function LessonList({
    * optimistic re-render cannot re-run the observable lookup in Home and suspend.
    */
   const lessons = data.useLessons(lessonsPromise)
+=======
+  tab,
+  search,
+  revision,
+  completeAction,
+}: {
+  tab: string
+  search: string
+  revision: number
+  completeAction: (id: string) => Promise<void>
+}) {
+  /**
+   * data.getLessons is a suspense-enabled data fetching function.
+   * It returns a cached promise that fetched the first time it's called
+   * with a given tab+search+revision, then it returns the resolved data on subsequent calls.
+   *
+   * Since it's cached, there needs to be a way to clear the cache and re-fetch the data,
+   * like after a mutation like toggling complete. This is done with the data.revalidate() function,
+   * which is called in the completeAction below.
+   *
+   * The use(data.getLessons(...)) call here will suspend the component
+   * until the promise resolves, then return the resolved data.
+   */
+  const lessons = use(data.getLessons(tab, search, revision))
+>>>>>>> origin/current
 
   if (lessons.length === 0) {
     return (
@@ -80,11 +122,15 @@ export default function Home() {
   const router = useRouter()
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
+<<<<<<< HEAD
   /**
    * One observable identity per tab+search lets a router transition hold the
    * current list while react-rx fetches the next one.
    */
   const lessonsPromise = data.useLessonsPromise(tab, search)
+=======
+  const revision = router.revision
+>>>>>>> origin/current
 
   function searchAction(value: string) {
     /**
@@ -99,13 +145,21 @@ export default function Home() {
     router.setParams('tab', value)
   }
 
+<<<<<<< HEAD
   async function completeAction(id: string, complete: boolean) {
+=======
+  async function completeAction(id: string) {
+>>>>>>> origin/current
     /**
      * Since we're in an Action we know we're in a transition. setComplete has
      * already recorded the user's intent, so the check has flipped. Awaiting
      * keeps the pending state active through the mutation and later updates.
      */
+<<<<<<< HEAD
     await data.setComplete(id, complete)
+=======
+    await data.mutateToggle(id)
+>>>>>>> origin/current
 
     /**
      * After the mutation we need to revalidate the data cache.
@@ -142,7 +196,16 @@ export default function Home() {
            the optimistic/pending states will be used to show loading instead.
         */}
         <Suspense fallback={<Design.FallbackList />}>
+<<<<<<< HEAD
           <LessonList lessonsPromise={lessonsPromise} completeAction={completeAction} />
+=======
+          <LessonList
+            tab={tab}
+            search={search}
+            revision={revision}
+            completeAction={completeAction}
+          />
+>>>>>>> origin/current
         </Suspense>
       </Design.TabList>
     </>

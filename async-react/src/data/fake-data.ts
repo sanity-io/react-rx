@@ -81,11 +81,12 @@ export async function getLessons(
 }
 
 export async function postLessonToggle(id: string, delay: number): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     setTimeout(() => {
       const lesson = lessons.find((candidate) => candidate.id === id)
       if (!lesson) {
-        throw new Error(`Unknown lesson id: ${id}`)
+        reject(new Error(`Unknown lesson id: ${id}`))
+        return
       }
       lesson.complete = !lesson.complete
       resolve()

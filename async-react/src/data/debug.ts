@@ -92,8 +92,10 @@ if (import.meta.env.VITE_USE_REAL_SERVER !== 'true') {
 
 export function delayedFetch(url: string, options?: RequestInit): Promise<unknown> {
   const {delay, path} = getRequestConfig(url)
+  const id = requestId
+  requestId += 1
   const request = addRequest(path, {
-    id: requestId,
+    id,
     label: `${options?.method || 'GET'} ${url}`,
     start: Date.now(),
     done: false,

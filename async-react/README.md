@@ -51,25 +51,25 @@ In the app, there is a network debugger at the bottom. By changing the timing fo
 
 Upstream's data layer is a hand-rolled Map of cached promises. This version replaces it with two observable channels whose update urgencies are deliberately different.
 
-**Canonical data suspends inside transitions.** Each `tab + search` query is one cold observable in a Map, so the observable's identity is the cache key. `useObservablePromise` turns it into a `use()`-compatible promise and shares one fetch among every consumer:
+**Canonical data suspends inside transitions.** Each `tab + search + revision` query is one cold observable in a Map, so the observable's identity is the cache key. `useObservablePromise` turns it into a `use()`-compatible promise and shares one fetch among every consumer:
 
 ```ts
-function lessonsFor(tab: string, search: string): Observable<Lesson[]> {
-  const key = `${tab || 'all'}|${search || ''}`
+function lessonsFor(tab: string, search: string, revision: number): Observable<Lesson[]> {
+  const key = queryKey(tab || 'all', search || '', revision)
   let query = queries.get(key)
   if (!query) {
-    query = defer(() => fetchLessons(`/lessons?tab=${tab || 'all'}&q=${search || ''}`))
+    query = defer(() => fetchLessons(lessonsUrl(tab || 'all', search || '')))
     queries.set(key, query)
   }
   return query
 }
 
-export function useLessonsPromise(tab: string, search: string) {
-  return useObservablePromise(lessonsFor(tab, search), {ttl: LESSONS_TTL})
+export function useLessonsPromise(tab: string, search: string, revision: number) {
+  return useObservablePromise(lessonsFor(tab, search, revision), {ttl: LESSONS_TTL})
 }
 ```
 
-Switching tabs or typing in search renders a new identity inside the router's transition, so react-rx starts the fetch during that render and the transition stays pending: the current list holds, the touched control shimmers, and the Suspense skeleton appears only on initial load. After a mutation, `router.refresh()` still calls `revalidate()` — the Map is swapped and the refetch suspends inside the action's transition, exactly like upstream. Login warms the same identity the home page will render by racing `preloadObservablePromise` against upstream's one-second timer.
+Switching tabs or typing in search renders a new identity inside the router's transition, so react-rx starts the fetch during that render and the transition stays pending: the current list holds, the touched control shimmers, and the Suspense skeleton appears only on initial load. After a mutation, `router.refresh()` calls `revalidate()` and bumps the router's `revision`, so the refetch is a new identity that suspends inside the action's transition — the same mechanism, and pure per `(tab, search, revision)`, which is what keeps it correct under the React Compiler. Login warms the same identity the home page will render by racing `preloadObservablePromise` against upstream's one-second timer.
 
 **Optimistic intent is urgent and lives in the store.** The completed checkmark is a property of the data, not of one button, so it moves out of `useOptimistic` into a desired-state stream: what the user asked for but has not seen yet.
 
@@ -113,7 +113,7 @@ export default function Login() {
 
   async function submitAction() {
     await login()
-    await prefetchLessons()
+    await prefetchLessons(router.revision)
     router.navigate('/')
   }
   return (
@@ -140,21 +140,21 @@ https://github.com/user-attachments/assets/6c04346e-903e-461c-b76e-b35b4c537698
 
 Our code for the home page is also simple and declarative:
 
-```tsx
+```js
 export default function Home() {
   const router = useRouter()
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
-  const lessonsPromise = data.useLessonsPromise(tab, search)
+  const revision = router.revision
 
-  function searchAction(value: string) {
+  function searchAction(value) {
     router.setParams('q', value)
   }
-  function tabAction(value: string) {
+  function tabAction(value) {
     router.setParams('tab', value)
   }
-  async function completeAction(id: string, complete: boolean) {
-    await data.setComplete(id, complete)
+  async function completeAction(id) {
+    await data.mutateToggle(id)
     router.refresh()
   }
   return (
@@ -162,7 +162,12 @@ export default function Home() {
       <Design.SearchInput value={search} changeAction={searchAction} />
       <Design.TabList activeTab={tab} changeAction={tabAction}>
         <Suspense fallback={<Design.FallbackList />}>
-          <LessonList lessonsPromise={lessonsPromise} completeAction={completeAction} />
+          <LessonList
+            tab={tab}
+            search={search}
+            revision={revision}
+            completeAction={completeAction}
+          />
         </Suspense>
       </Design.TabList>
     </>

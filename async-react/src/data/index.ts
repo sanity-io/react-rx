@@ -14,36 +14,42 @@ import type {Lesson, LessonIcon} from './fake-data'
  * earlier by revalidate() after mutations. */
 const LESSONS_TTL = 10 * 60 * 1000
 
-/** One cold observable per tab+search. react-rx's promise cache is keyed by
- * observable identity, so identity is the cache key. revalidate() drops the
- * identities, so the next transition render swaps to fresh sources. */
+/** One cold observable per tab+search+revision. react-rx's promise cache is
+ * keyed by observable identity, so identity is the cache key. refresh() bumps
+ * the router revision after revalidate(), so the next transition render maps
+ * to a fresh observable and refetches. */
 let queries = new Map<string, Observable<Lesson[]>>()
 
 export function revalidate() {
   queries = new Map()
 }
 
-function lessonsFor(tab: string, search: string): Observable<Lesson[]> {
-  const key = `${tab || 'all'}|${search || ''}`
+function queryKey(tab: string, search: string, revision: number): string {
+  return JSON.stringify([tab, search, revision])
+}
+
+function lessonsUrl(tab: string, search: string): string {
+  const query = new URLSearchParams({tab, q: search})
+  return `/lessons?${query}`
+}
+
+function lessonsFor(tab: string, search: string, revision: number): Observable<Lesson[]> {
+  const resolvedTab = tab || 'all'
+  const resolvedSearch = search || ''
+  const key = queryKey(resolvedTab, resolvedSearch, revision)
   let query = queries.get(key)
   if (!query) {
     // Creating this during render fetches nothing. react-rx subscribes after
     // commit, during a live swap, or during preload.
-    query = defer(() => fetchLessons(`/lessons?tab=${tab || 'all'}&q=${search || ''}`))
+    query = defer(() => fetchLessons(lessonsUrl(resolvedTab, resolvedSearch)))
     queries.set(key, query)
   }
   return query
 }
 
 /** Call above the Suspense boundary and pass the promise to useLessons below. */
-export function useLessonsPromise(tab: string, search: string) {
-  // The observable identity is read from a cache that revalidate() swaps
-  // between renders, so it is intentionally not a pure function of tab and
-  // search. Compiled, the React Compiler would memoize lessonsFor on its
-  // arguments and keep returning the stale identity after a mutation, and the
-  // refetch would never start.
-  'use no memo'
-  return useObservablePromise(lessonsFor(tab, search), {ttl: LESSONS_TTL})
+export function useLessonsPromise(tab: string, search: string, revision: number) {
+  return useObservablePromise(lessonsFor(tab, search, revision), {ttl: LESSONS_TTL})
 }
 
 /** id -> the `complete` the user asked for but has not seen yet. */
@@ -120,9 +126,9 @@ function retire(wanted: Wanted, matches: (id: string, complete: boolean) => bool
   return next.size === wanted.size ? wanted : next
 }
 
-export function prefetchLessons() {
+export function prefetchLessons(revision: number) {
   // Warm the identity Home will render so a fast login needs no fallback.
-  return Promise.race([preloadObservablePromise(lessonsFor('all', '')), delay(1000)])
+  return Promise.race([preloadObservablePromise(lessonsFor('all', '', revision)), delay(1000)])
 }
 
 export async function login() {

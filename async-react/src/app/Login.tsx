@@ -30,7 +30,7 @@ export default function Login() {
      * without the data, and the login will navigate to the page with fallbacks
      * while the data finishes loading.
      */
-    await prefetchLessons()
+    await prefetchLessons(router.revision)
     /**
      * This will navigate to a new page. Since the page is new, the transition
      * will complete to the suspended fallback state. Typically, you could
