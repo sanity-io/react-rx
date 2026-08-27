@@ -1,0 +1,283 @@
+// AI Generated slop vanilla JS for the network debugger panel.
+// I'm not using React here because I want to be able
+// to view clean React Performance Tracks without
+// the debugger being part of the trace.
+
+import {
+  createDebuggingState,
+  type ApiDebugState,
+  type ApiPath,
+  type DebuggingState,
+} from './data/debugging'
+
+function clamp(x: number) {
+  return Math.max(0, Math.min(1, x))
+}
+
+interface PathChange {
+  from: string
+  to: string
+  type?: NavigationType | null
+}
+
+// Wrapped so the feature check stays a plain boolean; `'navigation' in window`
+// inline would narrow `window` to never for the History fallback below.
+function supportsNavigationApi(): boolean {
+  return 'navigation' in window
+}
+
+// Call: const off = onPathChange(({ from, to }) => { ... });
+function onPathChange(cb: (change: PathChange) => void) {
+  let prevPath = location.pathname
+
+  if (supportsNavigationApi()) {
+    // Post-commit signal; fires after the URL actually changes.
+    const handler = (e: NavigationCurrentEntryChangeEvent) => {
+      const to = new URL(navigation.currentEntry?.url ?? location.href)
+      if (to.pathname !== prevPath) {
+        const old = prevPath
+        prevPath = to.pathname
+        cb({from: old, to: to.pathname, type: e.navigationType})
+      }
+    }
+    navigation.addEventListener('currententrychange', handler)
+    return () => navigation.removeEventListener('currententrychange', handler)
+  }
+
+  // Fallback: popstate/hash + patch push/replace
+  const fireIfChanged = () => {
+    const next = location.pathname
+    if (next !== prevPath) {
+      const old = prevPath
+      prevPath = next
+      cb({from: old, to: next})
+    }
+  }
+
+  const onPop = () => fireIfChanged()
+  const onHash = () => fireIfChanged()
+  window.addEventListener('popstate', onPop)
+  window.addEventListener('hashchange', onHash)
+
+  // Deliberately unbound: the patched versions below forward whatever `this`
+  // the caller used, and the cleanup reinstalls the untouched originals.
+  // oxlint-disable-next-line typescript/unbound-method
+  const origPush = history.pushState
+  // oxlint-disable-next-line typescript/unbound-method
+  const origReplace = history.replaceState
+  history.pushState = function (this: History, ...args: Parameters<History['pushState']>) {
+    const ret = origPush.apply(this, args)
+    fireIfChanged()
+    return ret
+  }
+  history.replaceState = function (this: History, ...args: Parameters<History['replaceState']>) {
+    const ret = origReplace.apply(this, args)
+    fireIfChanged()
+    return ret
+  }
+
+  return () => {
+    window.removeEventListener('popstate', onPop)
+    window.removeEventListener('hashchange', onHash)
+    history.pushState = origPush
+    history.replaceState = origReplace
+  }
+}
+
+interface ProgressElement extends HTMLDivElement {
+  _cleanup?: () => void
+}
+
+interface TimedProgressProps {
+  startMs: number
+  delayMs: number
+  onDone?: () => void
+  height?: string
+}
+
+function TimedProgress({startMs, delayMs, onDone, height = '6px'}: TimedProgressProps) {
+  const container: ProgressElement = document.createElement('div')
+  container.setAttribute('role', 'progressbar')
+  container.setAttribute('aria-valuemin', '0')
+  container.setAttribute('aria-valuemax', '100')
+  container.setAttribute('aria-label', 'Timed progress')
+  Object.assign(container.style, {
+    position: 'relative',
+    width: '100%',
+    height,
+    background: 'rgba(53,143,127,0.08)',
+    borderRadius: height,
+    overflow: 'hidden',
+  })
+
+  const bar = document.createElement('div')
+  Object.assign(bar.style, {
+    position: 'absolute',
+    inset: 0,
+    transform: 'translateX(-100%)',
+    width: '100%',
+    willChange: 'transform',
+    background: '#00bc7d',
+  })
+  container.appendChild(bar)
+
+  let raf = 0
+  let doneFired = false
+
+  function tick() {
+    const now = Date.now()
+    const progress = clamp((now - startMs) / delayMs)
+    bar.style.transform = `translateX(${progress * 100 - 100}%)`
+
+    if (progress < 1) {
+      raf = requestAnimationFrame(tick)
+    } else if (!doneFired) {
+      doneFired = true
+      if (onDone) onDone()
+    }
+  }
+  raf = requestAnimationFrame(tick)
+
+  container._cleanup = () => cancelAnimationFrame(raf)
+  return container
+}
+
+interface NetworkRequestProps {
+  label: string
+  id: ApiPath
+  api: ApiDebugState
+  row?: HTMLDivElement
+}
+
+function NetworkRequest({label, id, api, row}: NetworkRequestProps) {
+  let requestsDiv: HTMLDivElement
+  if (!row) {
+    row = document.createElement('div')
+    row.className = 'network-row'
+    const header = document.createElement('div')
+    header.className = 'network-row-header'
+    const labelDiv = document.createElement('div')
+    labelDiv.textContent = label
+    const controls = document.createElement('div')
+    controls.className = 'network-controls'
+    const span = document.createElement('span')
+    span.textContent = api.delay + 'ms'
+    const input = document.createElement('input')
+    input.type = 'range'
+    input.min = '0'
+    input.max = '3000'
+    input.step = '50'
+    input.value = String(api.delay)
+    input.addEventListener('input', () => {
+      setDelay(id, input.value)
+      span.textContent = input.value + 'ms'
+    })
+    controls.appendChild(span)
+    controls.appendChild(input)
+    header.appendChild(labelDiv)
+    header.appendChild(controls)
+    requestsDiv = document.createElement('div')
+    requestsDiv.className = 'network-row-requests'
+    row.appendChild(header)
+  } else {
+    const controls = row.querySelector('.network-controls')
+    const span = controls?.querySelector('span')
+    const input = controls?.querySelector('input')
+    const existingRequests = row.querySelector('.network-row-requests')
+    if (!span || !input || !(existingRequests instanceof HTMLDivElement)) {
+      throw new Error('Expected the network row to keep its controls and requests container')
+    }
+    span.textContent = api.delay + 'ms'
+    input.value = String(api.delay)
+    requestsDiv = existingRequests
+    requestsDiv.innerHTML = ''
+  }
+
+  const requests = api.requests.filter((req) => !req.done)
+  if (requests.length === 0) {
+    const empty = document.createElement('div')
+    empty.className = 'network-request min-h-6'
+    requestsDiv.appendChild(empty)
+  } else {
+    requests.forEach((req) => {
+      const reqDiv = document.createElement('div')
+      reqDiv.className = 'network-request'
+      const span = document.createElement('span')
+      span.textContent = req.label
+      reqDiv.appendChild(span)
+      reqDiv.appendChild(TimedProgress({startMs: req.start, delayMs: req.delay}))
+      requestsDiv.appendChild(reqDiv)
+    })
+  }
+
+  row.appendChild(requestsDiv)
+
+  return row
+}
+
+// Debugger: main container
+function Debugger() {
+  const container = document.createElement('div')
+  container.className = 'debugger'
+  let requests: DebuggingState = createDebuggingState()
+
+  let rows: Partial<Record<ApiPath, HTMLDivElement>> = {}
+
+  function render() {
+    let apis: {label: string; id: ApiPath}[]
+    if (window.location.pathname === '/login') {
+      apis = [
+        {label: 'GET /lessons', id: '/lessons'},
+        {label: 'POST /login', id: '/login'},
+      ]
+    } else {
+      apis = [
+        {label: 'GET /lessons', id: '/lessons'},
+        {label: 'POST /lessons/:id', id: '/lesson/:id/toggle'},
+      ]
+    }
+    apis.forEach(({label, id}) => {
+      const existingRow = rows[id]
+      if (!existingRow) {
+        const created = NetworkRequest({
+          label,
+          id,
+          api: requests[id],
+        })
+        rows[id] = created
+        container.appendChild(created)
+      } else {
+        NetworkRequest({
+          label,
+          id,
+          api: requests[id],
+          row: existingRow,
+        })
+      }
+    })
+  }
+
+  window.addEventListener('debugging-update', (event) => {
+    requests = event.detail
+    render()
+  })
+  onPathChange(() => {
+    rows = {}
+    container.innerHTML = ''
+    render()
+  })
+  render()
+  return container
+}
+
+function setDelay(id: ApiPath, value: string) {
+  const event = new CustomEvent('debugging-set-delay', {
+    detail: {id, value: Number(value)},
+  })
+  window.dispatchEvent(event)
+}
+
+const root = document.getElementById('debugger')
+if (root) {
+  root.appendChild(Debugger())
+}

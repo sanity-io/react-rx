@@ -1,33 +1,48 @@
-import { Suspense, use, ViewTransition } from "react";
-import * as Design from "@/design";
-import { useRouter } from "@/router/index.jsx";
-import * as data from "@/data/index.js";
+import {Suspense, use, ViewTransition} from 'react'
 
-function Lesson({ item, completeAction }) {
+import type {Lesson as LessonItem} from '@/data/fake-data'
+import * as data from '@/data/index'
+import * as Design from '@/design'
+import {useRouter} from '@/router/index'
+
+function Lesson({
+  item,
+  completeAction,
+}: {
+  item: LessonItem
+  completeAction: (id: string) => Promise<void>
+}) {
   async function action() {
-    await completeAction(item.id);
+    await completeAction(item.id)
   }
   return (
     <Design.LessonCard item={item}>
-      {/* 
+      {/*
           Design.CompleteButton is using the action prop pattern to automatically
           update the completed state while the action is pending. If the action to
           toggle complete takes longer than 150ms, it automatically shows a loading
           state on the button, so the user knows their action is being processed.
       */}
-      <Design.CompleteButton
-        complete={item.complete}
-        action={action}
-      ></Design.CompleteButton>
+      <Design.CompleteButton complete={item.complete} action={action}></Design.CompleteButton>
     </Design.LessonCard>
-  );
+  )
 }
 
-function LessonList({ tab, search, completeAction }) {
+function LessonList({
+  tab,
+  search,
+  revision,
+  completeAction,
+}: {
+  tab: string
+  search: string
+  revision: number
+  completeAction: (id: string) => Promise<void>
+}) {
   /**
    * data.getLessons is a suspense-enabled data fetching function.
    * It returns a cached promise that fetched the first time it's called
-   * with a given tab+search, then it returns the resolved data on subsequent calls.
+   * with a given tab+search+revision, then it returns the resolved data on subsequent calls.
    *
    * Since it's cached, there needs to be a way to clear the cache and re-fetch the data,
    * like after a mutation like toggling complete. This is done with the data.revalidate() function,
@@ -36,14 +51,14 @@ function LessonList({ tab, search, completeAction }) {
    * The use(data.getLessons(...)) call here will suspend the component
    * until the promise resolves, then return the resolved data.
    */
-  const lessons = use(data.getLessons(tab, search));
+  const lessons = use(data.getLessons(tab, search, revision))
 
   if (lessons.length === 0) {
     return (
       <ViewTransition key="empty" default="none" enter="auto" exit="auto">
         <Design.EmptyList />
       </ViewTransition>
-    );
+    )
   }
 
   return (
@@ -62,46 +77,43 @@ function LessonList({ tab, search, completeAction }) {
           <ViewTransition key={item.id}>
             <div>
               <ViewTransition default="none">
-                <Lesson
-                  id={item.id}
-                  item={item}
-                  completeAction={completeAction}
-                />
+                <Lesson item={item} completeAction={completeAction} />
               </ViewTransition>
             </div>
           </ViewTransition>
         ))}
       </Design.List>
     </ViewTransition>
-  );
+  )
 }
 
 export default function Home() {
-  const router = useRouter();
-  const search = router.search.q || "";
-  const tab = router.search.tab || "all";
+  const router = useRouter()
+  const search = router.search.q || ''
+  const tab = router.search.tab || 'all'
+  const revision = router.revision
 
-  function searchAction(value) {
+  function searchAction(value: string) {
     /**
      * Since this is an Action we know this updates in a transition.
      */
-    router.setParams("q", value);
+    router.setParams('q', value)
   }
-  function tabAction(value) {
+  function tabAction(value: string) {
     /**
      * Since this is an Action we know this updates in a transition.
      */
-    router.setParams("tab", value);
+    router.setParams('tab', value)
   }
 
-  async function completeAction(id) {
+  async function completeAction(id: string) {
     /**
      * Since we're in an Action we know we're in a transition.
      * This means we can await a mutation, and the pending state of
      * the action will be true until the mutation, and all the updates
      * after it are done.
      */
-    await data.mutateToggle(id);
+    await data.mutateToggle(id)
 
     /**
      * After the mutation we need to revalidate the data cache.
@@ -112,7 +124,7 @@ export default function Home() {
      * Note: We don't have to wrap this in startTransition because
      * the router wraps these updates in a transition automatically.
      */
-    router.refresh();
+    router.refresh()
   }
   return (
     <>
@@ -141,10 +153,11 @@ export default function Home() {
           <LessonList
             tab={tab}
             search={search}
+            revision={revision}
             completeAction={completeAction}
           />
         </Suspense>
       </Design.TabList>
     </>
-  );
+  )
 }
