@@ -42,12 +42,39 @@ function expectLatestValue(useEvent: EffectEventHook, componentType: ComponentTy
   expect(seen).toEqual([0, 1])
 }
 
+function expectStableIdentity(useEvent: EffectEventHook) {
+  const identities = new Set<() => void>()
+
+  function Component({value}: {value: number}) {
+    identities.add(
+      useEvent(() => {
+        void value
+      }),
+    )
+    return null
+  }
+
+  const {rerender} = render(<Component value={0} />)
+  rerender(<Component value={1} />)
+  rerender(<Component value={2} />)
+
+  expect(identities.size).toBe(1)
+}
+
 describe('useEffectEvent', () => {
   for (const componentType of componentTypes) {
     test(`sees the latest value in ${componentType} components`, () => {
       expectLatestValue(useEffectEvent, componentType)
     })
   }
+
+  // React Compiler only leaves `useEffectEvent` out of the dependencies it
+  // infers when the hook is React's own, so a ponyfill has to keep a stable
+  // identity. React's native hook and `use-effect-event@2` both return a fresh
+  // function per render and would fail this.
+  test('returns the same callback across renders', () => {
+    expectStableIdentity(useEffectEvent)
+  })
 })
 
 describe('React.useEffectEvent', () => {
