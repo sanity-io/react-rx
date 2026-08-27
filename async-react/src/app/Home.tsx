@@ -31,16 +31,18 @@ function Lesson({
 function LessonList({
   tab,
   search,
+  revision,
   completeAction,
 }: {
   tab: string
   search: string
+  revision: number
   completeAction: (id: string) => Promise<void>
 }) {
   /**
    * data.getLessons is a suspense-enabled data fetching function.
    * It returns a cached promise that fetched the first time it's called
-   * with a given tab+search, then it returns the resolved data on subsequent calls.
+   * with a given tab+search+revision, then it returns the resolved data on subsequent calls.
    *
    * Since it's cached, there needs to be a way to clear the cache and re-fetch the data,
    * like after a mutation like toggling complete. This is done with the data.revalidate() function,
@@ -49,7 +51,7 @@ function LessonList({
    * The use(data.getLessons(...)) call here will suspend the component
    * until the promise resolves, then return the resolved data.
    */
-  const lessons = use(data.getLessons(tab, search))
+  const lessons = use(data.getLessons(tab, search, revision))
 
   if (lessons.length === 0) {
     return (
@@ -148,7 +150,12 @@ export default function Home() {
            the optimistic/pending states will be used to show loading instead.
         */}
         <Suspense fallback={<Design.FallbackList />}>
-          <LessonList key={revision} tab={tab} search={search} completeAction={completeAction} />
+          <LessonList
+            tab={tab}
+            search={search}
+            revision={revision}
+            completeAction={completeAction}
+          />
         </Suspense>
       </Design.TabList>
     </>

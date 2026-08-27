@@ -60,7 +60,7 @@ export default function Login() {
 
   async function submitAction() {
     await login()
-    await prefetchLessons()
+    await prefetchLessons(router.revision)
     router.navigate('/')
   }
   return (

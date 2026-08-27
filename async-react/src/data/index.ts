@@ -63,8 +63,8 @@ function fetchLessons(url: string): Promise<Lesson[]> {
   return delayedFetch(url).then(parseLessons)
 }
 
-function lessonCacheKey(tab: string, search: string): string {
-  return JSON.stringify([tab, search])
+function lessonCacheKey(tab: string, search: string, revision: number): string {
+  return JSON.stringify([tab, search, revision])
 }
 
 function lessonsUrl(tab: string, search: string): string {
@@ -72,18 +72,18 @@ function lessonsUrl(tab: string, search: string): string {
   return `/lessons?${query}`
 }
 
-export function prefetchLessons() {
+export function prefetchLessons(revision: number) {
   const tab = 'all'
   const search = ''
   const promise = fetchLessons(lessonsUrl(tab, search))
-  lessonsCache.set(lessonCacheKey(tab, search), promise)
+  lessonsCache.set(lessonCacheKey(tab, search, revision), promise)
   return Promise.race([promise, delay(1000)])
 }
 
-export function getLessons(tab: string, search: string): Promise<Lesson[]> {
+export function getLessons(tab: string, search: string, revision: number): Promise<Lesson[]> {
   const resolvedTab = tab || 'all'
   const resolvedSearch = search || ''
-  const key = lessonCacheKey(resolvedTab, resolvedSearch)
+  const key = lessonCacheKey(resolvedTab, resolvedSearch, revision)
   const cached = lessonsCache.get(key)
   if (cached) {
     return cached
