@@ -1,13 +1,7 @@
-import { ViewTransition } from "react";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { BookX } from "lucide-react";
-import { ItemGroup } from "@/components//ui/item";
+import {BookX} from 'lucide-react'
+
+import {Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle} from '@/components/ui/empty'
+import {ItemGroup} from '@/components/ui/item'
 
 export default function EmptyList() {
   return (
@@ -22,5 +16,5 @@ export default function EmptyList() {
         <EmptyDescription>No lessons found</EmptyDescription>
       </Empty>
     </ItemGroup>
-  );
+  )
 }
