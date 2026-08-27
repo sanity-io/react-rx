@@ -72,7 +72,7 @@ importers:
         specifier: canary
         version: 19.3.0-canary-a1124489-20260826(react@19.3.0-canary-a1124489-20260826)
       tailwind-merge:
-        specifier: ^3.3.1
+        specifier: ^3.6.0
         version: 3.6.0
       tailwindcss:
         specifier: ^4.1.14
