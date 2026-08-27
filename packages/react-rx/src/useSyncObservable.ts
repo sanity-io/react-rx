@@ -3,7 +3,7 @@ import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore} from './cache'
 import type {UseObservableOptions} from './types'
-import {EMPTY_OBJECT, getValue, missingInitialValueError, UNSET_INITIAL_VALUE} from './utils'
+import {EMPTY_OBJECT, getValue, missingInitialValueError} from './utils'
 
 /**
  * Subscribe to an observable and return its latest value synchronously via
@@ -52,12 +52,11 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   ...args: [initialValue?: InitialValue | (() => InitialValue), options?: UseObservableOptions]
 ): InitialValue | ObservedValueOf<ObservableType> {
   // `undefined` (like every other value) is a valid `initialValue`, so a missing argument is
-  // detected by arity and modeled with a sentinel no caller can pass.
-  const initialValue =
-    args.length === 0 ? UNSET_INITIAL_VALUE : (args[0] as InitialValue | (() => InitialValue))
-  if (initialValue === UNSET_INITIAL_VALUE) {
+  // detected by arity.
+  if (args.length === 0) {
     throw missingInitialValueError('useSyncObservable')
   }
+  const initialValue = args[0] as InitialValue | (() => InitialValue)
   const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
   const instance = useMemo(() => getOrCreateStore(observable), [observable])
