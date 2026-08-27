@@ -140,21 +140,22 @@ https://github.com/user-attachments/assets/6c04346e-903e-461c-b76e-b35b4c537698
 
 Our code for the home page is also simple and declarative:
 
-```js
+```tsx
 export default function Home() {
   const router = useRouter()
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
   const revision = router.revision
+  const lessonsPromise = data.useLessonsPromise(tab, search, revision)
 
-  function searchAction(value) {
+  function searchAction(value: string) {
     router.setParams('q', value)
   }
-  function tabAction(value) {
+  function tabAction(value: string) {
     router.setParams('tab', value)
   }
-  async function completeAction(id) {
-    await data.mutateToggle(id)
+  async function completeAction(id: string, complete: boolean) {
+    await data.setComplete(id, complete)
     router.refresh()
   }
   return (
@@ -162,12 +163,7 @@ export default function Home() {
       <Design.SearchInput value={search} changeAction={searchAction} />
       <Design.TabList activeTab={tab} changeAction={tabAction}>
         <Suspense fallback={<Design.FallbackList />}>
-          <LessonList
-            tab={tab}
-            search={search}
-            revision={revision}
-            completeAction={completeAction}
-          />
+          <LessonList lessonsPromise={lessonsPromise} completeAction={completeAction} />
         </Suspense>
       </Design.TabList>
     </>
