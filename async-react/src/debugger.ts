@@ -161,7 +161,7 @@ function NetworkRequest({label, id, api, row}: NetworkRequestProps) {
     const controls = document.createElement('div')
     controls.className = 'network-controls'
     const span = document.createElement('span')
-    span.textContent = api.delay + 's'
+    span.textContent = api.delay + 'ms'
     const input = document.createElement('input')
     input.type = 'range'
     input.min = '0'
@@ -187,7 +187,7 @@ function NetworkRequest({label, id, api, row}: NetworkRequestProps) {
     if (!span || !input || !(existingRequests instanceof HTMLDivElement)) {
       throw new Error('Expected the network row to keep its controls and requests container')
     }
-    span.textContent = api.delay + 's'
+    span.textContent = api.delay + 'ms'
     input.value = String(api.delay)
     requestsDiv = existingRequests
     requestsDiv.innerHTML = ''

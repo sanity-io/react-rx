@@ -59,7 +59,7 @@ export default function Login() {
   const [fields, setFields] = useState(initialFieldData)
 
   async function submitAction() {
-    await login(fields.username, fields.password)
+    await login()
     await prefetchLessons()
     router.navigate('/')
   }
