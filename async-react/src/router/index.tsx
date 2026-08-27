@@ -9,6 +9,8 @@ import {
   type ReactNode,
 } from 'react'
 
+import {debugLog} from '@/debug-log'
+
 import {revalidate} from '../data/index'
 
 type SearchParams = Record<string, string>
@@ -47,6 +49,15 @@ function NavigationRouter({children}: {children: ReactNode}) {
     search: parseSearchParams(document.location.search),
   }))
 
+  // #region agent log
+  debugLog({
+    hypothesisId: 'H2',
+    location: 'router/index.tsx:NavigationRouter-render',
+    message: 'NavigationRouter render',
+    data: {url: routerState.url, search: routerState.search},
+  })
+  // #endregion
+
   // Kept inline so both routers expose navigate/setParams/refresh the same way.
   // oxlint-disable-next-line unicorn/consistent-function-scoping
   function navigate(url: string) {
@@ -68,9 +79,25 @@ function NavigationRouter({children}: {children: ReactNode}) {
   }
 
   function refresh() {
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H2',
+      location: 'router/index.tsx:NavigationRouter.refresh',
+      message: 'refresh() called',
+      data: {router: 'NavigationRouter'},
+    })
+    // #endregion
     revalidate()
     startTransition(() => {
       setRouterState((prev) => {
+        // #region agent log
+        debugLog({
+          hypothesisId: 'H2',
+          location: 'router/index.tsx:NavigationRouter.setRouterState',
+          message: 'setRouterState in refresh transition',
+          data: {url: prev.url, search: prev.search},
+        })
+        // #endregion
         return {
           ...prev,
         }
@@ -204,9 +231,25 @@ function HistoryRouter({children}: {children: ReactNode}) {
   }
 
   function refresh() {
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H2',
+      location: 'router/index.tsx:HistoryRouter.refresh',
+      message: 'refresh() called',
+      data: {router: 'HistoryRouter'},
+    })
+    // #endregion
     revalidate()
     startTransition(() => {
       setRouterState((prev) => {
+        // #region agent log
+        debugLog({
+          hypothesisId: 'H2',
+          location: 'router/index.tsx:HistoryRouter.setRouterState',
+          message: 'setRouterState in refresh transition',
+          data: {url: prev.url, search: prev.search},
+        })
+        // #endregion
         return {
           ...prev,
         }

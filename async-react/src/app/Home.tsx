@@ -1,5 +1,6 @@
-import {Suspense, use, ViewTransition} from 'react'
+import {Suspense, use, useEffect, ViewTransition} from 'react'
 
+import {debugLog} from '@/debug-log'
 import type {Lesson as LessonItem} from '@/data/fake-data'
 import * as data from '@/data/index'
 import * as Design from '@/design'
@@ -12,6 +13,16 @@ function Lesson({
   item: LessonItem
   completeAction: (id: string) => Promise<void>
 }) {
+  // #region agent log
+  useEffect(() => {
+    debugLog({
+      hypothesisId: 'H2-H5',
+      location: 'Home.tsx:Lesson-render',
+      message: 'Lesson render with item.complete',
+      data: {lessonId: item.id, complete: item.complete},
+    })
+  })
+  // #endregion
   async function action() {
     await completeAction(item.id)
   }
@@ -90,6 +101,17 @@ export default function Home() {
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
 
+  // #region agent log
+  useEffect(() => {
+    debugLog({
+      hypothesisId: 'H2',
+      location: 'Home.tsx:render',
+      message: 'Home re-rendered',
+      data: {tab, search, routerRefreshRef: router.refresh.toString().slice(0, 40)},
+    })
+  })
+  // #endregion
+
   function searchAction(value: string) {
     /**
      * Since this is an Action we know this updates in a transition.
@@ -110,7 +132,23 @@ export default function Home() {
      * the action will be true until the mutation, and all the updates
      * after it are done.
      */
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H5',
+      location: 'Home.tsx:completeAction-start',
+      message: 'completeAction started',
+      data: {lessonId: id},
+    })
+    // #endregion
     await data.mutateToggle(id)
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H5',
+      location: 'Home.tsx:completeAction-after-mutate',
+      message: 'mutateToggle settled, calling router.refresh',
+      data: {lessonId: id},
+    })
+    // #endregion
 
     /**
      * After the mutation we need to revalidate the data cache.
@@ -122,6 +160,14 @@ export default function Home() {
      * the router wraps these updates in a transition automatically.
      */
     router.refresh()
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H1-H2',
+      location: 'Home.tsx:completeAction-after-refresh',
+      message: 'router.refresh() returned (sync)',
+      data: {lessonId: id},
+    })
+    // #endregion
   }
   return (
     <>

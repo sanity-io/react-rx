@@ -1,3 +1,5 @@
+import {debugLog} from '@/debug-log'
+
 import {delayedFetch} from './debug'
 import type {Lesson, LessonIcon} from './fake-data'
 
@@ -6,6 +8,14 @@ import type {Lesson, LessonIcon} from './fake-data'
 let lessonsCache = new Map<string, Promise<Lesson[]>>()
 
 export function revalidate() {
+  // #region agent log
+  debugLog({
+    hypothesisId: 'H5',
+    location: 'data/index.ts:revalidate',
+    message: 'lessonsCache cleared',
+    data: {previousCacheSize: lessonsCache.size},
+  })
+  // #endregion
   lessonsCache = new Map()
 }
 
@@ -86,18 +96,63 @@ export function getLessons(tab: string, search: string): Promise<Lesson[]> {
   const key = lessonCacheKey(resolvedTab, resolvedSearch)
   const cached = lessonsCache.get(key)
   if (cached) {
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H5',
+      location: 'data/index.ts:getLessons',
+      message: 'cache hit',
+      data: {key},
+    })
+    // #endregion
     return cached
   }
 
+  // #region agent log
+  debugLog({
+    hypothesisId: 'H5',
+    location: 'data/index.ts:getLessons',
+    message: 'cache miss — fetching',
+    data: {key},
+  })
+  // #endregion
   const promise = fetchLessons(lessonsUrl(resolvedTab, resolvedSearch))
   lessonsCache.set(key, promise)
+  promise.then((lessons) => {
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H5',
+      location: 'data/index.ts:getLessons-resolved',
+      message: 'fetch resolved',
+      data: {
+        key,
+        completes: Object.fromEntries(lessons.map((lesson) => [lesson.id, lesson.complete])),
+      },
+    })
+    // #endregion
+  })
   return promise
 }
 
 export async function mutateToggle(id: string) {
+  // #region agent log
+  debugLog({
+    hypothesisId: 'H5',
+    location: 'data/index.ts:mutateToggle-start',
+    message: 'mutateToggle started',
+    data: {id},
+  })
+  // #endregion
   return delayedFetch(`/lesson/${id}/toggle`, {
     method: 'POST',
   }).then(() => {
+    // #region agent log
+    debugLog({
+      hypothesisId: 'H5',
+      location: 'data/index.ts:mutateToggle-done',
+      message: 'toggle POST settled, revalidating',
+      data: {id},
+    })
+    // #endregion
     revalidate()
   })
 }
