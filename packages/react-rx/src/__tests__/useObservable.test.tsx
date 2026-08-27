@@ -576,7 +576,7 @@ test('store mutation inside startTransition still applies (uSES updates cannot b
   expect(result.current).toBe('x')
 })
 
-test('initialValue factories must be pure', () => {
+test('initialValue factories are resolved once, like useState', () => {
   const values$ = new Subject<string>()
   let factoryCalls = 0
   const factory = () => {
@@ -585,16 +585,13 @@ test('initialValue factories must be pure', () => {
   }
 
   const {result} = renderHook(() => useObservable(values$, factory))
-  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
-  // when checking for tearing on commit.
-  expect(factoryCalls).toBeGreaterThanOrEqual(2)
+  // The factory is an initializer: invoked once, then the snapshot is reused.
+  expect(factoryCalls).toBe(1)
   expect(result.current).toBe('initial')
-  const callsBeforeEmit = factoryCalls
 
   act(() => values$.next('emitted'))
   expect(result.current).toBe('emitted')
-  // After didEmit, getSnapshot short-circuits and the factory is no longer called.
-  expect(factoryCalls).toBe(callsBeforeEmit)
+  expect(factoryCalls).toBe(1)
 })
 
 test('SSR renders the initialValue even when the observable emits synchronously', () => {

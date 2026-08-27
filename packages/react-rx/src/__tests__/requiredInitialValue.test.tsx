@@ -92,4 +92,34 @@ describe.each(hooks)('$name: initialValue is required', ({name, useHook}) => {
     expect(result.current).toBe(triple)
     unmount()
   })
+
+  test('an object-returning initializer is stable and does not infinite-loop', () => {
+    // uSES compares snapshots with Object.is. Re-invoking `() => ({…})` on every
+    // getSnapshot read would allocate a new object each time and loop until React
+    // aborts with "Maximum update depth exceeded".
+    const values$ = new Subject<{status: string}>()
+    const {result, rerender, unmount} = renderHook(() =>
+      useHook(values$, () => ({status: 'loading'})),
+    )
+
+    expect(result.current).toEqual({status: 'loading'})
+    const first = result.current
+    rerender()
+    expect(result.current).toBe(first)
+
+    act(() => values$.next({status: 'ready'}))
+    expect(result.current).toEqual({status: 'ready'})
+    unmount()
+  })
+
+  test('an inline object initialValue is stable and does not infinite-loop', () => {
+    const values$ = new Subject<{status: string}>()
+    const {result, rerender, unmount} = renderHook(() => useHook(values$, {status: 'loading'}))
+
+    expect(result.current).toEqual({status: 'loading'})
+    const first = result.current
+    rerender()
+    expect(result.current).toBe(first)
+    unmount()
+  })
 })

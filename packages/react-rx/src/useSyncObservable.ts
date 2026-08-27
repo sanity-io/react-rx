@@ -1,4 +1,4 @@
-import {useCallback, useMemo, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useState, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore} from './cache'
@@ -58,6 +58,9 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   if (initialValue === UNSET_INITIAL_VALUE) {
     throw missingInitialValueError('useSyncObservable')
   }
+  // Resolve once, like `useState`: a factory such as `() => ({loading: true})` must
+  // return the same snapshot on every `getSnapshot` read or uSES will loop.
+  const [resolvedInitial] = useState(() => getValue(initialValue))
   const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
   const instance = useMemo(() => getOrCreateStore(observable), [observable])
@@ -78,10 +81,10 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
-      return instance.getSnapshot(initialValue)
+      return instance.getSnapshot(resolvedInitial)
     },
     // Strict v4 server contract: the server always renders the resolved `initialValue` — even
     // when a shared cache entry has already emitted in the same runtime.
-    () => getValue(initialValue) as ObservedValueOf<ObservableType>,
+    () => resolvedInitial as ObservedValueOf<ObservableType>,
   )
 }
