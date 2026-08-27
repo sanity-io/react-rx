@@ -9,8 +9,6 @@ import {
   type ReactNode,
 } from 'react'
 
-import {debugLog} from '@/debug-log'
-
 import {revalidate} from '../data/index'
 
 type SearchParams = Record<string, string>
@@ -18,6 +16,7 @@ type SearchParams = Record<string, string>
 interface RouterContextValue {
   url: string
   search: SearchParams
+  revision: number
   navigate: (url: string) => void
   setParams: (key: string, value: string) => void
   refresh: () => void
@@ -27,6 +26,7 @@ interface RouterState {
   pendingNav: () => void
   url: string
   search: SearchParams
+  revision: number
 }
 
 // There are two example routers here.
@@ -47,16 +47,8 @@ function NavigationRouter({children}: {children: ReactNode}) {
     pendingNav: () => {},
     url: document.location.pathname,
     search: parseSearchParams(document.location.search),
+    revision: 0,
   }))
-
-  // #region agent log
-  debugLog({
-    hypothesisId: 'H2',
-    location: 'router/index.tsx:NavigationRouter-render',
-    message: 'NavigationRouter render',
-    data: {url: routerState.url, search: routerState.search},
-  })
-  // #endregion
 
   // Kept inline so both routers expose navigate/setParams/refresh the same way.
   // oxlint-disable-next-line unicorn/consistent-function-scoping
@@ -79,29 +71,12 @@ function NavigationRouter({children}: {children: ReactNode}) {
   }
 
   function refresh() {
-    // #region agent log
-    debugLog({
-      hypothesisId: 'H2',
-      location: 'router/index.tsx:NavigationRouter.refresh',
-      message: 'refresh() called',
-      data: {router: 'NavigationRouter'},
-    })
-    // #endregion
     revalidate()
     startTransition(() => {
-      setRouterState((prev) => {
-        // #region agent log
-        debugLog({
-          hypothesisId: 'H2',
-          location: 'router/index.tsx:NavigationRouter.setRouterState',
-          message: 'setRouterState in refresh transition',
-          data: {url: prev.url, search: prev.search},
-        })
-        // #endregion
-        return {
-          ...prev,
-        }
-      })
+      setRouterState((prev) => ({
+        ...prev,
+        revision: prev.revision + 1,
+      }))
     })
   }
 
@@ -140,11 +115,12 @@ function NavigationRouter({children}: {children: ReactNode}) {
               }
             }
             promise = new Promise((resolve) => {
-              setRouterState({
+              setRouterState((prev) => ({
                 url: newURL.pathname,
                 search: parseSearchParams(newURL.search),
                 pendingNav: () => resolve(),
-              })
+                revision: prev.revision,
+              }))
             })
           })
           return promise
@@ -167,13 +143,12 @@ function NavigationRouter({children}: {children: ReactNode}) {
 
   return (
     <RouterContext
-      // Deliberately not memoized: refresh() replaces routerState with an
-      // equal-valued copy, so a fresh value identity is the only thing that
-      // re-renders consumers after the data cache is cleared.
+      // revision increments on refresh() so consumers re-render after cache clears.
       // oxlint-disable-next-line react/jsx-no-constructed-context-values
       value={{
         url: routerState.url,
         search: routerState.search,
+        revision: routerState.revision,
         navigate,
         setParams,
         refresh,
@@ -193,19 +168,19 @@ function HistoryRouter({children}: {children: ReactNode}) {
     pendingNav: () => {},
     url: document.location.pathname,
     search: parseSearchParams(document.location.search),
+    revision: 0,
   })
 
   function navigate(url: string) {
     startTransition(() => {
-      setRouterState(() => {
-        return {
-          url,
-          search: {},
-          pendingNav() {
-            window.history.pushState({}, '', url)
-          },
-        }
-      })
+      setRouterState((prev) => ({
+        url,
+        search: {},
+        revision: prev.revision,
+        pendingNav() {
+          window.history.pushState({}, '', url)
+        },
+      }))
     })
   }
 
@@ -221,6 +196,7 @@ function HistoryRouter({children}: {children: ReactNode}) {
         return {
           url: prev.url,
           search: newParams,
+          revision: prev.revision,
           pendingNav() {
             const newUrlParams = new URLSearchParams(newParams).toString()
             window.history.pushState({}, '', prev.url + (newUrlParams ? `?${newUrlParams}` : ''))
@@ -231,29 +207,12 @@ function HistoryRouter({children}: {children: ReactNode}) {
   }
 
   function refresh() {
-    // #region agent log
-    debugLog({
-      hypothesisId: 'H2',
-      location: 'router/index.tsx:HistoryRouter.refresh',
-      message: 'refresh() called',
-      data: {router: 'HistoryRouter'},
-    })
-    // #endregion
     revalidate()
     startTransition(() => {
-      setRouterState((prev) => {
-        // #region agent log
-        debugLog({
-          hypothesisId: 'H2',
-          location: 'router/index.tsx:HistoryRouter.setRouterState',
-          message: 'setRouterState in refresh transition',
-          data: {url: prev.url, search: prev.search},
-        })
-        // #endregion
-        return {
-          ...prev,
-        }
-      })
+      setRouterState((prev) => ({
+        ...prev,
+        revision: prev.revision + 1,
+      }))
     })
   }
 
@@ -264,13 +223,14 @@ function HistoryRouter({children}: {children: ReactNode}) {
       // layer has a cache miss, it will force fallbacks to be shown. This is a good
       // example why just clearing the cache when a component unmounts is a bad idea.
       startTransition(() => {
-        setRouterState({
+        setRouterState((prev) => ({
           url: document.location.pathname,
           search: parseSearchParams(document.location.search),
+          revision: prev.revision,
           pendingNav() {
             // Noop. URL has already updated.
           },
-        })
+        }))
       })
     }
     window.addEventListener('popstate', handlePopState)
@@ -287,11 +247,12 @@ function HistoryRouter({children}: {children: ReactNode}) {
 
   return (
     <RouterContext
-      // Deliberately not memoized, for the same reason as NavigationRouter.
+      // revision increments on refresh() so consumers re-render after cache clears.
       // oxlint-disable-next-line react/jsx-no-constructed-context-values
       value={{
         url: routerState.url,
         search: routerState.search,
+        revision: routerState.revision,
         navigate,
         setParams,
         refresh,
@@ -312,6 +273,7 @@ export const Router = SelectedRouter
 const RouterContext = createContext<RouterContextValue>({
   url: '/',
   search: {},
+  revision: 0,
   navigate: () => {},
   setParams: () => {},
   refresh: () => {},
