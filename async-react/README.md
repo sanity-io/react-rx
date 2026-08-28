@@ -18,19 +18,7 @@ Run the frontend:
 pnpm --filter async-react dev
 ```
 
-Optional: you can use a real backend by updating `.env` to:
-
-```
-VITE_USE_REAL_SERVER=true
-```
-
-And run the backend:
-
-```
-pnpm --filter async-react server
-```
-
-This is useful when viewing React Performance Tracks because you can see the real network requests.
+The demo is a static Vite app. API calls run through an in-browser fake server so you can deploy without a backend. Use the network debugger at the bottom of the page to change request timing.
 
 ## Motivation
 

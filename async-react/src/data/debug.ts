@@ -26,15 +26,11 @@ function notifyDebugging() {
 
 const HOST = `http://localhost:8080`
 
-// The fake server resolves plain values rather than real Responses, so only the
-// part of the Response contract this module actually uses is modelled here.
 interface JsonResponse {
   json: () => Promise<unknown>
 }
 
-type DelayedFetch = (url: URL, options?: RequestInit) => Promise<JsonResponse>
-
-let clientOrServerFetch: DelayedFetch = globalThis.fetch
+type LocalTransport = (url: URL, options?: RequestInit) => Promise<JsonResponse>
 
 type RequestParams = Record<string, string>
 
@@ -44,7 +40,6 @@ function parseUrl(url: URL): {endpoint: string; params: RequestParams | undefine
   const endpoint = segments[segments.length - 1]
   const params: RequestParams = {}
 
-  // If the path is like /lesson/123/toggle, extract id
   if (
     segments.length > 2 &&
     (/\d+/.test(segments[segments.length - 2]) ||
@@ -53,7 +48,6 @@ function parseUrl(url: URL): {endpoint: string; params: RequestParams | undefine
     params.id = segments[segments.length - 2]
   }
 
-  // Parse query params
   u.searchParams.forEach((value, key) => {
     if (key === 'q') params.search = value
     else params[key] = value
@@ -67,27 +61,26 @@ function parseDelay(value: string | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-if (import.meta.env.VITE_USE_REAL_SERVER !== 'true') {
-  clientOrServerFetch = (url) => {
-    const {endpoint, params} = parseUrl(url)
-    if (endpoint === 'lessons') {
-      return fakeServer
-        .getLessons(params?.tab, params?.search, parseDelay(params?.delay))
-        .then((data) => {
-          return {json: () => Promise.resolve(data)}
-        })
-    } else if (endpoint === 'toggle' && params?.id) {
-      return fakeServer.postLessonToggle(params.id, parseDelay(params?.delay)).then((data) => {
+const localTransport: LocalTransport = (url) => {
+  const {endpoint, params} = parseUrl(url)
+  if (endpoint === 'lessons') {
+    return fakeServer
+      .getLessons(params?.tab, params?.search, parseDelay(params?.delay))
+      .then((data) => {
         return {json: () => Promise.resolve(data)}
       })
-    } else if (endpoint === 'login') {
-      return fakeServer.postLogin(parseDelay(params?.delay)).then((data) => {
-        return {json: () => Promise.resolve(data)}
-      })
-    } else {
-      return Promise.reject(new Error('Unknown endpoint'))
-    }
   }
+  if (endpoint === 'toggle' && params?.id) {
+    return fakeServer.postLessonToggle(params.id, parseDelay(params?.delay)).then((data) => {
+      return {json: () => Promise.resolve(data)}
+    })
+  }
+  if (endpoint === 'login') {
+    return fakeServer.postLogin(parseDelay(params?.delay)).then((data) => {
+      return {json: () => Promise.resolve(data)}
+    })
+  }
+  return Promise.reject(new Error('Unknown endpoint'))
 }
 
 export function delayedFetch(url: string, options?: RequestInit): Promise<unknown> {
@@ -105,7 +98,7 @@ export function delayedFetch(url: string, options?: RequestInit): Promise<unknow
   const delayedUrl = new URL(url, HOST)
   delayedUrl.searchParams.set('delay', String(delay))
 
-  return clientOrServerFetch(delayedUrl, options)
+  return localTransport(delayedUrl, options)
     .then((response) => {
       markRequestDone(request)
       return response.json()
@@ -133,7 +126,6 @@ function getPathPattern(url: string): string {
     .split('/')
     .map((segment) => {
       if (!segment) return ''
-      // match numeric IDs or UUID-like strings
       if (/^\d+$/.test(segment) || /^[0-9a-fA-F-]{6,}$/.test(segment)) {
         return ':id'
       }

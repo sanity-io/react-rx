@@ -4,8 +4,8 @@ const config: KnipConfig = {
   workspaces: {
     '.': {},
     'async-react': {
-      entry: ['src/main.tsx', 'src/debugger.ts', 'server.ts', 'vite.config.ts'],
-      project: ['src/**/*.{ts,tsx}', '*.ts'],
+      entry: ['src/main.tsx', 'src/debugger.ts', 'vite.config.ts'],
+      project: ['src/**/*.{ts,tsx}', 'vite.config.ts'],
       paths: {'@/*': ['./src/*']},
       ignoreDependencies: ['tailwindcss', 'tw-animate-css'],
     },
