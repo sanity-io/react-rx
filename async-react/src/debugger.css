@@ -45,12 +45,43 @@
 
 .network-controls {
   display: flex;
+  align-items: center;
   gap: 6px;
+}
+.network-real-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.network-real-toggle input {
+  margin: 0;
 }
 .network-request {
   margin-bottom: 5px;
 }
 
 input[type='range'] {
-  accent-color: #fff; /* Example: Green */
+  accent-color: #fff;
+}
+input[type='range']:disabled {
+  opacity: 0.4;
+}
+
+.network-progress-indeterminate-bar {
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: #00bc7d;
+  animation: network-indeterminate 1.1s ease-in-out infinite;
+}
+
+@keyframes network-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
 }

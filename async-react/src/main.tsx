@@ -77,5 +77,13 @@ const container = document.getElementById('root')
 if (!container) {
   throw new Error('Expected the document to contain a #root element')
 }
+
+async function prepare(): Promise<void> {
+  const {ensureWorker} = await import('@/mocks/browser')
+  await ensureWorker()
+}
+
 const root = createRoot(container, {})
-root.render(<App />)
+void prepare().then(() => {
+  root.render(<App />)
+})

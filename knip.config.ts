@@ -4,9 +4,10 @@ const config: KnipConfig = {
   workspaces: {
     '.': {},
     'async-react': {
-      entry: ['src/main.tsx', 'src/debugger.ts', 'vite.config.ts'],
+      entry: ['src/main.tsx', 'src/debugger.ts', 'src/mocks/browser.ts', 'vite.config.ts'],
       project: ['src/**/*.{ts,tsx}', 'vite.config.ts'],
       paths: {'@/*': ['./src/*']},
+      ignore: ['public/mockServiceWorker.js'],
       ignoreDependencies: ['tailwindcss', 'tw-animate-css'],
     },
     'packages/react-rx': {

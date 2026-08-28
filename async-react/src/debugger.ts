@@ -1,13 +1,13 @@
-// AI Generated slop vanilla JS for the network debugger panel.
-// I'm not using React here because I want to be able
-// to view clean React Performance Tracks without
-// the debugger being part of the trace.
+// Vanilla JS network debugger panel (not React) so React Performance Tracks
+// stay free of debugger work.
 
 import {
   createDebuggingState,
+  DEBUG_NETWORK_PATH,
   type ApiDebugState,
   type ApiPath,
   type DebuggingState,
+  type EndpointLatency,
 } from './data/debugging'
 
 function clamp(x: number) {
@@ -20,18 +20,14 @@ interface PathChange {
   type?: NavigationType | null
 }
 
-// Wrapped so the feature check stays a plain boolean; `'navigation' in window`
-// inline would narrow `window` to never for the History fallback below.
 function supportsNavigationApi(): boolean {
   return 'navigation' in window
 }
 
-// Call: const off = onPathChange(({ from, to }) => { ... });
 function onPathChange(cb: (change: PathChange) => void) {
   let prevPath = location.pathname
 
   if (supportsNavigationApi()) {
-    // Post-commit signal; fires after the URL actually changes.
     const handler = (e: NavigationCurrentEntryChangeEvent) => {
       const to = new URL(navigation.currentEntry?.url ?? location.href)
       if (to.pathname !== prevPath) {
@@ -44,7 +40,6 @@ function onPathChange(cb: (change: PathChange) => void) {
     return () => navigation.removeEventListener('currententrychange', handler)
   }
 
-  // Fallback: popstate/hash + patch push/replace
   const fireIfChanged = () => {
     const next = location.pathname
     if (next !== prevPath) {
@@ -59,8 +54,6 @@ function onPathChange(cb: (change: PathChange) => void) {
   window.addEventListener('popstate', onPop)
   window.addEventListener('hashchange', onHash)
 
-  // Deliberately unbound: the patched versions below forward whatever `this`
-  // the caller used, and the cleanup reinstalls the untouched originals.
   // oxlint-disable-next-line typescript/unbound-method
   const origPush = history.pushState
   // oxlint-disable-next-line typescript/unbound-method
@@ -126,7 +119,7 @@ function TimedProgress({startMs, delayMs, onDone, height = '6px'}: TimedProgress
 
   function tick() {
     const now = Date.now()
-    const progress = clamp((now - startMs) / delayMs)
+    const progress = delayMs <= 0 ? 1 : clamp((now - startMs) / delayMs)
     bar.style.transform = `translateX(${progress * 100 - 100}%)`
 
     if (progress < 1) {
@@ -139,6 +132,25 @@ function TimedProgress({startMs, delayMs, onDone, height = '6px'}: TimedProgress
   raf = requestAnimationFrame(tick)
 
   container._cleanup = () => cancelAnimationFrame(raf)
+  return container
+}
+
+function IndeterminateProgress(height = '6px') {
+  const container = document.createElement('div')
+  container.setAttribute('role', 'progressbar')
+  container.setAttribute('aria-label', 'Real network delay')
+  container.className = 'network-progress-indeterminate'
+  Object.assign(container.style, {
+    position: 'relative',
+    width: '100%',
+    height,
+    background: 'rgba(53,143,127,0.08)',
+    borderRadius: height,
+    overflow: 'hidden',
+  })
+  const bar = document.createElement('div')
+  bar.className = 'network-progress-indeterminate-bar'
+  container.appendChild(bar)
   return container
 }
 
@@ -160,35 +172,70 @@ function NetworkRequest({label, id, api, row}: NetworkRequestProps) {
     labelDiv.textContent = label
     const controls = document.createElement('div')
     controls.className = 'network-controls'
+
     const span = document.createElement('span')
-    span.textContent = api.delay + 'ms'
+    span.dataset.role = 'delay-label'
+    span.textContent = formatDelayLabel(api.latency)
+
     const input = document.createElement('input')
     input.type = 'range'
     input.min = '0'
     input.max = '3000'
     input.step = '50'
-    input.value = String(api.delay)
+    input.value = String(api.latency.ms)
+    input.disabled = api.latency.mode === 'real'
     input.addEventListener('input', () => {
-      setDelay(id, input.value)
-      span.textContent = input.value + 'ms'
+      const ms = Number(input.value)
+      span.textContent = `${ms}ms`
+      void postNetworkConfig(id, {mode: 'fixed', ms})
     })
+
+    const realLabel = document.createElement('label')
+    realLabel.className = 'network-real-toggle'
+    const checkbox = document.createElement('input')
+    checkbox.type = 'checkbox'
+    checkbox.checked = api.latency.mode === 'real'
+    checkbox.title = 'Use MSW delay("real")'
+    checkbox.setAttribute('aria-label', `Real latency for ${label}`)
+    const realText = document.createElement('span')
+    realText.textContent = 'real'
+    checkbox.addEventListener('change', () => {
+      const ms = Number(input.value)
+      const latency: EndpointLatency = checkbox.checked ? {mode: 'real', ms} : {mode: 'fixed', ms}
+      input.disabled = checkbox.checked
+      span.textContent = formatDelayLabel(latency)
+      void postNetworkConfig(id, latency)
+    })
+    realLabel.appendChild(checkbox)
+    realLabel.appendChild(realText)
+
     controls.appendChild(span)
     controls.appendChild(input)
+    controls.appendChild(realLabel)
     header.appendChild(labelDiv)
     header.appendChild(controls)
     requestsDiv = document.createElement('div')
     requestsDiv.className = 'network-row-requests'
     row.appendChild(header)
+    row.appendChild(requestsDiv)
   } else {
     const controls = row.querySelector('.network-controls')
-    const span = controls?.querySelector('span')
-    const input = controls?.querySelector('input')
+    const span = controls?.querySelector('[data-role="delay-label"]')
+    const input = controls?.querySelector('input[type="range"]')
+    const checkbox = controls?.querySelector('input[type="checkbox"]')
     const existingRequests = row.querySelector('.network-row-requests')
-    if (!span || !input || !(existingRequests instanceof HTMLDivElement)) {
+    if (
+      !(span instanceof HTMLElement) ||
+      !(input instanceof HTMLInputElement) ||
+      !(checkbox instanceof HTMLInputElement) ||
+      !(existingRequests instanceof HTMLDivElement)
+    ) {
       throw new Error('Expected the network row to keep its controls and requests container')
     }
-    span.textContent = api.delay + 'ms'
-    input.value = String(api.delay)
+    span.textContent = formatDelayLabel(api.latency)
+    input.value = String(api.latency.ms)
+    input.disabled = api.latency.mode === 'real'
+    checkbox.checked = api.latency.mode === 'real'
     requestsDiv = existingRequests
     requestsDiv.innerHTML = ''
   }
@@ -205,17 +252,22 @@ function NetworkRequest({label, id, api, row}: NetworkRequestProps) {
       const span = document.createElement('span')
       span.textContent = req.label
       reqDiv.appendChild(span)
-      reqDiv.appendChild(TimedProgress({startMs: req.start, delayMs: req.delay}))
+      if (req.latency.mode === 'real') {
+        reqDiv.appendChild(IndeterminateProgress())
+      } else {
+        reqDiv.appendChild(TimedProgress({startMs: req.start, delayMs: req.latency.ms}))
+      }
       requestsDiv.appendChild(reqDiv)
     })
   }
 
-  row.appendChild(requestsDiv)
-
   return row
 }
 
-// Debugger: main container
+function formatDelayLabel(latency: EndpointLatency): string {
+  return latency.mode === 'real' ? 'real' : `${latency.ms}ms`
+}
+
 function Debugger() {
   const container = document.createElement('div')
   container.className = 'debugger'
@@ -227,13 +279,13 @@ function Debugger() {
     let apis: {label: string; id: ApiPath}[]
     if (window.location.pathname === '/login') {
       apis = [
-        {label: 'GET /lessons', id: '/lessons'},
-        {label: 'POST /login', id: '/login'},
+        {label: 'GET /api/lessons', id: '/api/lessons'},
+        {label: 'POST /api/login', id: '/api/login'},
       ]
     } else {
       apis = [
-        {label: 'GET /lessons', id: '/lessons'},
-        {label: 'POST /lessons/:id', id: '/lesson/:id/toggle'},
+        {label: 'GET /api/lessons', id: '/api/lessons'},
+        {label: 'POST /api/lesson/:id', id: '/api/lesson/:id/toggle'},
       ]
     }
     apis.forEach(({label, id}) => {
@@ -270,14 +322,18 @@ function Debugger() {
   return container
 }
 
-function setDelay(id: ApiPath, value: string) {
-  const event = new CustomEvent('debugging-set-delay', {
-    detail: {id, value: Number(value)},
+async function postNetworkConfig(path: ApiPath, latency: EndpointLatency) {
+  const {ensureWorker} = await import('./mocks/browser')
+  await ensureWorker()
+  await fetch(DEBUG_NETWORK_PATH, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({path, mode: latency.mode, ms: latency.ms}),
   })
-  window.dispatchEvent(event)
 }
 
 const root = document.getElementById('debugger')
 if (root) {
   root.appendChild(Debugger())
+  void import('./mocks/browser').then(({ensureWorker}) => ensureWorker())
 }

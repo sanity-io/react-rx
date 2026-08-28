@@ -6,6 +6,7 @@ packages:
 allowBuilds:
   es5-ext: false
   esbuild: false
+  msw: false
   sharp: true
 
 minimumReleaseAgeExclude:
