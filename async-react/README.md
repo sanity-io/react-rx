@@ -18,7 +18,9 @@ Run the frontend:
 pnpm --filter async-react dev
 ```
 
-The demo is a static Vite app. API calls run through an in-browser fake server so you can deploy without a backend. Use the network debugger at the bottom of the page to change request timing.
+The demo is a static Vite app. [MSW](https://mswjs.io) registers a service worker (`public/mockServiceWorker.js`) before React renders. App code uses plain `fetch` against same-origin `/api/*` routes. Handlers in `src/mocks` wrap `fake-data` and apply latency with MSW's `delay()`.
+
+The network debugger posts latency settings to `POST /api/debug/network` (also handled by MSW). Each endpoint row has a range input for a fixed delay and a **real** checkbox. When **real** is checked, the range input disables and that handler uses `delay('real')` instead of a fixed millisecond value. Settings persist in `localStorage`.
 
 ## Motivation
 
