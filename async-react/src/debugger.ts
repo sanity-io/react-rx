@@ -9,6 +9,7 @@ import {
   type DebuggingState,
   type EndpointLatency,
 } from './data/debugging'
+import {ensureWorker} from './mocks/browser'
 
 function clamp(x: number) {
   return Math.max(0, Math.min(1, x))
@@ -323,7 +324,6 @@ function Debugger() {
 }
 
 async function postNetworkConfig(path: ApiPath, latency: EndpointLatency) {
-  const {ensureWorker} = await import('./mocks/browser')
   await ensureWorker()
   await fetch(DEBUG_NETWORK_PATH, {
     method: 'POST',
@@ -335,5 +335,5 @@ async function postNetworkConfig(path: ApiPath, latency: EndpointLatency) {
 const root = document.getElementById('debugger')
 if (root) {
   root.appendChild(Debugger())
-  void import('./mocks/browser').then(({ensureWorker}) => ensureWorker())
+  void ensureWorker()
 }

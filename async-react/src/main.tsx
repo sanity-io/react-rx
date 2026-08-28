@@ -7,6 +7,7 @@ import './debugger.css'
 import Home from '@/app/Home'
 import Login from '@/app/Login'
 import {Card, CardContent} from '@/components/ui/card'
+import {ensureWorker} from '@/mocks/browser'
 import {Router, useRouter} from '@/router/index'
 
 function Layout({children}: {children: ReactNode}) {
@@ -78,12 +79,7 @@ if (!container) {
   throw new Error('Expected the document to contain a #root element')
 }
 
-async function prepare(): Promise<void> {
-  const {ensureWorker} = await import('@/mocks/browser')
-  await ensureWorker()
-}
-
 const root = createRoot(container, {})
-void prepare().then(() => {
+void ensureWorker().then(() => {
   root.render(<App />)
 })
