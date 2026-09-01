@@ -1,7 +1,3 @@
-// Shared contract between the app's data layer / MSW mocks and the standalone
-// debugger panel. They only talk over CustomEvents and /api/debug/network, so
-// the debugger stays out of the app bundle.
-
 export type ApiPath = '/api/lessons' | '/api/lesson/:id/toggle' | '/api/login'
 
 export type EndpointLatency = {mode: 'fixed'; ms: number} | {mode: 'real'; ms: number}

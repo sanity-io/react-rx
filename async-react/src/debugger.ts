@@ -55,9 +55,7 @@ function onPathChange(cb: (change: PathChange) => void) {
   window.addEventListener('popstate', onPop)
   window.addEventListener('hashchange', onHash)
 
-  // oxlint-disable-next-line typescript/unbound-method
   const origPush = history.pushState
-  // oxlint-disable-next-line typescript/unbound-method
   const origReplace = history.replaceState
   history.pushState = function (this: History, ...args: Parameters<History['pushState']>) {
     const ret = origPush.apply(this, args)
