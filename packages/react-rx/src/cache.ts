@@ -64,11 +64,13 @@ export function getOrCreateStore<ObservableType extends Observable<any>>(
       }),
       share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
     ),
-    getSnapshot: (fallback) => {
+    getSnapshot: (resolvedInitialValue) => {
       if (state.error) {
         throw state.error
       }
-      return state.didEmit ? (state.snapshot as ObservedValueOf<ObservableType>) : fallback
+      return (
+        state.didEmit ? state.snapshot : resolvedInitialValue
+      ) as ObservedValueOf<ObservableType>
     },
   }
 
