@@ -85,6 +85,9 @@ function TimedProgress(startMs: number, delayMs: number) {
   container.appendChild(bar)
 
   function tick() {
+    if (!container.isConnected) {
+      return
+    }
     const progress = delayMs <= 0 ? 1 : clamp((Date.now() - startMs) / delayMs)
     bar.style.transform = `translateX(${progress * 100 - 100}%)`
     if (progress < 1) {
