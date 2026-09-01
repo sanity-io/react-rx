@@ -9,12 +9,13 @@ View the app: https://async-react.dev/
 Install:
 
 ```bash
-yarn
+pnpm install
 ```
 
 Run the frontend:
+
 ```bash
-yarn dev
+pnpm --filter async-react dev
 ```
 
 Optional: you can use a real backend by updating `.env` to:
@@ -24,8 +25,9 @@ VITE_USE_REAL_SERVER=true
 ```
 
 And run the backend:
+
 ```
-yarn server
+pnpm --filter async-react server
 ```
 
 This is useful when viewing React Performance Tracks because you can see the real network requests.
@@ -35,11 +37,13 @@ This is useful when viewing React Performance Tracks because you can see the rea
 This repo shows the future vision for how product code will be written in React without needing additional APIs.
 
 This is possible, but implementing Async React features in:
+
 - **Routing**: The router uses transitions by default, so users don't need to wrap navigation updates in additional transitions.
 - **Data Fetching**: The data fetching layer uses suspense by default, so users can use transitions and suspense throughout their app.
 - **Design Components**: The design components expose `action` props so callbacks are in async transitions by default. To provide user feedback, these components also use optimistic updates to automatically show results and delayed loading states, no matter what the product code does in the action.
 
 In the app, there is a network debugger at the bottom. By changing the timing for events, you can see the experience for:
+
 - **Fast network (<150ms)**: No loading states, the app performs and feels synchronous.
 - **Slow network (>150ms)**: Automatically displays loading states, and batches updates to prevent async bugs.
 
@@ -51,19 +55,19 @@ Our code for the login form is simple and declarative:
 
 ```js
 export default function Login() {
-  const router = useRouter();
-  const [fields, setFields] = useState(initialFieldData);
+  const router = useRouter()
+  const [fields, setFields] = useState(initialFieldData)
 
   async function submitAction() {
-    await login(fields.username, fields.password);
-    await prefetchLessons();
-    router.navigate("/");
+    await login()
+    await prefetchLessons(router.revision)
+    router.navigate('/')
   }
   return (
     <Design.LoginForm fields={fields} setFields={setFields}>
       <Design.Button action={submitAction}>Login</Design.Button>
     </Design.LoginForm>
-  );
+  )
 }
 ```
 
@@ -85,19 +89,20 @@ Our code for the home page is also simple and declarative:
 
 ```js
 export default function Home() {
-  const router = useRouter();
-  const search = router.search.q || "";
-  const tab = router.search.tab || "all";
+  const router = useRouter()
+  const search = router.search.q || ''
+  const tab = router.search.tab || 'all'
+  const revision = router.revision
 
   function searchAction(value) {
-    router.setParams("q", value);
+    router.setParams('q', value)
   }
   function tabAction(value) {
-    router.setParams("tab", value);
+    router.setParams('tab', value)
   }
   async function completeAction(id) {
-    await data.mutateToggle(id);
-    router.refresh();
+    await data.mutateToggle(id)
+    router.refresh()
   }
   return (
     <>
@@ -107,12 +112,13 @@ export default function Home() {
           <LessonList
             tab={tab}
             search={search}
+            revision={revision}
             completeAction={completeAction}
           />
         </Suspense>
       </Design.TabList>
     </>
-  );
+  )
 }
 ```
 

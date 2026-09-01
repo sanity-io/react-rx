@@ -11,9 +11,3 @@ export function missingInitialValueError(hookName: string): TypeError {
       'to suspend with `use()` until the first emission instead.',
   )
 }
-
-export function getValue<T>(value: T): T extends () => infer U ? U : T {
-  return (typeof value === 'function' ? (value as () => any)() : value) as T extends () => infer U
-    ? U
-    : T
-}

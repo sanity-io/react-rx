@@ -1,8 +1,6 @@
 import {asapScheduler, catchError, finalize, map, of, share, tap, timer} from 'rxjs'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
-import {getValue} from './utils'
-
 interface ObservableState<T> {
   didEmit: boolean
   snapshot?: T
@@ -12,7 +10,8 @@ interface ObservableState<T> {
 interface CacheRecord<T> {
   observable: Observable<void>
   state: ObservableState<T>
-  getSnapshot: (initialValue: unknown) => T
+  /** `resolvedInitialValue` must be a plain value: the hooks resolve function initializers once per instance. */
+  getSnapshot: (resolvedInitialValue: unknown) => T
 }
 
 const cache = new WeakMap<Observable<any>, CacheRecord<any>>()
@@ -65,12 +64,12 @@ export function getOrCreateStore<ObservableType extends Observable<any>>(
       }),
       share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
     ),
-    getSnapshot: (initialValue) => {
+    getSnapshot: (resolvedInitialValue) => {
       if (state.error) {
         throw state.error
       }
       return (
-        state.didEmit ? state.snapshot : getValue(initialValue)
+        state.didEmit ? state.snapshot : resolvedInitialValue
       ) as ObservedValueOf<ObservableType>
     },
   }

@@ -37,7 +37,7 @@ function MyComponent(props) {
 }
 ```
 
-The `initialValue` argument is **required**: it is what the component renders until the observable emits. Every value is a valid initial value — `undefined` included, pass it explicitly — and omitting the argument throws during render. Functions act as initializers, exactly like `useState`: pass `() => value` to compute the initial value lazily, and an initializer returning the function when the initial value should be a function itself. Keep initializers pure — they can run on more than one render before the first emission.
+The `initialValue` argument is **required**: it is what the component renders until the observable emits. Every value is a valid initial value — `undefined` included, pass it explicitly — and omitting the argument throws during render. Functions act as initializers, exactly like `useState`: pass `() => value` to compute the initial value lazily, and an initializer returning the function when the initial value should be a function itself.
 
 The observable is never subscribed during render. Every render — the first one and every identity change alike — shows the `initialValue` (or the shared entry's last emission), and the subscription starts when the component commits — an observable that emits _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …) replaces the `initialValue` right after that commit. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase.
 

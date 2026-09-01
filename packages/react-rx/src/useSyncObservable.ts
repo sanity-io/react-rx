@@ -1,9 +1,9 @@
-import {useCallback, useMemo, useSyncExternalStore} from 'react'
+import {useCallback, useMemo, useState, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore} from './cache'
 import type {UseObservableOptions} from './types'
-import {EMPTY_OBJECT, getValue, missingInitialValueError} from './utils'
+import {EMPTY_OBJECT, missingInitialValueError} from './utils'
 
 /**
  * Subscribe to an observable and return its latest value synchronously via
@@ -59,6 +59,12 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   const initialValue = args[0] as InitialValue | (() => InitialValue)
   const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
+  // Resolve function initializers once per hook instance, exactly like `useState`.
+  // `getSnapshot` must return the same reference on every pre-emission read: an
+  // initializer producing a fresh object per call would make `useSyncExternalStore`'s
+  // consistency check see a store change on every render and loop until React aborts.
+  const [resolvedInitialValue] = useState(initialValue)
+
   const instance = useMemo(() => getOrCreateStore(observable), [observable])
 
   const subscribe = useCallback(
@@ -77,10 +83,10 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
-      return instance.getSnapshot(initialValue)
+      return instance.getSnapshot(resolvedInitialValue)
     },
     // Strict v4 server contract: the server always renders the resolved `initialValue` — even
     // when a shared cache entry has already emitted in the same runtime.
-    () => getValue(initialValue) as ObservedValueOf<ObservableType>,
+    () => resolvedInitialValue as ObservedValueOf<ObservableType>,
   )
 }

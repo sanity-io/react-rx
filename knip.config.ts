@@ -1,11 +1,14 @@
 import type {KnipConfig} from 'knip'
 
 const config: KnipConfig = {
-  // Vendored fork of rickhanlonii/async-react via git subtree. Keep it out of
-  // the monorepo knip graph; it is not a workspace member.
-  ignore: ['async-react/**'],
   workspaces: {
     '.': {},
+    'async-react': {
+      entry: ['src/main.tsx', 'src/debugger.ts', 'server.ts', 'vite.config.ts'],
+      project: ['src/**/*.{ts,tsx}', '*.ts'],
+      paths: {'@/*': ['./src/*']},
+      ignoreDependencies: ['tailwindcss', 'tw-animate-css'],
+    },
     'packages/react-rx': {
       entry: [
         'src/index.ts',
