@@ -7,6 +7,7 @@ import './debugger.css'
 import Home from '@/app/Home'
 import Login from '@/app/Login'
 import {Card, CardContent} from '@/components/ui/card'
+import {ensureWorker} from '@/mocks/browser'
 import {Router, useRouter} from '@/router/index'
 
 function Layout({children}: {children: ReactNode}) {
@@ -77,5 +78,12 @@ const container = document.getElementById('root')
 if (!container) {
   throw new Error('Expected the document to contain a #root element')
 }
+
 const root = createRoot(container, {})
-root.render(<App />)
+void ensureWorker()
+  .catch((error: unknown) => {
+    console.error('MSW worker failed to start', error)
+  })
+  .then(() => {
+    root.render(<App />)
+  })

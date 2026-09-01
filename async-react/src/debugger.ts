@@ -1,14 +1,13 @@
-// AI Generated slop vanilla JS for the network debugger panel.
-// I'm not using React here because I want to be able
-// to view clean React Performance Tracks without
-// the debugger being part of the trace.
-
 import {
-  createDebuggingState,
+  DEBUG_NETWORK_PATH,
   type ApiDebugState,
   type ApiPath,
   type DebuggingState,
-} from './data/debugging'
+  type DebugRequest,
+  type EndpointLatency,
+} from './mocks/debugging'
+import {ensureWorker} from './mocks/browser'
+import {getDebuggingState} from './mocks/network-state'
 
 function clamp(x: number) {
   return Math.max(0, Math.min(1, x))
@@ -20,18 +19,14 @@ interface PathChange {
   type?: NavigationType | null
 }
 
-// Wrapped so the feature check stays a plain boolean; `'navigation' in window`
-// inline would narrow `window` to never for the History fallback below.
 function supportsNavigationApi(): boolean {
   return 'navigation' in window
 }
 
-// Call: const off = onPathChange(({ from, to }) => { ... });
 function onPathChange(cb: (change: PathChange) => void) {
   let prevPath = location.pathname
 
   if (supportsNavigationApi()) {
-    // Post-commit signal; fires after the URL actually changes.
     const handler = (e: NavigationCurrentEntryChangeEvent) => {
       const to = new URL(navigation.currentEntry?.url ?? location.href)
       if (to.pathname !== prevPath) {
@@ -44,7 +39,6 @@ function onPathChange(cb: (change: PathChange) => void) {
     return () => navigation.removeEventListener('currententrychange', handler)
   }
 
-  // Fallback: popstate/hash + patch push/replace
   const fireIfChanged = () => {
     const next = location.pathname
     if (next !== prevPath) {
@@ -59,21 +53,15 @@ function onPathChange(cb: (change: PathChange) => void) {
   window.addEventListener('popstate', onPop)
   window.addEventListener('hashchange', onHash)
 
-  // Deliberately unbound: the patched versions below forward whatever `this`
-  // the caller used, and the cleanup reinstalls the untouched originals.
-  // oxlint-disable-next-line typescript/unbound-method
-  const origPush = history.pushState
-  // oxlint-disable-next-line typescript/unbound-method
-  const origReplace = history.replaceState
-  history.pushState = function (this: History, ...args: Parameters<History['pushState']>) {
-    const ret = origPush.apply(this, args)
+  const origPush = history.pushState.bind(history)
+  const origReplace = history.replaceState.bind(history)
+  history.pushState = (...args: Parameters<History['pushState']>) => {
+    origPush(...args)
     fireIfChanged()
-    return ret
   }
-  history.replaceState = function (this: History, ...args: Parameters<History['replaceState']>) {
-    const ret = origReplace.apply(this, args)
+  history.replaceState = (...args: Parameters<History['replaceState']>) => {
+    origReplace(...args)
     fireIfChanged()
-    return ret
   }
 
   return () => {
@@ -84,181 +72,178 @@ function onPathChange(cb: (change: PathChange) => void) {
   }
 }
 
-interface ProgressElement extends HTMLDivElement {
-  _cleanup?: () => void
-}
-
-interface TimedProgressProps {
-  startMs: number
-  delayMs: number
-  onDone?: () => void
-  height?: string
-}
-
-function TimedProgress({startMs, delayMs, onDone, height = '6px'}: TimedProgressProps) {
-  const container: ProgressElement = document.createElement('div')
+function TimedProgress(startMs: number, delayMs: number) {
+  const container = document.createElement('div')
   container.setAttribute('role', 'progressbar')
   container.setAttribute('aria-valuemin', '0')
   container.setAttribute('aria-valuemax', '100')
   container.setAttribute('aria-label', 'Timed progress')
-  Object.assign(container.style, {
-    position: 'relative',
-    width: '100%',
-    height,
-    background: 'rgba(53,143,127,0.08)',
-    borderRadius: height,
-    overflow: 'hidden',
-  })
+  container.className = 'network-progress'
 
   const bar = document.createElement('div')
-  Object.assign(bar.style, {
-    position: 'absolute',
-    inset: 0,
-    transform: 'translateX(-100%)',
-    width: '100%',
-    willChange: 'transform',
-    background: '#00bc7d',
-  })
+  bar.className = 'network-progress-bar'
   container.appendChild(bar)
 
-  let raf = 0
-  let doneFired = false
-
   function tick() {
-    const now = Date.now()
-    const progress = clamp((now - startMs) / delayMs)
+    if (!container.isConnected) {
+      return
+    }
+    const progress = delayMs <= 0 ? 1 : clamp((Date.now() - startMs) / delayMs)
     bar.style.transform = `translateX(${progress * 100 - 100}%)`
-
     if (progress < 1) {
-      raf = requestAnimationFrame(tick)
-    } else if (!doneFired) {
-      doneFired = true
-      if (onDone) onDone()
+      requestAnimationFrame(tick)
     }
   }
-  raf = requestAnimationFrame(tick)
+  requestAnimationFrame(tick)
 
-  container._cleanup = () => cancelAnimationFrame(raf)
   return container
 }
 
-interface NetworkRequestProps {
-  label: string
-  id: ApiPath
-  api: ApiDebugState
-  row?: HTMLDivElement
+function IndeterminateProgress() {
+  const container = document.createElement('div')
+  container.setAttribute('role', 'progressbar')
+  container.setAttribute('aria-label', 'Real network delay')
+  container.className = 'network-progress network-progress-indeterminate'
+  const bar = document.createElement('div')
+  bar.className = 'network-progress-indeterminate-bar'
+  container.appendChild(bar)
+  return container
 }
 
-function NetworkRequest({label, id, api, row}: NetworkRequestProps) {
-  let requestsDiv: HTMLDivElement
-  if (!row) {
-    row = document.createElement('div')
-    row.className = 'network-row'
-    const header = document.createElement('div')
-    header.className = 'network-row-header'
-    const labelDiv = document.createElement('div')
-    labelDiv.textContent = label
-    const controls = document.createElement('div')
-    controls.className = 'network-controls'
-    const span = document.createElement('span')
-    span.textContent = api.delay + 'ms'
-    const input = document.createElement('input')
-    input.type = 'range'
-    input.min = '0'
-    input.max = '3000'
-    input.step = '50'
-    input.value = String(api.delay)
-    input.addEventListener('input', () => {
-      setDelay(id, input.value)
-      span.textContent = input.value + 'ms'
-    })
-    controls.appendChild(span)
-    controls.appendChild(input)
-    header.appendChild(labelDiv)
-    header.appendChild(controls)
-    requestsDiv = document.createElement('div')
-    requestsDiv.className = 'network-row-requests'
-    row.appendChild(header)
-  } else {
-    const controls = row.querySelector('.network-controls')
-    const span = controls?.querySelector('span')
-    const input = controls?.querySelector('input')
-    const existingRequests = row.querySelector('.network-row-requests')
-    if (!span || !input || !(existingRequests instanceof HTMLDivElement)) {
-      throw new Error('Expected the network row to keep its controls and requests container')
-    }
-    span.textContent = api.delay + 'ms'
-    input.value = String(api.delay)
-    requestsDiv = existingRequests
-    requestsDiv.innerHTML = ''
-  }
+interface NetworkRow {
+  root: HTMLDivElement
+  delayLabel: HTMLSpanElement
+  slider: HTMLInputElement
+  realCheckbox: HTMLInputElement
+  requestsDiv: HTMLDivElement
+}
 
-  const requests = api.requests.filter((req) => !req.done)
+function formatDelayLabel(latency: EndpointLatency): string {
+  return latency.mode === 'real' ? 'real' : `${latency.ms}ms`
+}
+
+function syncControls(row: NetworkRow, latency: EndpointLatency): void {
+  row.delayLabel.textContent = formatDelayLabel(latency)
+  row.slider.value = String(latency.ms)
+  row.slider.disabled = latency.mode === 'real'
+  row.realCheckbox.checked = latency.mode === 'real'
+}
+
+function renderRequests(row: NetworkRow, requests: DebugRequest[]): void {
+  row.requestsDiv.innerHTML = ''
   if (requests.length === 0) {
     const empty = document.createElement('div')
     empty.className = 'network-request min-h-6'
-    requestsDiv.appendChild(empty)
-  } else {
-    requests.forEach((req) => {
-      const reqDiv = document.createElement('div')
-      reqDiv.className = 'network-request'
-      const span = document.createElement('span')
-      span.textContent = req.label
-      reqDiv.appendChild(span)
-      reqDiv.appendChild(TimedProgress({startMs: req.start, delayMs: req.delay}))
-      requestsDiv.appendChild(reqDiv)
-    })
+    row.requestsDiv.appendChild(empty)
+    return
   }
+  for (const request of requests) {
+    const requestDiv = document.createElement('div')
+    requestDiv.className = 'network-request'
+    const label = document.createElement('span')
+    label.textContent = request.label
+    requestDiv.appendChild(label)
+    requestDiv.appendChild(
+      request.latency.mode === 'real'
+        ? IndeterminateProgress()
+        : TimedProgress(request.start, request.latency.ms),
+    )
+    row.requestsDiv.appendChild(requestDiv)
+  }
+}
 
-  row.appendChild(requestsDiv)
+function updateNetworkRow(row: NetworkRow, api: ApiDebugState): void {
+  syncControls(row, api.latency)
+  renderRequests(row, api.requests)
+}
 
+function createNetworkRow(label: string, id: ApiPath, api: ApiDebugState): NetworkRow {
+  const root = document.createElement('div')
+  root.className = 'network-row'
+  const header = document.createElement('div')
+  header.className = 'network-row-header'
+  const labelDiv = document.createElement('div')
+  labelDiv.textContent = label
+  const controls = document.createElement('div')
+  controls.className = 'network-controls'
+
+  const delayLabel = document.createElement('span')
+
+  const slider = document.createElement('input')
+  slider.type = 'range'
+  slider.min = '0'
+  slider.max = '3000'
+  slider.step = '50'
+
+  const realLabel = document.createElement('label')
+  realLabel.className = 'network-real-toggle'
+  const realCheckbox = document.createElement('input')
+  realCheckbox.type = 'checkbox'
+  realCheckbox.title = 'Use MSW delay("real")'
+  realCheckbox.setAttribute('aria-label', `Real latency for ${label}`)
+  const realText = document.createElement('span')
+  realText.textContent = 'real'
+  realLabel.appendChild(realCheckbox)
+  realLabel.appendChild(realText)
+
+  controls.appendChild(delayLabel)
+  controls.appendChild(slider)
+  controls.appendChild(realLabel)
+  header.appendChild(labelDiv)
+  header.appendChild(controls)
+  const requestsDiv = document.createElement('div')
+  requestsDiv.className = 'network-row-requests'
+  root.appendChild(header)
+  root.appendChild(requestsDiv)
+
+  const row: NetworkRow = {root, delayLabel, slider, realCheckbox, requestsDiv}
+
+  slider.addEventListener('input', () => {
+    const latency: EndpointLatency = {mode: 'fixed', ms: Number(slider.value)}
+    syncControls(row, latency)
+    postNetworkConfig(id, latency)
+  })
+  realCheckbox.addEventListener('change', () => {
+    const latency: EndpointLatency = {
+      mode: realCheckbox.checked ? 'real' : 'fixed',
+      ms: Number(slider.value),
+    }
+    syncControls(row, latency)
+    postNetworkConfig(id, latency)
+  })
+
+  updateNetworkRow(row, api)
   return row
 }
 
-// Debugger: main container
 function Debugger() {
   const container = document.createElement('div')
   container.className = 'debugger'
-  let requests: DebuggingState = createDebuggingState()
-
-  let rows: Partial<Record<ApiPath, HTMLDivElement>> = {}
+  let state: DebuggingState = getDebuggingState()
+  let rows: Partial<Record<ApiPath, NetworkRow>> = {}
 
   function render() {
-    let apis: {label: string; id: ApiPath}[]
-    if (window.location.pathname === '/login') {
-      apis = [
-        {label: 'GET /lessons', id: '/lessons'},
-        {label: 'POST /login', id: '/login'},
-      ]
-    } else {
-      apis = [
-        {label: 'GET /lessons', id: '/lessons'},
-        {label: 'POST /lessons/:id', id: '/lesson/:id/toggle'},
-      ]
-    }
-    apis.forEach(({label, id}) => {
-      const existingRow = rows[id]
-      if (!existingRow) {
-        const created = NetworkRequest({
-          label,
-          id,
-          api: requests[id],
-        })
-        rows[id] = created
-        container.appendChild(created)
+    const apis: {label: string; id: ApiPath}[] =
+      window.location.pathname === '/login'
+        ? [{label: 'GET /api/lessons', id: '/api/lessons'}]
+        : [
+            {label: 'GET /api/lessons', id: '/api/lessons'},
+            {label: 'POST /api/lesson/:id/toggle', id: '/api/lesson/:id/toggle'},
+          ]
+    for (const {label, id} of apis) {
+      const existing = rows[id]
+      if (existing) {
+        updateNetworkRow(existing, state[id])
       } else {
-        NetworkRequest({
-          label,
-          id,
-          api: requests[id],
-          row: existingRow,
-        })
+        const row = createNetworkRow(label, id, state[id])
+        rows[id] = row
+        container.appendChild(row.root)
       }
-    })
+    }
   }
 
   window.addEventListener('debugging-update', (event) => {
-    requests = event.detail
+    state = event.detail
     render()
   })
   onPathChange(() => {
@@ -270,11 +255,18 @@ function Debugger() {
   return container
 }
 
-function setDelay(id: ApiPath, value: string) {
-  const event = new CustomEvent('debugging-set-delay', {
-    detail: {id, value: Number(value)},
-  })
-  window.dispatchEvent(event)
+function postNetworkConfig(path: ApiPath, latency: EndpointLatency): void {
+  ensureWorker()
+    .then(() =>
+      fetch(DEBUG_NETWORK_PATH, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({path, mode: latency.mode, ms: latency.ms}),
+      }),
+    )
+    .catch((error: unknown) => {
+      console.error('Failed to update network config', error)
+    })
 }
 
 const root = document.getElementById('debugger')
