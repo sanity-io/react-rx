@@ -1,17 +1,4 @@
 {
   "mode": "pre",
-  "tag": "next",
-  "initialVersions": {
-    "react-rx": "6.0.0",
-    "react-rx-website": "1.0.0"
-  },
-  "changesets": [
-    "live-swap-eager-start",
-    "no-render-phase-fetching",
-    "remove-render-phase-warmup",
-    "remove-use-observable-event",
-    "require-initial-value",
-    "state-based-live-swap-gate",
-    "visibility-effect-live-flag"
-  ]
+  "tag": "next"
 }
