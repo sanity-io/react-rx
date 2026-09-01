@@ -80,6 +80,10 @@ if (!container) {
 }
 
 const root = createRoot(container, {})
-void ensureWorker().then(() => {
-  root.render(<App />)
-})
+void ensureWorker()
+  .catch((error: unknown) => {
+    console.error('MSW worker failed to start', error)
+  })
+  .then(() => {
+    root.render(<App />)
+  })

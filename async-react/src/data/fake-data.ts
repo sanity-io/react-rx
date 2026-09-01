@@ -81,5 +81,3 @@ export async function postLessonToggle(id: string): Promise<void> {
   }
   lesson.complete = !lesson.complete
 }
-
-export async function postLogin(): Promise<void> {}

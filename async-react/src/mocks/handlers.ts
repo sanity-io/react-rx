@@ -1,4 +1,4 @@
-import {http, HttpResponse} from 'msw'
+import {delay, http, HttpResponse} from 'msw'
 
 import {DEBUG_NETWORK_PATH} from '@/data/debugging'
 import * as fakeData from '@/data/fake-data'
@@ -30,8 +30,7 @@ export const handlers = [
   }),
 
   http.post('/api/login', async () => {
-    await applyEndpointDelay('/api/login')
-    await fakeData.postLogin()
+    await delay('real')
     return HttpResponse.json({status: 'ok'})
   }),
 

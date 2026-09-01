@@ -1,4 +1,4 @@
-export type ApiPath = '/api/lessons' | '/api/lesson/:id/toggle' | '/api/login'
+export type ApiPath = '/api/lessons' | '/api/lesson/:id/toggle'
 
 export type EndpointLatency = {mode: 'fixed'; ms: number} | {mode: 'real'; ms: number}
 
@@ -6,7 +6,6 @@ export interface DebugRequest {
   id: string
   label: string
   start: number
-  done: boolean
   latency: EndpointLatency
 }
 
@@ -17,7 +16,7 @@ export interface ApiDebugState {
 
 export type DebuggingState = Record<ApiPath, ApiDebugState>
 
-const API_PATHS: readonly ApiPath[] = ['/api/lessons', '/api/lesson/:id/toggle', '/api/login']
+const API_PATHS: readonly ApiPath[] = ['/api/lessons', '/api/lesson/:id/toggle']
 
 export const DEBUG_NETWORK_PATH = '/api/debug/network'
 
@@ -28,37 +27,32 @@ declare global {
 }
 
 export function isApiPath(value: string): value is ApiPath {
-  return (API_PATHS as readonly string[]).includes(value)
-}
-
-function defaultLatency(): EndpointLatency {
-  return {mode: 'fixed', ms: 0}
+  return API_PATHS.some((path) => path === value)
 }
 
 function parseStoredLatency(raw: string | null): EndpointLatency {
+  const fallback: EndpointLatency = {mode: 'fixed', ms: 0}
   if (raw == null || raw === '') {
-    return defaultLatency()
+    return fallback
   }
+  let parsed: unknown
   try {
-    const parsed: unknown = JSON.parse(raw)
-    if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      'mode' in parsed &&
-      'ms' in parsed &&
-      (parsed.mode === 'fixed' || parsed.mode === 'real') &&
-      typeof parsed.ms === 'number' &&
-      Number.isFinite(parsed.ms)
-    ) {
-      return {mode: parsed.mode, ms: Math.max(0, parsed.ms)}
-    }
+    parsed = JSON.parse(raw)
   } catch {
-    const legacy = Number(raw)
-    if (Number.isFinite(legacy)) {
-      return {mode: 'fixed', ms: Math.max(0, legacy)}
-    }
+    return fallback
   }
-  return defaultLatency()
+  if (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    'mode' in parsed &&
+    'ms' in parsed &&
+    (parsed.mode === 'fixed' || parsed.mode === 'real') &&
+    typeof parsed.ms === 'number' &&
+    Number.isFinite(parsed.ms)
+  ) {
+    return {mode: parsed.mode, ms: Math.max(0, parsed.ms)}
+  }
+  return fallback
 }
 
 function storedLatency(path: ApiPath): EndpointLatency {
@@ -76,7 +70,6 @@ export function createDebuggingState(): DebuggingState {
       latency: storedLatency('/api/lesson/:id/toggle'),
       requests: [],
     },
-    '/api/login': {latency: storedLatency('/api/login'), requests: []},
   }
 }
 

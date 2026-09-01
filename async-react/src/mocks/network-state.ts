@@ -1,94 +1,65 @@
-import {delay as mswDelay} from 'msw'
+import {delay} from 'msw'
 
 import {
   createDebuggingState,
-  DEBUG_NETWORK_PATH,
   isApiPath,
-  persistLatency,
   pathnameToApiPath,
+  persistLatency,
+  type ApiDebugState,
   type ApiPath,
   type DebuggingState,
   type DebugRequest,
   type EndpointLatency,
 } from '@/data/debugging'
 
-let debuggingState: DebuggingState = createDebuggingState()
+let debuggingState = createDebuggingState()
 
-const inFlight = new Map<string, {path: ApiPath; request: DebugRequest}>()
+const inFlight = new Map<string, ApiPath>()
 
 export function getDebuggingState(): DebuggingState {
   return debuggingState
 }
 
-function notifyDebugging() {
-  debuggingState = {
-    '/api/lessons': {
-      latency: debuggingState['/api/lessons'].latency,
-      requests: [...debuggingState['/api/lessons'].requests],
-    },
-    '/api/lesson/:id/toggle': {
-      latency: debuggingState['/api/lesson/:id/toggle'].latency,
-      requests: [...debuggingState['/api/lesson/:id/toggle'].requests],
-    },
-    '/api/login': {
-      latency: debuggingState['/api/login'].latency,
-      requests: [...debuggingState['/api/login'].requests],
-    },
-  }
+function updatePath(path: ApiPath, update: Partial<ApiDebugState>): void {
+  debuggingState = {...debuggingState, [path]: {...debuggingState[path], ...update}}
   window.dispatchEvent(new CustomEvent('debugging-update', {detail: debuggingState}))
 }
 
 export function setEndpointLatency(path: ApiPath, latency: EndpointLatency): void {
-  debuggingState[path].latency = latency
   persistLatency(path, latency)
-  notifyDebugging()
+  updatePath(path, {latency})
 }
 
-export async function applyEndpointDelay(path: ApiPath): Promise<void> {
+export function applyEndpointDelay(path: ApiPath): Promise<void> {
   const latency = debuggingState[path].latency
-  if (latency.mode === 'real') {
-    await mswDelay('real')
-    return
-  }
-  await mswDelay(latency.ms)
-}
-
-function isDebugNetworkUrl(url: string): boolean {
-  try {
-    return new URL(url).pathname === DEBUG_NETWORK_PATH
-  } catch {
-    return false
-  }
+  return latency.mode === 'real' ? delay('real') : delay(latency.ms)
 }
 
 export function trackRequestStart(request: Request, requestId: string): void {
-  if (isDebugNetworkUrl(request.url)) {
-    return
-  }
-  const path = pathnameToApiPath(new URL(request.url).pathname)
+  const url = new URL(request.url)
+  const path = pathnameToApiPath(url.pathname)
   if (path == null) {
     return
   }
   const debugRequest: DebugRequest = {
     id: requestId,
-    label: `${request.method} ${new URL(request.url).pathname}`,
+    label: `${request.method} ${url.pathname}`,
     start: Date.now(),
-    done: false,
     latency: debuggingState[path].latency,
   }
-  debuggingState[path].requests.push(debugRequest)
-  inFlight.set(requestId, {path, request: debugRequest})
-  notifyDebugging()
+  inFlight.set(requestId, path)
+  updatePath(path, {requests: [...debuggingState[path].requests, debugRequest]})
 }
 
 export function trackRequestEnd(requestId: string): void {
-  const tracked = inFlight.get(requestId)
-  if (!tracked) {
+  const path = inFlight.get(requestId)
+  if (path == null) {
     return
   }
-  tracked.request.done = true
   inFlight.delete(requestId)
-  notifyDebugging()
+  updatePath(path, {
+    requests: debuggingState[path].requests.filter((request) => request.id !== requestId),
+  })
 }
 
 export function parseNetworkConfigBody(value: unknown): {path: ApiPath; latency: EndpointLatency} {
