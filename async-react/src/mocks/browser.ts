@@ -22,10 +22,6 @@ async function startWorker(): Promise<void> {
   worker.events.on('request:end', ({requestId}) => {
     trackRequestEnd(requestId)
   })
-
-  worker.events.on('response:mocked', ({requestId}) => {
-    trackRequestEnd(requestId)
-  })
 }
 
 export function ensureWorker(): Promise<void> {

@@ -1,10 +1,9 @@
 import {delay, http, HttpResponse} from 'msw'
 
-import {DEBUG_NETWORK_PATH} from '@/data/debugging'
+import {DEBUG_NETWORK_PATH} from '@/mocks/debugging'
 import * as fakeData from '@/data/fake-data'
 import {
   applyEndpointDelay,
-  getDebuggingState,
   parseNetworkConfigBody,
   setEndpointLatency,
 } from '@/mocks/network-state'
@@ -19,13 +18,9 @@ export const handlers = [
     return HttpResponse.json(lessons)
   }),
 
-  http.post('/api/lesson/:id/toggle', async ({params}) => {
+  http.post<{id: string}>('/api/lesson/:id/toggle', async ({params}) => {
     await applyEndpointDelay('/api/lesson/:id/toggle')
-    const id = params.id
-    if (typeof id !== 'string') {
-      return HttpResponse.json({error: 'Missing lesson id'}, {status: 400})
-    }
-    await fakeData.postLessonToggle(id)
+    await fakeData.postLessonToggle(params.id)
     return HttpResponse.json({status: 'ok'})
   }),
 
@@ -44,7 +39,7 @@ export const handlers = [
     try {
       const {path, latency} = parseNetworkConfigBody(body)
       setEndpointLatency(path, latency)
-      return HttpResponse.json({status: 'ok', state: getDebuggingState()})
+      return HttpResponse.json({status: 'ok'})
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Invalid network config'
       return HttpResponse.json({error: message}, {status: 400})

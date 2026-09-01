@@ -2,15 +2,16 @@ import {delay} from 'msw'
 
 import {
   createDebuggingState,
-  isApiPath,
+  parseEndpointLatency,
   pathnameToApiPath,
   persistLatency,
+  isApiPath,
   type ApiDebugState,
   type ApiPath,
   type DebuggingState,
   type DebugRequest,
   type EndpointLatency,
-} from '@/data/debugging'
+} from '@/mocks/debugging'
 
 let debuggingState = createDebuggingState()
 
@@ -72,14 +73,9 @@ export function parseNetworkConfigBody(value: unknown): {path: ApiPath; latency:
   if (!isApiPath(value.path)) {
     throw new TypeError(`Unknown API path: ${value.path}`)
   }
-  if (!('mode' in value) || (value.mode !== 'fixed' && value.mode !== 'real')) {
-    throw new TypeError('Network config requires mode "fixed" or "real"')
+  const latency = parseEndpointLatency(value)
+  if (latency == null) {
+    throw new TypeError('Network config requires valid mode and ms')
   }
-  if (!('ms' in value) || typeof value.ms !== 'number' || !Number.isFinite(value.ms)) {
-    throw new TypeError('Network config requires a finite ms number')
-  }
-  return {
-    path: value.path,
-    latency: {mode: value.mode, ms: Math.max(0, value.ms)},
-  }
+  return {path: value.path, latency}
 }

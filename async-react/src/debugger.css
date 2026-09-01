@@ -69,6 +69,24 @@ input[type='range']:disabled {
   opacity: 0.4;
 }
 
+.network-progress {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: rgba(53, 143, 127, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.network-progress-bar {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  width: 100%;
+  will-change: transform;
+  background: #00bc7d;
+}
+
 .network-progress-indeterminate-bar {
   position: absolute;
   inset: 0;

@@ -1,6 +1,6 @@
 export type ApiPath = '/api/lessons' | '/api/lesson/:id/toggle'
 
-export type EndpointLatency = {mode: 'fixed'; ms: number} | {mode: 'real'; ms: number}
+export type EndpointLatency = {mode: 'fixed' | 'real'; ms: number}
 
 export interface DebugRequest {
   id: string
@@ -30,29 +30,29 @@ export function isApiPath(value: string): value is ApiPath {
   return API_PATHS.some((path) => path === value)
 }
 
+export function parseEndpointLatency(value: unknown): EndpointLatency | null {
+  if (typeof value !== 'object' || value === null) {
+    return null
+  }
+  if (!('mode' in value) || (value.mode !== 'fixed' && value.mode !== 'real')) {
+    return null
+  }
+  if (!('ms' in value) || typeof value.ms !== 'number' || !Number.isFinite(value.ms)) {
+    return null
+  }
+  return {mode: value.mode, ms: Math.max(0, value.ms)}
+}
+
 function parseStoredLatency(raw: string | null): EndpointLatency {
   const fallback: EndpointLatency = {mode: 'fixed', ms: 0}
-  if (raw == null || raw === '') {
+  if (raw == null) {
     return fallback
   }
-  let parsed: unknown
   try {
-    parsed = JSON.parse(raw)
+    return parseEndpointLatency(JSON.parse(raw)) ?? fallback
   } catch {
     return fallback
   }
-  if (
-    typeof parsed === 'object' &&
-    parsed !== null &&
-    'mode' in parsed &&
-    'ms' in parsed &&
-    (parsed.mode === 'fixed' || parsed.mode === 'real') &&
-    typeof parsed.ms === 'number' &&
-    Number.isFinite(parsed.ms)
-  ) {
-    return {mode: parsed.mode, ms: Math.max(0, parsed.ms)}
-  }
-  return fallback
 }
 
 function storedLatency(path: ApiPath): EndpointLatency {

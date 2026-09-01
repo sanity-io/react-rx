@@ -1,16 +1,13 @@
-// Vanilla JS network debugger panel (not React) so React Performance Tracks
-// stay free of debugger work.
-
 import {
-  createDebuggingState,
   DEBUG_NETWORK_PATH,
   type ApiDebugState,
   type ApiPath,
   type DebuggingState,
   type DebugRequest,
   type EndpointLatency,
-} from './data/debugging'
+} from './mocks/debugging'
 import {ensureWorker} from './mocks/browser'
+import {getDebuggingState} from './mocks/network-state'
 
 function clamp(x: number) {
   return Math.max(0, Math.min(1, x))
@@ -81,24 +78,10 @@ function TimedProgress(startMs: number, delayMs: number) {
   container.setAttribute('aria-valuemin', '0')
   container.setAttribute('aria-valuemax', '100')
   container.setAttribute('aria-label', 'Timed progress')
-  Object.assign(container.style, {
-    position: 'relative',
-    width: '100%',
-    height: '6px',
-    background: 'rgba(53,143,127,0.08)',
-    borderRadius: '6px',
-    overflow: 'hidden',
-  })
+  container.className = 'network-progress'
 
   const bar = document.createElement('div')
-  Object.assign(bar.style, {
-    position: 'absolute',
-    inset: 0,
-    transform: 'translateX(-100%)',
-    width: '100%',
-    willChange: 'transform',
-    background: '#00bc7d',
-  })
+  bar.className = 'network-progress-bar'
   container.appendChild(bar)
 
   function tick() {
@@ -117,15 +100,7 @@ function IndeterminateProgress() {
   const container = document.createElement('div')
   container.setAttribute('role', 'progressbar')
   container.setAttribute('aria-label', 'Real network delay')
-  container.className = 'network-progress-indeterminate'
-  Object.assign(container.style, {
-    position: 'relative',
-    width: '100%',
-    height: '6px',
-    background: 'rgba(53,143,127,0.08)',
-    borderRadius: '6px',
-    overflow: 'hidden',
-  })
+  container.className = 'network-progress network-progress-indeterminate'
   const bar = document.createElement('div')
   bar.className = 'network-progress-indeterminate-bar'
   container.appendChild(bar)
@@ -241,7 +216,7 @@ function createNetworkRow(label: string, id: ApiPath, api: ApiDebugState): Netwo
 function Debugger() {
   const container = document.createElement('div')
   container.className = 'debugger'
-  let state: DebuggingState = createDebuggingState()
+  let state: DebuggingState = getDebuggingState()
   let rows: Partial<Record<ApiPath, NetworkRow>> = {}
 
   function render() {
