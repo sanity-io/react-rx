@@ -1,8 +1,5 @@
-import {delayedFetch} from './debug'
 import type {Lesson, LessonIcon} from './fake-data'
 
-// With suspense-enabled data fetching.
-// These use a cache for suspense-enabled data fetching.
 let lessonsCache = new Map<string, Promise<Lesson[]>>()
 
 export function revalidate() {
@@ -59,8 +56,16 @@ function parseLessons(value: unknown): Lesson[] {
   return value.map(parseLesson)
 }
 
+async function fetchJson(url: string, options?: RequestInit): Promise<unknown> {
+  const response = await fetch(url, options)
+  if (!response.ok) {
+    throw new Error(`${options?.method ?? 'GET'} ${url} failed with ${response.status}`)
+  }
+  return response.json()
+}
+
 function fetchLessons(url: string): Promise<Lesson[]> {
-  return delayedFetch(url).then(parseLessons)
+  return fetchJson(url).then(parseLessons)
 }
 
 function lessonCacheKey(tab: string, search: string, revision: number): string {
@@ -69,7 +74,7 @@ function lessonCacheKey(tab: string, search: string, revision: number): string {
 
 function lessonsUrl(tab: string, search: string): string {
   const query = new URLSearchParams({tab, q: search})
-  return `/lessons?${query}`
+  return `/api/lessons?${query}`
 }
 
 export function prefetchLessons(revision: number) {
@@ -95,17 +100,11 @@ export function getLessons(tab: string, search: string, revision: number): Promi
 }
 
 export async function mutateToggle(id: string) {
-  return delayedFetch(`/lesson/${id}/toggle`, {
-    method: 'POST',
-  }).then(() => {
-    revalidate()
-  })
+  await fetchJson(`/api/lesson/${id}/toggle`, {method: 'POST'})
+  revalidate()
 }
 
 export async function login() {
-  return delayedFetch('/login', {
-    method: 'POST',
-  }).then(() => {
-    revalidate()
-  })
+  await fetchJson('/api/login', {method: 'POST'})
+  revalidate()
 }

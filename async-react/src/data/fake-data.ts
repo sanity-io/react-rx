@@ -58,7 +58,6 @@ const lessons: Lesson[] = [
 export async function getLessons(
   tab: string | undefined,
   search: string | undefined,
-  delay: number,
 ): Promise<Lesson[]> {
   let filteredLessons = [...lessons]
   if (tab === 'wip') {
@@ -72,32 +71,13 @@ export async function getLessons(
       threshold: 0.9,
     })
   }
-
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(filteredLessons)
-    }, delay)
-  })
+  return filteredLessons
 }
 
-export async function postLessonToggle(id: string, delay: number): Promise<void> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const lesson = lessons.find((candidate) => candidate.id === id)
-      if (!lesson) {
-        reject(new Error(`Unknown lesson id: ${id}`))
-        return
-      }
-      lesson.complete = !lesson.complete
-      resolve()
-    }, delay)
-  })
-}
-
-export async function postLogin(delay: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve()
-    }, delay)
-  })
+export async function postLessonToggle(id: string): Promise<void> {
+  const lesson = lessons.find((candidate) => candidate.id === id)
+  if (!lesson) {
+    throw new Error(`Unknown lesson id: ${id}`)
+  }
+  lesson.complete = !lesson.complete
 }
