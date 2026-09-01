@@ -228,7 +228,7 @@ function Debugger() {
         ? [{label: 'GET /api/lessons', id: '/api/lessons'}]
         : [
             {label: 'GET /api/lessons', id: '/api/lessons'},
-            {label: 'POST /api/lesson/:id', id: '/api/lesson/:id/toggle'},
+            {label: 'POST /api/lesson/:id/toggle', id: '/api/lesson/:id/toggle'},
           ]
     for (const {label, id} of apis) {
       const existing = rows[id]
