@@ -1,3 +1,4 @@
+import {ensureWorker} from './mocks/browser'
 import {
   DEBUG_NETWORK_PATH,
   type ApiDebugState,
@@ -6,7 +7,6 @@ import {
   type DebugRequest,
   type EndpointLatency,
 } from './mocks/debugging'
-import {ensureWorker} from './mocks/browser'
 import {getDebuggingState} from './mocks/network-state'
 
 function clamp(x: number) {

@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "7.0.0-next.5",
+  "version": "7.0.0-next.6",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -69,15 +69,15 @@
   },
   "devDependencies": {
     "@sanity/tsconfig": "^2.2.1",
-    "@sanity/tsdown-config": "^0.26.2",
+    "@sanity/tsdown-config": "^0.27.1",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
-    "@vitejs/plugin-react": "^6.1.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^30.0.1",
-    "oxc-transform-react": "^0.147.0",
+    "oxc-transform-react": "^0.148.0",
     "publint": "^0.3.24",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

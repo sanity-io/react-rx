@@ -1,12 +1,8 @@
 import {delay, http, HttpResponse} from 'msw'
 
-import {DEBUG_NETWORK_PATH} from '@/mocks/debugging'
 import * as fakeData from '@/data/fake-data'
-import {
-  applyEndpointDelay,
-  parseNetworkConfigBody,
-  setEndpointLatency,
-} from '@/mocks/network-state'
+import {DEBUG_NETWORK_PATH} from '@/mocks/debugging'
+import {applyEndpointDelay, parseNetworkConfigBody, setEndpointLatency} from '@/mocks/network-state'
 
 export const handlers = [
   http.get('/api/lessons', async ({request}) => {
