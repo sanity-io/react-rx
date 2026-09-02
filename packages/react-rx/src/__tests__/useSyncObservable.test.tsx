@@ -438,27 +438,7 @@ test('should return the actual value when the hook is disabled and then re-enabl
   unmount()
 })
 
-test('initialValue factories run once per hook instance, like useState initializers', () => {
-  const values$ = new Subject<string>()
-  let factoryCalls = 0
-  const factory = () => {
-    factoryCalls++
-    return 'initial'
-  }
-
-  const {result, rerender} = renderHook(() => useSyncObservable(values$, factory))
-  expect(factoryCalls).toBe(1)
-  expect(result.current).toBe('initial')
-
-  rerender()
-  expect(factoryCalls).toBe(1)
-
-  act(() => values$.next('emitted'))
-  expect(result.current).toBe('emitted')
-  expect(factoryCalls).toBe(1)
-})
-
-test('initializers returning fresh objects render without looping, and the reference is stable', () => {
+test('initialValue initializers resolve once per hook instance, like useState, so a fresh object per call cannot loop', () => {
   const values$ = new Subject<{label: string}>()
   let initializerCalls = 0
 
@@ -470,10 +450,14 @@ test('initializers returning fresh objects render without looping, and the refer
   )
   expect(initializerCalls).toBe(1)
   expect(result.current).toEqual({label: 'initial'})
-  const first = result.current
+  const initial = result.current
 
   rerender()
-  expect(result.current).toBe(first)
+  expect(result.current).toBe(initial)
+  expect(initializerCalls).toBe(1)
+
+  act(() => values$.next({label: 'emitted'}))
+  expect(result.current).toEqual({label: 'emitted'})
   expect(initializerCalls).toBe(1)
 })
 
