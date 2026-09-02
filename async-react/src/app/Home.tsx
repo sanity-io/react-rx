@@ -16,9 +16,8 @@ function Lesson({
     <Design.LessonCard item={item}>
       {/*
           Design.CompleteButton is using the action prop pattern to automatically
-          show a loading state if the toggle takes longer than 150ms. It renders
-          item.complete directly because the list already carries what the user
-          asked for.
+          show a loading state if the toggle takes longer than 150ms. The list
+          already carries the user's pending intent, so it renders item.complete.
       */}
       <Design.CompleteButton
         complete={item.complete}
@@ -103,11 +102,12 @@ export default function Home() {
 
   async function completeAction(id: string, complete: boolean) {
     /**
-     * Since we're in an Action we know we're in a transition. setComplete has
-     * already recorded the user's intent, so the check has flipped. Awaiting
-     * keeps the pending state active through the mutation and later updates.
+     * Since we're in an Action we know we're in a transition. toggleComplete
+     * records the user's intent before posting, so the check has flipped.
+     * Awaiting keeps the pending state active through the mutation and later
+     * updates.
      */
-    await data.setComplete(id, complete)
+    await data.toggleComplete(id, complete)
 
     /**
      * After the mutation we need to revalidate the data cache.

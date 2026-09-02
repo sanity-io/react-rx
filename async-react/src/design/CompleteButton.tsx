@@ -9,12 +9,8 @@ export default function CompleteButton({
   complete: boolean
   action: (complete: boolean) => Promise<void>
 }) {
-  /**
-   * No useOptimistic here: the list this button renders already shows what the
-   * user asked for, because the store merges intent into the data. The design
-   * system still owns the delayed loading state, via PendingButton.
-   * `action` takes the value the user asked for, like changeAction elsewhere.
-   */
+  // The data layer merges the user's pending intent into `complete`, so no
+  // useOptimistic here; PendingButton still owns the delayed loading state.
   return (
     <PendingButton action={() => action(!complete)}>
       {complete ? <CircleCheckBig className="text-chart-2" size={48} /> : <div></div>}

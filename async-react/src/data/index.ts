@@ -1,6 +1,6 @@
 import {use, useEffect} from 'react'
 import {preloadObservablePromise, useObservablePromise, useSyncObservable} from 'react-rx'
-import {defer, distinctUntilChanged, scan, shareReplay, Subject, type Observable} from 'rxjs'
+import {BehaviorSubject, defer, type Observable} from 'rxjs'
 
 import type {Lesson, LessonIcon} from './fake-data'
 
@@ -33,14 +33,12 @@ function lessonsUrl(tab: string, search: string): string {
 }
 
 function lessonsFor(tab: string, search: string, revision: number): Observable<Lesson[]> {
-  const resolvedTab = tab || 'all'
-  const resolvedSearch = search || ''
-  const key = queryKey(resolvedTab, resolvedSearch, revision)
+  const key = queryKey(tab, search, revision)
   let query = queries.get(key)
   if (!query) {
     // Creating this during render fetches nothing. react-rx subscribes after
     // commit, during a live swap, or during preload.
-    query = defer(() => fetchLessons(lessonsUrl(resolvedTab, resolvedSearch)))
+    query = defer(() => fetchLessons(lessonsUrl(tab, search)))
     queries.set(key, query)
   }
   return query
@@ -51,80 +49,6 @@ export function useLessonsPromise(tab: string, search: string, revision: number)
   return useObservablePromise(lessonsFor(tab, search, revision), {ttl: LESSONS_TTL})
 }
 
-/** id -> the `complete` the user asked for but has not seen yet. */
-type Wanted = ReadonlyMap<string, boolean>
-
-type StoreEvent =
-  | {type: 'want'; id: string; complete: boolean}
-  | {type: 'abandon'; id: string}
-  | {type: 'confirm'; lessons: Lesson[]}
-
-const events$ = new Subject<StoreEvent>()
-
-const wanted$ = events$.pipe(
-  scan(reduceWanted, new Map<string, boolean>()),
-  distinctUntilChanged(),
-  shareReplay({bufferSize: 1, refCount: false}),
-)
-// An intent recorded while no list is mounted must survive navigation.
-wanted$.subscribe()
-
-/** Read intent below the Suspense boundary so its urgent update cannot suspend
- * the committed tree. Only committed server data retires an intent. */
-export function useLessons(promise: Promise<Lesson[]>): Lesson[] {
-  const lessons = use(promise)
-  const wanted = useSyncObservable(wanted$, null)
-  useEffect(() => {
-    events$.next({type: 'confirm', lessons})
-  }, [lessons])
-  return applyWanted(lessons, wanted)
-}
-
-/** Record intent before the POST so the check flips in the same event tick.
- * Drop it before rethrowing a failure so the action rejects with data restored. */
-export function setComplete(id: string, complete: boolean): Promise<void> {
-  events$.next({type: 'want', id, complete})
-  return fetchJson(`/api/lesson/${id}/toggle`, {method: 'POST'}).then(
-    () => undefined,
-    (error: unknown) => {
-      events$.next({type: 'abandon', id})
-      throw error
-    },
-  )
-}
-
-function reduceWanted(wanted: Wanted, event: StoreEvent): Wanted {
-  switch (event.type) {
-    case 'want':
-      return new Map(wanted).set(event.id, event.complete)
-    case 'abandon':
-      return retire(wanted, (id) => id === event.id)
-    case 'confirm':
-      return retire(wanted, (id, complete) =>
-        event.lessons.some((lesson) => lesson.id === id && lesson.complete === complete),
-      )
-  }
-}
-
-function applyWanted(lessons: Lesson[], wanted: Wanted | null): Lesson[] {
-  if (!wanted || wanted.size === 0) return lessons
-  return lessons.map((lesson) =>
-    wanted.has(lesson.id) && wanted.get(lesson.id) !== lesson.complete
-      ? {...lesson, complete: !lesson.complete}
-      : lesson,
-  )
-}
-
-/** Preserve the reference when nothing matched so distinctUntilChanged drops
- * confirmation no-ops. */
-function retire(wanted: Wanted, matches: (id: string, complete: boolean) => boolean): Wanted {
-  const next = new Map(wanted)
-  for (const [id, complete] of wanted) {
-    if (matches(id, complete)) next.delete(id)
-  }
-  return next.size === wanted.size ? wanted : next
-}
-
 export function prefetchLessons(revision: number) {
   // Warm the identity Home will render so a fast login needs no fallback.
   return Promise.race([preloadObservablePromise(lessonsFor('all', '', revision)), delay(1000)])
@@ -133,6 +57,62 @@ export function prefetchLessons(revision: number) {
 export async function login() {
   await fetchJson('/api/login', {method: 'POST'})
   revalidate()
+}
+
+/** id -> the `complete` the user asked for but has not seen yet. */
+type Wanted = ReadonlyMap<string, boolean>
+
+const wanted$ = new BehaviorSubject<Wanted>(new Map())
+
+/** Read intent below the Suspense boundary so its urgent update cannot suspend
+ * the committed tree. Only committed server data retires an intent. */
+export function useLessons(promise: Promise<Lesson[]>): Lesson[] {
+  const lessons = use(promise)
+  const wanted = useSyncObservable(wanted$, () => wanted$.getValue())
+  useEffect(() => {
+    wanted$.next(
+      retire(wanted$.getValue(), (id, complete) =>
+        lessons.some((lesson) => lesson.id === id && lesson.complete === complete),
+      ),
+    )
+  }, [lessons])
+  return applyWanted(lessons, wanted)
+}
+
+/** Record the intent before the POST so the check flips in the same event
+ * tick. `complete` is the value the user expects to see; the endpoint itself
+ * only toggles. A failed POST drops exactly this intent before rethrowing. */
+export async function toggleComplete(id: string, complete: boolean): Promise<void> {
+  wanted$.next(new Map(wanted$.getValue()).set(id, complete))
+  try {
+    await fetchJson(`/api/lesson/${id}/toggle`, {method: 'POST'})
+  } catch (error) {
+    wanted$.next(
+      retire(
+        wanted$.getValue(),
+        (wantedId, wantedComplete) => wantedId === id && wantedComplete === complete,
+      ),
+    )
+    throw error
+  }
+}
+
+function applyWanted(lessons: Lesson[], wanted: Wanted): Lesson[] {
+  if (wanted.size === 0) return lessons
+  return lessons.map((lesson) => {
+    const want = wanted.get(lesson.id)
+    return want === undefined || want === lesson.complete ? lesson : {...lesson, complete: want}
+  })
+}
+
+/** Preserve the reference when nothing matched so useSyncExternalStore's
+ * Object.is bailout skips the re-render. */
+function retire(wanted: Wanted, matches: (id: string, complete: boolean) => boolean): Wanted {
+  const next = new Map(wanted)
+  for (const [id, complete] of wanted) {
+    if (matches(id, complete)) next.delete(id)
+  }
+  return next.size === wanted.size ? wanted : next
 }
 
 function delay(ms: number) {
