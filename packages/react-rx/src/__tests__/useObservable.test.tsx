@@ -272,6 +272,7 @@ test('falls back to the live value when the observable identity changes (deferra
   // snapshot belonging to the previous observable.
   expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('initial for b')
   expect(renderTimeline.slice(timelineLengthBeforeSwitch)).not.toContain('value for a')
+  expect(renderTimeline.at(-1)).toBe('initial for b')
 
   act(() => subjectB.next('updated for b'))
   expect(renderTimeline.at(-1)).toBe('updated for b')
@@ -298,6 +299,7 @@ test('identity change without an initialValue renders the new observable synchro
   // render after the identity change already shows subjectB's synchronous emission.
   expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('initial for b')
   expect(renderTimeline.slice(timelineLengthBeforeSwitch)).not.toContain('value for a')
+  expect(renderTimeline.at(-1)).toBe('initial for b')
 
   unmount()
 })
