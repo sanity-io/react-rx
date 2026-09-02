@@ -1,5 +1,5 @@
 ---
-"react-rx": major
+'react-rx': major
 ---
 
 **Breaking:** `useObservable` and `useSyncObservable` never subscribe the observable during render — the render-phase warm-up is gone.

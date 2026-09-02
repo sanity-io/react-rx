@@ -1,5 +1,5 @@
 ---
-"react-rx": major
+'react-rx': major
 ---
 
 **Breaking:** `useObservable` and `useSyncObservable` now require the `initialValue` argument.

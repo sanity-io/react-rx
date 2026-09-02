@@ -1,5 +1,5 @@
 ---
-"react-rx": major
+'react-rx': major
 ---
 
 **Breaking:** remove `useObservableEvent`.

@@ -1,5 +1,5 @@
 ---
-"react-rx": major
+'react-rx': major
 ---
 
 **Breaking:** `useObservablePromise` no longer subscribes the source observable during render — fetching is commit-driven or explicit.
