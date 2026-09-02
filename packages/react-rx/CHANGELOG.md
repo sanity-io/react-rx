@@ -114,6 +114,11 @@
   - Synchronously-emitting sources (`of`, `BehaviorSubject`, replayed `shareReplay`) now resolve at the hook caller's commit instead of during render, so a cold mount shows one Suspense fallback pass. Preload the observable to render them without a fallback.
   - Swapping to a new observable inside `startTransition` / behind `useDeferredValue` requires warming the new observable first (for example `preloadObservablePromise` in the event handler): a transition render that suspends never commits, so it can no longer start the fetch.
   - react-rx is a client-only library and never subscribes observables on the server: server rendering emits the Suspense fallback and the fetch starts after hydration, and `preloadObservablePromise` is now a no-op on the server (an inert pending promise; no subscription, no cache entry). A server-started subscription has no unmount to tear it down, a never-settling source would hang, and the module-scope cache would be shared across requests. For React Server Components or server-only flows, fetch with async/await or RxJS `firstValueFrom` and pass the promise/value as a prop.
+## 6.0.1
+
+### Patch Changes
+
+- [#545](https://github.com/sanity-io/react-rx/pull/545) [`a764dd3`](https://github.com/sanity-io/react-rx/commit/a764dd394843544ddb1402efbe5883ebd78da4c5) Thanks [@squiggler-app](https://github.com/apps/squiggler-app)! - fix(deps): update dependency use-effect-event to ^2.0.4
 
 ## 6.0.0
 
