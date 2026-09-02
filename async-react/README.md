@@ -1,8 +1,8 @@
-# Async React Demo — react-rx edition
+# Async React Demo on react-rx
 
 A fork of [rickhanlonii/async-react](https://github.com/rickhanlonii/async-react), the final state of the React Conf 2025 [Async React talk](https://youtu.be/B_2E96URooA), adapted to [react-rx](https://react-rx.dev): the data layer is RxJS observables read through `useObservablePromise`, and optimistic completion state lives in an observable store instead of `useOptimistic`.
 
-The original app is deployed at https://async-react.dev/. The router, the design system, the network debugger, and the UX are unchanged — that is the point. The adaptation lives in three source files: `src/data/index.ts`, `src/app/Home.tsx`, and `src/design/CompleteButton.tsx`.
+The original app is deployed at https://async-react.dev/. The router, the design system, the network debugger, and the UX are unchanged. That is the point. The adaptation lives in three source files: `src/data/index.ts`, `src/app/Home.tsx`, and `src/design/CompleteButton.tsx`.
 
 ## Setup
 
@@ -59,7 +59,7 @@ export function useLessonsPromise(tab: string, search: string, revision: number)
 }
 ```
 
-Switching tabs or typing in search renders a new identity inside the router's transition, so react-rx starts the fetch during that render and the transition stays pending: the current list holds, the touched control shimmers, and the Suspense skeleton appears only on initial load. After a mutation, `router.refresh()` calls `revalidate()` and bumps the router's `revision`, so the refetch is a new identity that suspends inside the action's transition — the same mechanism, and pure per `(tab, search, revision)`, which is what keeps it correct under the React Compiler. Login warms the same identity the home page will render by racing `preloadObservablePromise` against upstream's one-second timer.
+Switching tabs or typing in search renders a new identity inside the router's transition, so react-rx starts the fetch during that render and the transition stays pending: the current list holds, the touched control shimmers, and the Suspense skeleton appears only on initial load. After a mutation, `router.refresh()` calls `revalidate()` and bumps the router's `revision`, so the refetch is a new identity that suspends inside the action's transition. Same mechanism, and because identity is a pure function of `(tab, search, revision)`, the React Compiler can memoize `lessonsFor` without going stale. Login warms the same identity the home page will render by racing `preloadObservablePromise` against upstream's one-second timer.
 
 **Optimistic intent is urgent and lives in the store.** The completed checkmark is a property of the data, not of one button, so it moves out of `useOptimistic` into a desired-state stream: what the user asked for but has not seen yet.
 
@@ -84,11 +84,11 @@ export function setComplete(id: string, complete: boolean): Promise<void> {
 }
 ```
 
-`useLessons` reads the intent below the Suspense boundary and merges it into the canonical list, and an effect retires an intent only when a render commits server data that agrees with it. That timing rule is what makes the flash-back unrepresentable: the check flips in the same event tick as the click, holds through the POST and the refetch, and the retirement lands in the commit that already shows the same value. If the POST fails, the `abandon` event reverts exactly what the click set — catch the action's rejection to watch it happen; like upstream, the demo ships no error boundary, so an uncaught action error unmounts the tree.
+`useLessons` reads the intent below the Suspense boundary and merges it into the canonical list, and an effect retires an intent only when a render commits server data that agrees with it. That timing rule is what makes the flash-back unrepresentable: the check flips in the same event tick as the click, holds through the POST and the refetch, and the retirement lands in the commit that already shows the same value. If the POST fails, the `abandon` event reverts exactly what the click set. To watch it happen, catch the action's rejection. Like upstream, the demo ships no error boundary, so an uncaught action error unmounts the tree.
 
-`CompleteButton` renders `complete` directly and keeps its pending shimmer through the action transition — the design system still owns feedback. `SearchInput` and `TabList` keep `useOptimistic`: theirs is router-state optimism (the pending URL), which is React state and belongs to the design components.
+`CompleteButton` renders `complete` directly and keeps its pending shimmer through the action transition. The design system still owns feedback. `SearchInput` and `TabList` keep `useOptimistic` because theirs is router-state optimism, the pending URL, which is React state and belongs to the design components.
 
-No react-rx API was added for any of this. The store is composition over the shipped surface — `useObservablePromise`, `preloadObservablePromise`, `useSyncObservable`, a `Subject`, and `scan`.
+No react-rx API was added for any of this. The store composes the shipped hooks: `useObservablePromise`, `preloadObservablePromise`, `useSyncObservable`, a `Subject`, and `scan`.
 
 ## Examples
 
