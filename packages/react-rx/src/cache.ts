@@ -10,7 +10,12 @@ interface ObservableState<T> {
 interface CacheRecord<T> {
   observable: Observable<void>
   state: ObservableState<T>
-  getSnapshot: (resolvedInitialValue: unknown) => T
+  /**
+   * The latest emission, or `fallback` until there is one. `useSyncExternalStore` compares
+   * snapshots with `Object.is`, so a caller must pass the same `fallback` reference on every read
+   * within a render. The hooks resolve `initialValue` initializers once per instance for this reason.
+   */
+  getSnapshot: <Fallback>(fallback: Fallback) => T | Fallback
   /** Whether the eager render-phase warm-up subscription has run for this entry. */
   warmedUp: boolean
 }
@@ -136,13 +141,11 @@ export function getOrCreateStore<ObservableType extends Observable<any>>(
       }),
       share({resetOnRefCountZero: () => timer(0, asapScheduler)}),
     ),
-    getSnapshot: (resolvedInitialValue) => {
+    getSnapshot: (fallback) => {
       if (state.error) {
         throw state.error
       }
-      return (
-        state.didEmit ? state.snapshot : resolvedInitialValue
-      ) as ObservedValueOf<ObservableType>
+      return state.didEmit ? (state.snapshot as ObservedValueOf<ObservableType>) : fallback
     },
     warmedUp: false,
   }

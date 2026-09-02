@@ -46,7 +46,7 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   observable: ObservableType,
   initialValue?: InitialValue | (() => InitialValue),
   options: UseObservableOptions = EMPTY_OBJECT,
-): InitialValue | ObservedValueOf<ObservableType> {
+): InitialValue | ObservedValueOf<ObservableType> | undefined {
   const {disabled = false} = options
 
   const hasInitialValue = typeof initialValue !== 'undefined'
@@ -77,13 +77,11 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
     [tracker, observable, instance, disabled],
   )
 
-  return useSyncExternalStore<ObservedValueOf<ObservableType>>(
+  return useSyncExternalStore(
     subscribe,
-    () => {
-      return instance.getSnapshot(resolvedInitialValue)
-    },
+    () => instance.getSnapshot(resolvedInitialValue),
     // Strict v4 server contract: the server renders the resolved `initialValue`, and throws
     // (missing getServerSnapshot) without one — even when the observable emits synchronously.
-    hasInitialValue ? () => resolvedInitialValue as ObservedValueOf<ObservableType> : undefined,
+    hasInitialValue ? () => resolvedInitialValue : undefined,
   )
 }
