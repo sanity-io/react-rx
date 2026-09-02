@@ -262,7 +262,7 @@ test('a take(1) source latches the first emission and ignores everything after c
 function EditStateProbe({editState$, frames}: {editState$: Observable<string>; frames: string[]}) {
   // `useEditState` reads synchronously: stale edit state paired with live selection
   // would tear (see the deferral-safety section below).
-  frames.push(useSyncObservable(editState$)!)
+  frames.push(useSyncObservable(editState$, undefined)!)
   return null
 }
 
@@ -417,8 +417,8 @@ function SyncSelectionProbe({
   selection$: Observable<string | undefined>
   frames: SelectionFrame[]
 }) {
-  const name = useSyncObservable(selection$)
-  const releases = useSyncObservable(releases$)!
+  const name = useSyncObservable(selection$, undefined)
+  const releases = useSyncObservable(releases$, [])
   frames.push({name, resolved: name !== undefined && releases.includes(name) ? name : undefined})
   return null
 }
@@ -438,8 +438,8 @@ function DeferredSelectionProbe({
   selection$: Observable<string | undefined>
   frames: SelectionFrame[]
 }) {
-  const name = useSyncObservable(selection$)
-  const releases = useObservable(releases$)!
+  const name = useSyncObservable(selection$, undefined)
+  const releases = useObservable(releases$, [])
   frames.push({name, resolved: name !== undefined && releases.includes(name) ? name : undefined})
   return null
 }
@@ -495,8 +495,8 @@ function MixedSyncDeferredProbe({
   releases$: Observable<string[]>
   frames: CrossFrame[]
 }) {
-  const active = useSyncObservable(releases$)!
-  const all = useObservable(releases$)!
+  const active = useSyncObservable(releases$, [])
+  const all = useObservable(releases$, [])
   frames.push({active, all})
   return null
 }
@@ -508,8 +508,8 @@ function AllSyncProbe({
   releases$: Observable<string[]>
   frames: CrossFrame[]
 }) {
-  const active = useSyncObservable(releases$)!
-  const all = useSyncObservable(releases$)!
+  const active = useSyncObservable(releases$, [])
+  const all = useSyncObservable(releases$, [])
   frames.push({active, all})
   return null
 }

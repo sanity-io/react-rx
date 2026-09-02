@@ -66,7 +66,7 @@ describe.each(hooks)('$name', ({useHook}) => {
     })
 
     function ObservableComponent() {
-      useHook(observable)
+      useHook(observable, undefined)
       return null
     }
 
@@ -89,7 +89,7 @@ describe.each(hooks)('$name', ({useHook}) => {
 
     function ObservableComponent() {
       const memoObservable = useMemo(() => getObservable(), [])
-      useHook(memoObservable)
+      useHook(memoObservable, undefined)
       return null
     }
 

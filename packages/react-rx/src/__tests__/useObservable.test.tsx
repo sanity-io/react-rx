@@ -31,7 +31,7 @@ test('should subscribe immediately on component mount and unsubscribe on compone
 
   expect(subscribed).toBe(false)
 
-  const {unmount} = renderHook(() => useObservable(observable))
+  const {unmount} = renderHook(() => useObservable(observable, undefined))
   expect(subscribed).toBe(true)
 
   unmount()
@@ -47,14 +47,14 @@ test('should only subscribe once when given same observable on re-renders', asyn
 
   expect(subscriptionCount).toBe(0)
 
-  const {unmount, rerender} = renderHook(() => useObservable(observable))
+  const {unmount, rerender} = renderHook(() => useObservable(observable, undefined))
   expect(subscriptionCount).toBe(1)
   rerender()
   expect(subscriptionCount).toBe(1)
   unmount()
   await Promise.resolve()
 
-  renderHook(() => useObservable(observable))
+  renderHook(() => useObservable(observable, undefined))
   expect(subscriptionCount).toBe(2)
 })
 
@@ -99,13 +99,13 @@ test('should return undefined during first render if observable is async', () =>
 
 test('should have sync values from an observable as initial value', () => {
   const observable = of('something sync')
-  const {result} = renderHook(() => useObservable(observable))
+  const {result} = renderHook(() => useObservable(observable, undefined))
   expect(result.current).toBe('something sync')
 })
 
 test('should have undefined as initial value from delayed observables', () => {
   const {result, unmount} = renderHook(() =>
-    useObservable(scheduled('something async', asyncScheduler)),
+    useObservable(scheduled('something async', asyncScheduler), undefined),
   )
   expect(result.current).toBeUndefined()
   unmount()
@@ -141,15 +141,15 @@ test('should share the observable between each concurrent subscribing hook', asy
   const observable = new Observable<number>((subscriber) => {
     subscriber.next(subscribeCount++)
   })
-  const firstHook = renderHook(() => useObservable(observable))
+  const firstHook = renderHook(() => useObservable(observable, undefined))
   expect(firstHook.result.current).toBe(0)
-  const secondHook = renderHook(() => useObservable(observable))
+  const secondHook = renderHook(() => useObservable(observable, undefined))
   expect(secondHook.result.current).toBe(0)
   firstHook.unmount()
   secondHook.unmount()
   await Promise.resolve()
 
-  const thirdHook = renderHook(() => useObservable(observable))
+  const thirdHook = renderHook(() => useObservable(observable, undefined))
   expect(thirdHook.result.current).toBe(1)
   thirdHook.unmount()
 })
@@ -198,7 +198,7 @@ test('should restart any completed observable on mount', async () => {
   firstHook.unmount()
   await Promise.resolve()
 
-  const secondHook = renderHook(() => useObservable(observable))
+  const secondHook = renderHook(() => useObservable(observable, undefined))
   expect(secondHook.result.current).toBe(undefined)
   expect(subscribeCount).toBe(2)
   expect(unsubscribeCount).toBe(1)
@@ -210,7 +210,7 @@ test('should restart any completed observable on mount', async () => {
 
 test('should update with values from observables', () => {
   const values$ = new Subject<string>()
-  const {result, unmount} = renderHook(() => useObservable(values$))
+  const {result, unmount} = renderHook(() => useObservable(values$, undefined))
 
   expect(result.current).toBe(undefined)
 
@@ -285,7 +285,7 @@ test('identity change without an initialValue renders the new observable synchro
   const renderTimeline: (string | undefined)[] = []
 
   function ObservableComponent({observable}: {observable: BehaviorSubject<string>}) {
-    renderTimeline.push(useObservable(observable))
+    renderTimeline.push(useObservable(observable, undefined))
     return null
   }
   const {rerender, unmount} = render(<ObservableComponent observable={subjectA} />)
