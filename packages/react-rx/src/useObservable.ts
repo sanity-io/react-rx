@@ -62,6 +62,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   const {disabled = false} = options
 
   const hasInitialValue = typeof initialValue !== 'undefined'
+  const [resolvedInitialValue] = useState(initialValue)
   // With an `initialValue` the warm-up is skipped until this hook has received an emission; after
   // that, replacement observables are warmed during render again so that consumers that rebuild
   // the observable on every render converge instead of looping — see `needsWarmUp`. The tracker is
@@ -91,12 +92,12 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   const value = useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
-      return instance.getSnapshot(initialValue)
+      return instance.getSnapshot(resolvedInitialValue)
     },
     // Always provide getServerSnapshot so SSR never throws. The server renders
     // exactly what the client's first render will show (the resolved initialValue
     // when provided, else a sync emission, else undefined).
-    () => instance.getSnapshot(initialValue),
+    () => instance.getSnapshot(resolvedInitialValue),
   )
 
   // Defer identity and value as one snapshot so they can never tear — the

@@ -3,7 +3,7 @@ import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore, needsWarmUp, trackSubscribed, type WarmUpTracker} from './cache'
 import type {UseObservableOptions} from './types'
-import {EMPTY_OBJECT, getValue} from './utils'
+import {EMPTY_OBJECT} from './utils'
 
 /**
  * Subscribe to an observable and return its latest value synchronously via
@@ -50,6 +50,7 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   const {disabled = false} = options
 
   const hasInitialValue = typeof initialValue !== 'undefined'
+  const [resolvedInitialValue] = useState(initialValue)
   // With an `initialValue` the warm-up is skipped until this hook has received an emission; after
   // that, replacement observables are warmed during render again so that consumers that rebuild
   // the observable on every render converge instead of looping — see `needsWarmUp`. The tracker is
@@ -79,10 +80,10 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
   return useSyncExternalStore<ObservedValueOf<ObservableType>>(
     subscribe,
     () => {
-      return instance.getSnapshot(initialValue)
+      return instance.getSnapshot(resolvedInitialValue)
     },
     // Strict v4 server contract: the server renders the resolved `initialValue`, and throws
     // (missing getServerSnapshot) without one — even when the observable emits synchronously.
-    hasInitialValue ? () => getValue(initialValue) as ObservedValueOf<ObservableType> : undefined,
+    hasInitialValue ? () => resolvedInitialValue as ObservedValueOf<ObservableType> : undefined,
   )
 }

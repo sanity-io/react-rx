@@ -438,7 +438,7 @@ test('should return the actual value when the hook is disabled and then re-enabl
   unmount()
 })
 
-test('initialValue factories must be pure', () => {
+test('initialValue factories run once per hook instance, like useState initializers', () => {
   const values$ = new Subject<string>()
   let factoryCalls = 0
   const factory = () => {
@@ -446,23 +446,19 @@ test('initialValue factories must be pure', () => {
     return 'initial'
   }
 
-  const {result} = renderHook(() => useSyncObservable(values$, factory))
-  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
-  // when checking for tearing on commit.
-  expect(factoryCalls).toBeGreaterThanOrEqual(2)
+  const {result, rerender} = renderHook(() => useSyncObservable(values$, factory))
+  expect(factoryCalls).toBe(1)
   expect(result.current).toBe('initial')
-  const callsBeforeEmit = factoryCalls
+
+  rerender()
+  expect(factoryCalls).toBe(1)
 
   act(() => values$.next('emitted'))
   expect(result.current).toBe('emitted')
-  // After didEmit, getSnapshot short-circuits and the factory is no longer called.
-  expect(factoryCalls).toBe(callsBeforeEmit)
+  expect(factoryCalls).toBe(1)
 })
 
 test('initializers returning fresh objects render without looping, and the reference is stable', () => {
-  // Regression: the initializer used to run on every pre-emission getSnapshot
-  // read. A fresh object per call made useSyncExternalStore's consistency
-  // check see a store change on every render, looping until React aborted.
   const values$ = new Subject<{label: string}>()
   let initializerCalls = 0
 
@@ -482,8 +478,6 @@ test('initializers returning fresh objects render without looping, and the refer
 })
 
 test('SSR resolves a factory initialValue through getServerSnapshot', () => {
-  // The sync hook's getServerSnapshot resolves factories via getValue — a code path
-  // distinct from the client getSnapshot.
   const observable = scheduled('async value', asyncScheduler)
   function ObservableComponent() {
     return <>{useSyncObservable(observable, () => 'factory initial')}</>
