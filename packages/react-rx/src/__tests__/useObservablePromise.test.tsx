@@ -781,9 +781,6 @@ test('flipping disabled to false starts the fetch and resolves the same promise 
 
 test('disabled component sharing a warmed entry gets the settled promise', async () => {
   const observable = of('warm')
-  // Settle the shared entry before anything renders — a disabled consumer
-  // performs no fetching of its own and only re-reads on its own re-renders.
-  void preloadObservablePromise(observable)
 
   function Warmed() {
     const p = useObservablePromise(observable)
