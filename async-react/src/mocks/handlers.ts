@@ -5,8 +5,8 @@ import {DEBUG_NETWORK_PATH} from '@/mocks/debugging'
 import {applyEndpointDelay, parseNetworkConfigBody, setEndpointLatency} from '@/mocks/network-state'
 
 export const handlers = [
-  http.get('/api/lessons', async ({request}) => {
-    await applyEndpointDelay('/api/lessons')
+  http.get('/api/lessons', async ({request, requestId}) => {
+    await applyEndpointDelay('/api/lessons', requestId)
     const url = new URL(request.url)
     const tab = url.searchParams.get('tab') ?? undefined
     const search = url.searchParams.get('q') ?? undefined
@@ -14,8 +14,8 @@ export const handlers = [
     return HttpResponse.json(lessons)
   }),
 
-  http.post<{id: string}>('/api/lesson/:id/toggle', async ({params}) => {
-    await applyEndpointDelay('/api/lesson/:id/toggle')
+  http.post<{id: string}>('/api/lesson/:id/toggle', async ({params, requestId}) => {
+    await applyEndpointDelay('/api/lesson/:id/toggle', requestId)
     await fakeData.postLessonToggle(params.id)
     return HttpResponse.json({status: 'ok'})
   }),

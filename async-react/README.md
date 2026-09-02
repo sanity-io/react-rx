@@ -20,7 +20,7 @@ pnpm --filter async-react dev
 
 The demo is a static Vite app. [MSW](https://mswjs.io) registers a service worker (`public/mockServiceWorker.js`) before React renders. App code uses plain `fetch` against same-origin `/api/*` routes. Handlers in `src/mocks` wrap `fake-data` and apply latency with MSW's `delay()`.
 
-The network debugger posts latency settings to `POST /api/debug/network` (also handled by MSW) so config changes show up as real HTTP requests the same way app traffic does. Each configurable endpoint row has a range input for a fixed delay and a **real** checkbox. When **real** is checked, the range input disables and that handler uses `delay('real')` instead of a fixed millisecond value. Settings persist in `localStorage`. `POST /api/login` has no debugger controls and always responds with `delay('real')`.
+The network debugger posts latency settings to `POST /api/debug/network` (also handled by MSW) so config changes show up as real HTTP requests the same way app traffic does. Each configurable endpoint row has a range input for a fixed delay and a **real** checkbox. When **real** is checked, the range input disables and that handler uses a realistic random delay (MSW's 100–400ms browser range) instead of a fixed millisecond value. The chosen duration is stored so the debugger progress bar can track it; a new random duration is picked when **real** is checked and again after each request starts. Settings persist in `localStorage`. `POST /api/login` has no debugger controls and always responds with `delay('real')`.
 
 ## Motivation
 
