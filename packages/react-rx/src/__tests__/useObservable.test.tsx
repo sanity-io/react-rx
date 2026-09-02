@@ -625,6 +625,28 @@ test('initialValue factories must be pure', () => {
   expect(factoryCalls).toBe(callsBeforeEmit)
 })
 
+test('initializers returning fresh objects render without looping, and the reference is stable', () => {
+  // Regression: the initializer used to run on every pre-emission getSnapshot
+  // read. A fresh object per call made useSyncExternalStore's consistency
+  // check see a store change on every render, looping until React aborted.
+  const values$ = new Subject<{label: string}>()
+  let initializerCalls = 0
+
+  const {result, rerender} = renderHook(() =>
+    useObservable(values$, () => {
+      initializerCalls++
+      return {label: 'initial'}
+    }),
+  )
+  expect(initializerCalls).toBe(1)
+  expect(result.current).toEqual({label: 'initial'})
+  const first = result.current
+
+  rerender()
+  expect(result.current).toBe(first)
+  expect(initializerCalls).toBe(1)
+})
+
 test('SSR renders the initialValue even when the observable emits synchronously', () => {
   // With an initialValue there is no render-phase warm-up, so the server never sees the sync
   // emission: it paints the resolved initialValue — exactly what the client's first paint
