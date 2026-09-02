@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {use, useEffect} from 'react'
 import {preloadObservablePromise, useObservablePromise, useSyncObservable} from 'react-rx'
 import {defer, distinctUntilChanged, scan, shareReplay, Subject, type Observable} from 'rxjs'
@@ -19,6 +20,11 @@ const LESSONS_TTL = 10 * 60 * 1000
  * the router revision after revalidate(), so the next transition render maps
  * to a fresh observable and refetches. */
 let queries = new Map<string, Observable<Lesson[]>>()
+=======
+import type {Lesson, LessonIcon} from './fake-data'
+
+let lessonsCache = new Map<string, Promise<Lesson[]>>()
+>>>>>>> origin/next
 
 export function revalidate() {
   queries = new Map()
@@ -186,6 +192,58 @@ function parseLessons(value: unknown): Lesson[] {
   return value.map(parseLesson)
 }
 
-function fetchLessons(url: string): Promise<Lesson[]> {
-  return delayedFetch(url).then(parseLessons)
+async function fetchJson(url: string, options?: RequestInit): Promise<unknown> {
+  const response = await fetch(url, options)
+  if (!response.ok) {
+    throw new Error(`${options?.method ?? 'GET'} ${url} failed with ${response.status}`)
+  }
+  return response.json()
 }
+
+function fetchLessons(url: string): Promise<Lesson[]> {
+  return fetchJson(url).then(parseLessons)
+}
+<<<<<<< HEAD
+=======
+
+function lessonCacheKey(tab: string, search: string, revision: number): string {
+  return JSON.stringify([tab, search, revision])
+}
+
+function lessonsUrl(tab: string, search: string): string {
+  const query = new URLSearchParams({tab, q: search})
+  return `/api/lessons?${query}`
+}
+
+export function prefetchLessons(revision: number) {
+  const tab = 'all'
+  const search = ''
+  const promise = fetchLessons(lessonsUrl(tab, search))
+  lessonsCache.set(lessonCacheKey(tab, search, revision), promise)
+  return Promise.race([promise, delay(1000)])
+}
+
+export function getLessons(tab: string, search: string, revision: number): Promise<Lesson[]> {
+  const resolvedTab = tab || 'all'
+  const resolvedSearch = search || ''
+  const key = lessonCacheKey(resolvedTab, resolvedSearch, revision)
+  const cached = lessonsCache.get(key)
+  if (cached) {
+    return cached
+  }
+
+  const promise = fetchLessons(lessonsUrl(resolvedTab, resolvedSearch))
+  lessonsCache.set(key, promise)
+  return promise
+}
+
+export async function mutateToggle(id: string) {
+  await fetchJson(`/api/lesson/${id}/toggle`, {method: 'POST'})
+  revalidate()
+}
+
+export async function login() {
+  await fetchJson('/api/login', {method: 'POST'})
+  revalidate()
+}
+>>>>>>> origin/next
