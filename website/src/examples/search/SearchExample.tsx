@@ -94,7 +94,9 @@ function SearchExample() {
         value={keyword}
         placeholder="Type a keyword to search"
         onChange={(event) =>
-          keyword$.next(event.currentTarget.value)
+          keyword$.next(
+            event.currentTarget.value,
+          )
         }
       />
       <div>

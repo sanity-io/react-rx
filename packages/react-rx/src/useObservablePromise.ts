@@ -94,9 +94,9 @@ export interface PreloadObservablePromiseOptions {
  * the new data loads — no preload required. A suspended transition render
  * never commits, so for exactly this case the hook starts the new source
  * during that render (the live-swap eager start): only consumers that are
- * already committed and visible — and not `disabled` — qualify, which is
- * what keeps mounts, server rendering, `disabled` consumers, and hidden
- * `<Activity>` pre-renders fully lazy. A transition abandoned after the swap render can
+ * currently committed, visible, and subscribed qualify, which is what keeps
+ * mounts, server rendering, `disabled` consumers, and hidden `<Activity>`
+ * pre-renders fully lazy. A transition abandoned after the swap render can
  * therefore have started a fetch nobody consumes — the entry settles and
  * evicts after `ttl`, but bound never-settling sources with RxJS `timeout`
  * just as you would for {@link preloadObservablePromise}.

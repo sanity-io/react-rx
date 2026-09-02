@@ -3,7 +3,7 @@ import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore} from './cache'
 import type {UseObservableOptions} from './types'
-import {EMPTY_OBJECT, missingInitialValueError} from './utils'
+import {EMPTY_OBJECT, missingInitialValueError, UNSET_INITIAL_VALUE} from './utils'
 
 /**
  * Subscribe to an observable and return its latest value, with store updates deferred via
@@ -60,11 +60,12 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   ...args: [initialValue?: InitialValue | (() => InitialValue), options?: UseObservableOptions]
 ): InitialValue | ObservedValueOf<ObservableType> {
   // `undefined` (like every other value) is a valid `initialValue`, so a missing argument is
-  // detected by arity.
-  if (args.length === 0) {
+  // detected by arity and modeled with a sentinel no caller can pass.
+  const initialValue =
+    args.length === 0 ? UNSET_INITIAL_VALUE : (args[0] as InitialValue | (() => InitialValue))
+  if (initialValue === UNSET_INITIAL_VALUE) {
     throw missingInitialValueError('useObservable')
   }
-  const initialValue = args[0] as InitialValue | (() => InitialValue)
   const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
   // Resolve function initializers once per hook instance, exactly like `useState`.

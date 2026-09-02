@@ -8,9 +8,10 @@ import {useSyncObservable} from '../useSyncObservable'
 
 /**
  * `initialValue` is a required argument for `useObservable` and `useSyncObservable`. Omission is
- * detected by argument arity and throws during render, because every value a caller can pass —
- * `undefined` included — is a valid initial value. Observables without a meaningful initial value
- * belong to `useObservablePromise` instead.
+ * detected by argument arity (the internal default is the `Symbol.for('react-rx.unsetInitialValue')`
+ * sentinel) and throws during render, because every value a caller can pass — `undefined`
+ * included — is a valid initial value. Observables without a meaningful initial value belong to
+ * `useObservablePromise` instead.
  */
 
 const hooks = [

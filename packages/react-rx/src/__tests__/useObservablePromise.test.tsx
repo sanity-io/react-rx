@@ -563,9 +563,9 @@ test('disabled re-renders do not renew grace — entry still evicts for later mo
   }
 
   function Disabled({tick}: {tick: number}) {
-    // The idle `adoptTtl` on every render must not reset the eviction clock.
+    // Idle ensure on every render must not reset the eviction clock.
     // void: the return is an ObservablePromise (a Promise subclass); we only
-    // care that the hook runs, not that anything awaits the promise.
+    // care that ensure runs, not that anything awaits the promise.
     void useObservablePromise(observable, {disabled: true, ttl: 40})
     return <span data-testid="tick">{tick}</span>
   }
