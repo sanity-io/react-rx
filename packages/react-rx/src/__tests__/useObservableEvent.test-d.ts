@@ -1,3 +1,4 @@
+/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import type {ChangeEvent} from 'react'
 import {map, type Observable} from 'rxjs'
 import {expectTypeOf, test} from 'vitest'

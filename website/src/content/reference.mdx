@@ -64,23 +64,16 @@ function useSyncObservable<T>(
 **Example**
 
 ```tsx
-import type {ChangeEvent} from 'react'
-import {useObservableEvent, useSyncObservable} from 'react-rx'
-import {map, Subject, tap, type Observable} from 'rxjs'
+import {useSyncObservable} from 'react-rx'
+import {Subject} from 'rxjs'
 
 const text$ = new Subject<string>()
 
 function SearchField() {
-  const handleChange = useObservableEvent((events$: Observable<ChangeEvent<HTMLInputElement>>) =>
-    events$.pipe(
-      map((e) => e.currentTarget.value),
-      tap((value) => text$.next(value)),
-    ),
-  )
   // Controlled input values must update synchronously.
   const text = useSyncObservable(text$, '')
 
-  return <input value={text} onChange={handleChange} />
+  return <input value={text} onChange={(event) => text$.next(event.currentTarget.value)} />
 }
 ```
 
@@ -147,6 +140,12 @@ function preloadObservablePromise<T>(
 Default `ttl` is `5000` (longer than the hook default) so a hover-warmed value survives until click/navigation.
 
 ## useObservableEvent()
+
+> [!WARNING]
+>
+> Deprecated. v7 removes `useObservableEvent`. Use a `Subject` you own instead, as shown in
+> [Handling events](/guide#handling-events). See the
+> [v6 to v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
 
 A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.
 
