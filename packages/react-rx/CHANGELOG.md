@@ -1,5 +1,11 @@
 # react-rx
 
+## 7.0.0-next.6
+
+### Patch Changes
+
+- [#515](https://github.com/sanity-io/react-rx/pull/515) [`df7f99e`](https://github.com/sanity-io/react-rx/commit/df7f99e91ee06c0c87999d3d1628769c3a6524bf) Thanks [@stipsan](https://github.com/stipsan)! - `initialValue` initializers now run exactly once per hook instance, matching `useState`. They previously ran on every pre-emission `getSnapshot` read, so an initializer returning a fresh object (`useObservable(obs$, () => ({...}))`, and the same on `useSyncObservable`) gave `useSyncExternalStore` a new snapshot reference on every consistency check and looped until React aborted with "Maximum update depth exceeded". The resolved value is now cached per instance, which also makes the pre-emission snapshot reference stable across re-renders and fixes the equivalent hazard in `useSyncObservable`'s server snapshot.
+
 ## 7.0.0-next.5
 
 ### Patch Changes
