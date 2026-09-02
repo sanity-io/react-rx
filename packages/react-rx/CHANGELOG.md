@@ -1,5 +1,11 @@
 # react-rx
 
+## 6.0.1
+
+### Patch Changes
+
+- [#545](https://github.com/sanity-io/react-rx/pull/545) [`a764dd3`](https://github.com/sanity-io/react-rx/commit/a764dd394843544ddb1402efbe5883ebd78da4c5) Thanks [@squiggler-app](https://github.com/apps/squiggler-app)! - fix(deps): update dependency use-effect-event to ^2.0.4
+
 ## 6.0.0
 
 ### Major Changes
