@@ -627,6 +627,25 @@ test('initialValue initializers resolve once per hook instance, like useState, s
   expect(initializerCalls).toBe(1)
 })
 
+test('the initialValue argument is read on the first render only, like useState', () => {
+  const values$ = new Subject<string>()
+  const useValue = (initialValue: string | undefined) => useObservable(values$, initialValue)
+
+  const withoutInitial = renderHook(useValue, {initialProps: undefined})
+  expect(withoutInitial.result.current).toBeUndefined()
+  withoutInitial.rerender('later')
+  expect(withoutInitial.result.current).toBeUndefined()
+
+  const withInitial = renderHook(useValue, {initialProps: 'initial'})
+  expect(withInitial.result.current).toBe('initial')
+  withInitial.rerender(undefined)
+  expect(withInitial.result.current).toBe('initial')
+
+  act(() => values$.next('emitted'))
+  expect(withoutInitial.result.current).toBe('emitted')
+  expect(withInitial.result.current).toBe('emitted')
+})
+
 test('SSR renders the initialValue even when the observable emits synchronously', () => {
   // With an initialValue there is no render-phase warm-up, so the server never sees the sync
   // emission: it paints the resolved initialValue — exactly what the client's first paint

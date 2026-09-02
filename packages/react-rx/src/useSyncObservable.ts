@@ -49,7 +49,7 @@ export function useSyncObservable<ObservableType extends Observable<any>, Initia
 ): InitialValue | ObservedValueOf<ObservableType> | undefined {
   const {disabled = false} = options
 
-  const hasInitialValue = typeof initialValue !== 'undefined'
+  const [hasInitialValue] = useState(typeof initialValue !== 'undefined')
   const [resolvedInitialValue] = useState(initialValue)
   // With an `initialValue` the warm-up is skipped until this hook has received an emission; after
   // that, replacement observables are warmed during render again so that consumers that rebuild
