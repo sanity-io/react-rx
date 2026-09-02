@@ -74,7 +74,7 @@
     "@sanity/tsconfig": "^2.2.1",
     "@sanity/tsdown-config": "^0.26.2",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
