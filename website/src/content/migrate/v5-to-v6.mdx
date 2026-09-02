@@ -1,0 +1,49 @@
+# Migrating from v5 to v6
+
+v6 has a single breaking change: `useObservable` and `useSyncObservable` no longer subscribe the observable during render when an `initialValue` is provided. Requirements are unchanged from v5: React `^19.2`, RxJS `^7.2`, Node `>=22.12`, ESM-only.
+
+## Sync emissions no longer win the first paint
+
+In v5, both hooks ran a warm-up subscription during render so that a synchronously emitting source (`of`, `startWith`, a `BehaviorSubject`, a replayed `shareReplay`) could render its value on the very first paint, even when you had also passed an `initialValue`. That warm-up only exists to have something to show before the first emission. With an `initialValue` there already is something to show, so v6 skips it and subscribes on commit instead.
+
+The observable behavior is the same. What changes is which value the first render shows when the two disagree:
+
+```tsx
+const count$ = new BehaviorSubject(5)
+
+const count = useObservable(count$, 0)
+// v5: renders 5 on the first paint (the warm-up saw the sync emission)
+// v6: renders 0 on the first paint, then 5 right after mount
+```
+
+This applies to server rendering too. In v5 the SSR markup could contain the sync emission; in v6 the server always renders the `initialValue`, which is also exactly what the client's first paint shows, so hydration is deterministic.
+
+### Who is affected
+
+- Tests that assert the value of the first render, or SSR snapshot tests, for observables that emit synchronously and are paired with an `initialValue`.
+- UI that relied on a sync emission being visible before mount, for example a `BehaviorSubject` whose current value was assumed to paint immediately.
+- Call sites that pass a `startWith(x)` source together with an unrelated `initialValue`. Those now render the `initialValue` for one pass before `x` arrives.
+
+### What to do
+
+Pass the value you want on the first paint as the `initialValue`. For a `BehaviorSubject` that is its current value; for a `startWith` pipeline it is the same constant:
+
+```tsx
+// Before (v5) — relied on the warm-up to paint 5 first
+const count = useObservable(count$, 0)
+
+// After (v6) — say what the first paint should be
+const count = useObservable(count$, () => count$.getValue())
+```
+
+Calls that omit `initialValue` still get the v5 warm-up in v6, so they behave exactly as before. Do not lean on that: v7 makes `initialValue` required, so passing the real initial value now is the forward-compatible move.
+
+## Other effects of the change
+
+- `disabled: true` now guarantees zero subscriptions, even when the observable is rebuilt on every render. In v5 the warm-up probe could still subscribe once.
+- Subscribe-time side effects, such as a `fromFetch` request, stay out of the render phase whenever an `initialValue` is present.
+- Once the hook has received an emission, a replacement observable on a later render is still warmed during render in v6, so components that rebuild the observable every render settle instead of looping. v7 removes this too and requires stable identities; see [Migrating from v6 to v7](/migrate/v6-to-v7).
+
+## Next step
+
+If you are upgrading past v6, continue with [Migrating from v6 to v7](/migrate/v6-to-v7). Coming from v4, the cumulative [v4 to v7 guide](/migrate/v4-to-v7) covers the whole path in one place.
