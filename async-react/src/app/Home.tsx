@@ -12,6 +12,9 @@ function Lesson({
   item: LessonItem
   completeAction: (id: string, complete: boolean) => Promise<void>
 }) {
+  async function action(complete: boolean) {
+    await completeAction(item.id, complete)
+  }
   return (
     <Design.LessonCard item={item}>
       {/*
@@ -19,10 +22,7 @@ function Lesson({
           show a loading state if the toggle takes longer than 150ms. The list
           already carries the user's pending intent, so it renders item.complete.
       */}
-      <Design.CompleteButton
-        complete={item.complete}
-        action={(complete) => completeAction(item.id, complete)}
-      ></Design.CompleteButton>
+      <Design.CompleteButton complete={item.complete} action={action}></Design.CompleteButton>
     </Design.LessonCard>
   )
 }
