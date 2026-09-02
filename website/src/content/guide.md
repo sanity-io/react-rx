@@ -41,6 +41,13 @@ The `initialValue` argument is optional, and it also decides how the hook treats
 - **Without an `initialValue`**, the hook briefly subscribes during render so a synchronous emission can be returned from the very first render. If the observable only emits asynchronously, the value may be `undefined` initially.
 - **With an `initialValue`**, the observable is not subscribed during render at all. The first render shows the `initialValue`, and the subscription starts when the component commits — a synchronous emission then replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase whenever you already have a value to paint first. Once the hook has received an emission, a later render that swaps in a different observable warms the replacement during render — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever.
 
+> [!WARNING]
+>
+> Omitting `initialValue` is deprecated. v7 removes this overload and requires the argument.
+> `useObservable(observable, undefined)` keeps the v6 behavior. See the [v6 to v7 migration
+> guide](/migrate/v6-to-v7#initialvalue-is-now-required) for what changes once the render-phase
+> warm-up is gone.
+
 ```tsx
 import {useMemo} from 'react'
 import {useObservable} from 'react-rx'
@@ -260,12 +267,12 @@ function TabButton({users$, onSelect}) {
 
 **Which hook when?**
 
-| Need                                                   | Hook                                    |
-| ------------------------------------------------------ | --------------------------------------- |
-| Live values, timers, subjects, optional `initialValue` | `useObservable`                         |
-| Controlled inputs / synchronous store updates          | `useSyncObservable`                     |
-| Async data + Suspense / Activity pre-render            | `useObservablePromise`                  |
-| Events pushed from handlers                            | a `Subject` piped into one of the above |
+| Need                                                | Hook                                    |
+| --------------------------------------------------- | --------------------------------------- |
+| Live values, timers, subjects (with `initialValue`) | `useObservable`                         |
+| Controlled inputs / synchronous store updates       | `useSyncObservable`                     |
+| Async data + Suspense / Activity pre-render         | `useObservablePromise`                  |
+| Events pushed from handlers                         | a `Subject` piped into one of the above |
 
 For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
 
@@ -379,5 +386,5 @@ function SaveSearchButton({term}: {term: string}) {
 
 > [!WARNING]
 >
-> `useObservableEvent` wraps exactly this pattern and is deprecated. v7 removes it. See the
-> [v6 to v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
+> `useObservableEvent` wraps exactly this pattern and is deprecated. v7 removes it. See the [v6 to
+> v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).

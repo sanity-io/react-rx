@@ -1,3 +1,4 @@
+/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {render} from '@testing-library/react'
 import {mergeMap, of, Subject, throwError} from 'rxjs'
 import {describe, expect, test} from 'vitest'

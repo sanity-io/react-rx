@@ -25,6 +25,13 @@ interface UseObservableOptions {
 }
 ```
 
+> [!WARNING]
+>
+> The overload without `initialValue` is deprecated. v7 removes it and requires the argument.
+> `useObservable(observable$, undefined)` is a drop-in replacement with the same type and, in v6,
+> the same behavior. See the [v6 to v7 migration
+> guide](/migrate/v6-to-v7#initialvalue-is-now-required).
+
 `disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). When no `initialValue` is given the render-phase warm-up subscription still runs; with an `initialValue` there is no warm-up while disabled, so `disabled: true` means zero subscriptions — see the [guide](/guide).
 
 **Example**
@@ -60,6 +67,13 @@ function useSyncObservable<T>(
   options?: UseObservableOptions,
 ): T
 ```
+
+> [!WARNING]
+>
+> The overload without `initialValue` is deprecated. v7 removes it and requires the argument.
+> `useSyncObservable(observable$, undefined)` is a drop-in replacement with the same type and, in
+> v6, the same behavior. See the [v6 to v7 migration
+> guide](/migrate/v6-to-v7#initialvalue-is-now-required).
 
 **Example**
 
@@ -144,8 +158,8 @@ Default `ttl` is `5000` (longer than the hook default) so a hover-warmed value s
 > [!WARNING]
 >
 > Deprecated. v7 removes `useObservableEvent`. Use a `Subject` you own instead, as shown in
-> [Handling events](/guide#handling-events). See the
-> [v6 to v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
+> [Handling events](/guide#handling-events). See the [v6 to v7 migration
+> guide](/migrate/v6-to-v7#useobservableevent-is-removed).
 
 A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.
 

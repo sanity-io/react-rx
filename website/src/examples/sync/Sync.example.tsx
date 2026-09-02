@@ -10,7 +10,10 @@ const observable = from([
 ])
 
 function Sync() {
-  const message = useObservable(observable)
+  const message = useObservable(
+    observable,
+    undefined,
+  )
 
   return <>{message}</>
 }
