@@ -27,4 +27,4 @@ minimumReleaseAgeExclude:
 # nextra-theme-docs 4.6.1 Layout breaks on zod 4.4.x (children stripped before safeParse).
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).
 overrides:
-  'nextra-theme-docs>zod': 4.3.6
+  'nextra-theme-docs>zod': 4.5.4
