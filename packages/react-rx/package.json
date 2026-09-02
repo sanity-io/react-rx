@@ -68,7 +68,7 @@
     "watch": "tsdown --watch"
   },
   "dependencies": {
-    "use-effect-event": "^2.0.3"
+    "use-effect-event": "^2.0.4"
   },
   "devDependencies": {
     "@sanity/tsconfig": "^2.2.1",
