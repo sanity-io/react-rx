@@ -71,6 +71,12 @@ importers:
       react-dom:
         specifier: canary
         version: 19.3.0-canary-21c89c9f-20260901(react@19.3.0-canary-21c89c9f-20260901)
+      react-rx:
+        specifier: workspace:*
+        version: link:../packages/react-rx
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0

@@ -74,7 +74,7 @@ const wanted$ = events$.pipe(
 
 export function setComplete(id: string, complete: boolean): Promise<void> {
   events$.next({type: 'want', id, complete})
-  return delayedFetch(`/lesson/${id}/toggle`, {method: 'POST'}).then(
+  return fetchJson(`/api/lesson/${id}/toggle`, {method: 'POST'}).then(
     () => undefined,
     (error: unknown) => {
       events$.next({type: 'abandon', id})
