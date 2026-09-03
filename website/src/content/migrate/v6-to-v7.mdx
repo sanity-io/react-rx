@@ -4,7 +4,9 @@
 >
 > v7 is in prerelease. Install it with `npm install react-rx@next`. Its docs live at
 > [react-rx-git-next.sanity.dev](https://react-rx-git-next.sanity.dev). v6 marks every API this
-> guide removes as `@deprecated`, so editors flag call sites ahead of the upgrade.
+> guide removes as `@deprecated`, so editors flag call sites ahead of the upgrade. `no-deprecated`
+> lint rules also flag uncalled references such as `typeof useObservable`, because they read the
+> tags of every overload. Those are false positives. Suppress them locally.
 
 v7 has three breaking changes, all pushing in the same direction — subscriptions are strictly commit-driven, and event handling uses plain RxJS instead of a library-specific hook:
 

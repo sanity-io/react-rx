@@ -36,7 +36,7 @@ function MyComponent(props) {
 }
 ```
 
-The `initialValue` argument is optional, and it also decides how the hook treats observables that emit _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …):
+The `initialValue` argument also decides how the hook treats observables that emit _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …):
 
 - **Without an `initialValue`**, the hook briefly subscribes during render so a synchronous emission can be returned from the very first render. If the observable only emits asynchronously, the value may be `undefined` initially.
 - **With an `initialValue`**, the observable is not subscribed during render at all. The first render shows the `initialValue`, and the subscription starts when the component commits — a synchronous emission then replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase whenever you already have a value to paint first. Once the hook has received an emission, a later render that swaps in a different observable warms the replacement during render — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever.
@@ -278,6 +278,11 @@ For cold observables you want to share across subscribers yourself, keep using R
 
 ### Handling events
 
+> [!WARNING]
+>
+> `useObservableEvent` is deprecated. v7 removes it. It wraps the pattern below. See the [v6 to
+> v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
+
 No dedicated event hook is needed. Create a `Subject`, call `subject.next(...)` from the event handler, and read the derived stream with whichever hook fits the read. This is the same mental model the upcoming [native Observable API](https://github.com/WICG/observable) builds on: events become observables, and state is derived from them.
 
 Here's a component that displays the current value from a range input. The pipeline's emissions _are_ the rendered value — no local `useState` mirror, no `tap`:
@@ -309,20 +314,7 @@ function ShowSliderValue() {
 
 Creating the `Subject` in `useState` scopes it to the component instance; a module-level `Subject` works just as well when the stream should be shared. Everything RxJS offers applies on the way from event to value — `debounceTime`, `distinctUntilChanged`, `switchMap`, `scan`, and friends all go in the `pipe`, as in the [search example](/examples/search).
 
-For **controlled inputs**, read the subject back with [`useSyncObservable`](#usesyncobservable) so the value updates synchronously:
-
-```tsx
-import {useSyncObservable} from 'react-rx'
-import {Subject} from 'rxjs'
-
-const text$ = new Subject<string>()
-
-function SearchField() {
-  const text = useSyncObservable(text$, '')
-
-  return <input value={text} onChange={(event) => text$.next(event.currentTarget.value)} />
-}
-```
+For **controlled inputs**, read the subject back with [`useSyncObservable`](#usesyncobservable) so the value updates synchronously. The `SearchField` example in that section does exactly this.
 
 For **event-driven Suspense data**, seed a `BehaviorSubject` with the initial query and derive the request stream from it. [`useObservablePromise`](#useobservablepromise) suspends until the first result, and later events swap in new data without re-showing the fallback (while `switchMap` cancels the stale request):
 
@@ -383,8 +375,3 @@ function SaveSearchButton({term}: {term: string}) {
   return <button onClick={() => savedSearches$.next(term)}>Save search</button>
 }
 ```
-
-> [!WARNING]
->
-> `useObservableEvent` wraps exactly this pattern and is deprecated. v7 removes it. See the [v6 to
-> v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
