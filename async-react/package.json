@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "build:no-compiler": "vite build --mode no-compiler",
     "dev": "vite",
+    "dev:no-compiler": "vite --mode no-compiler",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
