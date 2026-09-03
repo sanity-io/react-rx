@@ -78,16 +78,18 @@ function useSyncObservable<T>(
 **Example**
 
 ```tsx
-import {useSyncObservable} from 'react-rx'
-import {Subject} from 'rxjs'
-
-const text$ = new Subject<string>()
+import type {ChangeEvent} from 'react'
+import {useMemo} from 'react'
+import {useObservableSubject, useSyncObservable} from 'react-rx'
+import {map} from 'rxjs'
 
 function SearchField() {
+  const [changes$, handleChange] = useObservableSubject<ChangeEvent<HTMLInputElement>>()
+  const text$ = useMemo(() => changes$.pipe(map((event) => event.currentTarget.value)), [changes$])
   // Controlled input values must update synchronously.
   const text = useSyncObservable(text$, '')
 
-  return <input value={text} onChange={(event) => text$.next(event.currentTarget.value)} />
+  return <input value={text} onChange={handleChange} />
 }
 ```
 
@@ -153,12 +155,86 @@ function preloadObservablePromise<T>(
 
 Default `ttl` is `5000` (longer than the hook default) so a hover-warmed value survives until click/navigation.
 
+## useObservableSubject()
+
+Creates an RxJS `Subject` scoped to the component instance and returns its two halves: an observable of the values pushed into it, plus a stable handler that pushes them.
+
+Only the observable side of the `Subject` is exposed, so the pipeline cannot accidentally push into the stream and the handler cannot be subscribed. The handler is referentially stable, so it can be passed straight to event props or memoized children without `useCallback`. Read the observable with [`useObservable`](#useobservable) / [`useSyncObservable`](#usesyncobservable) when the pipeline produces something to render, or subscribe it in an effect for side-effect-only pipelines. Values emitted while nothing is subscribed are dropped, exactly like a `Subject`.
+
+This is the building block [`useObservableEvent`](#useobservableevent) is made of, and the recommended replacement for it: `useObservableEvent` is removed in v7 while `useObservableSubject` carries over unchanged, so call sites migrated to it need no further changes. See the [v6 → v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
+
+**Signature**
+
+```ts
+function useObservableSubject<T>(): [events$: Observable<T>, handleEvent: (event: T) => void]
+```
+
+**Example**
+
+```tsx
+import {useMemo} from 'react'
+import {useObservableSubject, useSyncObservable} from 'react-rx'
+import {filter, map} from 'rxjs'
+
+const ShowSliderValue = () => {
+  const [input$, handleChange] = useObservableSubject<string>()
+  const value$ = useMemo(
+    () =>
+      input$.pipe(
+        // Ignore nullish values
+        filter(nonNullable),
+        // Cast to number
+        map((value) => Number(value)),
+      ),
+    [input$],
+  )
+  // The derived stream is the state — no setState mirror needed.
+  const value = useSyncObservable(value$, 1)
+
+  return (
+    <>
+      <input
+        type="range"
+        value={value}
+        onChange={(event) => handleChange(event.target.value)}
+        min={1}
+        max={10}
+      />
+      <div>Value is: {value}</div>
+    </>
+  )
+}
+
+function nonNullable<T>(v: T): v is NonNullable<T> {
+  return v != null
+}
+```
+
+Side-effect-only pipelines (analytics, persistence, …) subscribe the observable in an effect instead:
+
+```tsx
+import {useEffect} from 'react'
+import {useObservableSubject} from 'react-rx'
+import {concatMap} from 'rxjs'
+
+function SaveSearchButton({term}: {term: string}) {
+  const [saves$, handleSave] = useObservableSubject<string>()
+
+  useEffect(() => {
+    const subscription = saves$.pipe(concatMap((t) => saveSearch(t))).subscribe()
+    return () => subscription.unsubscribe()
+  }, [saves$])
+
+  return <button onClick={() => handleSave(term)}>Save search</button>
+}
+```
+
 ## useObservableEvent()
 
 > [!WARNING]
 >
-> Deprecated. v7 removes `useObservableEvent`. Use a `Subject` you own instead, as shown in
-> [Handling events](/guide#handling-events). See the [v6 to v7 migration
+> Deprecated. v7 removes `useObservableEvent`. Use [`useObservableSubject`](#useobservablesubject)
+> instead, as shown in [Handling events](/guide#handling-events). See the [v6 to v7 migration
 > guide](/migrate/v6-to-v7#useobservableevent-is-removed).
 
 A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.

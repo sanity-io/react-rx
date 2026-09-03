@@ -2,7 +2,7 @@
 
 > v7 is in prerelease. Install it with `npm install react-rx@next`. The stable release is v6.
 
-v7 has three breaking changes, all pushing in the same direction — subscriptions are strictly commit-driven, and event handling uses plain RxJS instead of a library-specific hook:
+v7 has three breaking changes, all pushing in the same direction — subscriptions are strictly commit-driven, and event streams are created separately from the pipelines that consume them:
 
 1. [`initialValue` is now required](#initialvalue-is-now-required) in `useObservable` and `useSyncObservable`.
 2. [`useObservablePromise` fetches start at commit](#useobservablepromise-fetches-start-at-commit), never during render.
@@ -69,11 +69,23 @@ function UsersList({promise}: {promise: Promise<unknown>}) {
 
 ## useObservableEvent is removed
 
-`useObservableEvent` was layers of abstraction over a plain RxJS `Subject`: it created one internally, returned `subject.next` as a stable callback, and subscribed the pipeline you returned in an effect. The same thing is expressed directly with a `Subject` you own — fewer moving parts, no library-specific event concept to learn, and a mental model that carries straight over to the upcoming [native Observable API](https://github.com/WICG/observable).
+`useObservableEvent` created an RxJS `Subject` internally, returned a stable callback that pushed into it, and subscribed the pipeline you returned in an effect. `useObservableSubject` exposes the stream and callback directly, so you decide where the output is consumed instead of hiding the subscription inside the event hook.
 
 The removal also drops the hook's `use-effect-event` dependency, leaving `react-rx` with no runtime dependencies beyond its `react` and `rxjs` peers.
 
-To migrate, create a `Subject`, call `subject.next(...)` where you previously called the returned handler, and move the pipeline to where its output is consumed.
+To migrate, replace `useObservableEvent` with `useObservableSubject`, then move the pipeline to where its output is consumed. The new hook is available from v6.1 and carries over to v7, so you can migrate on v6 first and upgrade later:
+
+```tsx
+// Before (v6)
+const handleSave = useObservableEvent((term$) => term$.pipe(concatMap((term) => saveSearch(term))))
+
+// After (v6.1+ or v7) — the pipeline moves into an effect
+const [saves$, handleSave] = useObservableSubject<string>()
+useEffect(() => {
+  const subscription = saves$.pipe(concatMap((term) => saveSearch(term))).subscribe()
+  return () => subscription.unsubscribe()
+}, [saves$])
+```
 
 ### Pipelines that updated state
 
@@ -91,10 +103,10 @@ const handleChange = useObservableEvent((value$) =>
 // <input onChange={(event) => handleChange(event.currentTarget.value)} />
 
 // After (v7)
-const [sliderInput$] = useState(() => new Subject<string>())
+const [sliderInput$, handleChange] = useObservableSubject<string>()
 const value$ = useMemo(() => sliderInput$.pipe(map((value) => Number(value))), [sliderInput$])
 const value = useObservable(value$, 1)
-// <input onChange={(event) => sliderInput$.next(event.currentTarget.value)} />
+// <input onChange={(event) => handleChange(event.currentTarget.value)} />
 ```
 
 ### Pipelines that only forwarded into a Subject
@@ -123,18 +135,17 @@ Pipelines with no rendered output (analytics, persistence, …) subscribe in an 
 // Before (v6)
 const handleSave = useObservableEvent((term$) => term$.pipe(concatMap((term) => saveSearch(term))))
 
-// After (v7)
-const [saves$] = useState(() => new Subject<string>())
+// After (v6.1+ or v7)
+const [saves$, handleSave] = useObservableSubject<string>()
 useEffect(() => {
   const subscription = saves$.pipe(concatMap((term) => saveSearch(term))).subscribe()
   return () => subscription.unsubscribe()
 }, [saves$])
-const handleSave = (term: string) => saves$.next(term)
 ```
 
 ### Semantics to be aware of
 
-- `useObservableEvent` subscribed its pipeline in an effect after mount, so events fired before that were dropped. A `Subject` read through the hooks starts its live subscription on commit as well, and event handlers can only fire after mount — no change in practice.
-- The returned handler was referentially stable. An inline `(v) => subject$.next(v)` is a new function per render; if a memoized child needs a stable callback, wrap it in `useCallback` or pass the subject itself down.
+- `useObservableEvent` subscribed its pipeline in an effect after mount, so events fired before that were dropped. `useObservableSubject` also uses a non-replaying `Subject`: values pushed while nothing is subscribed are dropped.
+- Both hooks return a referentially stable handler. The observable and tuple returned by `useObservableSubject` are stable across re-renders too.
 
 See [Handling events](https://react-rx-git-next.sanity.dev/guide#handling-events) in the v7 guide for the full set of recommended patterns, including `useObservablePromise` for event-driven Suspense data.
