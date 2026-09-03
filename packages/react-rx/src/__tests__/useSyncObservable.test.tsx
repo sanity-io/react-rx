@@ -438,30 +438,49 @@ test('should return the actual value when the hook is disabled and then re-enabl
   unmount()
 })
 
-test('initialValue factories must be pure', () => {
-  const values$ = new Subject<string>()
-  let factoryCalls = 0
-  const factory = () => {
-    factoryCalls++
-    return 'initial'
-  }
+test('initialValue initializers resolve once per hook instance, like useState, so a fresh object per call cannot loop', () => {
+  const values$ = new Subject<{label: string}>()
+  let initializerCalls = 0
 
-  const {result} = renderHook(() => useSyncObservable(values$, factory))
-  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
-  // when checking for tearing on commit.
-  expect(factoryCalls).toBeGreaterThanOrEqual(2)
-  expect(result.current).toBe('initial')
-  const callsBeforeEmit = factoryCalls
+  const {result, rerender} = renderHook(() =>
+    useSyncObservable(values$, () => {
+      initializerCalls++
+      return {label: 'initial'}
+    }),
+  )
+  expect(initializerCalls).toBe(1)
+  expect(result.current).toEqual({label: 'initial'})
+  const initial = result.current
+
+  rerender()
+  expect(result.current).toBe(initial)
+  expect(initializerCalls).toBe(1)
+
+  act(() => values$.next({label: 'emitted'}))
+  expect(result.current).toEqual({label: 'emitted'})
+  expect(initializerCalls).toBe(1)
+})
+
+test('the initialValue argument is read on the first render only, like useState', () => {
+  const values$ = new Subject<string>()
+  const useValue = (initialValue: string | undefined) => useSyncObservable(values$, initialValue)
+
+  const withoutInitial = renderHook(useValue, {initialProps: undefined})
+  expect(withoutInitial.result.current).toBeUndefined()
+  withoutInitial.rerender('later')
+  expect(withoutInitial.result.current).toBeUndefined()
+
+  const withInitial = renderHook(useValue, {initialProps: 'initial'})
+  expect(withInitial.result.current).toBe('initial')
+  withInitial.rerender(undefined)
+  expect(withInitial.result.current).toBe('initial')
 
   act(() => values$.next('emitted'))
-  expect(result.current).toBe('emitted')
-  // After didEmit, getSnapshot short-circuits and the factory is no longer called.
-  expect(factoryCalls).toBe(callsBeforeEmit)
+  expect(withoutInitial.result.current).toBe('emitted')
+  expect(withInitial.result.current).toBe('emitted')
 })
 
 test('SSR resolves a factory initialValue through getServerSnapshot', () => {
-  // The sync hook's getServerSnapshot resolves factories via getValue — a code path
-  // distinct from the client getSnapshot.
   const observable = scheduled('async value', asyncScheduler)
   function ObservableComponent() {
     return <>{useSyncObservable(observable, () => 'factory initial')}</>

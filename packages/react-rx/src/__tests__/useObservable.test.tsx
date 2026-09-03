@@ -604,25 +604,46 @@ test('store mutation inside startTransition still applies (uSES updates cannot b
   expect(result.current).toBe('x')
 })
 
-test('initialValue factories must be pure', () => {
-  const values$ = new Subject<string>()
-  let factoryCalls = 0
-  const factory = () => {
-    factoryCalls++
-    return 'initial'
-  }
+test('initialValue initializers resolve once per hook instance, like useState, so a fresh object per call cannot loop', () => {
+  const values$ = new Subject<{label: string}>()
+  let initializerCalls = 0
 
-  const {result} = renderHook(() => useObservable(values$, factory))
-  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
-  // when checking for tearing on commit.
-  expect(factoryCalls).toBeGreaterThanOrEqual(2)
-  expect(result.current).toBe('initial')
-  const callsBeforeEmit = factoryCalls
+  const {result, rerender} = renderHook(() =>
+    useObservable(values$, () => {
+      initializerCalls++
+      return {label: 'initial'}
+    }),
+  )
+  expect(initializerCalls).toBe(1)
+  expect(result.current).toEqual({label: 'initial'})
+  const initial = result.current
+
+  rerender()
+  expect(result.current).toBe(initial)
+  expect(initializerCalls).toBe(1)
+
+  act(() => values$.next({label: 'emitted'}))
+  expect(result.current).toEqual({label: 'emitted'})
+  expect(initializerCalls).toBe(1)
+})
+
+test('the initialValue argument is read on the first render only, like useState', () => {
+  const values$ = new Subject<string>()
+  const useValue = (initialValue: string | undefined) => useObservable(values$, initialValue)
+
+  const withoutInitial = renderHook(useValue, {initialProps: undefined})
+  expect(withoutInitial.result.current).toBeUndefined()
+  withoutInitial.rerender('later')
+  expect(withoutInitial.result.current).toBeUndefined()
+
+  const withInitial = renderHook(useValue, {initialProps: 'initial'})
+  expect(withInitial.result.current).toBe('initial')
+  withInitial.rerender(undefined)
+  expect(withInitial.result.current).toBe('initial')
 
   act(() => values$.next('emitted'))
-  expect(result.current).toBe('emitted')
-  // After didEmit, getSnapshot short-circuits and the factory is no longer called.
-  expect(factoryCalls).toBe(callsBeforeEmit)
+  expect(withoutInitial.result.current).toBe('emitted')
+  expect(withInitial.result.current).toBe('emitted')
 })
 
 test('SSR renders the initialValue even when the observable emits synchronously', () => {
