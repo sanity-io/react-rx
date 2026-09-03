@@ -25,3 +25,11 @@ test('useSyncObservable with initial value if a different type returns a union o
   expectTypeOf(useSyncObservable(observable, () => 1)).toEqualTypeOf<string | number>()
   expectTypeOf(useSyncObservable(observable, 'foo')).toEqualTypeOf<string>()
 })
+
+const double = (n: number) => n * 2
+
+test('a function initial value is provided through an initializer, like useState', () => {
+  const observable = of((n: number) => n + 1)
+
+  expectTypeOf(useSyncObservable(observable, () => double)).toEqualTypeOf<(n: number) => number>()
+})
