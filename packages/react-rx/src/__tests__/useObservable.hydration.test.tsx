@@ -1,4 +1,3 @@
-/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {act, screen} from '@testing-library/react'
 import {Suspense, type ReactNode} from 'react'
 import {hydrateRoot} from 'react-dom/client'
