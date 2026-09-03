@@ -1,4 +1,13 @@
-import {defer, ReplaySubject, share, tap, timer, type Observable, type ObservableInput} from 'rxjs'
+import {
+  defer,
+  of,
+  ReplaySubject,
+  share,
+  tap,
+  timer,
+  type Observable,
+  type ObservableInput,
+} from 'rxjs'
 
 export interface ObservableCache<A extends unknown[], T> {
   /** The shared observable for these arguments; the same instance for the same arguments. */
@@ -16,7 +25,8 @@ export interface ObservableCache<A extends unknown[], T> {
  * concurrent subscriber joins the same in-flight request, a request that loses
  * all its subscribers still runs to completion and populates the cache, and
  * the result replays to late subscribers for `ttl` after it arrives. Then the
- * key is released and the next subscriber refetches. Errors are never cached.
+ * key is released and the next subscriber refetches. An error releases the
+ * key immediately, so failures are never cached and never retained.
  */
 export function createObservableCache<A extends unknown[], T>(
   fetch: (...args: A) => ObservableInput<T>,
@@ -30,18 +40,17 @@ export function createObservableCache<A extends unknown[], T>(
     if (cached) {
       return cached
     }
+    const release = () => {
+      if (entries.get(key) === shared) {
+        entries.delete(key)
+      }
+    }
     const shared: Observable<T> = defer(() => fetch(...args)).pipe(
       share({
         connector: () => new ReplaySubject<T>(1),
         resetOnRefCountZero: false,
-        resetOnComplete: () =>
-          timer(ttl).pipe(
-            tap(() => {
-              if (entries.get(key) === shared) {
-                entries.delete(key)
-              }
-            }),
-          ),
+        resetOnError: () => of(null).pipe(tap(release)),
+        resetOnComplete: () => timer(ttl).pipe(tap(release)),
       }),
     )
     entries.set(key, shared)
