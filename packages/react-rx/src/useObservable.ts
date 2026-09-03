@@ -44,12 +44,8 @@ export function useObservable<ObservableType extends Observable<any>>(
   options?: UseObservableOptions,
 ): ObservedValueOf<ObservableType>
 /**
- * @deprecated Calling `useObservable` without an `initialValue` is removed in react-rx v7, where the
- * argument is required. Pass it explicitly. `useObservable(observable$, undefined)` is a drop-in
- * replacement with the same type and, in v6, the same behavior. In v7 the observable is no longer
- * subscribed during render, so a synchronous emission replaces the initial value right after mount
- * instead of on the first paint. When there is no meaningful initial value, prefer
- * `useObservablePromise` with `use()` and Suspense. Migration guide:
+ * @deprecated react-rx v7 requires the `initialValue` argument. Pass it explicitly:
+ * `useObservable(observable$, undefined)` keeps the v6 type and behavior. Migration guide:
  * https://react-rx.dev/migrate/v6-to-v7#initialvalue-is-now-required
  * @public
  */

@@ -5,25 +5,28 @@ import {observableCallback} from './observableCallback'
 import {useEffectEvent} from './useEffectEvent'
 
 /**
- * @deprecated Removed in react-rx v7. Push events into a `Subject` you own instead. Call
- * `subject.next(event)` from the handler and read the derived stream with `useObservable` or
- * `useSyncObservable`. Subscribe side-effect-only pipelines in an effect. Migration guide:
+ * @deprecated Removed in react-rx v7. Push events into a `Subject` you own and read the derived
+ * stream with `useObservable` or `useSyncObservable`. Migration guide:
  * https://react-rx.dev/migrate/v6-to-v7#useobservableevent-is-removed
  *
  * @example
  * ```tsx
- * // Before
- * const [value, setValue] = useState(1)
- * const handleChange = useObservableEvent((value$) =>
- *   value$.pipe(map((value) => Number(value)), tap(setValue)),
- * )
- * // <input onChange={(event) => handleChange(event.currentTarget.value)} />
+ * import {useMemo, useState} from 'react'
+ * import {useObservable} from 'react-rx'
+ * import {map, Subject} from 'rxjs'
  *
- * // After
- * const [input$] = useState(() => new Subject<string>())
- * const value$ = useMemo(() => input$.pipe(map((value) => Number(value))), [input$])
- * const value = useObservable(value$, 1)
- * // <input onChange={(event) => input$.next(event.currentTarget.value)} />
+ * function ShowSliderValue() {
+ *   const [input$] = useState(() => new Subject<string>())
+ *   const value$ = useMemo(() => input$.pipe(map((value) => Number(value))), [input$])
+ *   const value = useObservable(value$, 1)
+ *   return (
+ *     <input
+ *       type="range"
+ *       value={value}
+ *       onChange={(event) => input$.next(event.currentTarget.value)}
+ *     />
+ *   )
+ * }
  * ```
  * @public
  */
