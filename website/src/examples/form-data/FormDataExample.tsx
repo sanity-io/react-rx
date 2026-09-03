@@ -1,18 +1,21 @@
 import {
-  type ChangeEvent,
+  ChangeEvent,
   type SyntheticEvent,
   useState,
 } from 'react'
 import {
   useObservable,
+  useObservableEvent,
   useSyncObservable,
 } from 'react-rx'
 import {
+  type Observable,
   map,
   scan,
   startWith,
   Subject,
   switchMap,
+  tap,
   withLatestFrom,
 } from 'rxjs'
 import {styled} from 'styled-components'
@@ -35,15 +38,33 @@ interface FormValues {
 }
 
 function FormDataExample() {
-  // Push input changes into the form stream
-  const handleChange = (
-    event: ChangeEvent<
+  // Handle input changes
+  const handleChange = useObservableEvent<
+    ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement
     >,
-  ) =>
-    formData$.next({
-      [event.target.name]: event.target.value,
-    })
+    any
+  >((change$) =>
+    change$.pipe(
+      map((event) => ({
+        [event.target.name]: event.target.value,
+      })),
+      tap((update) => formData$.next(update)),
+    ),
+  )
+
+  // Handle form submissions
+  const handleSubmit = useObservableEvent<
+    SyntheticEvent<HTMLFormElement>,
+    any
+  >((event$) =>
+    event$.pipe(
+      tap((e) => {
+        e.preventDefault()
+        submit$.next(e)
+      }),
+    ),
+  )
 
   // Create form data stream
   const [data$] = useState(() =>
@@ -73,7 +94,7 @@ function FormDataExample() {
     submit$.pipe(
       withLatestFrom(data$),
       map(([, formData]) => formData),
-      switchMap((formData) =>
+      map((formData) =>
         storage.set(STORAGE_KEY, formData).pipe(
           map(() => ({
             status: 'saved' as const,
@@ -98,7 +119,11 @@ function FormDataExample() {
     description: '',
   })
   const submitState = useObservable(
-    submitState$,
+    // @TODO investigate why this is necessary
+    submitState$ as unknown as Observable<{
+      status: 'saved' | 'saving' | 'unsaved'
+      result: FormValues | null
+    }>,
     {
       status: 'unsaved' as const,
       result: null,
@@ -106,12 +131,7 @@ function FormDataExample() {
   )
 
   return (
-    <Form
-      onSubmit={(event) => {
-        event.preventDefault()
-        submit$.next(event)
-      }}
-    >
+    <Form onSubmit={handleSubmit}>
       <div>
         <label>
           <strong>Title: </strong>

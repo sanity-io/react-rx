@@ -1,9 +1,11 @@
 import {
+  ChangeEvent,
   type SyntheticEvent,
   useMemo,
 } from 'react'
 import {
   useObservable,
+  useObservableEvent,
   useSyncObservable,
 } from 'react-rx'
 import {
@@ -12,6 +14,7 @@ import {
   scan,
   startWith,
   Subject,
+  tap,
   withLatestFrom,
 } from 'rxjs'
 import {styled} from 'styled-components'
@@ -31,14 +34,33 @@ const textToItem = (text: string) => ({
 })
 
 function TodoApp() {
+  // Handle input changes
+  const handleInput = useObservableEvent<
+    ChangeEvent<HTMLInputElement>,
+    any
+  >((input$) =>
+    input$.pipe(
+      map(
+        (e: ChangeEvent<HTMLInputElement>) =>
+          e.currentTarget.value,
+      ),
+      tap((value) => text$.next(value)),
+    ),
+  )
+
   // Handle form submissions
-  const handleSubmit = (
-    event: SyntheticEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault()
-    submit$.next(event)
-    text$.next('')
-  }
+  const handleSubmit = useObservableEvent<
+    SyntheticEvent<HTMLFormElement>,
+    any
+  >((event$) =>
+    event$.pipe(
+      tap((e) => {
+        e.preventDefault()
+        submit$.next(e)
+        text$.next('')
+      }),
+    ),
+  )
 
   // Create items stream
   const items$ = useMemo(
@@ -72,11 +94,7 @@ function TodoApp() {
         </label>
         <input
           id="new-todo"
-          onChange={(event) =>
-            text$.next(
-              event.currentTarget.value,
-            )
-          }
+          onChange={handleInput}
           value={text}
         />
         <button>Add #{items.length + 1}</button>

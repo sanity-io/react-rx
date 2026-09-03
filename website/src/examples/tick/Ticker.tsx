@@ -23,10 +23,7 @@ export function Ticker(props: {
       ),
     [props.observable],
   )
-  const tick = useObservable(
-    observable,
-    undefined,
-  )
+  const tick = useObservable(observable)
 
   return <p>Delayed tick: {tick}</p>
 }

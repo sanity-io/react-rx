@@ -13,10 +13,7 @@ export default function App() {
     [delay],
   )
 
-  const label = useObservable(
-    observable,
-    undefined,
-  )
+  const label = useObservable(observable)
   return (
     <>
       Counter interval (ms):{' '}
