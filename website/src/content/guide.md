@@ -53,11 +53,11 @@ import {useMemo} from 'react'
 import {useObservable} from 'react-rx'
 import {of} from 'rxjs'
 
-// The observable emits "world" synchronously and no initialValue is given, so this
+// The observable emits "world" synchronously and the initialValue is undefined, so this
 // component renders "Hello world!" from the very first render — never an empty value.
 function MyComponent(props) {
   const observable = useMemo(() => of('world'), [])
-  const planet = useObservable(observable)
+  const planet = useObservable(observable, undefined)
 
   return <>Hello {planet}!</>
 }
@@ -131,7 +131,7 @@ function Users({shouldFetch}: {shouldFetch: boolean}) {
         : of(null),
     [shouldFetch],
   )
-  const users = useObservable(users$)
+  const users = useObservable(users$, undefined)
 
   return <pre>{JSON.stringify(users, null, 2)}</pre>
 }
