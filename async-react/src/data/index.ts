@@ -1,10 +1,7 @@
+import {preloadObservablePromise} from 'react-rx'
+
+import {createObservableCache} from './cache'
 import type {Lesson, LessonIcon} from './fake-data'
-
-let lessonsCache = new Map<string, Promise<Lesson[]>>()
-
-export function revalidate() {
-  lessonsCache = new Map()
-}
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -68,35 +65,31 @@ function fetchLessons(url: string): Promise<Lesson[]> {
   return fetchJson(url).then(parseLessons)
 }
 
-function lessonCacheKey(tab: string, search: string, revision: number): string {
-  return JSON.stringify([tab, search, revision])
-}
-
 function lessonsUrl(tab: string, search: string): string {
   const query = new URLSearchParams({tab, q: search})
   return `/api/lessons?${query}`
 }
 
-export function prefetchLessons(revision: number) {
-  const tab = 'all'
-  const search = ''
-  const promise = fetchLessons(lessonsUrl(tab, search))
-  lessonsCache.set(lessonCacheKey(tab, search, revision), promise)
-  return Promise.race([promise, delay(1000)])
+/**
+ * One shared observable per (tab, search, revision). Concurrent subscribers —
+ * renders, Suspense retries, the login prefetch — dedupe into one request, and
+ * a result replays for five minutes after it arrives. Mutations and
+ * `router.refresh()` call `revalidate()`, which drops every entry eagerly; the
+ * router's `revision` is an input too so a refresh changes what a memoized
+ * render asks for and re-reads the store.
+ */
+export const lessons$ = createObservableCache(
+  (tab: string, search: string, _revision: number) => fetchLessons(lessonsUrl(tab, search)),
+  {ttl: 5 * 60_000},
+)
+
+export function revalidate() {
+  lessons$.clear()
 }
 
-export function getLessons(tab: string, search: string, revision: number): Promise<Lesson[]> {
-  const resolvedTab = tab || 'all'
-  const resolvedSearch = search || ''
-  const key = lessonCacheKey(resolvedTab, resolvedSearch, revision)
-  const cached = lessonsCache.get(key)
-  if (cached) {
-    return cached
-  }
-
-  const promise = fetchLessons(lessonsUrl(resolvedTab, resolvedSearch))
-  lessonsCache.set(key, promise)
-  return promise
+export function prefetchLessons(revision: number) {
+  const promise = preloadObservablePromise(lessons$('all', '', revision))
+  return Promise.race([promise, delay(1000)])
 }
 
 export async function mutateToggle(id: string) {
