@@ -149,7 +149,7 @@ test('releases the last snapshot of an asynchronously completing observable afte
   )
 
   function ObservableComponent() {
-    useObservable(source)
+    useObservable(source, undefined)
     return null
   }
 

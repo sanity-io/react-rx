@@ -4,7 +4,11 @@ import {createRoot} from 'react-dom/client'
 import {BehaviorSubject} from 'rxjs'
 import {expect, test} from 'vitest'
 
-import {useObservablePromise, type ObservablePromise} from '../useObservablePromise'
+import {
+  preloadObservablePromise,
+  useObservablePromise,
+  type ObservablePromise,
+} from '../useObservablePromise'
 
 /**
  * Port of the dai-shi concurrent-rendering tearing checks relevant to external
@@ -26,6 +30,21 @@ async function renderAsync(ui: ReactNode) {
     result = render(ui)
   })
   return result
+}
+
+/**
+ * Settle the counter store before anything mounts: the tearing checks below
+ * measure store consistency across many readers (not Suspense fallback churn),
+ * and the mount-during-transition tests emit into the store before any
+ * consumer commits — the preload's shared connection is what keeps the cached
+ * promise current until then. Preloading a BehaviorSubject settles it
+ * synchronously, matching how a real app would warm a store before mounting an
+ * expensive subtree.
+ */
+function warmedCounterStore(initial = 0) {
+  const count$ = new BehaviorSubject(initial)
+  void preloadObservablePromise(count$, {ttl: 60_000})
+  return count$
 }
 
 function slowFib(n: number): number {
@@ -53,7 +72,7 @@ function readAll(): number[] {
 }
 
 test('no tearing finally on update (startTransition)', async () => {
-  const count$ = new BehaviorSubject(0)
+  const count$ = warmedCounterStore()
 
   function App() {
     const [, startTransition] = useTransition()
@@ -92,7 +111,7 @@ test('no tearing finally on update (startTransition)', async () => {
 })
 
 test('no tearing finally on mount (startTransition)', async () => {
-  const count$ = new BehaviorSubject(0)
+  const count$ = warmedCounterStore()
 
   function App() {
     const [mounted, setMounted] = useState(false)
@@ -132,7 +151,7 @@ test('no tearing finally on mount (startTransition)', async () => {
 })
 
 test('no tearing finally on update (useDeferredValue)', async () => {
-  const count$ = new BehaviorSubject(0)
+  const count$ = warmedCounterStore()
 
   function App() {
     const [version, setVersion] = useState(0)
@@ -169,7 +188,7 @@ test('no tearing finally on update (useDeferredValue)', async () => {
 })
 
 test('no tearing finally on mount (useDeferredValue)', async () => {
-  const count$ = new BehaviorSubject(0)
+  const count$ = warmedCounterStore()
 
   function App() {
     const [mounted, setMounted] = useState(false)
@@ -276,18 +295,23 @@ function DeferredSection({promise, waste}: {promise: ObservablePromise<number>; 
   return <SlowList promise={deferred} waste={waste} />
 }
 
+function ImmediateValue({promise}: {promise: ObservablePromise<number>}) {
+  return <span data-testid="immediate">{use(promise)}</span>
+}
+
 function InterruptibleApp({count$, waste}: {count$: BehaviorSubject<number>; waste: number}) {
   const promise = useObservablePromise(count$)
-  const immediate = use(promise)
   const [urgent, setUrgent] = useState(0)
   return (
     <>
       <button type="button" onClick={() => setUrgent((n) => n + 1)}>
         urgent
       </button>
-      <span data-testid="immediate">{immediate}</span>
       <span data-testid="urgent">{urgent}</span>
-      <DeferredSection promise={promise} waste={waste} />
+      <Suspense fallback={null}>
+        <ImmediateValue promise={promise} />
+        <DeferredSection promise={promise} waste={waste} />
+      </Suspense>
     </>
   )
 }
@@ -296,7 +320,7 @@ test('userland useDeferredValue(promise) restores time slicing for emission-driv
   // ≥4ms per item × 25 items ⇒ ≥100ms of deferred render work, sliced into
   // many ~5ms scheduler chunks with yields in between.
   const waste = calibrateWaste(4)
-  const count$ = new BehaviorSubject(0)
+  const count$ = warmedCounterStore()
 
   // act() flushes sync and deferred work together, hiding exactly the
   // interleaving this test observes — so run without the act environment,

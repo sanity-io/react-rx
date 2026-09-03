@@ -133,11 +133,11 @@ test('useObservable: sync-emitting observable + initialValue server-renders the 
   expect(screen.getByTestId('value').textContent).toBe('sync')
 })
 
-test('useObservable: async observable without initialValue server-renders nothing and hydrates cleanly', async () => {
+test('useObservable: async observable with an undefined initialValue server-renders nothing and hydrates cleanly', async () => {
   const observable = timer(60_000).pipe(map(() => 'later'))
 
   function App() {
-    const value = useObservable(observable)
+    const value = useObservable(observable, undefined)
     return <div data-testid="value">{value ?? ''}</div>
   }
 
@@ -160,7 +160,7 @@ test('useObservable: a NON-deterministic sync emission without an initialValue s
   })
 
   function App() {
-    return <div data-testid="value">{useObservable(observable)}</div>
+    return <div data-testid="value">{useObservable(observable, undefined)}</div>
   }
 
   const html = renderToString(<App />)
