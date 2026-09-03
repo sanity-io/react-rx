@@ -30,7 +30,7 @@ test('should subscribe immediately on component mount and unsubscribe on compone
 
   expect(subscribed).toBe(false)
 
-  const {unmount} = renderHook(() => useSyncObservable(observable))
+  const {unmount} = renderHook(() => useSyncObservable(observable, undefined))
   expect(subscribed).toBe(true)
 
   unmount()
@@ -46,14 +46,14 @@ test('should only subscribe once when given same observable on re-renders', asyn
 
   expect(subscriptionCount).toBe(0)
 
-  const {unmount, rerender} = renderHook(() => useSyncObservable(observable))
+  const {unmount, rerender} = renderHook(() => useSyncObservable(observable, undefined))
   expect(subscriptionCount).toBe(1)
   rerender()
   expect(subscriptionCount).toBe(1)
   unmount()
   await Promise.resolve()
 
-  renderHook(() => useSyncObservable(observable))
+  renderHook(() => useSyncObservable(observable, undefined))
   expect(subscriptionCount).toBe(2)
 })
 
@@ -98,7 +98,7 @@ test('should return undefined during first render if observable is async', () =>
 
 test('should have sync values from an observable as initial value', () => {
   const observable = of('something sync')
-  const {result} = renderHook(() => useSyncObservable(observable))
+  const {result} = renderHook(() => useSyncObservable(observable, undefined))
   expect(result.current).toBe('something sync')
 })
 
@@ -142,7 +142,7 @@ test('disabled with an initialValue never subscribes the source (zero subscripti
 
 test('should have undefined as initial value from delayed observables', () => {
   const {result, unmount} = renderHook(() =>
-    useSyncObservable(scheduled('something async', asyncScheduler)),
+    useSyncObservable(scheduled('something async', asyncScheduler), undefined),
   )
   expect(result.current).toBeUndefined()
   unmount()
@@ -178,15 +178,15 @@ test('should share the observable between each concurrent subscribing hook', asy
   const observable = new Observable<number>((subscriber) => {
     subscriber.next(subscribeCount++)
   })
-  const firstHook = renderHook(() => useSyncObservable(observable))
+  const firstHook = renderHook(() => useSyncObservable(observable, undefined))
   expect(firstHook.result.current).toBe(0)
-  const secondHook = renderHook(() => useSyncObservable(observable))
+  const secondHook = renderHook(() => useSyncObservable(observable, undefined))
   expect(secondHook.result.current).toBe(0)
   firstHook.unmount()
   secondHook.unmount()
   await Promise.resolve()
 
-  const thirdHook = renderHook(() => useSyncObservable(observable))
+  const thirdHook = renderHook(() => useSyncObservable(observable, undefined))
   expect(thirdHook.result.current).toBe(1)
   thirdHook.unmount()
 })
@@ -235,7 +235,7 @@ test('should restart any completed observable on mount', async () => {
   firstHook.unmount()
   await Promise.resolve()
 
-  const secondHook = renderHook(() => useSyncObservable(observable))
+  const secondHook = renderHook(() => useSyncObservable(observable, undefined))
   expect(secondHook.result.current).toBe(undefined)
   expect(subscribeCount).toBe(2)
   expect(unsubscribeCount).toBe(1)
@@ -247,7 +247,7 @@ test('should restart any completed observable on mount', async () => {
 
 test('should update with values from observables', () => {
   const values$ = new Subject<string>()
-  const {result, unmount} = renderHook(() => useSyncObservable(values$))
+  const {result, unmount} = renderHook(() => useSyncObservable(values$, undefined))
 
   expect(result.current).toBe(undefined)
 
@@ -439,30 +439,49 @@ test('should return the actual value when the hook is disabled and then re-enabl
   unmount()
 })
 
-test('initialValue factories must be pure', () => {
-  const values$ = new Subject<string>()
-  let factoryCalls = 0
-  const factory = () => {
-    factoryCalls++
-    return 'initial'
-  }
+test('initialValue initializers resolve once per hook instance, like useState, so a fresh object per call cannot loop', () => {
+  const values$ = new Subject<{label: string}>()
+  let initializerCalls = 0
 
-  const {result} = renderHook(() => useSyncObservable(values$, factory))
-  // Pre-emission: uSES calls getSnapshot (factory included) during render and again
-  // when checking for tearing on commit.
-  expect(factoryCalls).toBeGreaterThanOrEqual(2)
-  expect(result.current).toBe('initial')
-  const callsBeforeEmit = factoryCalls
+  const {result, rerender} = renderHook(() =>
+    useSyncObservable(values$, () => {
+      initializerCalls++
+      return {label: 'initial'}
+    }),
+  )
+  expect(initializerCalls).toBe(1)
+  expect(result.current).toEqual({label: 'initial'})
+  const initial = result.current
+
+  rerender()
+  expect(result.current).toBe(initial)
+  expect(initializerCalls).toBe(1)
+
+  act(() => values$.next({label: 'emitted'}))
+  expect(result.current).toEqual({label: 'emitted'})
+  expect(initializerCalls).toBe(1)
+})
+
+test('the initialValue argument is read on the first render only, like useState', () => {
+  const values$ = new Subject<string>()
+  const useValue = (initialValue: string | undefined) => useSyncObservable(values$, initialValue)
+
+  const withoutInitial = renderHook(useValue, {initialProps: undefined})
+  expect(withoutInitial.result.current).toBeUndefined()
+  withoutInitial.rerender('later')
+  expect(withoutInitial.result.current).toBeUndefined()
+
+  const withInitial = renderHook(useValue, {initialProps: 'initial'})
+  expect(withInitial.result.current).toBe('initial')
+  withInitial.rerender(undefined)
+  expect(withInitial.result.current).toBe('initial')
 
   act(() => values$.next('emitted'))
-  expect(result.current).toBe('emitted')
-  // After didEmit, getSnapshot short-circuits and the factory is no longer called.
-  expect(factoryCalls).toBe(callsBeforeEmit)
+  expect(withoutInitial.result.current).toBe('emitted')
+  expect(withInitial.result.current).toBe('emitted')
 })
 
 test('SSR resolves a factory initialValue through getServerSnapshot', () => {
-  // The sync hook's getServerSnapshot resolves factories via getValue — a code path
-  // distinct from the client getSnapshot.
   const observable = scheduled('async value', asyncScheduler)
   function ObservableComponent() {
     return <>{useSyncObservable(observable, () => 'factory initial')}</>

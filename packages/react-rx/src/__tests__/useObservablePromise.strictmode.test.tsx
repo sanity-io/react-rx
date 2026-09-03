@@ -13,7 +13,12 @@ async function renderAsync(ui: ReactNode) {
   return result
 }
 
-test('StrictMode double-mount does not double-subscribe beyond the share contract', async () => {
+function Reader({promise}: {promise: Promise<string>}) {
+  const value = use(promise)
+  return <div data-testid="value">{value}</div>
+}
+
+test('StrictMode double effects do not double-subscribe beyond the share contract', async () => {
   let subscriptions = 0
   let resolve!: (value: string) => void
   const promise = new Promise<string>((r) => {
@@ -37,7 +42,8 @@ test('StrictMode double-mount does not double-subscribe beyond the share contrac
     </StrictMode>,
   )
 
-  // Share + retention must collapse StrictMode double invoke to a single source sub.
+  // StrictMode runs subscribe → unsubscribe → resubscribe; share + retention
+  // must collapse that to a single source subscription.
   expect(subscriptions).toBe(1)
 
   await act(async () => {
@@ -48,23 +54,25 @@ test('StrictMode double-mount does not double-subscribe beyond the share contrac
   expect(subscriptions).toBe(1)
 })
 
-test('StrictMode keeps a stable promise identity across double effects', async () => {
+test('StrictMode keeps a stable promise identity across double renders and effects', async () => {
   const identities: Promise<string>[] = []
   const observable = new Observable<string>((subscriber) => {
     subscriber.next('sync')
   })
 
-  function Child() {
+  function Owner() {
     const p = useObservablePromise(observable)
     identities.push(p)
-    return <div data-testid="value">{use(p)}</div>
+    return (
+      <Suspense fallback={<div>loading</div>}>
+        <Reader promise={p} />
+      </Suspense>
+    )
   }
 
   await renderAsync(
     <StrictMode>
-      <Suspense fallback={<div>loading</div>}>
-        <Child />
-      </Suspense>
+      <Owner />
     </StrictMode>,
   )
 

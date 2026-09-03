@@ -12,10 +12,10 @@ test('useObservable and useSyncObservable share one source subscription for the 
     subscriber.next(subscribeCount++)
   })
 
-  const deferred = renderHook(() => useObservable(observable))
+  const deferred = renderHook(() => useObservable(observable, undefined))
   expect(deferred.result.current).toBe(0)
 
-  const sync = renderHook(() => useSyncObservable(observable))
+  const sync = renderHook(() => useSyncObservable(observable, undefined))
   expect(sync.result.current).toBe(0)
   expect(subscribeCount).toBe(1)
 
@@ -23,7 +23,7 @@ test('useObservable and useSyncObservable share one source subscription for the 
   sync.unmount()
   await Promise.resolve()
 
-  const remount = renderHook(() => useObservable(observable))
+  const remount = renderHook(() => useObservable(observable, undefined))
   expect(remount.result.current).toBe(1)
   remount.unmount()
 })

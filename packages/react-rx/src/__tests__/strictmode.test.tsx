@@ -1,7 +1,7 @@
 /* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {act, render} from '@testing-library/react'
 import {useEffect, useMemo} from 'react'
-import {BehaviorSubject, Observable} from 'rxjs'
+import {BehaviorSubject, Observable, Subject} from 'rxjs'
 import {describe, expect, test} from 'vitest'
 
 import {useObservable} from '../useObservable'
@@ -67,7 +67,7 @@ describe.each(hooks)('$name', ({useHook}) => {
     })
 
     function ObservableComponent() {
-      useHook(observable)
+      useHook(observable, undefined)
       return null
     }
 
@@ -90,7 +90,7 @@ describe.each(hooks)('$name', ({useHook}) => {
 
     function ObservableComponent() {
       const memoObservable = useMemo(() => getObservable(), [])
-      useHook(memoObservable)
+      useHook(memoObservable, undefined)
       return null
     }
 
@@ -99,5 +99,32 @@ describe.each(hooks)('$name', ({useHook}) => {
     unmount()
     await Promise.resolve()
     expect(subscriberCount, 'Subscriber count should be 0').toBe(0)
+  })
+
+  test('Strict mode double-invokes a fresh-object initializer but keeps one resolved reference', () => {
+    const values$ = new Subject<{label: string}>()
+    let initializerCalls = 0
+    const rendered: {label: string}[] = []
+
+    function ObservableComponent() {
+      const value = useHook(values$, () => {
+        // oxlint-disable-next-line react/todo -- compiler cannot yet lower ++ captured in lambdas
+        initializerCalls++
+        return {label: 'initial'}
+      })
+      rendered.push(value)
+      return null
+    }
+
+    const {rerender} = render(<ObservableComponent />, {reactStrictMode: true})
+    expect(initializerCalls, 'Strict Mode calls useState initializers twice in development').toBe(2)
+    expect(new Set(rendered).size, 'every pre-emission render saw the same reference').toBe(1)
+
+    rerender(<ObservableComponent />)
+    expect(initializerCalls).toBe(2)
+    expect(new Set(rendered).size).toBe(1)
+
+    act(() => values$.next({label: 'emitted'}))
+    expect(rendered.at(-1)).toEqual({label: 'emitted'})
   })
 })

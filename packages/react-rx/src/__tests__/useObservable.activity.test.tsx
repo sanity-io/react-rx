@@ -102,7 +102,7 @@ test('Activity hides and restores useObservable subscriptions the same way it do
   })
 
   function Child() {
-    return <div data-testid="value">{useObservable(observable)}</div>
+    return <div data-testid="value">{useObservable(observable, undefined)}</div>
   }
 
   render(
@@ -126,7 +126,7 @@ test('Activity hides and restores useObservable subscriptions the same way it do
   expect(screen.getByTestId('value').style.display).not.toBe('none')
 })
 
-test('sync observable (of/from) without initial value: hide keeps last value, show re-subscribes sync', async () => {
+test('sync observable (of/from) with an undefined initial value: hide keeps last value, show re-subscribes sync', async () => {
   let subscriptions = 0
   // Equivalent to `of('sync')` / `from(['sync'])` for the first emission: sync on subscribe.
   const observable = new Observable<string>((subscriber) => {
@@ -135,7 +135,7 @@ test('sync observable (of/from) without initial value: hide keeps last value, sh
   })
 
   function Child() {
-    return <div data-testid="value">{String(useObservable(observable))}</div>
+    return <div data-testid="value">{String(useObservable(observable, undefined))}</div>
   }
 
   render(
@@ -217,7 +217,7 @@ test('async observable with initial value: shows initial until emission, keeps i
   expect(textOf('value')).toBe('fetched')
 })
 
-test('async observable without initial value: undefined until emission, then preserved across Activity toggles', async () => {
+test('async observable with an undefined initial value: undefined until emission, then preserved across Activity toggles', async () => {
   let resolve!: (value: string) => void
   const promise = new Promise<string>((r) => {
     resolve = r
@@ -225,7 +225,7 @@ test('async observable without initial value: undefined until emission, then pre
   const observable = defer(() => from(promise))
 
   function Child() {
-    return <div data-testid="value">{String(useObservable(observable))}</div>
+    return <div data-testid="value">{String(useObservable(observable, undefined))}</div>
   }
 
   render(
@@ -426,7 +426,7 @@ test('sync from() without initial value under initially-hidden Activity still re
   const observable = from(['from-value'])
 
   function Child() {
-    return <div data-testid="value">{String(useObservable(observable))}</div>
+    return <div data-testid="value">{String(useObservable(observable, undefined))}</div>
   }
 
   render(

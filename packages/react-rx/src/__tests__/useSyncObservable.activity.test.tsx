@@ -60,7 +60,7 @@ test('Activity hides and restores useSyncObservable subscriptions the same way i
   })
 
   function Child() {
-    return <div data-testid="value">{useSyncObservable(observable)}</div>
+    return <div data-testid="value">{useSyncObservable(observable, undefined)}</div>
   }
 
   render(
