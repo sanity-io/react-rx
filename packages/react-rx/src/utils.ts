@@ -1,5 +1,15 @@
 export const EMPTY_OBJECT: Readonly<Record<string, never>> = Object.freeze({})
 
+/**
+ * Sentinel representing an omitted `initialValue` argument. Every value a caller can produce —
+ * `undefined` included — is a valid initial value, so omission is detected by argument arity and
+ * modeled with a symbol user code cannot accidentally pass. Registered with `Symbol.for()` so
+ * duplicate copies of react-rx in one module graph agree on the sentinel.
+ *
+ * @internal
+ */
+export const UNSET_INITIAL_VALUE: unique symbol = Symbol.for('react-rx.unsetInitialValue')
+
 /** @internal */
 export function missingInitialValueError(hookName: string): TypeError {
   return new TypeError(
