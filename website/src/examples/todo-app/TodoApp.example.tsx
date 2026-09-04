@@ -1,7 +1,4 @@
-import {
-  type SyntheticEvent,
-  useMemo,
-} from 'react'
+import {type SyntheticEvent, useMemo} from 'react'
 import {
   useObservable,
   useSyncObservable,
@@ -73,9 +70,7 @@ function TodoApp() {
         <input
           id="new-todo"
           onChange={(event) =>
-            text$.next(
-              event.currentTarget.value,
-            )
+            text$.next(event.currentTarget.value)
           }
           value={text}
         />

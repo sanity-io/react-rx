@@ -104,14 +104,14 @@ interface CacheEntry<T> {
 
 const cache = new WeakMap<Observable<unknown>, CacheEntry<unknown>>()
 
-function clearEvictionTimer(entry: CacheEntry<unknown>): void {
+function clearEvictionTimer<T>(entry: CacheEntry<T>): void {
   if (entry.evictionTimer !== null) {
     clearTimeout(entry.evictionTimer)
     entry.evictionTimer = null
   }
 }
 
-function scheduleEviction(entry: CacheEntry<unknown>): void {
+function scheduleEviction<T>(entry: CacheEntry<T>): void {
   clearEvictionTimer(entry)
   entry.evictionTimer = setTimeout(() => {
     entry.evictionTimer = null
@@ -148,7 +148,7 @@ function settle<T>(entry: CacheEntry<T>, outcome: Outcome<T>): void {
       entry.resolverSub = null
     }
     if (entry.liveCount === 0) {
-      scheduleEviction(entry as CacheEntry<unknown>)
+      scheduleEviction(entry)
     }
     return
   }
@@ -216,7 +216,7 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
         entry.settled &&
         entry.evictionTimer === null
       ) {
-        scheduleEviction(entry as CacheEntry<unknown>)
+        scheduleEviction(entry)
       }
     }),
     share({
@@ -240,7 +240,7 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
       // the shared connection (emissions during the window keep updating the
       // cached promise).
       if (entry.evictionTimer !== null) {
-        scheduleEviction(entry as CacheEntry<unknown>)
+        scheduleEviction(entry)
         if (!entry.sourceTerminated) {
           entry.shared$.subscribe().unsubscribe()
         }
@@ -265,7 +265,7 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
         cache.set(source, entry as CacheEntry<unknown>)
       }
       entry.liveCount++
-      clearEvictionTimer(entry as CacheEntry<unknown>)
+      clearEvictionTimer(entry)
 
       if (entry.sourceTerminated) {
         // No further emissions possible — retain the settled promise without
@@ -273,7 +273,7 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
         return () => {
           entry.liveCount--
           if (entry.liveCount === 0 && entry.settled) {
-            scheduleEviction(entry as CacheEntry<unknown>)
+            scheduleEviction(entry)
           }
         }
       }
@@ -283,7 +283,7 @@ function createEntry<T>(source: Observable<T>): CacheEntry<T> {
         subscription.unsubscribe()
         entry.liveCount--
         if (entry.liveCount === 0 && entry.settled) {
-          scheduleEviction(entry as CacheEntry<unknown>)
+          scheduleEviction(entry)
         }
       }
     },
@@ -320,9 +320,9 @@ export function getObservablePromiseEntry<T>(source: Observable<T>): ObservableP
   let entry = cache.get(source) as CacheEntry<T> | undefined
   if (!entry) {
     entry = createEntry(source)
-    // Insert before any subscription can start (via `ensure`): sync-terminating
-    // sources trigger finalize immediately and must find the entry in the cache
-    // to schedule eviction.
+    // Insert before any subscription can start (via `warm`/`ensureStarted`):
+    // sync-terminating sources trigger finalize immediately and must find the
+    // entry in the cache to schedule eviction.
     cache.set(source, entry as CacheEntry<unknown>)
   }
   return entry.handle
