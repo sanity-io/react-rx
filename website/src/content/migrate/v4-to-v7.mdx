@@ -1,0 +1,128 @@
+# Migrating from v4 to v7
+
+> v7 is in prerelease. Install it with `npm install react-rx@next`. The stable release is v6.
+
+Most react-rx installs are still on v4, and there is no reason to stop at v5 or v6 on the way up. This page is the direct path: it groups the changes by what you need to do to your code rather than by the version that introduced them. The per-version guides ([v4 to v5](/migrate/v4-to-v5), [v5 to v6](/migrate/v5-to-v6), [v6 to v7](/migrate/v6-to-v7)) go deeper on each step.
+
+Across the whole span, only one export was removed: `useObservableEvent`. `useObservable` is still here with the same call shape, and v5 added `useSyncObservable`, `useObservablePromise`, and `preloadObservablePromise`.
+
+## Requirements
+
+|               | v4                                            | v7                                     |
+| ------------- | --------------------------------------------- | -------------------------------------- |
+| React         | 18+                                           | `^19.2`                                |
+| RxJS          | 7.x (operators often from `'rxjs/operators'`) | `^7.2`, import operators from `'rxjs'` |
+| Node          | (unspecified)                                 | `>=22.12`                              |
+| Module format | CJS + ESM                                     | ESM-only                               |
+
+Upgrade React and Node first; the rest of this guide assumes React 19.2. If you still import from `'rxjs/operators'`, follow the [RxJS import migration guide](https://rxjs.dev/guide/importing#how-to-migrate).
+
+## 1. Pass an `initialValue` to every `useObservable` call
+
+In v4 the second argument was optional. In v7 it is required, and the hooks throw during render if it is missing. Every value is valid, `undefined` included; it just has to be passed explicitly. Functions act as initializers, exactly like `useState`.
+
+```tsx
+// Before (v4) — implicitly undefined until the first emission
+const users = useObservable(users$)
+
+// After (v7)
+const users = useObservable(users$, undefined)
+const count = useObservable(count$, () => count$.getValue())
+```
+
+The `initialValue` also means something slightly different now. v4 subscribed during render, so a synchronously emitting source (`of`, `startWith`, a `BehaviorSubject`) painted its value on the very first render. v7 never subscribes during render: the `initialValue` renders first, the subscription starts on commit, and a synchronous emission replaces the initial value right after mount. Server rendering always emits the `initialValue`. If a source has no initial value that makes sense and you want fallback UI while it loads, that is what `useObservablePromise` is for (step 5).
+
+## 2. Decide which reads must stay synchronous
+
+v4's `useObservable` forced synchronous React updates. Since v5, `useObservable` defers store updates with `useDeferredValue`: urgent renders keep the previous value while a background render catches up, which keeps typing and interaction smooth under load. The old synchronous behavior lives on as `useSyncObservable`.
+
+Keep `useObservable` for most reads. Switch to `useSyncObservable` for controlled inputs and for values that must stay consistent within the same event:
+
+```tsx
+// Before (v4)
+const text = useObservable(text$, '')
+const items = useObservable(items$, [])
+
+// After (v7) — only the input value needs to be sync
+const text = useSyncObservable(text$, '')
+const items = useObservable(items$, [])
+```
+
+If you need a zero-behavior-change upgrade day, rename every `useObservable` to `useSyncObservable` first and adopt deferral incrementally. Remove hand-rolled `useDeferredValue(useObservable(...))` wrappers; the deferral is built in and identity-coherent. The [Suspense and deferred values example](/examples/suspense) shows the two hooks side by side.
+
+## 3. Keep observable identities stable
+
+Because nothing is subscribed during render anymore, an observable rebuilt on every render is torn down and re-subscribed on every render, the same contract as `useSyncExternalStore`'s `subscribe`. When such a source synchronously replays a value that differs from the `initialValue`, the component loops until React aborts. Memoize observables built from props or state with `useMemo`, keep them in `useState`, or hoist them to module scope. React Compiler memoization also satisfies this.
+
+```tsx
+// Before (v4) — tolerated by the render-phase warm-up
+const value = useObservable(store.get(id).pipe(map(pick)), null)
+
+// After (v7)
+const value$ = useMemo(() => store.get(id).pipe(map(pick)), [store, id])
+const value = useObservable(value$, null)
+```
+
+## 4. Replace `useObservableEvent` with a `Subject`
+
+`useObservableEvent` created a `Subject` internally, returned `subject.next` as a callback, and subscribed the pipeline you returned in an effect. In v7 you own the `Subject` directly and read derived streams with the hooks. Pipelines that ended in `tap(setState)` lose the local state mirror entirely:
+
+```tsx
+// Before (v4)
+const [value, setValue] = useState(1)
+const handleChange = useObservableEvent((value$) =>
+  value$.pipe(
+    map((value) => Number(value)),
+    tap(setValue),
+  ),
+)
+// <input onChange={(event) => handleChange(event.currentTarget.value)} />
+
+// After (v7) — the derived stream is the state
+const [input$] = useState(() => new Subject<string>())
+const value$ = useMemo(() => input$.pipe(map((value) => Number(value))), [input$])
+const value = useObservable(value$, 1)
+// <input onChange={(event) => input$.next(event.currentTarget.value)} />
+```
+
+Handlers that only forwarded into an existing `Subject` become a plain `next` call; side-effect-only pipelines (analytics, persistence) subscribe in an effect. The [v6 to v7 guide](/migrate/v6-to-v7#useobservableevent-is-removed) walks through each shape, and [Handling events](/guide#handling-events) covers the recommended patterns. The returned handler used to be referentially stable; an inline `(v) => input$.next(v)` is not, so wrap it in `useCallback` or pass the subject down when a memoized child needs a stable callback.
+
+## 5. Optional: Suspense data with `useObservablePromise`
+
+New since v5.1 and not something you have to adopt. `useObservablePromise` returns a `use()`-compatible promise that suspends until the first emission, for observables with no meaningful initial value. Two rules matter:
+
+- Pass the promise to a child that reads it with `use()`, with a `<Suspense>` boundary between the hook caller and that child. The fetch starts when the hook caller commits, so `use(useObservablePromise(obs$))` in one component deadlocks.
+- Swapping observables inside `startTransition` or behind `useDeferredValue` works without preloading, and `preloadObservablePromise` warms the cache from event handlers and route loaders.
+
+```tsx
+function Users() {
+  const promise = useObservablePromise(users$)
+  return (
+    <Suspense fallback={<p>Loading users…</p>}>
+      <UsersList promise={promise} />
+    </Suspense>
+  )
+}
+
+function UsersList({promise}: {promise: Promise<User[]>}) {
+  const users = use(promise)
+  return (
+    <ul>
+      {users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+See the [Suspense data fetching](/examples/data-fetching), [Activity and preload](/examples/activity), and [Transitions and refetching](/examples/transitions) examples.
+
+## Checklist
+
+1. React `^19.2`, Node `>=22.12`, ESM imports, operators from `'rxjs'`.
+2. Every `useObservable` call passes an `initialValue`.
+3. Controlled inputs and same-event reads use `useSyncObservable`; hand-rolled `useDeferredValue` wrappers are gone.
+4. Observables built inside components are memoized.
+5. No `useObservableEvent` imports remain.
+6. Tests that asserted a synchronous first paint now expect the `initialValue` first.

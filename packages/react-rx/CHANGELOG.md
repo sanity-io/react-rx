@@ -1,5 +1,11 @@
 # react-rx
 
+## 7.0.0-next.6
+
+### Patch Changes
+
+- [#515](https://github.com/sanity-io/react-rx/pull/515) [`df7f99e`](https://github.com/sanity-io/react-rx/commit/df7f99e91ee06c0c87999d3d1628769c3a6524bf) Thanks [@stipsan](https://github.com/stipsan)! - `initialValue` initializers now run exactly once per hook instance, matching `useState`. They previously ran on every pre-emission `getSnapshot` read, so an initializer returning a fresh object (`useObservable(obs$, () => ({...}))`, and the same on `useSyncObservable`) gave `useSyncExternalStore` a new snapshot reference on every consistency check and looped until React aborted with "Maximum update depth exceeded". The resolved value is now cached per instance, which also makes the pre-emission snapshot reference stable across re-renders and fixes the equivalent hazard in `useSyncObservable`'s server snapshot.
+
 ## 7.0.0-next.5
 
 ### Patch Changes
@@ -108,6 +114,11 @@
   - Synchronously-emitting sources (`of`, `BehaviorSubject`, replayed `shareReplay`) now resolve at the hook caller's commit instead of during render, so a cold mount shows one Suspense fallback pass. Preload the observable to render them without a fallback.
   - Swapping to a new observable inside `startTransition` / behind `useDeferredValue` requires warming the new observable first (for example `preloadObservablePromise` in the event handler): a transition render that suspends never commits, so it can no longer start the fetch.
   - react-rx is a client-only library and never subscribes observables on the server: server rendering emits the Suspense fallback and the fetch starts after hydration, and `preloadObservablePromise` is now a no-op on the server (an inert pending promise; no subscription, no cache entry). A server-started subscription has no unmount to tear it down, a never-settling source would hang, and the module-scope cache would be shared across requests. For React Server Components or server-only flows, fetch with async/await or RxJS `firstValueFrom` and pass the promise/value as a prop.
+## 6.0.1
+
+### Patch Changes
+
+- [#545](https://github.com/sanity-io/react-rx/pull/545) [`a764dd3`](https://github.com/sanity-io/react-rx/commit/a764dd394843544ddb1402efbe5883ebd78da4c5) Thanks [@squiggler-app](https://github.com/apps/squiggler-app)! - fix(deps): update dependency use-effect-event to ^2.0.4
 
 ## 6.0.0
 

@@ -1,8 +1,23 @@
-# Async React Demo on react-rx
+# Async React Demo
 
-A fork of [rickhanlonii/async-react](https://github.com/rickhanlonii/async-react), the final state of the React Conf 2025 [Async React talk](https://youtu.be/B_2E96URooA), adapted to [react-rx](https://react-rx.dev): the data layer is RxJS observables read through `useObservablePromise`, and optimistic completion state lives in an observable store instead of `useOptimistic`.
+An Observable-powered adaptation of the final state of Ricky Hanlon's React Conf 2025
+[Async React demo](https://github.com/rickhanlonii/async-react).
 
-The original app is deployed at https://async-react.dev/. The router, the design system, the network debugger, and the UX are unchanged. That is the point. The adaptation lives in three source files: `src/data/index.ts`, `src/app/Home.tsx`, and `src/design/CompleteButton.tsx`.
+The product and design code deliberately keeps React's native async primitives. RxJS owns the
+data layer and `react-rx` connects it to `use()` and Suspense:
+
+- **Ref-counted cache store**: `lessons$` is a keyed observable cache built from RxJS
+  primitives (`src/data/cache.ts`). Concurrent subscribers dedupe into one request, and a result
+  replays for five minutes after it arrives.
+- **Suspense interop**: `useObservablePromise()` turns the shared observable into a promise that a
+  child reads with `use()`; `preloadObservablePromise()` warms the same observable before login
+  navigation.
+- **Invalidation**: mutations and `router.refresh()` clear the store eagerly; `refresh()` then
+  re-renders the route inside a transition so it refetches.
+- **Actions and feedback**: native transitions and `useOptimistic()` keep immediate feedback
+  correctly scheduled while Observable-backed content loads.
+
+View the app: https://async-react.dev/
 
 ## Setup
 
@@ -18,13 +33,20 @@ Run the frontend:
 pnpm --filter async-react dev
 ```
 
+To run the same app without the React Compiler:
+
+```bash
+pnpm --filter async-react dev:no-compiler
+```
+
 The demo is a static Vite app. [MSW](https://mswjs.io) registers a service worker (`public/mockServiceWorker.js`) before React renders. App code uses plain `fetch` against same-origin `/api/*` routes. Handlers in `src/mocks` wrap `fake-data` and apply latency with MSW's `delay()`.
 
-The network debugger posts latency settings to `POST /api/debug/network` (also handled by MSW) so config changes show up as real HTTP requests the same way app traffic does. Each configurable endpoint row has a range input for a fixed delay and a **real** checkbox. When **real** is checked, the range input disables and that handler uses `delay('real')` instead of a fixed millisecond value. Settings persist in `localStorage`. `POST /api/login` has no debugger controls and always responds with `delay('real')`.
+The network debugger posts latency settings to `POST /api/debug/network` (also handled by MSW) so config changes show up as real HTTP requests the same way app traffic does. Each configurable endpoint row has a range input for a fixed delay and a **real** checkbox. When **real** is checked, the range input disables and that handler uses a realistic random delay (MSW's 100–400ms browser range) instead of a fixed millisecond value. The chosen duration is stored so the debugger progress bar can track it; a new random duration is picked when **real** is checked and again after each request starts. Settings persist in `localStorage`. `POST /api/login` has no debugger controls and always responds with `delay('real')`.
 
 ## Motivation
 
-This repo shows the future vision for how product code will be written in React without needing additional APIs.
+This demo shows how product code can keep the same Async React shape when its data layer uses
+Observables. `react-rx` is an interop layer, not a replacement for React's scheduling primitives.
 
 This is possible, but implementing Async React features in:
 
@@ -36,56 +58,6 @@ In the app, there is a network debugger at the bottom. By changing the timing fo
 
 - **Fast network (<150ms)**: No loading states, the app performs and feels synchronous.
 - **Slow network (>150ms)**: Automatically displays loading states, and batches updates to prevent async bugs.
-
-## The react-rx adaptation
-
-Upstream's data layer is a hand-rolled Map of cached promises. This version replaces it with two observable channels whose update urgencies are deliberately different.
-
-**Canonical data suspends inside transitions.** Each `tab + search + revision` query is one cold observable in a Map, so the observable's identity is the cache key. `useObservablePromise` turns it into a `use()`-compatible promise and shares one fetch among every consumer:
-
-```ts
-function lessonsFor(tab: string, search: string, revision: number): Observable<Lesson[]> {
-  const key = queryKey(tab, search, revision)
-  let query = queries.get(key)
-  if (!query) {
-    query = defer(() => fetchLessons(lessonsUrl(tab, search)))
-    queries.set(key, query)
-  }
-  return query
-}
-
-export function useLessonsPromise(tab: string, search: string, revision: number) {
-  return useObservablePromise(lessonsFor(tab, search, revision), {ttl: LESSONS_TTL})
-}
-```
-
-Switching tabs or typing in search renders a new identity inside the router's transition, so react-rx starts the fetch during that render and the transition stays pending: the current list holds, the touched control shimmers, and the Suspense skeleton appears only on initial load. After a mutation, `router.refresh()` calls `revalidate()` and bumps the router's `revision`, so the refetch is a new identity that suspends inside the action's transition. Same mechanism. The `revision` argument is what keeps this correct under the React Compiler, which memoizes `lessonsFor` by its arguments: identity is deterministic per key between revalidations, so a bumped revision is the only way a refetch can reach a compiled component. Login warms the same identity the home page will render by racing `preloadObservablePromise` against upstream's one-second timer. Query observables are retained for ten minutes of inactivity (`LESSONS_TTL`), where upstream's promise cache lives for the whole session.
-
-**Optimistic intent is urgent and lives in the store.** The completed checkmark is a property of the data, not of one button, so it moves out of `useOptimistic` into a desired-state stream: what the user asked for but has not seen yet.
-
-```ts
-type Wanted = ReadonlyMap<string, boolean>
-
-const wanted$ = new BehaviorSubject<Wanted>(new Map())
-
-export async function toggleComplete(id: string, complete: boolean): Promise<void> {
-  wanted$.next(new Map(wanted$.getValue()).set(id, complete))
-  try {
-    await fetchJson(`/api/lesson/${id}/toggle`, {method: 'POST'})
-  } catch (error) {
-    wanted$.next(
-      retire(wanted$.getValue(), (wantedId, wanted) => wantedId === id && wanted === complete),
-    )
-    throw error
-  }
-}
-```
-
-`useLessons` reads the intent below the Suspense boundary with `useSyncObservable` and merges it into the canonical list, and an effect retires an intent only when a render commits server data that agrees with it. That timing rule is what makes the flash-back unrepresentable: the check flips in the same event tick as the click, holds through the POST and the refetch, and the retirement lands in the commit that already shows the same value. If the POST fails, exactly the intent that click recorded is dropped. To watch it happen, catch the action's rejection. Like upstream, the demo ships no error boundary, so an uncaught action error unmounts the tree.
-
-`CompleteButton` renders `complete` directly and keeps its pending shimmer through the action transition. The design system still owns feedback. `SearchInput` and `TabList` keep `useOptimistic` because theirs is router-state optimism, the pending URL, which is React state and belongs to the design components.
-
-No react-rx API was added for any of this. The store composes the shipped hooks: `useObservablePromise`, `preloadObservablePromise`, `useSyncObservable`, and one `BehaviorSubject`.
 
 ## Examples
 
@@ -127,22 +99,22 @@ https://github.com/user-attachments/assets/6c04346e-903e-461c-b76e-b35b4c537698
 
 Our code for the home page is also simple and declarative:
 
-```tsx
+```js
 export default function Home() {
   const router = useRouter()
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
   const revision = router.revision
-  const lessonsPromise = data.useLessonsPromise(tab, search, revision)
+  const lessonsPromise = useObservablePromise(data.lessons$(tab, search, revision))
 
-  function searchAction(value: string) {
+  function searchAction(value) {
     router.setParams('q', value)
   }
-  function tabAction(value: string) {
+  function tabAction(value) {
     router.setParams('tab', value)
   }
-  async function completeAction(id: string, complete: boolean) {
-    await data.toggleComplete(id, complete)
+  async function completeAction(id) {
+    await data.mutateToggle(id)
     router.refresh()
   }
   return (
@@ -157,6 +129,41 @@ export default function Home() {
   )
 }
 ```
+
+`Home` must not read `lessonsPromise` itself. The Suspense boundary stays between the component
+calling `useObservablePromise()` and the `LessonList` child calling `use(lessonsPromise)`. This lets
+`Home` commit and start the Observable while the child suspends.
+
+The lessons data layer is one declaration on top of a small cache store:
+
+```ts
+export const lessons$ = createObservableCache(
+  (tab, search, _revision) => fetchLessons(lessonsUrl(tab, search)),
+  {ttl: 5 * 60_000},
+)
+
+export function revalidate() {
+  lessons$.clear()
+}
+```
+
+The original demo hand-rolls a `Map<string, Promise>`, a cache key builder, and a `revalidate()`
+the router and every mutation must remember to call. Here the store is what RxJS already offers,
+composed in `src/data/cache.ts`: one `share()` per key with a `ReplaySubject(1)` connector so late
+subscribers get the last result, `resetOnRefCountZero: false` so a request that loses its
+subscribers still completes and populates the cache, and `resetOnComplete: () => timer(ttl)` so a
+result replays for five minutes after it arrives and then releases its key. Every render, Suspense
+retry, and the login page's prefetch of the same key are just subscribers to the same observable, so
+they dedupe into a single request, and switching back to a recent tab replays synchronously with no
+fetch. `react-rx` needs no changes: it keys its promise cache by observable identity, and the store
+is what keeps that identity stable — so none of this depends on compiler-inserted memoization.
+
+Invalidation is the original demo's: mutations and `router.refresh()` call `revalidate()`, which
+drops every entry eagerly, and `refresh()` then bumps `revision` inside a transition so the route
+re-renders, the swap render starts the fresh fetch, and React keeps the previous list visible until
+it settles. `revision` is also an input to `lessons$`, which matters under React Compiler: a compiled
+`Home` only re-reads the store when one of the call's inputs changes, so clearing the store alone
+would not refetch.
 
 When network is fast, the app feels like it's synchronous:
 

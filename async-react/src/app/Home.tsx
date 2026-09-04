@@ -1,4 +1,5 @@
-import {Suspense, ViewTransition} from 'react'
+import {Suspense, use, ViewTransition} from 'react'
+import {useObservablePromise, type ObservablePromise} from 'react-rx'
 
 import type {Lesson as LessonItem} from '@/data/fake-data'
 import * as data from '@/data/index'
@@ -10,17 +11,18 @@ function Lesson({
   completeAction,
 }: {
   item: LessonItem
-  completeAction: (id: string, complete: boolean) => Promise<void>
+  completeAction: (id: string) => Promise<void>
 }) {
-  async function action(complete: boolean) {
-    await completeAction(item.id, complete)
+  async function action() {
+    await completeAction(item.id)
   }
   return (
     <Design.LessonCard item={item}>
       {/*
           Design.CompleteButton is using the action prop pattern to automatically
-          show a loading state if the toggle takes longer than 150ms. The list
-          already carries the user's pending intent, so it renders item.complete.
+          update the completed state while the action is pending. If the action to
+          toggle complete takes longer than 150ms, it automatically shows a loading
+          state on the button, so the user knows their action is being processed.
       */}
       <Design.CompleteButton complete={item.complete} action={action}></Design.CompleteButton>
     </Design.LessonCard>
@@ -31,15 +33,14 @@ function LessonList({
   lessonsPromise,
   completeAction,
 }: {
-  lessonsPromise: Promise<LessonItem[]>
-  completeAction: (id: string, complete: boolean) => Promise<void>
+  lessonsPromise: ObservablePromise<LessonItem[]>
+  completeAction: (id: string) => Promise<void>
 }) {
   /**
-   * The promise suspends until canonical data arrives. data.useLessons also
-   * reads pending intent synchronously below this Suspense boundary, so an
-   * optimistic re-render cannot re-run the observable lookup in Home and suspend.
+   * The Suspense boundary sits between Home, which owns the promise, and
+   * this use() call, so Home commits and starts the request while we suspend.
    */
-  const lessons = data.useLessons(lessonsPromise)
+  const lessons = use(lessonsPromise)
 
   if (lessons.length === 0) {
     return (
@@ -81,11 +82,10 @@ export default function Home() {
   const tab = router.search.tab || 'all'
   const revision = router.revision
   /**
-   * One observable identity per tab+search+revision lets a router transition
-   * hold the current list while react-rx fetches the next one. refresh()
-   * bumps the revision, so post-mutation refetches ride the same mechanism.
+   * data.lessons$ returns one shared observable per key, so the login page's
+   * prefetch and this render dedupe into the same request.
    */
-  const lessonsPromise = data.useLessonsPromise(tab, search, revision)
+  const lessonsPromise = useObservablePromise(data.lessons$(tab, search, revision))
 
   function searchAction(value: string) {
     /**
@@ -100,14 +100,14 @@ export default function Home() {
     router.setParams('tab', value)
   }
 
-  async function completeAction(id: string, complete: boolean) {
+  async function completeAction(id: string) {
     /**
-     * Since we're in an Action we know we're in a transition. toggleComplete
-     * records the user's intent before posting, so the check has flipped.
-     * Awaiting keeps the pending state active through the mutation and later
-     * updates.
+     * Since we're in an Action we know we're in a transition.
+     * This means we can await a mutation, and the pending state of
+     * the action will be true until the mutation, and all the updates
+     * after it are done.
      */
-    await data.toggleComplete(id, complete)
+    await data.mutateToggle(id)
 
     /**
      * After the mutation we need to revalidate the data cache.

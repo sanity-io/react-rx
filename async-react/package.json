@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "build:no-compiler": "vite build --mode no-compiler",
     "dev": "vite",
+    "dev:no-compiler": "vite --mode no-compiler",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
@@ -18,7 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "fast-fuzzy": "^1.12.0",
-    "lucide-react": "^1.35.0",
+    "lucide-react": "^1.39.0",
     "msw": "^2.15.0",
     "react": "canary",
     "react-dom": "canary",
@@ -34,7 +36,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
-    "oxc-transform-react": "^0.147.0",
+    "oxc-transform-react": "^0.148.0",
     "typescript": "6.0.3",
     "vite": "^8.2.2"
   },
