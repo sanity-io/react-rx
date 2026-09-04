@@ -292,20 +292,11 @@ Here's a component that displays the current value from a range input. The pipel
 ```tsx
 import {useMemo} from 'react'
 import {useObservableSubject, useSyncObservable} from 'react-rx'
-import {filter, map} from 'rxjs'
+import {map} from 'rxjs'
 
 const ShowSliderValue = () => {
   const [input$, handleChange] = useObservableSubject<string>()
-  const value$ = useMemo(
-    () =>
-      input$.pipe(
-        // Ignore nullish values
-        filter(nonNullable),
-        // Cast to number
-        map((value) => Number(value)),
-      ),
-    [input$],
-  )
+  const value$ = useMemo(() => input$.pipe(map((value) => Number(value))), [input$])
   const value = useSyncObservable(value$, 1)
 
   return (
@@ -320,10 +311,6 @@ const ShowSliderValue = () => {
       <div>Value is: {value}</div>
     </>
   )
-}
-
-function nonNullable<T>(v: T): v is NonNullable<T> {
-  return v != null
 }
 ```
 
