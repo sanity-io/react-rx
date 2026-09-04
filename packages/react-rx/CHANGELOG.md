@@ -1,5 +1,22 @@
 # react-rx
 
+## 6.1.0
+
+### Minor Changes
+
+- [#582](https://github.com/sanity-io/react-rx/pull/582) [`27db7b6`](https://github.com/sanity-io/react-rx/commit/27db7b6334c9045617cd99d75451e855dd524541) Thanks [@stipsan](https://github.com/stipsan)! - Deprecate the APIs that react-rx v7 removes, so editors and `no-deprecated` lint rules flag them ahead of the upgrade. Runtime behavior is unchanged.
+  
+  - `useObservableEvent` is removed in v7. Push events into a `Subject` you own and read the derived stream with `useObservable` or `useSyncObservable`.
+  - Calling `useObservable` or `useSyncObservable` without an `initialValue` is removed in v7, where the argument is required. `useObservable(observable$, undefined)` keeps the v6 type and behavior. `no-deprecated` lint rules also flag uncalled references such as `typeof useObservable`, because they read the tags of every overload. Those are false positives. Suppress them locally.
+  
+  See the [v6 to v7 migration guide](https://react-rx.dev/migrate/v6-to-v7).
+
+### Patch Changes
+
+- [#579](https://github.com/sanity-io/react-rx/pull/579) [`9010e04`](https://github.com/sanity-io/react-rx/commit/9010e04a0ad498e5c360dc90984f4c7b871c33fe) Thanks [@stipsan](https://github.com/stipsan)! - `initialValue` initializers are now resolved once per hook instance, like a `useState` initializer. They previously ran on every pre-emission `getSnapshot` read, so an initializer returning a fresh object (`useObservable(obs$, () => ({...}))`, and the same on `useSyncObservable`) gave `useSyncExternalStore` a new snapshot reference on every consistency check and looped until React aborted with "Maximum update depth exceeded". The resolved value is now cached per instance, which also makes the pre-emission snapshot reference stable across re-renders and fixes the equivalent hazard in `useSyncObservable`'s server snapshot.
+  
+  As with `useState`, the hook reads the `initialValue` argument on its first render only. A different value passed on a later render is ignored until the hook remounts, where a plain value used to be re-read on every pre-emission render. Keep initializers pure. React Strict Mode calls them twice in development and keeps one result.
+
 ## 6.0.1
 
 ### Patch Changes
