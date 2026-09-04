@@ -1,4 +1,5 @@
 import {Suspense, use, ViewTransition} from 'react'
+import {useObservablePromise, type ObservablePromise} from 'react-rx'
 
 import type {Lesson as LessonItem} from '@/data/fake-data'
 import * as data from '@/data/index'
@@ -29,29 +30,17 @@ function Lesson({
 }
 
 function LessonList({
-  tab,
-  search,
-  revision,
+  lessonsPromise,
   completeAction,
 }: {
-  tab: string
-  search: string
-  revision: number
+  lessonsPromise: ObservablePromise<LessonItem[]>
   completeAction: (id: string) => Promise<void>
 }) {
   /**
-   * data.getLessons is a suspense-enabled data fetching function.
-   * It returns a cached promise that fetched the first time it's called
-   * with a given tab+search+revision, then it returns the resolved data on subsequent calls.
-   *
-   * Since it's cached, there needs to be a way to clear the cache and re-fetch the data,
-   * like after a mutation like toggling complete. This is done with the data.revalidate() function,
-   * which is called in the completeAction below.
-   *
-   * The use(data.getLessons(...)) call here will suspend the component
-   * until the promise resolves, then return the resolved data.
+   * The Suspense boundary sits between Home, which owns the promise, and
+   * this use() call, so Home commits and starts the request while we suspend.
    */
-  const lessons = use(data.getLessons(tab, search, revision))
+  const lessons = use(lessonsPromise)
 
   if (lessons.length === 0) {
     return (
@@ -92,6 +81,11 @@ export default function Home() {
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
   const revision = router.revision
+  /**
+   * data.lessons$ returns one shared observable per key, so the login page's
+   * prefetch and this render dedupe into the same request.
+   */
+  const lessonsPromise = useObservablePromise(data.lessons$(tab, search, revision))
 
   function searchAction(value: string) {
     /**
@@ -150,12 +144,7 @@ export default function Home() {
            the optimistic/pending states will be used to show loading instead.
         */}
         <Suspense fallback={<Design.FallbackList />}>
-          <LessonList
-            tab={tab}
-            search={search}
-            revision={revision}
-            completeAction={completeAction}
-          />
+          <LessonList lessonsPromise={lessonsPromise} completeAction={completeAction} />
         </Suspense>
       </Design.TabList>
     </>

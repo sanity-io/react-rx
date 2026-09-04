@@ -1,6 +1,21 @@
 # Async React Demo
 
-The final state of the React Conf 2025 Async React talk.
+An Observable-powered adaptation of the final state of Ricky Hanlon's React Conf 2025
+[Async React demo](https://github.com/rickhanlonii/async-react).
+
+The product and design code deliberately keeps React's native async primitives. RxJS owns the
+data layer and `react-rx` connects it to `use()` and Suspense:
+
+- **Ref-counted cache store**: `lessons$` is a keyed observable cache built from RxJS
+  primitives (`src/data/cache.ts`). Concurrent subscribers dedupe into one request, and a result
+  replays for five minutes after it arrives.
+- **Suspense interop**: `useObservablePromise()` turns the shared observable into a promise that a
+  child reads with `use()`; `preloadObservablePromise()` warms the same observable before login
+  navigation.
+- **Invalidation**: mutations and `router.refresh()` clear the store eagerly; `refresh()` then
+  re-renders the route inside a transition so it refetches.
+- **Actions and feedback**: native transitions and `useOptimistic()` keep immediate feedback
+  correctly scheduled while Observable-backed content loads.
 
 View the app: https://async-react.dev/
 
@@ -18,13 +33,20 @@ Run the frontend:
 pnpm --filter async-react dev
 ```
 
+To run the same app without the React Compiler:
+
+```bash
+pnpm --filter async-react dev:no-compiler
+```
+
 The demo is a static Vite app. [MSW](https://mswjs.io) registers a service worker (`public/mockServiceWorker.js`) before React renders. App code uses plain `fetch` against same-origin `/api/*` routes. Handlers in `src/mocks` wrap `fake-data` and apply latency with MSW's `delay()`.
 
-The network debugger posts latency settings to `POST /api/debug/network` (also handled by MSW) so config changes show up as real HTTP requests the same way app traffic does. Each configurable endpoint row has a range input for a fixed delay and a **real** checkbox. When **real** is checked, the range input disables and that handler uses `delay('real')` instead of a fixed millisecond value. Settings persist in `localStorage`. `POST /api/login` has no debugger controls and always responds with `delay('real')`.
+The network debugger posts latency settings to `POST /api/debug/network` (also handled by MSW) so config changes show up as real HTTP requests the same way app traffic does. Each configurable endpoint row has a range input for a fixed delay and a **real** checkbox. When **real** is checked, the range input disables and that handler uses a realistic random delay (MSW's 100–400ms browser range) instead of a fixed millisecond value. The chosen duration is stored so the debugger progress bar can track it; a new random duration is picked when **real** is checked and again after each request starts. Settings persist in `localStorage`. `POST /api/login` has no debugger controls and always responds with `delay('real')`.
 
 ## Motivation
 
-This repo shows the future vision for how product code will be written in React without needing additional APIs.
+This demo shows how product code can keep the same Async React shape when its data layer uses
+Observables. `react-rx` is an interop layer, not a replacement for React's scheduling primitives.
 
 This is possible, but implementing Async React features in:
 
@@ -83,6 +105,7 @@ export default function Home() {
   const search = router.search.q || ''
   const tab = router.search.tab || 'all'
   const revision = router.revision
+  const lessonsPromise = useObservablePromise(data.lessons$(tab, search, revision))
 
   function searchAction(value) {
     router.setParams('q', value)
@@ -99,18 +122,48 @@ export default function Home() {
       <Design.SearchInput value={search} changeAction={searchAction} />
       <Design.TabList activeTab={tab} changeAction={tabAction}>
         <Suspense fallback={<Design.FallbackList />}>
-          <LessonList
-            tab={tab}
-            search={search}
-            revision={revision}
-            completeAction={completeAction}
-          />
+          <LessonList lessonsPromise={lessonsPromise} completeAction={completeAction} />
         </Suspense>
       </Design.TabList>
     </>
   )
 }
 ```
+
+`Home` must not read `lessonsPromise` itself. The Suspense boundary stays between the component
+calling `useObservablePromise()` and the `LessonList` child calling `use(lessonsPromise)`. This lets
+`Home` commit and start the Observable while the child suspends.
+
+The lessons data layer is one declaration on top of a small cache store:
+
+```ts
+export const lessons$ = createObservableCache(
+  (tab, search, _revision) => fetchLessons(lessonsUrl(tab, search)),
+  {ttl: 5 * 60_000},
+)
+
+export function revalidate() {
+  lessons$.clear()
+}
+```
+
+The original demo hand-rolls a `Map<string, Promise>`, a cache key builder, and a `revalidate()`
+the router and every mutation must remember to call. Here the store is what RxJS already offers,
+composed in `src/data/cache.ts`: one `share()` per key with a `ReplaySubject(1)` connector so late
+subscribers get the last result, `resetOnRefCountZero: false` so a request that loses its
+subscribers still completes and populates the cache, and `resetOnComplete: () => timer(ttl)` so a
+result replays for five minutes after it arrives and then releases its key. Every render, Suspense
+retry, and the login page's prefetch of the same key are just subscribers to the same observable, so
+they dedupe into a single request, and switching back to a recent tab replays synchronously with no
+fetch. `react-rx` needs no changes: it keys its promise cache by observable identity, and the store
+is what keeps that identity stable — so none of this depends on compiler-inserted memoization.
+
+Invalidation is the original demo's: mutations and `router.refresh()` call `revalidate()`, which
+drops every entry eagerly, and `refresh()` then bumps `revision` inside a transition so the route
+re-renders, the swap render starts the fresh fetch, and React keeps the previous list visible until
+it settles. `revision` is also an input to `lessons$`, which matters under React Compiler: a compiled
+`Home` only re-reads the store when one of the call's inputs changes, so clearing the store alone
+would not refetch.
 
 When network is fast, the app feels like it's synchronous:
 

@@ -1,6 +1,7 @@
 import {ensureWorker} from './mocks/browser'
 import {
   DEBUG_NETWORK_PATH,
+  realisticLatency,
   type ApiDebugState,
   type ApiPath,
   type DebuggingState,
@@ -99,17 +100,6 @@ function TimedProgress(startMs: number, delayMs: number) {
   return container
 }
 
-function IndeterminateProgress() {
-  const container = document.createElement('div')
-  container.setAttribute('role', 'progressbar')
-  container.setAttribute('aria-label', 'Real network delay')
-  container.className = 'network-progress network-progress-indeterminate'
-  const bar = document.createElement('div')
-  bar.className = 'network-progress-indeterminate-bar'
-  container.appendChild(bar)
-  return container
-}
-
 interface NetworkRow {
   root: HTMLDivElement
   delayLabel: HTMLSpanElement
@@ -119,7 +109,7 @@ interface NetworkRow {
 }
 
 function formatDelayLabel(latency: EndpointLatency): string {
-  return latency.mode === 'real' ? 'real' : `${latency.ms}ms`
+  return `${latency.ms}ms`
 }
 
 function syncControls(row: NetworkRow, latency: EndpointLatency): void {
@@ -143,11 +133,7 @@ function renderRequests(row: NetworkRow, requests: DebugRequest[]): void {
     const label = document.createElement('span')
     label.textContent = request.label
     requestDiv.appendChild(label)
-    requestDiv.appendChild(
-      request.latency.mode === 'real'
-        ? IndeterminateProgress()
-        : TimedProgress(request.start, request.latency.ms),
-    )
+    requestDiv.appendChild(TimedProgress(request.start, request.latency.ms))
     row.requestsDiv.appendChild(requestDiv)
   }
 }
@@ -179,7 +165,7 @@ function createNetworkRow(label: string, id: ApiPath, api: ApiDebugState): Netwo
   realLabel.className = 'network-real-toggle'
   const realCheckbox = document.createElement('input')
   realCheckbox.type = 'checkbox'
-  realCheckbox.title = 'Use MSW delay("real")'
+  realCheckbox.title = 'Use a realistic random network delay'
   realCheckbox.setAttribute('aria-label', `Real latency for ${label}`)
   const realText = document.createElement('span')
   realText.textContent = 'real'
@@ -204,10 +190,9 @@ function createNetworkRow(label: string, id: ApiPath, api: ApiDebugState): Netwo
     postNetworkConfig(id, latency)
   })
   realCheckbox.addEventListener('change', () => {
-    const latency: EndpointLatency = {
-      mode: realCheckbox.checked ? 'real' : 'fixed',
-      ms: Number(slider.value),
-    }
+    const latency: EndpointLatency = realCheckbox.checked
+      ? realisticLatency()
+      : {mode: 'fixed', ms: Number(slider.value)}
     syncControls(row, latency)
     postNetworkConfig(id, latency)
   })

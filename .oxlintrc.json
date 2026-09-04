@@ -50,6 +50,15 @@
     {
       "files": ["website/**/*.{js,jsx,mjs,ts,tsx}"],
       "plugins": ["nextjs"]
+    },
+    {
+      "files": ["website/src/examples/**"],
+      "rules": {
+        "typescript/no-deprecated": [
+          "error",
+          {"allow": [{"from": "file", "name": ["useObservable", "useObservableEvent", "useSyncObservable"]}]}
+        ]
+      }
     }
   ]
 }
