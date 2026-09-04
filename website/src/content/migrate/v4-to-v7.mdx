@@ -81,7 +81,7 @@ const handleChange = useObservableEvent((value$) =>
 // After (v7) — the derived stream is the state
 const [input$, handleChange] = useObservableSubject<string>()
 const value$ = useMemo(() => input$.pipe(map((value) => Number(value))), [input$])
-const value = useObservable(value$, 1)
+const value = useSyncObservable(value$, 1)
 // <input onChange={(event) => handleChange(event.currentTarget.value)} />
 ```
 
