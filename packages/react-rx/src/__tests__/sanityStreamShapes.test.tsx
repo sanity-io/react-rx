@@ -1,3 +1,4 @@
+/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 /**
  * Regression suite for the stream shapes `sanity-io/sanity` feeds into `useObservable` /
  * `useSyncObservable`. Each scenario cites the sanity source it mirrors, so a failure

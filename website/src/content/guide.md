@@ -36,21 +36,28 @@ function MyComponent(props) {
 }
 ```
 
-The `initialValue` argument is optional, and it also decides how the hook treats observables that emit _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …):
+The `initialValue` argument also decides how the hook treats observables that emit _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …):
 
 - **Without an `initialValue`**, the hook briefly subscribes during render so a synchronous emission can be returned from the very first render. If the observable only emits asynchronously, the value may be `undefined` initially.
 - **With an `initialValue`**, the observable is not subscribed during render at all. The first render shows the `initialValue`, and the subscription starts when the component commits — a synchronous emission then replaces the `initialValue` right after mount. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase whenever you already have a value to paint first. Once the hook has received an emission, a later render that swaps in a different observable warms the replacement during render — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever.
+
+> [!WARNING]
+>
+> Omitting `initialValue` is deprecated. v7 removes this overload and requires the argument.
+> `useObservable(observable, undefined)` keeps the v6 behavior. See the [v6 to v7 migration
+> guide](/migrate/v6-to-v7#initialvalue-is-now-required) for what changes once the render-phase
+> warm-up is gone.
 
 ```tsx
 import {useMemo} from 'react'
 import {useObservable} from 'react-rx'
 import {of} from 'rxjs'
 
-// The observable emits "world" synchronously and no initialValue is given, so this
+// The observable emits "world" synchronously and the initialValue is undefined, so this
 // component renders "Hello world!" from the very first render — never an empty value.
 function MyComponent(props) {
   const observable = useMemo(() => of('world'), [])
-  const planet = useObservable(observable)
+  const planet = useObservable(observable, undefined)
 
   return <>Hello {planet}!</>
 }
@@ -124,7 +131,7 @@ function Users({shouldFetch}: {shouldFetch: boolean}) {
         : of(null),
     [shouldFetch],
   )
-  const users = useObservable(users$)
+  const users = useObservable(users$, undefined)
 
   return <pre>{JSON.stringify(users, null, 2)}</pre>
 }
@@ -137,22 +144,15 @@ Because the fetch observable is only created (and therefore only ever subscribed
 Same signature as `useObservable`, but updates are synchronous (the previous default). Use it for controlled inputs:
 
 ```tsx
-import type {ChangeEvent} from 'react'
-import {useObservableEvent, useSyncObservable} from 'react-rx'
-import {map, Subject, tap, type Observable} from 'rxjs'
+import {useSyncObservable} from 'react-rx'
+import {Subject} from 'rxjs'
 
 const text$ = new Subject<string>()
 
 function SearchField() {
-  const handleChange = useObservableEvent((events$: Observable<ChangeEvent<HTMLInputElement>>) =>
-    events$.pipe(
-      map((e) => e.currentTarget.value),
-      tap((value) => text$.next(value)),
-    ),
-  )
   const text = useSyncObservable(text$, '')
 
-  return <input value={text} onChange={handleChange} />
+  return <input value={text} onChange={(event) => text$.next(event.currentTarget.value)} />
 }
 ```
 
@@ -267,45 +267,42 @@ function TabButton({users$, onSelect}) {
 
 **Which hook when?**
 
-| Need                                                   | Hook                   |
-| ------------------------------------------------------ | ---------------------- |
-| Live values, timers, subjects, optional `initialValue` | `useObservable`        |
-| Controlled inputs / synchronous store updates          | `useSyncObservable`    |
-| Async data + Suspense / Activity pre-render            | `useObservablePromise` |
-| Event → observable pipelines                           | `useObservableEvent`   |
+| Need                                                | Hook                                    |
+| --------------------------------------------------- | --------------------------------------- |
+| Live values, timers, subjects (with `initialValue`) | `useObservable`                         |
+| Controlled inputs / synchronous store updates       | `useSyncObservable`                     |
+| Async data + Suspense / Activity pre-render         | `useObservablePromise`                  |
+| Events pushed from handlers                         | a `Subject` piped into one of the above |
 
 For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
 
-### useObservableEvent()
+### Handling events
 
-This creates an event handler that can be used to create an observable from events.
+> [!WARNING]
+>
+> `useObservableEvent` is deprecated. v7 removes it. It wraps the pattern below. See the [v6 to
+> v7 migration guide](/migrate/v6-to-v7#useobservableevent-is-removed).
 
-Here's an example of a component that displays the current value from a range input:
+No dedicated event hook is needed. Create a `Subject`, call `subject.next(...)` from the event handler, and read the derived stream with whichever hook fits the read. This is the same mental model the upcoming [native Observable API](https://github.com/WICG/observable) builds on: events become observables, and state is derived from them.
+
+Here's a component that displays the current value from a range input. The pipeline's emissions _are_ the rendered value — no local `useState` mirror, no `tap`:
 
 ```tsx
-import {useState} from 'react'
-import {useObservableEvent} from 'react-rx'
-import {filter, map, tap} from 'rxjs'
+import {useMemo, useState} from 'react'
+import {useObservable} from 'react-rx'
+import {map, Subject} from 'rxjs'
 
-const ShowSliderValue = () => {
-  const [value, setValue] = useState(1)
-  const handleChange = useObservableEvent((value$) =>
-    value$.pipe(
-      // Ignore nullish values
-      filter(nonNullable),
-      // Cast to number
-      map((value) => Number(value)),
-      // Update local state
-      tap(setValue),
-    ),
-  )
+function ShowSliderValue() {
+  const [sliderInput$] = useState(() => new Subject<string>())
+  const value$ = useMemo(() => sliderInput$.pipe(map((value) => Number(value))), [sliderInput$])
+  const value = useObservable(value$, 1)
 
   return (
     <>
       <input
         type="range"
         value={value}
-        onChange={(event) => handleChange(event.target.value)}
+        onChange={(event) => sliderInput$.next(event.currentTarget.value)}
         min={1}
         max={10}
       />
@@ -313,8 +310,68 @@ const ShowSliderValue = () => {
     </>
   )
 }
+```
 
-function nonNullable<T>(v: T): v is NonNullable<T> {
-  return v != null
+Creating the `Subject` in `useState` scopes it to the component instance; a module-level `Subject` works just as well when the stream should be shared. Everything RxJS offers applies on the way from event to value — `debounceTime`, `distinctUntilChanged`, `switchMap`, `scan`, and friends all go in the `pipe`, as in the [search example](/examples/search).
+
+For **controlled inputs**, read the subject back with [`useSyncObservable`](#usesyncobservable) so the value updates synchronously. The `SearchField` example in that section does exactly this.
+
+For **event-driven Suspense data**, seed a `BehaviorSubject` with the initial query and derive the request stream from it. [`useObservablePromise`](#useobservablepromise) suspends until the first result, and later events swap in new data without re-showing the fallback (while `switchMap` cancels the stale request):
+
+```tsx
+import {Suspense, use, useMemo} from 'react'
+import {useObservablePromise} from 'react-rx'
+import {BehaviorSubject, switchMap} from 'rxjs'
+import {fromFetch} from 'rxjs/fetch'
+
+const query$ = new BehaviorSubject('react')
+
+function Search() {
+  const results$ = useMemo(
+    () =>
+      query$.pipe(
+        switchMap((query) =>
+          fromFetch(`https://api.github.com/search/repositories?q=${query}&per_page=5`, {
+            selector: (response) => response.json(),
+          }),
+        ),
+      ),
+    [],
+  )
+  const promise = useObservablePromise(results$)
+
+  return (
+    <>
+      <input
+        defaultValue={query$.getValue()}
+        onChange={(event) => query$.next(event.currentTarget.value)}
+      />
+      <Suspense fallback={<p>Searching…</p>}>
+        <Results promise={promise} />
+      </Suspense>
+    </>
+  )
+}
+
+function Results({promise}: {promise: Promise<unknown>}) {
+  return <pre>{JSON.stringify(use(promise), null, 2)}</pre>
+}
+```
+
+**Side-effect-only pipelines** (analytics, persistence, …) that produce nothing to render can subscribe in an effect — the event handler stays a plain `subject.next` call:
+
+```tsx
+import {useEffect} from 'react'
+import {concatMap, Subject} from 'rxjs'
+
+const savedSearches$ = new Subject<string>()
+
+function SaveSearchButton({term}: {term: string}) {
+  useEffect(() => {
+    const subscription = savedSearches$.pipe(concatMap((t) => saveSearch(t))).subscribe()
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return <button onClick={() => savedSearches$.next(term)}>Save search</button>
 }
 ```

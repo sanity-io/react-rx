@@ -43,7 +43,12 @@ export function useObservable<ObservableType extends Observable<any>>(
   initialValue: ObservedValueOf<ObservableType> | (() => ObservedValueOf<ObservableType>),
   options?: UseObservableOptions,
 ): ObservedValueOf<ObservableType>
-/** @public */
+/**
+ * @deprecated react-rx v7 requires the `initialValue` argument. Pass it explicitly:
+ * `useObservable(observable$, undefined)` keeps the v6 type and behavior. Migration guide:
+ * https://react-rx.dev/migrate/v6-to-v7#initialvalue-is-now-required
+ * @public
+ */
 export function useObservable<ObservableType extends Observable<any>>(
   observable: ObservableType,
 ): undefined | ObservedValueOf<ObservableType>

@@ -1,3 +1,4 @@
+/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {act, render} from '@testing-library/react'
 import {renderToString} from 'react-dom/server'
 import {defer, map, Observable, of, throwError, timer} from 'rxjs'

@@ -1,3 +1,4 @@
+/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {act, renderHook} from '@testing-library/react'
 import {Observable, scan, tap} from 'rxjs'
 import {expect, test} from 'vitest'
