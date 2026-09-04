@@ -304,7 +304,7 @@ const ShowSliderValue = () => {
       <input
         type="range"
         value={value}
-        onChange={(event) => handleChange(event.target.value)}
+        onChange={(event) => handleChange(event.currentTarget.value)}
         min={1}
         max={10}
       />
