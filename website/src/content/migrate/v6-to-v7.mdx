@@ -1,0 +1,140 @@
+# Migrating from v6 to v7
+
+> v7 is in prerelease. Install it with `npm install react-rx@next`. The stable release is v6.
+
+v7 has three breaking changes, all pushing in the same direction — subscriptions are strictly commit-driven, and event handling uses plain RxJS instead of a library-specific hook:
+
+1. [`initialValue` is now required](#initialvalue-is-now-required) in `useObservable` and `useSyncObservable`.
+2. [`useObservablePromise` fetches start at commit](#useobservablepromise-fetches-start-at-commit), never during render.
+3. [`useObservableEvent` is removed](#useobservableevent-is-removed).
+
+Requirements are unchanged from v5: React `^19.2`, RxJS `^7.2`, Node `>=22.12`, ESM-only.
+
+## initialValue is now required
+
+The initial value is what renders until the observable emits. Omitting the argument is now a type error, and since JavaScript callers can bypass the types, the hooks also throw during render when it is missing.
+
+```tsx
+// Before (v6) — implicitly undefined until the first emission
+const users = useObservable(users$)
+
+// After (v7) — pass the initial value explicitly
+const users = useObservable(users$, undefined)
+```
+
+Every value is valid, `undefined` included — it just has to be passed explicitly. Functions act as initializers, exactly like `useState`: `useObservable(value$, () => expensiveInitial())` computes lazily, and to use a function itself as the initial value, pass an initializer that returns it.
+
+Call sites that already pass an `initialValue` are unaffected, including their runtime behavior.
+
+### What you may notice
+
+- **No render-phase warm-up on mount.** Without an `initialValue`, v6 briefly subscribed during render so a synchronous emission (`of`, `startWith`, a `BehaviorSubject`, …) could win the very first paint. In v7 the observable is never subscribed during render for its first paint: the `initialValue` renders first and the synchronous emission replaces it right after mount. If an observable has no initial value that makes sense — you want fallback UI while it "loads" — that is `useObservablePromise` with `use()` and Suspense.
+- **`disabled: true` now always guarantees zero subscriptions.** Previously the warm-up probe still subscribed once when no `initialValue` was given.
+- **Server rendering is uniform.** Both hooks render the resolved `initialValue` and never subscribe the observable on the server. `useSyncObservable` can no longer hit React's "Missing getServerSnapshot" error, and non-deterministic synchronous emissions can no longer cause hydration mismatches.
+
+## useObservablePromise fetches start at commit
+
+The hook no longer subscribes the source observable during mounting renders. Previously any render triggered fetching as a side effect, including hidden `<Activity>` pre-renders. Fetching now has three triggers: a non-`disabled` component that called the hook **commits**; an already-**live** consumer re-renders with a **new observable** (`startTransition` / `useDeferredValue` swaps; the swap render starts the new source so the suspended transition can settle and commit); or `preloadObservablePromise` is called.
+
+What to change:
+
+- **`use(useObservablePromise(obs$))` in a single component now deadlocks** — the component suspends on its own pending promise before the commit that would start the fetch. This was never a supported pattern and is intentionally not guarded against. Pass the promise as a prop to a child that reads it with `use()`, with a `<Suspense>` boundary **between** the hook caller and that child, so the caller can commit while the child suspends:
+
+```tsx
+// Broken in v7 — suspends before the commit that would start the fetch
+function Users() {
+  const users = use(useObservablePromise(users$))
+  return <pre>{JSON.stringify(users, null, 2)}</pre>
+}
+
+// Works — the hook caller commits, the child suspends
+function Users() {
+  const promise = useObservablePromise(users$)
+  return (
+    <Suspense fallback={<p>Loading users…</p>}>
+      <UsersList promise={promise} />
+    </Suspense>
+  )
+}
+
+function UsersList({promise}: {promise: Promise<unknown>}) {
+  return <pre>{JSON.stringify(use(promise), null, 2)}</pre>
+}
+```
+
+- **Hidden `<Activity>` trees no longer fetch.** A hidden tree that calls the hook is fully paused — no subscription until it is revealed and effects mount. To pre-render hidden content _with_ data, call the hook in a visible parent and pass the promise into the hidden tree, where `use(promise)` lets React pre-render and suspend on its own terms. See the [Activity and preload example](/examples/activity).
+- **Synchronously-emitting sources show one fallback pass on a cold mount** (`of`, `BehaviorSubject`, replayed `shareReplay`): they now resolve at the hook caller's commit instead of during render. Preload the observable to render them without a fallback.
+- **Swapping observables inside `startTransition` / behind `useDeferredValue` needs no preloading.** A consumer that is already live starts the swapped-in source during the transition render itself. This is React's [client-side refetch pattern](https://react.dev/reference/react/use#re-fetching-data-in-client-components): previous content stays visible while the new data loads, and the swap commits when it settles. `preloadObservablePromise` remains useful for warming ahead of the swap, for example on hover, so the transition can commit with no pending period. See the [Transitions and refetching example](https://react-rx-git-next.sanity.dev/examples/transitions) in the v7 docs.
+- **On the server, `preloadObservablePromise` is a no-op** (an inert pending promise; no subscription, no cache entry) — react-rx never subscribes observables on the server. Server rendering emits the Suspense fallback and the fetch starts after hydration. For React Server Components or server-only flows, fetch with async/await or RxJS [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) and pass the promise or value down as a prop.
+
+## useObservableEvent is removed
+
+`useObservableEvent` was layers of abstraction over a plain RxJS `Subject`: it created one internally, returned `subject.next` as a stable callback, and subscribed the pipeline you returned in an effect. The same thing is expressed directly with a `Subject` you own — fewer moving parts, no library-specific event concept to learn, and a mental model that carries straight over to the upcoming [native Observable API](https://github.com/WICG/observable).
+
+The removal also drops the hook's `use-effect-event` dependency, leaving `react-rx` with no runtime dependencies beyond its `react` and `rxjs` peers.
+
+To migrate, create a `Subject`, call `subject.next(...)` where you previously called the returned handler, and move the pipeline to where its output is consumed.
+
+### Pipelines that updated state
+
+Most `useObservableEvent` pipelines ended in `tap(setState)`. Drop the local state mirror entirely — the derived stream _is_ the state, read it with `useObservable` (or `useSyncObservable` when it feeds a controlled input):
+
+```tsx
+// Before (v6)
+const [value, setValue] = useState(1)
+const handleChange = useObservableEvent((value$) =>
+  value$.pipe(
+    map((value) => Number(value)),
+    tap(setValue),
+  ),
+)
+// <input onChange={(event) => handleChange(event.currentTarget.value)} />
+
+// After (v7)
+const [sliderInput$] = useState(() => new Subject<string>())
+const value$ = useMemo(() => sliderInput$.pipe(map((value) => Number(value))), [sliderInput$])
+const value = useObservable(value$, 1)
+// <input onChange={(event) => sliderInput$.next(event.currentTarget.value)} />
+```
+
+### Pipelines that only forwarded into a Subject
+
+A very common shape was a handler whose pipeline just pushed into an existing `Subject`. Call `next` directly instead:
+
+```tsx
+// Before (v6)
+const handleChange = useObservableEvent((events$: Observable<ChangeEvent<HTMLInputElement>>) =>
+  events$.pipe(
+    map((e) => e.currentTarget.value),
+    tap((value) => text$.next(value)),
+  ),
+)
+// <input onChange={handleChange} />
+
+// After (v7)
+// <input onChange={(event) => text$.next(event.currentTarget.value)} />
+```
+
+### Side-effect-only pipelines
+
+Pipelines with no rendered output (analytics, persistence, …) subscribe in an effect; the handler stays a plain `next` call:
+
+```tsx
+// Before (v6)
+const handleSave = useObservableEvent((term$) => term$.pipe(concatMap((term) => saveSearch(term))))
+
+// After (v7)
+const [saves$] = useState(() => new Subject<string>())
+useEffect(() => {
+  const subscription = saves$.pipe(concatMap((term) => saveSearch(term))).subscribe()
+  return () => subscription.unsubscribe()
+}, [saves$])
+const handleSave = (term: string) => saves$.next(term)
+```
+
+### Semantics to be aware of
+
+- `useObservableEvent` subscribed its pipeline in an effect after mount, so events fired before that were dropped. A `Subject` read through the hooks starts its live subscription on commit as well, and event handlers can only fire after mount — no change in practice.
+- The returned handler was referentially stable. An inline `(v) => subject$.next(v)` is a new function per render; if a memoized child needs a stable callback, wrap it in `useCallback` or pass the subject itself down.
+
+See [Handling events](https://react-rx-git-next.sanity.dev/guide#handling-events) in the v7 guide for the full set of recommended patterns, including `useObservablePromise` for event-driven Suspense data.
