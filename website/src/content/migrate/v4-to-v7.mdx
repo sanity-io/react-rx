@@ -63,9 +63,9 @@ const value$ = useMemo(() => store.get(id).pipe(map(pick)), [store, id])
 const value = useObservable(value$, null)
 ```
 
-## 4. Replace `useObservableEvent` with a `Subject`
+## 4. Replace `useObservableEvent` with `useObservableSubject`
 
-`useObservableEvent` created a `Subject` internally, returned `subject.next` as a callback, and subscribed the pipeline you returned in an effect. In v7 you own the `Subject` directly and read derived streams with the hooks. Pipelines that ended in `tap(setState)` lose the local state mirror entirely:
+`useObservableEvent` created a `Subject` internally, returned a handler that pushed into it, and subscribed the pipeline you returned in an effect. `useObservableSubject` exposes the observable and stable handler directly, and you read derived streams with the other hooks. Pipelines that ended in `tap(setState)` lose the local state mirror entirely:
 
 ```tsx
 // Before (v4)
@@ -79,13 +79,13 @@ const handleChange = useObservableEvent((value$) =>
 // <input onChange={(event) => handleChange(event.currentTarget.value)} />
 
 // After (v7) — the derived stream is the state
-const [input$] = useState(() => new Subject<string>())
+const [input$, handleChange] = useObservableSubject<string>()
 const value$ = useMemo(() => input$.pipe(map((value) => Number(value))), [input$])
-const value = useObservable(value$, 1)
-// <input onChange={(event) => input$.next(event.currentTarget.value)} />
+const value = useSyncObservable(value$, 1)
+// <input onChange={(event) => handleChange(event.currentTarget.value)} />
 ```
 
-Handlers that only forwarded into an existing `Subject` become a plain `next` call; side-effect-only pipelines (analytics, persistence) subscribe in an effect. The [v6 to v7 guide](/migrate/v6-to-v7#useobservableevent-is-removed) walks through each shape, and [Handling events](https://react-rx-git-next.sanity.dev/guide#handling-events) in the v7 guide covers the recommended patterns. The returned handler used to be referentially stable; an inline `(v) => input$.next(v)` is not, so wrap it in `useCallback` or pass the subject down when a memoized child needs a stable callback.
+Handlers that only forwarded into an existing `Subject` become a plain `next` call; side-effect-only pipelines (analytics, persistence) subscribe the observable returned by `useObservableSubject` in an effect. The [v6 to v7 guide](/migrate/v6-to-v7#useobservableevent-is-removed) walks through each shape, and [Handling events](https://react-rx-git-next.sanity.dev/guide#handling-events) in the v7 guide covers the recommended patterns. The observable, handler, and tuple returned by `useObservableSubject` are stable across re-renders.
 
 ## 5. Optional: Suspense data with `useObservablePromise`
 
