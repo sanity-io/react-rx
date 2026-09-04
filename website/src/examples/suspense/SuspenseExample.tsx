@@ -137,9 +137,7 @@ export default function App() {
         value={keyword}
         placeholder="Type a keyword"
         onChange={(event) =>
-          keyword$.next(
-            event.currentTarget.value,
-          )
+          keyword$.next(event.currentTarget.value)
         }
       />
       <div
