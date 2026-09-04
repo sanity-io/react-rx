@@ -6,6 +6,7 @@ import {
   pathnameToApiPath,
   persistLatency,
   isApiPath,
+  realisticLatency,
   type ApiDebugState,
   type ApiPath,
   type DebuggingState,
@@ -31,9 +32,9 @@ export function setEndpointLatency(path: ApiPath, latency: EndpointLatency): voi
   updatePath(path, {latency})
 }
 
-export function applyEndpointDelay(path: ApiPath): Promise<void> {
-  const latency = debuggingState[path].latency
-  return latency.mode === 'real' ? delay('real') : delay(latency.ms)
+export function applyEndpointDelay(path: ApiPath, requestId: string): Promise<void> {
+  const tracked = debuggingState[path].requests.find((request) => request.id === requestId)
+  return delay(tracked?.latency.ms ?? debuggingState[path].latency.ms)
 }
 
 export function trackRequestStart(request: Request, requestId: string): void {
@@ -42,14 +43,22 @@ export function trackRequestStart(request: Request, requestId: string): void {
   if (path == null) {
     return
   }
+  const latency = debuggingState[path].latency
   const debugRequest: DebugRequest = {
     id: requestId,
     label: `${request.method} ${url.pathname}`,
     start: Date.now(),
-    latency: debuggingState[path].latency,
+    latency,
   }
   inFlight.set(requestId, path)
-  updatePath(path, {requests: [...debuggingState[path].requests, debugRequest]})
+  const requests = [...debuggingState[path].requests, debugRequest]
+  if (latency.mode === 'real') {
+    const nextLatency = realisticLatency()
+    persistLatency(path, nextLatency)
+    updatePath(path, {latency: nextLatency, requests})
+    return
+  }
+  updatePath(path, {requests})
 }
 
 export function trackRequestEnd(requestId: string): void {

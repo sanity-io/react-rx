@@ -86,20 +86,3 @@ input[type='range']:disabled {
   will-change: transform;
   background: #00bc7d;
 }
-
-.network-progress-indeterminate-bar {
-  position: absolute;
-  inset: 0;
-  width: 40%;
-  background: #00bc7d;
-  animation: network-indeterminate 1.1s ease-in-out infinite;
-}
-
-@keyframes network-indeterminate {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(350%);
-  }
-}

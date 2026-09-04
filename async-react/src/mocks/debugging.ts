@@ -2,6 +2,25 @@ export type ApiPath = '/api/lessons' | '/api/lesson/:id/toggle'
 
 export type EndpointLatency = {mode: 'fixed' | 'real'; ms: number}
 
+/** @see https://github.com/mswjs/msw/blob/49d9d47f613b072f8d20e1a025feaee7c5382b2b/src/core/delay.ts */
+const MIN_SERVER_RESPONSE_TIME = 100
+const MAX_SERVER_RESPONSE_TIME = 400
+
+/**
+ * Browser half of MSW's `getRealisticResponseTime()`.
+ * @see https://github.com/mswjs/msw/blob/49d9d47f613b072f8d20e1a025feaee7c5382b2b/src/core/delay.ts#L14-L17
+ */
+function getRealisticResponseTime(): number {
+  return Math.floor(
+    Math.random() * (MAX_SERVER_RESPONSE_TIME - MIN_SERVER_RESPONSE_TIME) +
+      MIN_SERVER_RESPONSE_TIME,
+  )
+}
+
+export function realisticLatency(): EndpointLatency {
+  return {mode: 'real', ms: getRealisticResponseTime()}
+}
+
 export interface DebugRequest {
   id: string
   label: string
@@ -56,7 +75,8 @@ function parseStoredLatency(raw: string | null): EndpointLatency {
 }
 
 function storedLatency(path: ApiPath): EndpointLatency {
-  return parseStoredLatency(localStorage.getItem(path))
+  const stored = parseStoredLatency(localStorage.getItem(path))
+  return stored.mode === 'real' ? realisticLatency() : stored
 }
 
 export function persistLatency(path: ApiPath, latency: EndpointLatency): void {
