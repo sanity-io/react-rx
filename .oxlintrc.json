@@ -56,7 +56,11 @@
       "rules": {
         "typescript/no-deprecated": [
           "error",
-          {"allow": [{"from": "file", "name": ["useObservable", "useObservableEvent", "useSyncObservable"]}]}
+          {
+            "allow": [
+              {"from": "file", "name": ["useObservable", "useObservableEvent", "useSyncObservable"]}
+            ]
+          }
         ]
       }
     }
