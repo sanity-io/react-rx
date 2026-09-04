@@ -1,4 +1,3 @@
-/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {act, render, renderHook} from '@testing-library/react'
 import {startTransition, useMemo} from 'react'
 import {renderToString} from 'react-dom/server'
@@ -72,33 +71,10 @@ test('should not return undefined during render if initial value is given', () =
   expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
 })
 
-test('should not return undefined during render if observable is sync', () => {
-  const observable = of('initial value')
-
-  const returnedValues: unknown[] = []
-  function ObservableComponent() {
-    const observedValue = useObservable(observable)
-    returnedValues.push(observedValue)
-    return <>{observedValue}</>
-  }
-  render(<ObservableComponent />)
-  expect(returnedValues).toEqual(expect.arrayContaining(['initial value']))
-})
-
-test('should return undefined during first render if observable is async', () => {
-  const observable = scheduled('async value', asyncScheduler)
-
-  const returnedValues: unknown[] = []
-  function ObservableComponent() {
-    const observedValue = useObservable(observable)
-    returnedValues.push(observedValue)
-    return <>{observedValue}</>
-  }
-  render(<ObservableComponent />)
-  expect(returnedValues).toEqual(expect.arrayContaining([undefined]))
-})
-
-test('should have sync values from an observable as initial value', () => {
+test('a sync emission replaces an explicit undefined initialValue right after mount', () => {
+  // The observable is never subscribed during render: the first render shows the (undefined)
+  // initialValue, and the store subscription on commit delivers the sync emission before
+  // renderHook returns.
   const observable = of('something sync')
   const {result} = renderHook(() => useObservable(observable, undefined))
   expect(result.current).toBe('something sync')
@@ -267,11 +243,10 @@ test('falls back to the live value when the observable identity changes (deferra
   const timelineLengthBeforeSwitch = renderTimeline.length
   rerender(<ObservableComponent observable={subjectB} />)
 
-  // The render right after the identity change must reflect the new observable —
-  // replacement observables are warmed up during render even with an initialValue, so
-  // subjectB's synchronous emission is available immediately. It never shows the deferred
-  // snapshot belonging to the previous observable.
-  expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('initial for b')
+  // The switch render never subscribes subjectB — it falls back to the initialValue, never the
+  // deferred snapshot belonging to the previous observable. subjectB's synchronous emission
+  // arrives right after the commit and settles the timeline.
+  expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('fallback')
   expect(renderTimeline.slice(timelineLengthBeforeSwitch)).not.toContain('value for a')
   expect(renderTimeline.at(-1)).toBe('initial for b')
 
@@ -281,7 +256,7 @@ test('falls back to the live value when the observable identity changes (deferra
   unmount()
 })
 
-test('identity change without an initialValue renders the new observable synchronous emission immediately (warm-up)', () => {
+test('identity change to a sync-emitting observable: the initialValue renders for the switch pass, the emission lands after its commit', () => {
   const subjectA = new BehaviorSubject('value for a')
   const subjectB = new BehaviorSubject('initial for b')
   const renderTimeline: (string | undefined)[] = []
@@ -296,9 +271,10 @@ test('identity change without an initialValue renders the new observable synchro
   const timelineLengthBeforeSwitch = renderTimeline.length
   rerender(<ObservableComponent observable={subjectB} />)
 
-  // Without an initialValue the warm-up runs during the switch render, so the very first
-  // render after the identity change already shows subjectB's synchronous emission.
-  expect(renderTimeline[timelineLengthBeforeSwitch]).toBe('initial for b')
+  // The replacement is not subscribed during render either, so the switch pass shows the
+  // (undefined) initialValue; the commit-time subscription then delivers subjectB's synchronous
+  // emission. The previous observable's value never renders under the new identity.
+  expect(renderTimeline[timelineLengthBeforeSwitch]).toBeUndefined()
   expect(renderTimeline.slice(timelineLengthBeforeSwitch)).not.toContain('value for a')
   expect(renderTimeline.at(-1)).toBe('initial for b')
 
@@ -455,23 +431,9 @@ test('should return the actual value when the hook is disabled and then re-enabl
   unmount()
 })
 
-test('sync emission wins over an omitted initialValue on the first render (warm-up)', () => {
-  // Without an initialValue the observable is briefly subscribed during render, so the sync
-  // emission is the very first rendered value — never undefined.
-  const returnedValues: unknown[] = []
-  function ObservableComponent() {
-    returnedValues.push(useObservable(of('sync')))
-    return null
-  }
-  render(<ObservableComponent />)
-  expect(returnedValues[0]).toBe('sync')
-  expect(returnedValues.every((v) => v === 'sync')).toBe(true)
-})
-
-test('an initialValue skips the render-phase warm-up: the initialValue paints first, the sync emission follows after mount', () => {
-  // With an initialValue there is nothing to warm up for — the source is first subscribed by
-  // the live store subscription on commit, keeping subscribe-time side effects out of the
-  // render phase.
+test('the observable is never subscribed during render: the initialValue paints first, the sync emission follows after mount', () => {
+  // The source is first subscribed by the live store subscription on commit, keeping
+  // subscribe-time side effects out of the render phase.
   let subscriptions = 0
   const source = defer(() => {
     subscriptions++
@@ -491,10 +453,9 @@ test('an initialValue skips the render-phase warm-up: the initialValue paints fi
   expect(subscriptions).toBe(1)
 })
 
-test('disabled with an initialValue never subscribes the source (zero subscriptions)', () => {
-  // Without an initialValue, `disabled` still runs the warm-up subscription; with one, there
-  // is no render-phase warm-up and `disabled` pauses the store subscription — so nothing ever
-  // subscribes the source.
+test('disabled never subscribes the source (zero subscriptions)', () => {
+  // Nothing subscribes during render, and `disabled` pauses the store subscription — so nothing
+  // ever subscribes the source.
   let subscriptions = 0
   const source = defer(() => {
     subscriptions++
@@ -506,31 +467,39 @@ test('disabled with an initialValue never subscribes the source (zero subscripti
   unmount()
 })
 
-test('a consumer without an initialValue warms up a shared entry created by an initialValue consumer', () => {
-  // `WithInitial` renders first and creates the shared cache entry without warming it up;
-  // `WithoutInitial` relies on sync emissions being available on its first render, so the
-  // cache hit warms the entry up on its behalf.
-  const source = of('sync')
-  const withInitial: unknown[] = []
-  const withoutInitial: unknown[] = []
-  function WithInitial() {
-    withInitial.push(useObservable(source, 'initial'))
+test('a consumer that swaps to an observable already live elsewhere reads its last emission on the swap render', () => {
+  // `Keeper` holds a live subscription to `source`, so the shared cache entry has emitted.
+  // When `Swapper` swaps identities to `source`, its swap render reads the entry's last
+  // emission straight from the cache — no subscription during render, and no initialValue
+  // flash for observables that are already live.
+  const subject = new BehaviorSubject('first value')
+  const source = new BehaviorSubject('sync')
+  const swapper: unknown[] = []
+  function Keeper() {
+    useObservable(source, 'keeper initial')
     return null
   }
-  function WithoutInitial() {
-    withoutInitial.push(useObservable(source))
+  function Swapper({observable}: {observable: Observable<string>}) {
+    swapper.push(useObservable(observable, 'swapper initial'))
     return null
   }
-  render(
+  const {rerender} = render(
     <>
-      <WithInitial />
-      <WithoutInitial />
+      <Keeper />
+      <Swapper observable={subject} />
     </>,
   )
-  expect(withInitial[0]).toBe('initial')
-  expect(withoutInitial[0]).toBe('sync')
-  // Once the entry is warm, the initialValue consumer reads the emitted snapshot too.
-  expect(withInitial.at(-1)).toBe('sync')
+  expect(swapper.at(-1)).toBe('first value')
+
+  const swapIndex = swapper.length
+  rerender(
+    <>
+      <Keeper />
+      <Swapper observable={source} />
+    </>,
+  )
+  expect(swapper[swapIndex]).toBe('sync')
+  expect(swapper.slice(swapIndex)).not.toContain('swapper initial')
 })
 
 test('remount shows the cached snapshot immediately, never the initialValue', async () => {
@@ -607,7 +576,30 @@ test('store mutation inside startTransition still applies (uSES updates cannot b
   expect(result.current).toBe('x')
 })
 
-test('initialValue initializers resolve once per hook instance, like useState, so a fresh object per call cannot loop', () => {
+test('initialValue factories run once per hook instance, like useState initializers', () => {
+  const values$ = new Subject<string>()
+  let factoryCalls = 0
+  const factory = () => {
+    factoryCalls++
+    return 'initial'
+  }
+
+  const {result, rerender} = renderHook(() => useObservable(values$, factory))
+  expect(factoryCalls).toBe(1)
+  expect(result.current).toBe('initial')
+
+  rerender()
+  expect(factoryCalls).toBe(1)
+
+  act(() => values$.next('emitted'))
+  expect(result.current).toBe('emitted')
+  expect(factoryCalls).toBe(1)
+})
+
+test('initializers returning fresh objects render without looping, and the reference is stable', () => {
+  // Regression: the initializer used to run on every pre-emission getSnapshot
+  // read. A fresh object per call made useSyncExternalStore's consistency
+  // check see a store change on every render, looping until React aborted.
   const values$ = new Subject<{label: string}>()
   let initializerCalls = 0
 
@@ -619,38 +611,15 @@ test('initialValue initializers resolve once per hook instance, like useState, s
   )
   expect(initializerCalls).toBe(1)
   expect(result.current).toEqual({label: 'initial'})
-  const initial = result.current
+  const first = result.current
 
   rerender()
-  expect(result.current).toBe(initial)
+  expect(result.current).toBe(first)
   expect(initializerCalls).toBe(1)
-
-  act(() => values$.next({label: 'emitted'}))
-  expect(result.current).toEqual({label: 'emitted'})
-  expect(initializerCalls).toBe(1)
-})
-
-test('the initialValue argument is read on the first render only, like useState', () => {
-  const values$ = new Subject<string>()
-  const useValue = (initialValue: string | undefined) => useObservable(values$, initialValue)
-
-  const withoutInitial = renderHook(useValue, {initialProps: undefined})
-  expect(withoutInitial.result.current).toBeUndefined()
-  withoutInitial.rerender('later')
-  expect(withoutInitial.result.current).toBeUndefined()
-
-  const withInitial = renderHook(useValue, {initialProps: 'initial'})
-  expect(withInitial.result.current).toBe('initial')
-  withInitial.rerender(undefined)
-  expect(withInitial.result.current).toBe('initial')
-
-  act(() => values$.next('emitted'))
-  expect(withoutInitial.result.current).toBe('emitted')
-  expect(withInitial.result.current).toBe('emitted')
 })
 
 test('SSR renders the initialValue even when the observable emits synchronously', () => {
-  // With an initialValue there is no render-phase warm-up, so the server never sees the sync
+  // The observable is never subscribed during render, so the server never sees the sync
   // emission: it paints the resolved initialValue — exactly what the client's first paint
   // will show.
   const observable = of('server-sync')
@@ -661,9 +630,9 @@ test('SSR renders the initialValue even when the observable emits synchronously'
   expect(renderToString(<ObservableComponent />)).toBe('initial')
 })
 
-test('SSR with an initialValue never subscribes the source', () => {
-  // There is no commit phase on the server, and with an initialValue no warm-up either —
-  // subscribe-time side effects never run during server rendering.
+test('SSR never subscribes the source', () => {
+  // There is no commit phase on the server and no subscription during render — subscribe-time
+  // side effects never run during server rendering.
   let subscriptions = 0
   const source = defer(() => {
     subscriptions++
@@ -686,34 +655,29 @@ test('SSR with an async observable renders the resolved initialValue', () => {
   expect(renderToString(<ObservableComponent />)).toBe('initial value')
 })
 
-test('SSR without an initialValue no longer throws', () => {
-  // Contrast with useSyncObservable, which still throws without getServerSnapshot.
-  expect(renderToString(<SSRSyncEmit />)).toBe('sync')
-  // Empty output matches the client's first paint (undefined).
-  expect(renderToString(<SSRAsyncNoInitial />)).toBe('')
-})
-
-function SSRSyncEmit() {
-  return <>{useObservable(of('sync'))}</>
-}
-
-function SSRAsyncNoInitial() {
-  return <>{useObservable(scheduled('async', asyncScheduler))}</>
-}
-
-test('SSR surfaces synchronous observable errors when no initialValue is given', () => {
-  // Without an initialValue the warm-up captures the error during the server render, and the
-  // snapshot-based getServerSnapshot fails the server render with the observable's error.
-  const observable = throwError(() => new Error('boom'))
-  function ObservableComponent() {
-    return <>{useObservable(observable)}</>
+test('SSR with an explicit undefined initialValue renders nothing and never subscribes', () => {
+  // The server never subscribes the observable — even a synchronous emission is not picked up.
+  // Empty output matches the client's first paint (the undefined initialValue).
+  let subscriptions = 0
+  const source = defer(() => {
+    subscriptions++
+    return of('sync')
+  })
+  function SSRSyncEmit() {
+    return <>{useObservable(source, undefined)}</>
   }
 
-  expect(() => renderToString(<ObservableComponent />)).toThrow('boom')
+  expect(renderToString(<SSRSyncEmit />)).toBe('')
+  expect(subscriptions).toBe(0)
+  expect(renderToString(<SSRAsyncUndefined />)).toBe('')
 })
 
-test('SSR with an initialValue renders it and leaves a synchronous error to the client subscription', () => {
-  // With an initialValue there is no render-phase warm-up, so nothing can throw on the
+function SSRAsyncUndefined() {
+  return <>{useObservable(scheduled('async', asyncScheduler), undefined)}</>
+}
+
+test('SSR renders the initialValue and leaves a synchronous error to the client subscription', () => {
+  // The observable is never subscribed during server rendering, so nothing can throw on the
   // server: it paints the initialValue, and the error surfaces on the client once the store
   // subscription starts after mount.
   const observable = throwError(() => new Error('boom'))

@@ -113,10 +113,6 @@ importers:
         version: 8.2.2(@types/node@26.4.0)(jiti@2.7.0)(yaml@2.9.0)
 
   packages/react-rx:
-    dependencies:
-      use-effect-event:
-        specifier: ^2.0.4
-        version: 2.0.4(react@19.2.8)
     devDependencies:
       '@sanity/tsconfig':
         specifier: ^2.2.1
@@ -4922,11 +4918,6 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
-
-  use-effect-event@2.0.4:
-    resolution: {integrity: sha512-il5ezAwTIxg1dr+eXP+1SS1EpXe6IFy1oADvGxmiCNGCDX1X+ygERRDOFoCyzc+r6ktqag3VITmrw1ZPfoig1g==}
-    peerDependencies:
-      react: ^18.3 || ^19.0.0-0
 
   use-error-boundary@2.0.6:
     resolution: {integrity: sha512-AWCVKSAanLe6R/on/ZkHYtGKfXs8BQX6z/TUGYqtvkajLqQyrGKJJscbahtq8OyN8L3LqTRjJWx4gCOLmfIObw==}
@@ -10013,10 +10004,6 @@ snapshots:
       browserslist: 4.28.8
       escalade: 3.2.0
       picocolors: 1.1.1
-
-  use-effect-event@2.0.4(react@19.2.8):
-    dependencies:
-      react: 19.2.8
 
   use-error-boundary@2.0.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:

@@ -1,10 +1,9 @@
-import {ChangeEvent, Suspense, use} from 'react'
+import {Suspense, use} from 'react'
 import {
   useObservable,
-  useObservableEvent,
   useSyncObservable,
 } from 'react-rx'
-import {map, Subject, tap} from 'rxjs'
+import {Subject} from 'rxjs'
 
 // Shared by the input and both panels. Each hook file has its own
 // WeakMap, so dual reads subscribe twice — fine for this demo.
@@ -129,15 +128,6 @@ function DeferredPanel() {
 export default function App() {
   // Controlled input value must update synchronously.
   const keyword = useSyncObservable(keyword$, '')
-  const handleInput = useObservableEvent<
-    ChangeEvent<HTMLInputElement>,
-    any
-  >((input$) =>
-    input$.pipe(
-      map((e) => e.currentTarget.value),
-      tap((value) => keyword$.next(value)),
-    ),
-  )
 
   return (
     <div>
@@ -146,7 +136,9 @@ export default function App() {
         style={{width: '100%', marginBottom: 12}}
         value={keyword}
         placeholder="Type a keyword"
-        onChange={handleInput}
+        onChange={(event) =>
+          keyword$.next(event.currentTarget.value)
+        }
       />
       <div
         style={{

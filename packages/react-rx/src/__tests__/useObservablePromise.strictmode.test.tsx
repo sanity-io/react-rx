@@ -29,16 +29,20 @@ test('StrictMode double effects do not double-subscribe beyond the share contrac
     return from(promise)
   })
 
-  function Child() {
-    const value = use(useObservablePromise(observable))
-    return <div data-testid="value">{value}</div>
+  // The hook caller must commit for the fetch to start, so it cannot be the
+  // component that suspends: keep use() in a child below the boundary.
+  function Owner() {
+    const p = useObservablePromise(observable)
+    return (
+      <Suspense fallback={<div>loading</div>}>
+        <Reader promise={p} />
+      </Suspense>
+    )
   }
 
   await renderAsync(
     <StrictMode>
-      <Suspense fallback={<div>loading</div>}>
-        <Child />
-      </Suspense>
+      <Owner />
     </StrictMode>,
   )
 

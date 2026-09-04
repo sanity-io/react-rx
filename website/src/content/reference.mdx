@@ -4,35 +4,34 @@
 
 A React hook that returns the current/latest value from an observable. Store updates are **deferred by default** via [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue): urgent renders keep the previous value while a background render catches up. That makes it safe to suspend on the returned value without replacing already-revealed UI with a Suspense fallback.
 
-The deferral is **identity-coherent**: unlike a bare `useDeferredValue(useObservable(...))`, the observable identity and its value are deferred as one snapshot, and when the observable identity changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live value — typically the new observable's synchronous emission or the `initialValue` — so the previous identity's value never renders under the new one.
+The deferral is **identity-coherent**: unlike a bare `useDeferredValue(useObservable(...))`, the observable identity and its value are deferred as one snapshot, and when the observable identity changes (e.g. it is memoized on a document id that just changed) the hook falls back to the live value — the `initialValue`, or the new observable's last emission when it is already live elsewhere — so the previous identity's value never renders under the new one.
 
-Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash once a value has been emitted). When no `initialValue` is given, the hook briefly subscribes during render so a synchronous emission (e.g. from `startWith`) is available from the very first render; with an `initialValue` the observable is not subscribed during render — the `initialValue` paints first and the live subscription starts on commit, keeping subscribe-time side effects out of the render phase. Once the hook has received an emission, replacement observables on later renders are warmed during render again — that is what lets components that rebuild the observable on every render settle instead of re-rendering forever; before the first emission (and always while `disabled`), identity churn stays subscription-free. On the server, this hook renders exactly what the client's first paint will show (the resolved `initialValue` when one is provided, else a synchronous emission when there is one, else nothing) and never throws for a missing `initialValue`.
+`initialValue` is **required**: it is what renders until the observable emits. Every value is a valid initial value — `undefined` included, pass it explicitly — and omitting the argument throws during render. Functions act as initializers, exactly like `useState`: pass `() => value` to compute the initial value lazily, and an initializer returning the function when the initial value should be a function itself. When there is no meaningful initial value, use [`useObservablePromise`](#useobservablepromise) instead.
 
-Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs or strict SSR control.
+Mounts, remounts, and `<Activity>` reveals still render the current snapshot synchronously (no initial-value flash once a value has been emitted). The observable is **never subscribed during render** — the `initialValue` paints first and the live subscription starts on commit, keeping subscribe-time side effects out of the render phase. Keep the observable's identity stable across renders (`useMemo`, `useState`, module scope, or React Compiler memoization): like `useSyncExternalStore`'s `subscribe`, an observable rebuilt on every render is re-subscribed on every render, and when it synchronously replays a value that differs from the `initialValue` this forces a render loop. On the server, this hook renders the resolved `initialValue` — exactly what the client's first paint will show — and never subscribes the observable.
+
+Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs.
 
 **Signature**
 
 ```ts
-function useObservable<T>(observable$: Observable<T>): T | undefined
 function useObservable<T>(
   observable$: Observable<T>,
   initialValue: T | (() => T),
   options?: UseObservableOptions,
 ): T
+function useObservable<T, InitialValue>(
+  observable$: Observable<T>,
+  initialValue: InitialValue | (() => InitialValue),
+  options?: UseObservableOptions,
+): T | InitialValue
 
 interface UseObservableOptions {
   disabled?: boolean
 }
 ```
 
-> [!WARNING]
->
-> The overload without `initialValue` is deprecated. v7 removes it and requires the argument.
-> `useObservable(observable$, undefined)` is a drop-in replacement with the same type and, in v6,
-> the same behavior. See the [v6 to v7 migration
-> guide](/migrate/v6-to-v7#initialvalue-is-now-required).
-
-`disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). When no `initialValue` is given the render-phase warm-up subscription still runs; with an `initialValue` there is no warm-up while disabled, so `disabled: true` means zero subscriptions — see the [guide](/guide).
+`disabled` pauses the live subscription (later emissions stop updating the component; the last value is kept). A disabled hook performs no subscriptions at all — `disabled: true` means zero subscriptions until it is re-enabled — see the [guide](/guide).
 
 **Example**
 
@@ -53,27 +52,26 @@ function MyComponent() {
 
 A React hook that returns the current/latest value from an observable **synchronously** via [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore). This is the v4 `useObservable` behavior.
 
-Use it when the value feeds a controlled input (or must stay consistent within the same event), or when you need strict control over server markup: the server renders the resolved `initialValue` and throws without one.
+Use it when the value feeds a controlled input, or must stay consistent within the same event.
+
+`initialValue` is **required** and follows the same rules as [`useObservable`](#useobservable): every value is valid (`undefined` included), functions act as `useState`-style initializers, and omitting the argument throws during render. The server always renders the resolved `initialValue`.
 
 **Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by this hook replaces already-visible content with the nearest Suspense fallback — see the [useSyncExternalStore caveats](https://react.dev/reference/react/useSyncExternalStore#caveats). Compare the two hooks in the [Suspense example](/examples/suspense).
 
 **Signature**
 
 ```ts
-function useSyncObservable<T>(observable$: Observable<T>): T | undefined
 function useSyncObservable<T>(
   observable$: Observable<T>,
   initialValue: T | (() => T),
   options?: UseObservableOptions,
 ): T
+function useSyncObservable<T, InitialValue>(
+  observable$: Observable<T>,
+  initialValue: InitialValue | (() => InitialValue),
+  options?: UseObservableOptions,
+): T | InitialValue
 ```
-
-> [!WARNING]
->
-> The overload without `initialValue` is deprecated. v7 removes it and requires the argument.
-> `useSyncObservable(observable$, undefined)` is a drop-in replacement with the same type and, in
-> v6, the same behavior. See the [v6 to v7 migration
-> guide](/migrate/v6-to-v7#initialvalue-is-now-required).
 
 **Example**
 
@@ -112,7 +110,9 @@ type ObservablePromise<T> = Promise<T> &
   ({status: 'pending'} | {status: 'fulfilled'; value: T} | {status: 'rejected'; reason: unknown})
 ```
 
-The hook does **not** suspend. Pass the returned promise to React's [`use`](https://react.dev/reference/react/use) inside a `<Suspense>` boundary. Suspends until the first emission; later emissions update without re-suspending. Errors reject the promise (Error Boundary). See the [guide](/guide) for `startWith` caveats, `disabled` / `ttl`, and when to prefer `useObservable`.
+The hook does **not** suspend, and mounting renders never subscribe the source: the fetch starts when the component that called the hook commits, when an already-live consumer re-renders with a new observable (so `startTransition` / `useDeferredValue` swaps fetch and commit on their own; see the [Transitions and refetching example](/examples/transitions)), or via [`preloadObservablePromise`](#preloadobservablepromise). Pass the returned promise as a prop to a child component that reads it with React's [`use`](https://react.dev/reference/react/use), with a `<Suspense>` boundary **between** the hook caller and that child — the caller must be able to commit while the child suspends. Never call `use()` on the promise in the same component that called the hook (or without a boundary in between): it suspends on its own pending promise before the fetch can start and deadlocks, the same wrong usage as `use()`-ing a promise created during your own render, and it is not guarded against. Suspends until the first emission; later emissions update without re-suspending. Errors reject the promise (Error Boundary). Hidden `<Activity>` trees calling the hook stay paused until revealed.
+
+Client components only: on the server the observable is never subscribed, so server rendering emits the Suspense fallback and the fetch starts after hydration. react-rx is not a library for React Server Components or server-only flows — see [server rendering in the guide](/guide). Also see the [guide](/guide) for `startWith` caveats, `disabled` / `ttl`, Activity patterns, and when to prefer `useObservable`.
 
 **Example**
 
@@ -138,9 +138,9 @@ function Pre({promise}: {promise: Promise<unknown>}) {
 
 ## preloadObservablePromise()
 
-Warm the `useObservablePromise` cache outside of rendering (for example on `mouseenter` or in a route loader). Not a hook — callable anywhere. Returns the same promise instance the hook would return for that observable.
+Warm the `useObservablePromise` cache before any consumer is live (for example on `mouseenter`, in a route loader, or ahead of a transition swap so it commits with no pending period). Not a hook — callable anywhere. Returns the same promise instance the hook would return for that observable.
 
-Calling it starts the source subscription immediately. Pending entries are never timed out, so a never-emitting / hung observable keeps both the promise and the subscription alive until it settles. Prefer RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when a preload can stall.
+Calling it starts the source subscription immediately, before any component has committed. On the server it is a no-op: it returns an inert, forever-pending promise and subscribes nothing (react-rx never subscribes observables on the server), so preloads in shared/isomorphic code only take effect in the browser. Pending entries are never timed out, so a never-emitting / hung observable keeps both the promise and the subscription alive until it settles. Prefer RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when a preload can stall.
 
 **Signature**
 
@@ -153,61 +153,6 @@ function preloadObservablePromise<T>(
 
 Default `ttl` is `5000` (longer than the hook default) so a hover-warmed value survives until click/navigation.
 
-## useObservableEvent()
+## What happened to useObservableEvent()?
 
-> [!WARNING]
->
-> Deprecated. v7 removes `useObservableEvent`. Use a `Subject` you own instead, as shown in
-> [Handling events](/guide#handling-events). See the [v6 to v7 migration
-> guide](/migrate/v6-to-v7#useobservableevent-is-removed).
-
-A React hook that turns an event handler into an observable stream. Pass a function that receives an observable of events and returns an observable of side effects; the hook returns a stable callback you can attach to DOM or component event props.
-
-When the returned callback is invoked, its single argument is emitted into the observable. The pipeline you return is subscribed for the lifetime of the component, and unsubscribed on unmount.
-
-**Signature**
-
-```ts
-function useObservableEvent<T, U>(
-  handleEvent: (arg: Observable<T>) => Observable<U>,
-): (arg: T) => void
-```
-
-**Example**
-
-```tsx
-import {useState} from 'react'
-import {useObservableEvent} from 'react-rx'
-import {filter, map, tap} from 'rxjs'
-
-const ShowSliderValue = () => {
-  const [value, setValue] = useState(1)
-  const handleChange = useObservableEvent((value$) =>
-    value$.pipe(
-      // Ignore nullish values
-      filter(nonNullable),
-      // Cast to number
-      map((value) => Number(value)),
-      // Update local state
-      tap(setValue),
-    ),
-  )
-
-  return (
-    <>
-      <input
-        type="range"
-        value={value}
-        onChange={(event) => handleChange(event.target.value)}
-        min={1}
-        max={10}
-      />
-      <div>Value is: {value}</div>
-    </>
-  )
-}
-
-function nonNullable<T>(v: T): v is NonNullable<T> {
-  return v != null
-}
-```
+It was removed in v7. Push events into an RxJS `Subject` from your event handler and read the derived stream with one of the hooks — see [Handling events](/guide#handling-events) for the recommended patterns and the [v6 → v7 migration guide](/migrate/v6-to-v7) for a before/after.

@@ -1,5 +1,6 @@
 export default {
   'simple': 'Simple',
+  'event-handlers': 'Event handlers',
   'counters': 'Advanced counters',
   'errors': 'Error handling',
   'todo-app': 'Todo app',
@@ -9,4 +10,5 @@ export default {
   'suspense': 'Suspense & deferred values',
   'data-fetching': 'Suspense data fetching',
   'activity': 'Activity and preload',
+  'transitions': 'Transitions and refetching',
 }

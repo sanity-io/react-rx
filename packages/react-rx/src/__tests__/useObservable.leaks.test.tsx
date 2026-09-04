@@ -1,6 +1,4 @@
-/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {act, render} from '@testing-library/react'
-import {renderToString} from 'react-dom/server'
 import {defer, map, Observable, of, throwError, timer} from 'rxjs'
 import {expect, test} from 'vitest'
 
@@ -9,20 +7,14 @@ import {useObservable} from '../useObservable'
 /**
  * Regression tests: `useObservable` keeps a module-level `WeakMap<Observable, CacheRecord>` where each
  * record retains the last snapshot (or error) produced by the source. Records are only ever removed by
- * `finalize(() => cache.delete(observable))` in the piped observable.
+ * `finalize(() => cache.delete(observable))` in the piped observable, which runs when the source
+ * completes or errors.
  *
- * The eager subscription inside `useMemo` used to run BEFORE `cache.set(observable, entry)`. For sources
- * that terminate (complete or error) synchronously upon subscription, `finalize` fired during that eager
- * subscription — while the entry was not yet in the cache — so the delete was a no-op and the entry was
- * inserted right after, with nothing left to evict it. A later committed mount would re-trigger teardown
- * through its store subscription and clean the entry up, but that never happens for server renders,
- * disabled hooks (which still warm up via the eager subscribe, but never establish a store subscription),
- * or renders that throw before commit (synchronously erroring sources). In those cases the entry retained
- * the last snapshot/error for as long as the source observable object itself stayed alive, and a
- * poisoned entry replayed its stale error on later mounts instead of re-subscribing.
- *
- * Note: the eager warm-up subscription only runs for consumers without an `initialValue` — with one,
- * the source is never subscribed during render — so these scenarios omit the `initialValue`.
+ * For long-lived source observables (e.g. declared at module scope in an app) that eviction is what
+ * keeps a terminated source's last snapshot or error from being retained forever: the WeakMap key —
+ * the source — stays strongly reachable, so only deleting the entry releases what it holds. A
+ * poisoned entry that survived termination would also replay its stale error on later mounts
+ * instead of re-subscribing the source.
  */
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -44,60 +36,31 @@ async function forceGC() {
   }
 }
 
-test('releases the last snapshot of a synchronously completing observable used by a disabled hook', async () => {
+test('releases the last snapshot of a synchronously completing observable after unmount', async () => {
   let snapshotRef: WeakRef<object> | undefined
   // Long-lived source, as if declared at module scope in an app. It emits a fresh object per
   // subscription and completes synchronously (like a replayed+completed cache observable would).
   const source = defer(() => {
     const snapshot = {payload: 'x'.repeat(1024)}
     snapshotRef = new WeakRef(snapshot)
-    return of(snapshot)
+    return of<unknown>(snapshot)
   })
 
   function ObservableComponent() {
-    useObservable(source, undefined, {disabled: true})
+    useObservable(source, undefined)
     return null
   }
 
+  // The commit-time store subscription delivers the snapshot; the synchronous completion runs
+  // `finalize` right away, which must find the entry in the cache and evict it.
   const {unmount} = render(<ObservableComponent />)
   unmount()
 
   await forceGC()
 
-  // While disabled, the hook (given no initialValue) still performs its eager render-phase warm-up
-  // subscription (disabled only pauses the live store subscription), but nothing re-triggers teardown
-  // after that — so the entry created during render must already have been evicted, releasing the
-  // snapshot.
   expect(snapshotRef!.deref()).toBeUndefined()
-  // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
-  // only have been released through eviction, not by the key getting collected.
-  expect(source).toBeInstanceOf(Observable)
-})
-
-test('releases the last snapshot of a synchronously completing observable after server-side rendering', async () => {
-  let snapshotRef: WeakRef<object> | undefined
-  const source = defer(() => {
-    const snapshot = {payload: 'x'.repeat(1024)}
-    snapshotRef = new WeakRef(snapshot)
-    return of(snapshot)
-  })
-
-  function ObservableComponent() {
-    useObservable(source)
-    return null
-  }
-
-  // On the server there is no commit phase and no store subscription, only the eager subscription made
-  // during render when no initialValue is given — the cache entry must not outlive it, or every unique
-  // observable rendered by a long-lived server process would keep its last snapshot alive. (With an
-  // initialValue the source is never subscribed during server rendering at all.)
-  renderToString(<ObservableComponent />)
-
-  await forceGC()
-
-  expect(snapshotRef!.deref()).toBeUndefined()
-  // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot can
-  // only have been released through eviction, not by the key getting collected.
+  // Keep the source — the WeakMap key — strongly reachable across the GC above, so the snapshot
+  // can only have been released through eviction, not by the key getting collected.
   expect(source).toBeInstanceOf(Observable)
 })
 
@@ -110,14 +73,12 @@ test('re-subscribes a synchronously erroring observable on a later mount instead
   })
 
   function ObservableComponent() {
-    return <>{useObservable(source)}</>
+    return <>{useObservable(source, 'initial')}</>
   }
 
-  // First mount (no initialValue, so the warm-up runs): the source errors synchronously during the
-  // eager render-phase subscription, so the render throws before commit and no store subscription
-  // ever runs that could clean up the cache entry created for the errored source. The source keeps
-  // failing for the whole mount, which keeps the test agnostic to how many render attempts React
-  // makes before surfacing the error.
+  // The error is captured by the commit-time store subscription and thrown from `getSnapshot` on
+  // the forced re-render. The source keeps failing for the whole mount, which keeps the test
+  // agnostic to how many render attempts React makes before surfacing the error.
   expect(() => render(<ObservableComponent />)).toThrow('transient error')
   const failedSubscriptions = subscriptions
   expect(failedSubscriptions).toBeGreaterThan(0)
@@ -133,10 +94,9 @@ test('re-subscribes a synchronously erroring observable on a later mount instead
   expect(container.textContent).toBe('recovered')
 })
 
-// Control: for a source that terminates asynchronously, the entry was in the cache when `finalize` ran
-// even before the fix, so this passes either way. Its job is to prove the GC harness can actually
-// collect these snapshots in this environment — if this control fails, failures in the retention tests
-// above point at the harness or environment rather than at a leak regression.
+// Control: proves the GC harness can actually collect these snapshots in this environment — if
+// this control fails, failures in the retention tests above point at the harness or environment
+// rather than at a leak regression.
 test('releases the last snapshot of an asynchronously completing observable after unmount', async () => {
   let snapshotRef: WeakRef<object> | undefined
   const source = defer(() =>

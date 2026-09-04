@@ -20,14 +20,15 @@ In v4, `useObservable` was built on [`useSyncExternalStore`](https://react.dev/r
 v5 makes that the library default:
 
 - **`useObservable`** — store updates are deferred with `useDeferredValue`. Urgent renders keep the previous value; a background render catches up. Mounts, remounts, and `<Activity>` reveals still show the live snapshot (no initial-value flash). The deferral is identity-coherent: when the observable identity changes, the hook falls back to the live value so the previous observable's value never renders under the new one — a stale-value bug a hand-rolled `useDeferredValue(useObservable(...))` wrapper is prone to.
-- **`useSyncObservable`** — exact v4 synchronous behavior, including the strict server snapshot (`initialValue` on the server, throws without one).
+- **`useSyncObservable`** — exact v4 synchronous behavior, including the strict server snapshot (the server renders the resolved `initialValue`).
 
 ### What you may notice
 
 - **Controlled inputs** can lag or lose caret position under load if they keep using `useObservable` — switch those reads to `useSyncObservable`.
 - The **rendered value can briefly trail the store**, so imperative reads or equality checks against it can observe a stale value. Keep a sync read for write-path equality when needed.
 - **Render-count / test assertions** may see extra passes: one Object.is bail-out pass on mount when the snapshot is defined, and an urgent-plus-deferred pair per emission.
-- **SSR** no longer throws when `initialValue` is omitted: without one, the server renders a synchronous emission (or nothing). Non-deterministic sync emissions can then surface hydration mismatches, and synchronously erroring observables fail the server render instead of exploding at hydration. With an `initialValue` the server keeps painting it, as in v4 — since v6 the observable is not subscribed during render at all in that case.
+- **`initialValue` is required since v7** for both hooks: any value works (`undefined` included — pass it explicitly; functions act as `useState`-style initializers), and omitting the argument throws during render — on the server too. The observable is never subscribed during render at all, so the server always paints the resolved `initialValue`. Observables without a meaningful initial value belong to `useObservablePromise` instead.
+- **Observable identities must be stable since v7** (`useMemo`, `useState`, module scope, or React Compiler memoization). There is no render-phase warm-up anymore: a fresh identity always renders the `initialValue` first and is re-subscribed at commit, so rebuilding the observable on every render over a source that synchronously replays a different value loops forever — the same stable-identity contract as `useSyncExternalStore`'s `subscribe`.
 
 ### Recommended: targeted migration
 
@@ -49,8 +50,8 @@ Also remove redundant wrappers that are now built in:
 // Before
 const results = useDeferredValue(useObservable(results$))
 
-// After
-const results = useObservable(results$)
+// After (initialValue is required since v7 — undefined must be passed explicitly)
+const results = useObservable(results$, undefined)
 ```
 
 ### Fallback: mechanical rename

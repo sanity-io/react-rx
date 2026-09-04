@@ -1,15 +1,14 @@
 import {use} from 'react'
 import {type ObservablePromise} from 'react-rx'
 
-export default function TabPanel({
+import {type Profile} from './api'
+
+export default function ProfileCard({
   promise,
 }: {
-  promise: ObservablePromise<{
-    tab: string
-    body: string
-  }>
+  promise: ObservablePromise<Profile>
 }) {
-  const data = use(promise)
+  const profile = use(promise)
 
   return (
     <div
@@ -19,8 +18,8 @@ export default function TabPanel({
         borderRadius: 8,
       }}
     >
-      <strong>{data.tab}</strong>
-      <p>{data.body}</p>
+      <strong>{profile.name}</strong>
+      <p>{profile.bio}</p>
     </div>
   )
 }

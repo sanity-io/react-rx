@@ -4,7 +4,10 @@ import {
   useMemo,
   useState,
 } from 'react'
-import {preloadObservablePromise} from 'react-rx'
+import {
+  preloadObservablePromise,
+  useObservablePromise,
+} from 'react-rx'
 
 import {fetchTab$} from './api'
 import TabPanel from './TabPanel'
@@ -16,6 +19,61 @@ const TABS = [
   'Photos',
   'Settings',
 ] as const
+
+function Spinner() {
+  return <p style={{opacity: 0.7}}>🌀 Loading…</p>
+}
+
+/**
+ * The hook caller renders the Suspense
+ * boundary below itself: it commits even while
+ * the panel suspends, and that commit is what
+ * starts the fetch.
+ */
+function ActiveTab({tab}: {tab: string}) {
+  const data$ = useMemo(
+    () => fetchTab$(tab),
+    [tab],
+  )
+  const promise = useObservablePromise(data$)
+  return (
+    <Suspense fallback={<Spinner />}>
+      <TabPanel promise={promise} />
+    </Suspense>
+  )
+}
+
+/**
+ * Activity pre-render: this always-visible
+ * wrapper owns the fetch and hands the promise
+ * into the hidden tree. React pre-renders the
+ * hidden panel in the background, suspending on
+ * the promise until the data arrives. (A hook
+ * called *inside* a hidden tree stays paused —
+ * rendering never starts a fetch.)
+ */
+function PrerenderedTab({
+  tab,
+  active,
+}: {
+  tab: (typeof TABS)[number]
+  active: boolean
+}) {
+  const data$ = useMemo(
+    () => fetchTab$(tab),
+    [tab],
+  )
+  const promise = useObservablePromise(data$)
+  return (
+    <Activity
+      mode={active ? 'visible' : 'hidden'}
+    >
+      <Suspense fallback={<Spinner />}>
+        <TabPanel promise={promise} />
+      </Suspense>
+    </Activity>
+  )
+}
 
 function TabButton({
   tab,
@@ -119,30 +177,17 @@ export default function App() {
         ))}
       </div>
 
-      <Suspense
-        fallback={
-          <p style={{opacity: 0.7}}>
-            🌀 Loading…
-          </p>
-        }
-      >
-        {strategy === 'activity' ? (
-          TABS.map((tab) => (
-            <Activity
-              key={tab}
-              mode={
-                active === tab
-                  ? 'visible'
-                  : 'hidden'
-              }
-            >
-              <TabPanel tab={tab} />
-            </Activity>
-          ))
-        ) : (
-          <TabPanel tab={active} />
-        )}
-      </Suspense>
+      {strategy === 'activity' ? (
+        TABS.map((tab) => (
+          <PrerenderedTab
+            key={tab}
+            tab={tab}
+            active={active === tab}
+          />
+        ))
+      ) : (
+        <ActiveTab tab={active} />
+      )}
     </div>
   )
 }

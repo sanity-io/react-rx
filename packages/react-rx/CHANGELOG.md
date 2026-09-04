@@ -1,5 +1,119 @@
 # react-rx
 
+## 7.0.0-next.6
+
+### Patch Changes
+
+- [#515](https://github.com/sanity-io/react-rx/pull/515) [`df7f99e`](https://github.com/sanity-io/react-rx/commit/df7f99e91ee06c0c87999d3d1628769c3a6524bf) Thanks [@stipsan](https://github.com/stipsan)! - `initialValue` initializers now run exactly once per hook instance, matching `useState`. They previously ran on every pre-emission `getSnapshot` read, so an initializer returning a fresh object (`useObservable(obs$, () => ({...}))`, and the same on `useSyncObservable`) gave `useSyncExternalStore` a new snapshot reference on every consistency check and looped until React aborted with "Maximum update depth exceeded". The resolved value is now cached per instance, which also makes the pre-emission snapshot reference stable across re-renders and fixes the equivalent hazard in `useSyncObservable`'s server snapshot.
+
+## 7.0.0-next.5
+
+### Patch Changes
+
+- [#515](https://github.com/sanity-io/react-rx/pull/515) [`93c59fe`](https://github.com/sanity-io/react-rx/commit/93c59fe6f4f3782d266cdc53c081c464320cd123) Thanks [@stipsan](https://github.com/stipsan)! - Track `useObservablePromise`'s committed-and-visible flag with a dependency-free visibility effect (`useEffect` + `useState`) instead of setting state from the `useSyncExternalStore` subscribe cycle. `subscribe` is subscription-only again, matching its documented contract, and the flag follows plain effect mount and cleanup semantics, which `<Activity>` hide and reveal already drive. Setting the flag is marked as a transition so the extra render stays off the urgent path; clearing it on hide stays synchronous, so a hidden tree's swap render is guaranteed to observe the cleared flag. `disabled` is enforced at the consumption sites rather than in the effect, which fixes one wedge: flipping `disabled` off inside a transition now starts the fetch from that same render instead of suspending on a source nothing had started.
+
+## 7.0.0-next.4
+
+### Patch Changes
+
+- [#515](https://github.com/sanity-io/react-rx/pull/515) [`832add9`](https://github.com/sanity-io/react-rx/commit/832add902d381441e6da442e64226987e5f230fa) Thanks [@stipsan](https://github.com/stipsan)! - Track `useObservablePromise`'s live-swap gate with React state instead of a ref. No behavior change: the flag is written from the store subscription's commit-phase setup/teardown and read as regular state during render, which removes the ref-read-in-render rules exception and lets the React Compiler optimize the hook again. State-queue ordering also guarantees a hidden tree's swap render observes the torn-down subscription even when a hide and a swap land in the same update batch.
+
+## 7.0.0-next.3
+
+### Major Changes
+
+- [#515](https://github.com/sanity-io/react-rx/pull/515) [`b0249a0`](https://github.com/sanity-io/react-rx/commit/b0249a0a574816feda25900e6205059e240f0043) Thanks [@stipsan](https://github.com/stipsan)! - **`useObservablePromise` now starts a swapped-in observable during the render of an already-live consumer** — React's canonical [client-side refetch pattern](https://react.dev/reference/react/use#re-fetching-data-in-client-components) (swap the data source inside `startTransition`, or behind `useDeferredValue`) works without preloading.
+
+  A suspended transition render never commits, and commit is otherwise what starts the fetch — so a bare observable swap inside a transition used to deadlock silently: the old content stayed up, `isPending` never cleared, and no fetch was ever made, which made `preloadObservablePromise` in the event handler mandatory. The fetch now has three triggers:
+
+  - **Commit** — a non-`disabled` consumer that called the hook commits (mounts, `<Activity>` reveals). Unchanged.
+  - **Live-swap render** — a consumer that is already committed, visible, and subscribed re-renders with a new observable identity: the new source is subscribed during that render, so the suspended transition settles, retries, and commits. This is the new trigger, and it makes `startTransition(() => setObservable(next$))` behave like React's promise-swapping examples.
+  - **`preloadObservablePromise`** — explicit and render-independent. No longer required for transitions; still the way to warm on hover or in route loaders (so a swap can commit with no pending period at all) and to feed hidden `<Activity>` pre-renders.
+
+  Everything that keeps rendering side-effect-free stays lazy: fresh mounts (the Suspense fallback's commit starts the fetch), server rendering, `disabled` consumers, and hidden `<Activity>` trees — hiding tears down the live subscription, so a hidden tree never qualifies, and swapping observables while hidden stays fully paused.
+
+  One consequence to know about: a transition abandoned after its swap render (for example, superseded by another swap) can have started a fetch nobody consumes. The entry settles into the shared cache and is evicted after `ttl`. As with `preloadObservablePromise`, bound never-settling sources with RxJS [`timeout`](https://rxjs.dev/api/index/function/timeout) where a stalled fetch is possible.
+
+## 7.0.0-next.2
+
+### Major Changes
+
+- [#520](https://github.com/sanity-io/react-rx/pull/520) [`9df53b8`](https://github.com/sanity-io/react-rx/commit/9df53b8574977dbc0f2decb1cd12860a77447afa) Thanks [@stipsan](https://github.com/stipsan)! - **Breaking:** `useObservable` and `useSyncObservable` never subscribe the observable during render — the render-phase warm-up is gone.
+
+  With `initialValue` required there is always something to render, so the internal warm-up machinery (the per-hook tracker and the eager render-phase probe that captured synchronous emissions for replacement observables) has been removed entirely. Every render — the first one and every identity change alike — shows the resolved `initialValue` (or the shared cache entry's last emission when the observable is already live elsewhere), and the source is only ever subscribed by the store subscription when the component commits.
+
+  What this changes:
+
+  - **Identity swaps render the `initialValue` for one pass.** Swapping to a new observable no longer surfaces its synchronous emission during the swap render; the emission arrives right after the swap commits. The identity-coherent deferral in `useObservable` is unchanged: the previous observable's value never renders under the new identity.
+  - **Observable identities must be stable across renders** (`useMemo`, `useState`, module scope — or React Compiler memoization, which does this automatically). Like `useSyncExternalStore`'s `subscribe`, an observable rebuilt on every render is torn down and re-subscribed on every render. Previously the warm-up let that pattern converge; now, when such a source synchronously replays a value that differs from the `initialValue`, every commit forces a re-render that builds yet another identity and the component loops until React aborts with "Maximum update depth exceeded". Sanity's `useCanInviteMembers`-style call sites (`enabled ? store.getGrants().pipe(map(...)) : of(false)` with no memoization) need a `useMemo`.
+  - **Synchronously erroring observables surface their error after commit** (from the store subscription via `getSnapshot` on the forced re-render) instead of during the render that used to warm them up.
+  - `disabled: true` still guarantees zero subscriptions, and server rendering still paints the resolved `initialValue` without subscribing — both now fall out of the one rule instead of being special cases.
+
+## 7.0.0-next.1
+
+### Major Changes
+
+- [#518](https://github.com/sanity-io/react-rx/pull/518) [`d4eba44`](https://github.com/sanity-io/react-rx/commit/d4eba444525163aff746b9aa253b7a8655996ff1) Thanks [@stipsan](https://github.com/stipsan)! - **Breaking:** remove `useObservableEvent`.
+
+  The hook was layers of abstraction over a plain RxJS `Subject`: it created one internally, returned `subject.next` as a callback, and subscribed your pipeline in an effect. Push events into a `Subject` yourself and read derived streams with `useObservable`, `useSyncObservable`, or `useObservablePromise` — a simpler pattern that also stays aligned with the upcoming [native Observable API](https://github.com/WICG/observable).
+
+  ```tsx
+  // Before
+  const [value, setValue] = useState(1);
+  const handleChange = useObservableEvent((value$) =>
+    value$.pipe(map(Number), tap(setValue))
+  );
+
+  // After — emissions are the rendered value, no local state or tap needed
+  const [rawValue$] = useState(() => new Subject<string>());
+  const value$ = useMemo(() => rawValue$.pipe(map(Number)), [rawValue$]);
+  const value = useObservable(value$, 1);
+  // <input onChange={(event) => rawValue$.next(event.currentTarget.value)} />
+  ```
+
+  See the [v6 → v7 migration guide](https://react-rx.dev/migrate/v6-to-v7) for more patterns, including side-effect-only pipelines.
+
+  The `use-effect-event` dependency existed only for this hook and has been removed too — `react-rx` now has zero runtime dependencies beyond its peers.
+
+- [#517](https://github.com/sanity-io/react-rx/pull/517) [`edf04fb`](https://github.com/sanity-io/react-rx/commit/edf04fbbf1b90893e564935f6454a9809323cd76) Thanks [@stipsan](https://github.com/stipsan)! - **Breaking:** `useObservable` and `useSyncObservable` now require the `initialValue` argument.
+
+  The initial value is what renders until the observable emits. Omitting the argument is a type error, and — since JavaScript callers can bypass the types — the hooks also detect a missing argument at runtime (internally defaulting it to the `Symbol.for('react-rx.unsetInitialValue')` sentinel) and throw during render.
+
+  The rules for what counts as a valid `initialValue`:
+
+  - **Every value is valid, `undefined` included** — but it must be passed explicitly: `useObservable(value$, undefined)` renders `undefined` until the first emission, while `useObservable(value$)` throws.
+  - **Functions act as initializers**, exactly like `useState`: `useObservable(value$, () => expensiveInitial())` computes the initial value lazily. To use a function itself as the initial value, pass an initializer that returns it: `useObservable(fn$, () => myFunction)`.
+
+  Migration:
+
+  - Call sites that already pass an `initialValue` are unaffected, including their runtime behavior.
+  - For call sites that relied on `undefined` being the implicit initial value, pass it explicitly: `useObservable(value$)` → `useObservable(value$, undefined)`.
+  - Call sites that relied on the render-phase warm-up subscription (with no `initialValue`, a synchronous emission — e.g. from `of`, `startWith`, or a `BehaviorSubject` — used to be returned from the very first render): there is no warm-up on mount anymore. The first render shows the `initialValue` and the synchronous emission replaces it right after mount, in the same paint cycle as with any other emission. If an observable has no initial value that makes sense, or you want fallback UI while the observable is "loading", use `useObservablePromise` with `use()` and Suspense instead.
+
+  This dramatically simplifies the internal implementation and makes the hooks' behavior uniform:
+
+  - The observable is **never** subscribed during render for its first paint — subscribe-time side effects (network requests, socket connections) can no longer run as render-phase side effects. The only remaining render-phase warm-up is for replacement observables after the hook has received an emission, which is what keeps consumers that rebuild the observable on every render from looping forever.
+  - `disabled: true` now always guarantees zero subscriptions (previously the warm-up probe still subscribed once when no `initialValue` was given).
+  - Server rendering is uniform: both hooks render the resolved `initialValue` and never subscribe the observable, so `useSyncObservable` no longer hits React's "Missing getServerSnapshot" error and non-deterministic synchronous emissions can no longer cause hydration mismatches.
+
+## 7.0.0-next.0
+
+### Major Changes
+
+- [#510](https://github.com/sanity-io/react-rx/pull/510) [`c3c6460`](https://github.com/sanity-io/react-rx/commit/c3c6460035dac8e818fb8b4629da920fae9a2097) Thanks [@stipsan](https://github.com/stipsan)! - **Breaking:** `useObservablePromise` no longer subscribes the source observable during render.
+
+  Previously the hook eagerly started the source subscription in the render phase (unless `disabled`), which meant rendering — including hidden `<Activity>` pre-renders — triggered fetching as a side effect. Fetching is now strictly commit-driven or explicit:
+
+  - The source subscription starts when a non-`disabled` component that called the hook **commits**, or when `preloadObservablePromise` is called. Rendering alone never subscribes.
+  - A hidden `<Activity>` tree that calls the hook is fully paused: no subscription, no fetching, until it is revealed and effects mount. To pre-render hidden content _with_ data, call the hook in a visible parent and pass the promise into the hidden tree, where `use(promise)` lets React pre-render and suspend on its own terms.
+  - `preloadObservablePromise` is the mechanism for warming an entry outside of a commit (hover, route loaders, before swapping observables inside a transition). It re-arms the entry's retention window and starts the fetch immediately — in the browser only (see below).
+
+  Migration notes:
+
+  - `use(useObservablePromise(obs$))` in a single component — never a supported pattern — now deadlocks: the component suspends on its own pending promise before the commit that would start the fetch, the same wrong usage as `use()`-ing a promise created during your own render, and it is intentionally not guarded against. The promise is meant to be passed as a prop to a child that reads it with `use()`, with a `<Suspense>` boundary **between** the hook caller and that child so the caller can commit while the child suspends.
+  - Synchronously-emitting sources (`of`, `BehaviorSubject`, replayed `shareReplay`) now resolve at the hook caller's commit instead of during render, so a cold mount shows one Suspense fallback pass. Preload the observable to render them without a fallback.
+  - Swapping to a new observable inside `startTransition` / behind `useDeferredValue` requires warming the new observable first (for example `preloadObservablePromise` in the event handler): a transition render that suspends never commits, so it can no longer start the fetch.
+  - react-rx is a client-only library and never subscribes observables on the server: server rendering emits the Suspense fallback and the fetch starts after hydration, and `preloadObservablePromise` is now a no-op on the server (an inert pending promise; no subscription, no cache entry). A server-started subscription has no unmount to tear it down, a never-settling source would hang, and the module-scope cache would be shared across requests. For React Server Components or server-only flows, fetch with async/await or RxJS `firstValueFrom` and pass the promise/value as a prop.
 ## 6.0.1
 
 ### Patch Changes

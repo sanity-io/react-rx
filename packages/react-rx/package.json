@@ -1,6 +1,6 @@
 {
   "name": "react-rx",
-  "version": "6.0.1",
+  "version": "7.0.0-next.6",
   "description": "React + RxJS = <3",
   "keywords": [
     "action",
@@ -66,9 +66,6 @@
     "prepublishOnly": "pnpm build",
     "test": "vitest run --typecheck",
     "watch": "tsdown --watch"
-  },
-  "dependencies": {
-    "use-effect-event": "^2.0.4"
   },
   "devDependencies": {
     "@sanity/tsconfig": "^2.2.1",
