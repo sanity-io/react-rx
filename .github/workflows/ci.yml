@@ -20,6 +20,15 @@ jobs:
       - run: pnpm lint
       - run: pnpm knip --reporter github-actions
 
+  demo:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter async-react test
+      - run: pnpm --filter async-react build
+
   test:
     needs: build
     runs-on: ${{ matrix.os }}
