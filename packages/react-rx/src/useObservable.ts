@@ -89,7 +89,7 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
     [instance, disabled],
   )
 
-  const value = useSyncExternalStore<ObservedValueOf<ObservableType>>(
+  const value = useSyncExternalStore(
     subscribe,
     () => {
       return instance.getSnapshot(resolvedInitialValue)

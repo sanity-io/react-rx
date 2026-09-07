@@ -400,30 +400,7 @@ test('should return the actual value when the hook is disabled and then re-enabl
   unmount()
 })
 
-test('initialValue factories run once per hook instance, like useState initializers', () => {
-  const values$ = new Subject<string>()
-  let factoryCalls = 0
-  const factory = () => {
-    factoryCalls++
-    return 'initial'
-  }
-
-  const {result, rerender} = renderHook(() => useSyncObservable(values$, factory))
-  expect(factoryCalls).toBe(1)
-  expect(result.current).toBe('initial')
-
-  rerender()
-  expect(factoryCalls).toBe(1)
-
-  act(() => values$.next('emitted'))
-  expect(result.current).toBe('emitted')
-  expect(factoryCalls).toBe(1)
-})
-
-test('initializers returning fresh objects render without looping, and the reference is stable', () => {
-  // Regression: the initializer used to run on every pre-emission getSnapshot
-  // read. A fresh object per call made useSyncExternalStore's consistency
-  // check see a store change on every render, looping until React aborted.
+test('initialValue initializers resolve once per hook instance, like useState, so a fresh object per call cannot loop', () => {
   const values$ = new Subject<{label: string}>()
   let initializerCalls = 0
 
@@ -435,16 +412,37 @@ test('initializers returning fresh objects render without looping, and the refer
   )
   expect(initializerCalls).toBe(1)
   expect(result.current).toEqual({label: 'initial'})
-  const first = result.current
+  const initial = result.current
 
   rerender()
-  expect(result.current).toBe(first)
+  expect(result.current).toBe(initial)
+  expect(initializerCalls).toBe(1)
+
+  act(() => values$.next({label: 'emitted'}))
+  expect(result.current).toEqual({label: 'emitted'})
   expect(initializerCalls).toBe(1)
 })
 
+test('the initialValue argument is read on the first render only, like useState', () => {
+  const values$ = new Subject<string>()
+  const useValue = (initialValue: string | undefined) => useSyncObservable(values$, initialValue)
+
+  const withoutInitial = renderHook(useValue, {initialProps: undefined})
+  expect(withoutInitial.result.current).toBeUndefined()
+  withoutInitial.rerender('later')
+  expect(withoutInitial.result.current).toBeUndefined()
+
+  const withInitial = renderHook(useValue, {initialProps: 'initial'})
+  expect(withInitial.result.current).toBe('initial')
+  withInitial.rerender(undefined)
+  expect(withInitial.result.current).toBe('initial')
+
+  act(() => values$.next('emitted'))
+  expect(withoutInitial.result.current).toBe('emitted')
+  expect(withInitial.result.current).toBe('emitted')
+})
+
 test('SSR resolves a factory initialValue through getServerSnapshot', () => {
-  // The sync hook's getServerSnapshot returns the per-instance resolved
-  // initial value — a code path distinct from the client getSnapshot.
   const observable = scheduled('async value', asyncScheduler)
   function ObservableComponent() {
     return <>{useSyncObservable(observable, () => 'factory initial')}</>
