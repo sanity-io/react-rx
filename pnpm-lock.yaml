@@ -64,7 +64,7 @@ importers:
         version: 1.41.0(react@19.3.0-canary-8425b691-20260904)
       msw:
         specifier: ^2.15.0
-        version: 2.15.0(@types/node@26.4.1)(typescript@6.0.3)
+        version: 2.15.0(@types/node@26.4.1)(typescript@7.0.2)
       react:
         specifier: canary
         version: 19.3.0-canary-8425b691-20260904
@@ -106,8 +106,8 @@ importers:
         specifier: ^0.148.0
         version: 0.148.0
       typescript:
-        specifier: 6.0.3
-        version: 6.0.3
+        specifier: 7.0.2
+        version: 7.0.2
       vite:
         specifier: ^8.2.2
         version: 8.2.2(@types/node@26.4.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -8920,7 +8920,7 @@ snapshots:
       - '@types/node'
     optional: true
 
-  msw@2.15.0(@types/node@26.4.1)(typescript@6.0.3):
+  msw@2.15.0(@types/node@26.4.1)(typescript@7.0.2):
     dependencies:
       '@inquirer/confirm': 6.3.1(@types/node@26.4.1)
       '@mswjs/interceptors': 0.41.9
@@ -8941,7 +8941,7 @@ snapshots:
       until-async: 3.0.2
       yargs: 17.7.3
     optionalDependencies:
-      typescript: 6.0.3
+      typescript: 7.0.2
     transitivePeerDependencies:
       - '@types/node'
 
