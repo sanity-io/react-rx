@@ -223,8 +223,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       '@sanity/tsdown-config':
-        specifier: ^0.27.1
-        version: 0.27.1(@types/node@24.13.3)(oxc-transform-react@0.148.0)(tsdown@0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2))(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))
+        specifier: ^0.28.0
+        version: 0.28.0(@types/node@24.13.3)(oxc-transform-react@0.148.0)(tsdown@0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2))(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
@@ -2074,16 +2074,16 @@ packages:
   '@sanity/tsconfig@2.2.1':
     resolution: {integrity: sha512-1HbvN+W2bWixgXQnvJ9rev5vJaSbN62d+r0Y2pN6XsK6/MP9JfVyF90elBuIrDENTGgVmxB403+gZow45wq+Pg==}
 
-  '@sanity/tsdown-config@0.27.1':
-    resolution: {integrity: sha512-UzCBeoCUoqHlzkTyz1J39m08Xu70bxPbL4qoZWWJ1kIf1pwccUeY5Gqn5IaQW9brEWs1vDZm37MDNGzVb1ci3w==}
-    engines: {node: ^22.18.0 || >=24.11.0}
+  '@sanity/tsdown-config@0.28.0':
+    resolution: {integrity: sha512-SwUzJFZfypnzEWiBwaVOreaojceEMXw26yfXiGIiX+n5OflPaesYChPRjawsiphGHC3bf5XO5cBJkY9YAgIEAg==}
+    engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}
     peerDependencies:
       '@babel/core': '*'
       '@rolldown/plugin-babel': '*'
       '@tsdown/css': '*'
       babel-plugin-react-compiler: '*'
       oxc-transform-react: '*'
-      tsdown: ^0.22.7
+      tsdown: ^0.23.0
       typescript: 6.x || 7.x
     peerDependenciesMeta:
       '@babel/core':
@@ -2110,11 +2110,11 @@ packages:
       rolldown:
         optional: true
 
-  '@sanity/vanilla-extract-tsdown-plugin@0.3.6':
-    resolution: {integrity: sha512-7tLDT/dPeZY6hGqlvM+zG7PXWTpXCWz2Gnw0ZmSQCmMZ4rbdemfbiVSYwNIFd1Ol1FaepG89xQI+kdMxD2efKA==}
+  '@sanity/vanilla-extract-tsdown-plugin@0.4.0':
+    resolution: {integrity: sha512-NDmGELhGSauzJ2tqqtPtIXsvUy96djYYDYA8MomGwgnyOU/cNXdUlyhlCaE92GC/d5gUcO3+YhVgijUuU4ZrcQ==}
     engines: {node: '>=20.19 <22 || >=22.12'}
     peerDependencies:
-      tsdown: ^0.22.5
+      tsdown: ^0.23.0
 
   '@shikijs/core@3.23.0':
     resolution: {integrity: sha512-NSWQz0riNb67xthdm5br6lAkvpDJRTgB36fxlo37ZzM2yq0PQFFzbd8psqC2XMPgCzo1fW6cVi18+ArJ44wqgA==}
@@ -6583,12 +6583,12 @@ snapshots:
 
   '@sanity/tsconfig@2.2.1': {}
 
-  '@sanity/tsdown-config@0.27.1(@types/node@24.13.3)(oxc-transform-react@0.148.0)(tsdown@0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2))(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))':
+  '@sanity/tsdown-config@0.28.0(@types/node@24.13.3)(oxc-transform-react@0.148.0)(tsdown@0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2))(typescript@7.0.2)(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))':
     dependencies:
       '@microsoft/api-extractor': 7.59.0(@types/node@24.13.3)
       '@microsoft/tsdoc-config': 0.18.1
       '@sanity/browserslist-config': 1.0.5
-      '@sanity/vanilla-extract-tsdown-plugin': 0.3.6(rolldown@1.2.7)(tsdown@0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2))
+      '@sanity/vanilla-extract-tsdown-plugin': 0.4.0(rolldown@1.2.7)(tsdown@0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2))
       '@typescript/typescript6': 6.0.2
       '@vitejs/plugin-react': 6.1.1(oxc-transform-react@0.148.0)(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0)(yaml@2.9.0))
       browserslist: 4.28.9
@@ -6624,7 +6624,7 @@ snapshots:
     transitivePeerDependencies:
       - babel-plugin-macros
 
-  '@sanity/vanilla-extract-tsdown-plugin@0.3.6(rolldown@1.2.7)(tsdown@0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2))':
+  '@sanity/vanilla-extract-tsdown-plugin@0.4.0(rolldown@1.2.7)(tsdown@0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2))':
     dependencies:
       '@sanity/vanilla-extract-rolldown-plugin': 0.4.7(rolldown@1.2.7)
       tsdown: 0.23.0(oxc-resolver@11.24.2)(publint@0.3.24)(typescript@7.0.2)
