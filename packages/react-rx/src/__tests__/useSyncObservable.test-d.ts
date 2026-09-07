@@ -1,4 +1,3 @@
-/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {of} from 'rxjs'
 import {expectTypeOf, test} from 'vitest'
 

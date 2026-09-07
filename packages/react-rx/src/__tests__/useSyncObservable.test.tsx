@@ -1,4 +1,3 @@
-/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {act, render, renderHook} from '@testing-library/react'
 import {useMemo} from 'react'
 import {renderToString} from 'react-dom/server'

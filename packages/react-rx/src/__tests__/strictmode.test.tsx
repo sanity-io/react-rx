@@ -1,4 +1,3 @@
-/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {act, render} from '@testing-library/react'
 import {useEffect, useMemo} from 'react'
 import {BehaviorSubject, Observable, Subject} from 'rxjs'
