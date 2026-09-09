@@ -97,6 +97,13 @@ export default function SandpackComponent({
       options={{
         editorHeight: '60vh',
         editorWidthPercentage: 66,
+        /**
+         * Sandpack boots a bundler per example. The default 1000px observer margin starts every
+         * sandbox within a screen or two of the viewport, so a page with several examples (see
+         * `/examples/timers`) can boot four bundlers at once and starve them. A tighter margin
+         * still boots just before the example scrolls into view, one at a time.
+         */
+        initModeObserverOptions: {rootMargin: '200px 0px'},
         externalResources: [PICO_CSS_URL],
         showConsoleButton: true,
         showLineNumbers: true,
