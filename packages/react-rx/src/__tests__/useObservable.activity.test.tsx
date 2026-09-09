@@ -13,11 +13,9 @@ import {useObservable} from '../useObservable'
  * When the boundary becomes visible again, subscriptions are re-created while
  * React state / the last rendered UI are preserved.
  *
- * When no `initialValue` is given, `useObservable` also eagerly probes the
- * observable during render to pick up synchronous emissions, so sync sources
- * can still populate the snapshot even when Activity has not yet mounted a
- * live subscription. With an `initialValue` there is no render-phase probe —
- * a hidden mount performs no subscription at all until it becomes visible.
+ * The observable is never subscribed during render for its first paint — a
+ * hidden mount performs no subscription at all until it becomes visible, and
+ * the (required) `initialValue` is what the hidden tree renders until then.
  *
  * While hidden, children can still re-render from new props (lower priority).
  * The WeakMap cache entry for a stable observable keeps `didEmit` / `snapshot`,
@@ -143,8 +141,7 @@ test('sync observable (of/from) with an undefined initial value: hide keeps last
     </ToggleActivity>,
   )
 
-  // Live subscription is active (eager probe + uSES share the same underlying subscription
-  // while refcount stays > 0 across the delayed reset window).
+  // The store subscription started on commit and delivered the sync emission right after mount.
   expect(subscriptions).toBe(1)
   expect(textOf('value')).toBe('sync')
 
@@ -322,7 +319,7 @@ test('async fetch that resolves while Activity is hidden: value appears when bec
   expect(textOf('value')).toBe('fetched-while-hidden')
 })
 
-test('Activity initially hidden with an initial value: no subscription at all until visible (warm-up skipped)', async () => {
+test('Activity initially hidden: no subscription at all until visible', async () => {
   let activeSubscriptions = 0
   let totalSubscriptions = 0
   const observable = new Observable<string>((subscriber) => {
@@ -421,14 +418,18 @@ test('Activity initially hidden with async observable and initial value: never s
   expect(textOf('value')).toBe('fetched')
 })
 
-test('sync from() without initial value under initially-hidden Activity still renders the sync value', async () => {
-  const observable = from(['from-value'])
+test('sync from() with an undefined initial value under initially-hidden Activity: no subscription until visible', async () => {
+  let subscriptions = 0
+  const observable = defer(() => {
+    subscriptions++
+    return from(['from-value'])
+  })
 
   function Child() {
     return <div data-testid="value">{String(useObservable(observable, undefined))}</div>
   }
 
-  render(
+  const {rerender} = render(
     <Activity mode="hidden">
       <Child />
     </Activity>,
@@ -438,8 +439,24 @@ test('sync from() without initial value under initially-hidden Activity still re
     await Promise.resolve()
   })
 
-  expect(textOf('value')).toBe('from-value')
+  // The observable is never subscribed during render, and a hidden Activity mounts no effects —
+  // even a synchronously emitting source stays untouched and the initialValue renders.
+  expect(subscriptions).toBe(0)
+  expect(textOf('value')).toBe('undefined')
   expect(screen.getByTestId('value').style.display).toBe('none')
+
+  rerender(
+    <Activity mode="visible">
+      <Child />
+    </Activity>,
+  )
+  await act(async () => {
+    await Promise.resolve()
+  })
+
+  // Becoming visible starts the live subscription; the sync emission replaces the initialValue.
+  expect(subscriptions).toBe(1)
+  expect(textOf('value')).toBe('from-value')
 })
 
 test('after async emission, hiding Activity then updating parent state: last emission survives when visible again (cache does not reset to initial)', async () => {

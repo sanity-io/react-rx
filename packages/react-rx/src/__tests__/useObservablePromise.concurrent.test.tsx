@@ -52,6 +52,10 @@ function slowFib(n: number): number {
   return slowFib(n - 1) + slowFib(n - 2)
 }
 
+function CounterValue({promise, index}: {promise: ObservablePromise<number>; index: number}) {
+  return <span data-testid={`c-${index}`}>{use(promise)}</span>
+}
+
 function Counter({
   count$,
   index,
@@ -61,10 +65,17 @@ function Counter({
   index: number
   waste?: number
 }) {
-  const value = use(useObservablePromise(count$))
+  // Hook caller above the boundary, use() reader below it — the sanctioned
+  // shape, so the caller can commit (starting/holding the subscription) even
+  // while the reader suspends.
+  const promise = useObservablePromise(count$)
   // Artificial expensive render to widen the concurrent window.
   slowFib(waste)
-  return <span data-testid={`c-${index}`}>{value}</span>
+  return (
+    <Suspense fallback={null}>
+      <CounterValue promise={promise} index={index} />
+    </Suspense>
+  )
 }
 
 function readAll(): number[] {
@@ -256,6 +267,9 @@ async function until(predicate: () => boolean, timeoutMs = 5000, intervalMs = 10
 /** Find the fib(n) whose computation takes at least `targetMs` on this machine. */
 function calibrateWaste(targetMs: number): number {
   for (let n = 18; n < 30; n++) {
+    // Warm the candidate before measuring so JIT optimization cannot make the
+    // real render substantially faster than calibration.
+    slowFib(n)
     const start = performance.now()
     slowFib(n)
     if (performance.now() - start >= targetMs) {
@@ -317,9 +331,9 @@ function InterruptibleApp({count$, waste}: {count$: BehaviorSubject<number>; was
 }
 
 test('userland useDeferredValue(promise) restores time slicing for emission-driven updates', async () => {
-  // ≥4ms per item × 25 items ⇒ ≥100ms of deferred render work, sliced into
+  // ≥10ms per item × 25 items ⇒ ≥250ms of deferred render work, sliced into
   // many ~5ms scheduler chunks with yields in between.
-  const waste = calibrateWaste(4)
+  const waste = calibrateWaste(10)
   const count$ = warmedCounterStore()
 
   // act() flushes sync and deferred work together, hiding exactly the

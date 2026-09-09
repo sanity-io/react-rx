@@ -24,5 +24,5 @@ const observable = timer(0, 500).pipe(
 )
 
 export default function App() {
-  return useObservable(observable)
+  return useObservable(observable, null)
 }

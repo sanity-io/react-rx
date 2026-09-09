@@ -1,0 +1,22 @@
+import Example from '@/examples/transitions'
+
+# Transitions and refetching
+
+Swapping which observable a live component renders follows React's [client-side refetch pattern](https://react.dev/reference/react/use#re-fetching-data-in-client-components): change the data source inside `startTransition` or behind `useDeferredValue`, and the previous content stays visible until the new data is ready. No Suspense fallback.
+
+A suspended transition render never commits, and commit is otherwise what starts a fetch. So for exactly this case `useObservablePromise` starts the swapped-in source during the transition render itself. A consumer that is already **live**, meaning committed, visible, and subscribed, re-rendering with a new observable identity starts the fetch; the suspended transition settles and the swap commits. Mounts, server rendering, `disabled` consumers, and hidden `<Activity>` pre-renders have no live subscription and stay fully lazy. Rendering alone still never fetches for them.
+
+Try it:
+
+1. Click **Grace**. The pending timer runs for about 1.5s while Ada stays on screen, then the swap commits. No preloading, no fallback flash.
+2. Click **Ada** again. Settled observables are retained (`ttl: 60_000` here), so swapping back commits instantly.
+3. Click **Reset demo**. A fresh mount is not a swap: the initial fetch starts at the hook caller's commit while the Suspense fallback shows.
+
+<Example />
+
+## The rules that still apply
+
+- **Identities must be stable.** react-rx keys its promise cache by observable identity, so every render asking for the same data must receive the same instance. That is what the `Map` in `fetchProfile$` is for. A factory creating a fresh observable per call gives every render its own entry.
+- **The `<Suspense>` boundary sits between the hook caller and the `use()` reader.** The hook caller must be able to commit, or already be live. `use()`-ing the hook's own promise in the same component still deadlocks, exactly like `use()`-ing a promise created during your own render.
+- **Preloading is now an optimization, not a requirement.** `preloadObservablePromise` on hover or in a route loader means the swap target can already be in flight, or even settled, by the time the transition renders. That shortens or removes the pending period. See [Activity and preload](/examples/activity).
+- **An abandoned transition may have started a fetch nobody consumes.** It settles into the shared cache and stays reusable within `ttl`. Cap never-settling sources with RxJS [`timeout`](https://rxjs.dev/api/index/function/timeout), just as you would for preloads.

@@ -1,14 +1,10 @@
 import {useMemo} from 'react'
-import {
-  useObservable,
-  useObservableEvent,
-} from 'react-rx'
+import {useObservable} from 'react-rx'
 import {
   distinctUntilChanged,
   map,
   Subject,
   switchMap,
-  tap,
 } from 'rxjs'
 
 // Create subject for URL changes
@@ -21,14 +17,6 @@ const URLS = [
 ]
 
 function FetchExample() {
-  // Handle URL selection
-  const handleUrlClick = useObservableEvent<
-    string,
-    any
-  >((click$) =>
-    click$.pipe(tap((url) => url$.next(url))),
-  )
-
   // Create fetch response stream
   const response$ = useMemo(
     () =>
@@ -49,7 +37,7 @@ function FetchExample() {
   )
 
   const currentUrl = useObservable(url$, '')
-  const response = useObservable(response$)
+  const response = useObservable(response$, null)
 
   return (
     <div>
@@ -58,7 +46,7 @@ function FetchExample() {
           <button
             key={url.toString()}
             onClick={() =>
-              handleUrlClick(url.toString())
+              url$.next(url.toString())
             }
           >
             {url.pathname}

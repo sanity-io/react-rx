@@ -1,16 +1,19 @@
-/* oxlint-disable typescript/no-deprecated -- exercises the v6 surface that v7 removes */
 import {of} from 'rxjs'
 import {expectTypeOf, test} from 'vitest'
 
 import {useObservable} from '../useObservable'
 
-test('useObservable with no initial value can be undefined', () => {
+test('useObservable requires an initialValue', () => {
   const observable = of('foo')
 
-  expectTypeOf(useObservable(observable)).toEqualTypeOf<string | undefined>()
+  //@ts-expect-error - initialValue is required; use useObservablePromise when there is none
+  useObservable(observable)
+})
 
-  //@ts-expect-error - because initial value is not given, we can't guarantee the observable emits a sync value, so it could be undefined
-  expectTypeOf(useObservable(observable)).toEqualTypeOf<string>()
+test('an explicit undefined initialValue is valid and widens the return type', () => {
+  const observable = of('foo')
+
+  expectTypeOf(useObservable(observable, undefined)).toEqualTypeOf<string | undefined>()
 })
 
 test('return type of useObservable with initial value is not undefined', () => {
