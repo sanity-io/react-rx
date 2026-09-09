@@ -7,20 +7,24 @@ import {
 import {
   preloadObservablePromise,
   useObservablePromise,
+  type ObservablePromise,
 } from 'react-rx'
 
 import {
   CHATS,
   conversation$,
   type Chat,
+  type Message,
 } from './chat'
 
-function ChatView({chat}: {chat: Chat}) {
+function ChatMessages({
+  promise,
+}: {
+  promise: ObservablePromise<Message[]>
+}) {
   // Suspends until the first token, then streams in place. Later emissions
   // never re-trigger the Suspense fallback.
-  const messages = use(
-    useObservablePromise(conversation$(chat)),
-  )
+  const messages = use(promise)
 
   return (
     <div>
@@ -37,6 +41,35 @@ function ChatView({chat}: {chat: Chat}) {
         ),
       )}
     </div>
+  )
+}
+
+function ChatView({
+  chat,
+  active,
+}: {
+  chat: Chat
+  active: boolean
+}) {
+  // Visible owner: its commit starts the fetch. `use()` of this promise in
+  // the same component would deadlock — a suspended tree never commits.
+  const promise = useObservablePromise(
+    conversation$(chat),
+  )
+  return (
+    <Activity
+      mode={active ? 'visible' : 'hidden'}
+    >
+      <Suspense
+        fallback={
+          <p aria-busy="true">
+            Waiting for the first token…
+          </p>
+        }
+      >
+        <ChatMessages promise={promise} />
+      </Suspense>
+    </Activity>
   )
 }
 
@@ -86,31 +119,18 @@ export default function App() {
         ))}
       </div>
 
-      <Suspense
-        fallback={
-          <p aria-busy="true">
-            Waiting for the first token…
-          </p>
-        }
-      >
-        {CHATS.filter((chat) =>
-          visitedIds.includes(chat.id),
-        ).map((chat) => (
-          // Visited chats stay mounted but hidden: they keep their state and
-          // reveal instantly, including every token that streamed while you
-          // were looking at another chat.
-          <Activity
-            key={chat.id}
-            mode={
-              chat.id === activeId
-                ? 'visible'
-                : 'hidden'
-            }
-          >
-            <ChatView chat={chat} />
-          </Activity>
-        ))}
-      </Suspense>
+      {CHATS.filter((chat) =>
+        visitedIds.includes(chat.id),
+      ).map((chat) => (
+        // Visited chats stay mounted but hidden: they keep their state and
+        // reveal instantly, including every token that streamed while you
+        // were looking at another chat.
+        <ChatView
+          key={chat.id}
+          chat={chat}
+          active={chat.id === activeId}
+        />
+      ))}
     </>
   )
 }
