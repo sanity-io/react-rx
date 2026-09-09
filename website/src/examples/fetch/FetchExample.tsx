@@ -7,7 +7,7 @@ import {
   switchMap,
 } from 'rxjs'
 
-// Create subject for URL changes
+// URL selections push into a Subject
 const url$ = new Subject<string>()
 
 const origin = new URL('http://localhost:3000')

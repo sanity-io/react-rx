@@ -15,37 +15,24 @@ import {
   switchMap,
   withLatestFrom,
 } from 'rxjs'
-import {styled} from 'styled-components'
 
 import storage from './storage'
 
 const STORAGE_KEY = '__form-submit-example__'
-
-// Create subjects for form events
-const formData$ = new Subject<
-  Partial<FormValues>
->()
-const submit$ = new Subject<
-  SyntheticEvent<HTMLFormElement>
->()
 
 interface FormValues {
   title: string
   description: string
 }
 
-function FormDataExample() {
-  // Push input changes into the form stream
-  const handleChange = (
-    event: ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >,
-  ) =>
-    formData$.next({
-      [event.target.name]: event.target.value,
-    })
+// Form events push into Subjects
+const formData$ = new Subject<
+  Partial<FormValues>
+>()
+const submit$ = new Subject<void>()
 
-  // Create form data stream
+function FormDataExample() {
+  // Form data stream: start from what's in storage, then fold in every edit
   const [data$] = useState(() =>
     storage
       .get(STORAGE_KEY, {
@@ -55,7 +42,6 @@ function FormDataExample() {
       .pipe(
         switchMap((initial) =>
           formData$.pipe(
-            startWith(initial),
             scan(
               (data, update) => ({
                 ...data,
@@ -63,104 +49,85 @@ function FormDataExample() {
               }),
               initial,
             ),
+            startWith(initial),
           ),
         ),
       ),
   )
 
-  // Create submit state stream
+  // Submit state stream: every submit samples the latest form data and
+  // switches to the (async) storage write, emitting saving → saved
   const [submitState$] = useState(() =>
     submit$.pipe(
       withLatestFrom(data$),
       map(([, formData]) => formData),
       switchMap((formData) =>
         storage.set(STORAGE_KEY, formData).pipe(
-          map(() => ({
-            status: 'saved' as const,
-            result: formData,
-          })),
-          startWith({
-            status: 'saving' as const,
-            result: null,
-          }),
+          map(() => ({status: 'saved' as const})),
+          startWith({status: 'saving' as const}),
         ),
       ),
-      startWith({
-        status: 'unsaved' as const,
-        result: null,
-      }),
+      startWith({status: 'unsaved' as const}),
     ),
   )
 
-  // Form field values feed controlled inputs — must stay synchronous.
+  // Form field values feed controlled inputs, so they must stay synchronous.
   const formData = useSyncObservable(data$, {
     title: '',
     description: '',
   })
   const submitState = useObservable(
     submitState$,
-    {
-      status: 'unsaved' as const,
-      result: null,
-    },
+    {status: 'unsaved' as const},
   )
+
+  const handleChange = (
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement
+    >,
+  ) =>
+    formData$.next({
+      [event.currentTarget.name]:
+        event.currentTarget.value,
+    })
+
+  const handleSubmit = (
+    event: SyntheticEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault()
+    submit$.next()
+  }
 
   return (
-    <Form
-      onSubmit={(event) => {
-        event.preventDefault()
-        submit$.next(event)
-      }}
-    >
-      <div>
-        <label>
-          <strong>Title: </strong>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          <strong>Description: </strong>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-          />
-        </label>
-      </div>
-      <div>
-        <button
-          disabled={
-            submitState.status === 'saving'
-          }
-        >
-          {submitState.status === 'saving'
-            ? 'Saving…'
-            : submitState.status === 'saved'
-              ? 'Saved!'
-              : 'Save'}
-        </button>
-      </div>
-    </Form>
+    <form onSubmit={handleSubmit}>
+      <label>
+        Title
+        <input
+          type="text"
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+        />
+      </label>
+      <label>
+        Description
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+        />
+      </label>
+      <button
+        disabled={submitState.status === 'saving'}
+      >
+        {submitState.status === 'saving'
+          ? 'Saving…'
+          : submitState.status === 'saved'
+            ? 'Saved!'
+            : 'Save'}
+      </button>
+    </form>
   )
 }
-
-const Form = styled.form`
-  label {
-    display: block;
-    margin-top: 10px;
-  }
-  input,
-  textarea {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 5px;
-  }
-`
 
 export default FormDataExample
