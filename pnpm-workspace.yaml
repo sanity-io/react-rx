@@ -3,6 +3,9 @@ packages:
   - 'website'
   - 'async-react'
 
+catalog:
+  rxjs: ^7.8.2
+
 allowBuilds:
   es5-ext: false
   esbuild: false
