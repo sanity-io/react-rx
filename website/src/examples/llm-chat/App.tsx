@@ -86,31 +86,32 @@ export default function App() {
         ))}
       </div>
 
-      <Suspense
-        fallback={
-          <p aria-busy="true">
-            Waiting for the first token…
-          </p>
-        }
-      >
-        {CHATS.filter((chat) =>
-          visitedIds.includes(chat.id),
-        ).map((chat) => (
-          // Visited chats stay mounted but hidden: they keep their state and
-          // reveal instantly, including every token that streamed while you
-          // were looking at another chat.
-          <Activity
-            key={chat.id}
-            mode={
-              chat.id === activeId
-                ? 'visible'
-                : 'hidden'
+      {CHATS.filter((chat) =>
+        visitedIds.includes(chat.id),
+      ).map((chat) => (
+        // Visited chats stay mounted but hidden: they keep their state and
+        // reveal instantly, including every token that streamed while you
+        // were looking at another chat. Each panel has its own Suspense so a
+        // pending first token cannot replace siblings that already have one.
+        <Activity
+          key={chat.id}
+          mode={
+            chat.id === activeId
+              ? 'visible'
+              : 'hidden'
+          }
+        >
+          <Suspense
+            fallback={
+              <p aria-busy="true">
+                Waiting for the first token…
+              </p>
             }
           >
             <ChatView chat={chat} />
-          </Activity>
-        ))}
-      </Suspense>
+          </Suspense>
+        </Activity>
+      ))}
     </>
   )
 }
