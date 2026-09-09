@@ -43,6 +43,8 @@ The `suspense` keyword on this package is earned two ways:
 - **[`useObservablePromise`](https://react-rx.dev/reference#useobservablepromise)** turns any observable into a [`use()`](https://react.dev/reference/react/use)-compatible promise. The reader suspends until the first emission. Later emissions update in place without re-suspending. Synchronous sources never flash a fallback. `preloadObservablePromise` warms the same cache outside render (hover, route loaders, `<Activity>` tabs).
 - **`useObservable` is safe to suspend on.** Its updates are deferred. So a store update that makes a child suspend keeps the visible content on screen, instead of yanking it back to the nearest fallback. That is the classic [`useSyncExternalStore` caveat](https://react.dev/reference/react/useSyncExternalStore#caveats), solved. See the [side-by-side demo](https://react-rx.dev/examples/suspense).
 
+For a full app using `useObservablePromise` with Suspense, `<Activity>`, and transitions, see the [Async React demo](https://async-react.sanity.dev/).
+
 ```tsx
 function Users({users$}: {users$: Observable<User[]>}) {
   const promise = useObservablePromise(users$)

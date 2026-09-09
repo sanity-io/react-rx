@@ -55,7 +55,7 @@ Don't make it your default. Synchronous store updates cannot be marked as Transi
 
 **Reach for `useObservableSubject`** when a component turns its own event handlers into a stream. See [handling events](#handling-events).
 
-Each hook's [API reference](/reference) has a full "When not to use" list. See [Suspense & deferred values](/examples/suspense) for a side-by-side demo. Upgrading? Start with the [v6 to v7 migration guide](/migrate/v6-to-v7).
+Each hook's [API reference](/reference) has a full "When not to use" list. See [Suspense & deferred values](/examples/suspense) for a side-by-side demo, or the [Async React demo](https://async-react.sanity.dev/) for a full app. Upgrading? Start with the [v6 to v7 migration guide](/migrate/v6-to-v7).
 
 ## Observable Hooks
 
@@ -185,7 +185,7 @@ function SearchField() {
 
 ### useObservablePromise()
 
-Use this when you want **Suspense-powered data fetching** instead of tracking loading state in the stream.
+Use this when you want **Suspense-powered data fetching** instead of tracking loading state in the stream. The [Async React demo](https://async-react.sanity.dev/) is a full app built this way.
 
 `useObservable` is built on `useSyncExternalStore`. That is great for live values, but it cannot activate a [`Suspense`](https://react.dev/reference/react/Suspense#what-activates-a-suspense-boundary) boundary, and React 19.2 [`Activity`](https://react.dev/reference/react/Activity#pre-rendering-content-thats-likely-to-become-visible) pre-rendering can only wait on data read with `use(promise)`.
 

@@ -27,4 +27,4 @@ The userland recipe is small:
 - **[`<Activity mode="hidden">`](https://react.dev/reference/react/Activity)** keeps visited chats mounted with their state intact. Hiding a chat tears down its live subscription (like an effect). The shared conversation stream keeps running. On reveal, the hook synchronously reads the current snapshot. No flash, no refetch, and all the tokens that arrived meanwhile are there.
 - **[`preloadObservablePromise`](/reference#preloadobservablepromise)** warms the same cache the hook reads from, outside of render. Hover-to-preload is one line on the button.
 
-See [Activity and preload](/examples/activity) for a side-by-side comparison of prefetch strategies. See [Suspense data fetching](/examples/data-fetching) for the promise semantics on their own.
+See [Activity and preload](/examples/activity) for a side-by-side comparison of prefetch strategies. See [Suspense data fetching](/examples/data-fetching) for the promise semantics on their own. The [Async React demo](https://async-react.sanity.dev/) puts the same hooks in a full app.

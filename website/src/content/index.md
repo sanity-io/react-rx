@@ -17,7 +17,7 @@ react-rx turns those streams into React state. It has first-class support for Su
 - **Predictable first paint.** The required `initialValue` renders first, on the server and on the client. Observables are never subscribed during render, so subscribe-time side effects stay out of the render phase.
 - **Warm snapshots.** Mounts, remounts, and `<Activity>` reveals render the current value of an already-live stream. No initial-value flash.
 - **First-class [`<Activity>`](https://react.dev/reference/react/Activity) (React 19.2).** Hidden trees keep warm snapshots and reveal instantly. Own a promise in a visible component and the hidden tree pre-renders with the data. See [Activity and preload](/examples/activity).
-- **Suspense-powered data fetching.** [`useObservablePromise`](/reference#useobservablepromise) turns any observable into a `use()`-compatible promise. Suspend until the first emission, then live-update in place. See [Suspense data fetching](/examples/data-fetching).
+- **Suspense-powered data fetching.** [`useObservablePromise`](/reference#useobservablepromise) turns any observable into a `use()`-compatible promise. Suspend until the first emission, then live-update in place. See [Suspense data fetching](/examples/data-fetching) and the [Async React demo](https://async-react.sanity.dev/).
 - **SSR you can predict.** `useObservable` renders exactly what the client's first paint will show, and nothing is ever subscribed on the server.
 - **React Compiler tested.** The entire test suite runs twice: once plain, once compiled through the React Compiler.
 - **Tiny.** ESM-only, tree-shakeable, one small dependency, fully typed.

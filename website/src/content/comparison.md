@@ -19,7 +19,7 @@ You already have observables. The bindings differ in update timing, Suspense int
 
 The honest flip side: observable-hooks and @react-rxjs support much older React versions. react-rx targets the newest React on purpose. The concurrent-rendering rows above are the reason.
 
-Want to feel the differences? Try the [Suspense demo](/examples/suspense) and the [Activity demo](/examples/activity).
+Want to feel the differences? Try the [Suspense demo](/examples/suspense), the [Activity demo](/examples/activity), or the [Async React demo](https://async-react.sanity.dev/).
 
 ## General state libraries
 

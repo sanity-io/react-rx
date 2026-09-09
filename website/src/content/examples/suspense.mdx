@@ -15,3 +15,5 @@ Type into the search field and compare the two panels.
 [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore#caveats) cannot mark store mutations as Transitions. So suspending on its value triggers the nearest Suspense fallback. Wrapping the value in [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue), which is what `useObservable` does, is how you [prevent unwanted fallbacks](https://react.dev/reference/react/Suspense#preventing-unwanted-fallbacks) for already-revealed content.
 
 See also [jantimon/react-hydration-rules](https://github.com/jantimon/react-hydration-rules) for the broader hydration/Suspense matrix, and the React reconciler tests for `useDeferredValue` / `useSyncExternalStore` in [facebook/react](https://github.com/facebook/react). Hydration-time differences between the two hooks are covered by the library's Vitest suite (Sandpack examples are client-only).
+
+For a full app using Suspense with react-rx, see the [Async React demo](https://async-react.sanity.dev/).

@@ -18,6 +18,8 @@ The full documentation, including the source code of every interactive example, 
 
 ${links}
 
+- [Async React demo](https://async-react.sanity.dev/)
+
 ## Agent skill
 
 A best-practices skill for writing and reviewing React components that consume observables: hook selection (with per-hook "when not to use" lists), referential stability, and refactoring hand-rolled \`useEffect\` + \`.subscribe()\` bridges.
