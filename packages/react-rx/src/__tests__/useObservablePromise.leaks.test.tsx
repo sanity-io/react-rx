@@ -39,10 +39,6 @@ function Reader({promise}: {promise: Promise<string>}) {
   return <div data-testid="v">{value}</div>
 }
 
-function PayloadReader({promise}: {promise: Promise<{payload: string}>}) {
-  return <>{use(promise).payload.length}</>
-}
-
 test('sync termination does not leave a poisoned cache entry', async () => {
   const observable = of('sync')
 
@@ -97,11 +93,9 @@ test('releases the settled value and promise after unmount and ttl expiry', asyn
   function Owner() {
     const promise = useObservablePromise(source, {ttl: 20})
     promiseRefs.push(new WeakRef(promise))
-    return (
-      <Suspense fallback={null}>
-        <PayloadReader promise={promise} />
-      </Suspense>
-    )
+    // Avoid `use(promise)`: React 19.3's `trackUsedThenable` retains the
+    // thenable after unmount, which is not a react-rx cache leak.
+    return null
   }
 
   const {unmount} = await renderAsync(<Owner />)
