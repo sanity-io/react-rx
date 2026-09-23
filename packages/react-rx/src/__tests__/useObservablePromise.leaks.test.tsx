@@ -1,9 +1,17 @@
 import {act, render, screen} from '@testing-library/react'
-import {Suspense, use, type ReactNode} from 'react'
+import {Suspense, use, version as reactVersion, type ReactNode} from 'react'
 import {defer, from, Observable, of} from 'rxjs'
-import {expect, test} from 'vitest'
+import {describe, expect, test} from 'vitest'
 
 import {preloadObservablePromise, useObservablePromise} from '../useObservablePromise'
+
+// React 19.3's `trackUsedThenable` keeps a thenable passed to `use()` reachable after the component
+// that read it unmounts. That retain is React's, not a react-rx cache leak, so the collectability
+// assertions below can only read the promise with `use()` on older React — which the `react-19.2`
+// vitest project provides. Gating on the version (not the project name) keeps a single-project run
+// correct too.
+const [reactMajor = 0, reactMinor = 0] = reactVersion.split('.').map(Number)
+const reactRetainsUsedThenables = reactMajor > 19 || (reactMajor === 19 && reactMinor >= 3)
 
 async function renderAsync(ui: ReactNode) {
   let result!: ReturnType<typeof render>
@@ -37,6 +45,10 @@ async function forceGC() {
 function Reader({promise}: {promise: Promise<string>}) {
   const value = use(promise)
   return <div data-testid="v">{value}</div>
+}
+
+function PayloadReader({promise}: {promise: Promise<{payload: string}>}) {
+  return <>{use(promise).payload.length}</>
 }
 
 test('sync termination does not leave a poisoned cache entry', async () => {
@@ -79,41 +91,56 @@ test('preloaded-never-consumed entry is torn down after ttl', async () => {
   expect(active).toBe(0)
 })
 
-test('releases the settled value and promise after unmount and ttl expiry', async () => {
-  let valueRef: WeakRef<object> | undefined
-  const promiseRefs: WeakRef<object>[] = []
-  // Long-lived source (as if declared at module scope). It emits a fresh
-  // payload object per subscription and completes synchronously.
-  const source = defer(() => {
-    const value = {payload: 'x'.repeat(1024)}
-    valueRef = new WeakRef(value)
-    return of(value)
-  })
+describe('releases the settled value and promise after unmount and ttl expiry', () => {
+  async function expectReleased(read: (promise: Promise<{payload: string}>) => ReactNode) {
+    let valueRef: WeakRef<object> | undefined
+    const promiseRefs: WeakRef<object>[] = []
+    // Long-lived source (as if declared at module scope). It emits a fresh
+    // payload object per subscription and completes synchronously.
+    const source = defer(() => {
+      const value = {payload: 'x'.repeat(1024)}
+      valueRef = new WeakRef(value)
+      return of(value)
+    })
 
-  function Owner() {
-    const promise = useObservablePromise(source, {ttl: 20})
-    promiseRefs.push(new WeakRef(promise))
-    // Avoid `use(promise)`: React 19.3's `trackUsedThenable` retains the
-    // thenable after unmount, which is not a react-rx cache leak.
-    return null
+    function Owner() {
+      const promise = useObservablePromise(source, {ttl: 20})
+      promiseRefs.push(new WeakRef(promise))
+      return read(promise)
+    }
+
+    const {unmount} = await renderAsync(<Owner />)
+    unmount()
+    // Let the eviction timer fire, releasing the cache entry (which retains both
+    // the instrumented promise and, through it, the settled value).
+    await wait(50)
+
+    await forceGC()
+
+    expect(valueRef!.deref()).toBeUndefined()
+    expect(promiseRefs.length).toBeGreaterThan(0)
+    for (const promiseRef of promiseRefs) {
+      expect(promiseRef.deref()).toBeUndefined()
+    }
+    // Keep the source — the WeakMap key — strongly reachable across the GC above, so the value can
+    // only have been released through eviction, not by the key getting collected.
+    expect(source).toBeInstanceOf(Observable)
   }
 
-  const {unmount} = await renderAsync(<Owner />)
-  unmount()
-  // Let the eviction timer fire, releasing the cache entry (which retains both
-  // the instrumented promise and, through it, the settled value).
-  await wait(50)
+  // Only the hook pins the promise here, so this holds on every React version.
+  test('when the promise is never read', () => expectReleased(() => null))
 
-  await forceGC()
-
-  expect(valueRef!.deref()).toBeUndefined()
-  expect(promiseRefs.length).toBeGreaterThan(0)
-  for (const promiseRef of promiseRefs) {
-    expect(promiseRef.deref()).toBeUndefined()
-  }
-  // Keep the source — the WeakMap key — strongly reachable across the GC above, so the value can
-  // only have been released through eviction, not by the key getting collected.
-  expect(source).toBeInstanceOf(Observable)
+  // The stronger check: the value was also handed to React through `use()`. Skipped where React
+  // itself retains the thenable, see `reactRetainsUsedThenables`.
+  test.skipIf(reactRetainsUsedThenables)(
+    'when the promise was read with use() under Suspense',
+    () =>
+      expectReleased((promise) => (
+        <Suspense fallback={null}>
+          <PayloadReader promise={promise} />
+        </Suspense>
+      )),
+  )
 })
 
 test('releases a preloaded-never-consumed value after ttl expiry', async () => {
