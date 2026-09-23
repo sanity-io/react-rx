@@ -184,6 +184,8 @@ class TestErrorBoundary extends Component<
 
 describe('createHookFromObservableFactory (vendored from sanity)', () => {
   test('returns the loading tuple first, then the loaded tuple', async () => {
+    // Kept per-test like the spied factories below, so each contract reads on its own.
+    // oxlint-disable-next-line unicorn/consistent-function-scoping
     const observableFactory = (value: string) =>
       new Observable<string>((subscriber) => {
         void tick().then(() => {
