@@ -8,6 +8,8 @@ catalog:
 
 catalogMode: prefer
 
+autoDedupe: true
+
 allowBuilds:
   es5-ext: false
   esbuild: false
