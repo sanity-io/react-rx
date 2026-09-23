@@ -56,6 +56,7 @@ function NavigationRouter({children}: {children: ReactNode}) {
     window.navigation.navigate(url)
   }
 
+  // oxlint-disable-next-line unicorn/consistent-function-scoping
   function setParams(key: string, value: string) {
     const newParams = parseSearchParams(document.location.search)
     if (value !== '') {

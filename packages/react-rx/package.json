@@ -69,15 +69,15 @@
   },
   "devDependencies": {
     "@sanity/tsconfig": "^2.2.1",
-    "@sanity/tsdown-config": "^0.28.0",
-    "@testing-library/dom": "^10.4.1",
+    "@sanity/tsdown-config": "^0.28.1",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.13.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
-    "jsdom": "^30.0.1",
-    "oxc-transform-react": "^0.149.0",
+    "jsdom": "^30.1.1",
+    "oxc-transform-react": "^0.151.0",
     "publint": "^0.3.24",
     "react": "^19.3.0",
     "react-19.2": "npm:react@~19.2.8",
@@ -86,8 +86,8 @@
     "rxjs": "catalog:",
     "tsdown": "^0.23.0",
     "typescript": "7.0.2",
-    "vite": "^8.2.2",
-    "vitest": "^5.0.0"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
   },
   "peerDependencies": {
     "react": "^19.2",

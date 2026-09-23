@@ -34,17 +34,17 @@ interface FormValues {
   description: string
 }
 
-function FormDataExample() {
-  // Push input changes into the form stream
-  const handleChange = (
-    event: ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >,
-  ) =>
-    formData$.next({
-      [event.target.name]: event.target.value,
-    })
+// Push input changes into the form stream
+const handleChange = (
+  event: ChangeEvent<
+    HTMLInputElement | HTMLTextAreaElement
+  >,
+) =>
+  formData$.next({
+    [event.target.name]: event.target.value,
+  })
 
+function FormDataExample() {
   // Create form data stream
   const [data$] = useState(() =>
     storage

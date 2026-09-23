@@ -54,6 +54,12 @@ function ReaderB({promise}: {promise: Promise<string>}) {
   return <div data-testid="b">{use(promise)}</div>
 }
 
+/** Reads a promise derived from the hook's promise with `then()`, not the promise itself. */
+function DerivedReader({promise}: {promise: Promise<string>}) {
+  const derived = useMemo(() => promise.then((value) => `${value}!`), [promise])
+  return <div data-testid="value">{use(derived)}</div>
+}
+
 function EmptyParent({onError}: {onError?: (error: Error) => void}) {
   const p = useObservablePromise(EMPTY)
   return (
@@ -275,6 +281,36 @@ test('Object.is-equal emission does not re-render the reader', async () => {
     subject.next('same')
   })
   expect(readerRenders).toBe(rendersAfterFirst)
+})
+
+test('a promise derived with then() can be handed to use()', async () => {
+  // `use(promise.then(pick))` is a natural thing to write with the returned
+  // promise. The derived promise must be a plain Promise React can instrument:
+  // an engine-built subclass instance would keep `status: 'pending'` forever
+  // and suspend this component for good (#626).
+  const subject = new Subject<string>()
+
+  function Parent() {
+    const p = useObservablePromise(subject)
+    return (
+      <Suspense fallback={<Fallback />}>
+        <DerivedReader promise={p} />
+      </Suspense>
+    )
+  }
+
+  await renderAsync(<Parent />)
+  expect(screen.getByTestId('fallback')).toBeTruthy()
+
+  await act(async () => {
+    subject.next('hello')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('hello!'))
+
+  await act(async () => {
+    subject.next('again')
+  })
+  await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('again!'))
 })
 
 test('multiple components share one source subscription and the same promise identity', async () => {
@@ -564,8 +600,8 @@ test('disabled re-renders do not renew grace — entry still evicts for later mo
 
   function Disabled({tick}: {tick: number}) {
     // The idle `adoptTtl` on every render must not reset the eviction clock.
-    // void: the return is an ObservablePromise (a Promise subclass); we only
-    // care that the hook runs, not that anything awaits the promise.
+    // void: the return is an ObservablePromise (a thenable); we only care
+    // that the hook runs, not that anything awaits the promise.
     void useObservablePromise(observable, {disabled: true, ttl: 40})
     return <span data-testid="tick">{tick}</span>
   }

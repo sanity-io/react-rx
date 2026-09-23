@@ -91,51 +91,53 @@ test('preloaded-never-consumed entry is torn down after ttl', async () => {
   expect(active).toBe(0)
 })
 
-describe('releases the settled value and promise after unmount and ttl expiry', () => {
-  async function expectReleased(read: (promise: Promise<{payload: string}>) => ReactNode) {
-    let valueRef: WeakRef<object> | undefined
-    const promiseRefs: WeakRef<object>[] = []
-    // Long-lived source (as if declared at module scope). It emits a fresh
-    // payload object per subscription and completes synchronously.
-    const source = defer(() => {
-      const value = {payload: 'x'.repeat(1024)}
-      valueRef = new WeakRef(value)
-      return of(value)
-    })
+async function expectReleasedAfterUnmountAndTtl(
+  read: (promise: Promise<{payload: string}>) => ReactNode,
+) {
+  let valueRef: WeakRef<object> | undefined
+  const promiseRefs: WeakRef<object>[] = []
+  // Long-lived source (as if declared at module scope). It emits a fresh
+  // payload object per subscription and completes synchronously.
+  const source = defer(() => {
+    const value = {payload: 'x'.repeat(1024)}
+    valueRef = new WeakRef(value)
+    return of(value)
+  })
 
-    function Owner() {
-      const promise = useObservablePromise(source, {ttl: 20})
-      promiseRefs.push(new WeakRef(promise))
-      return read(promise)
-    }
-
-    const {unmount} = await renderAsync(<Owner />)
-    unmount()
-    // Let the eviction timer fire, releasing the cache entry (which retains both
-    // the instrumented promise and, through it, the settled value).
-    await wait(50)
-
-    await forceGC()
-
-    expect(valueRef!.deref()).toBeUndefined()
-    expect(promiseRefs.length).toBeGreaterThan(0)
-    for (const promiseRef of promiseRefs) {
-      expect(promiseRef.deref()).toBeUndefined()
-    }
-    // Keep the source — the WeakMap key — strongly reachable across the GC above, so the value can
-    // only have been released through eviction, not by the key getting collected.
-    expect(source).toBeInstanceOf(Observable)
+  function Owner() {
+    const promise = useObservablePromise(source, {ttl: 20})
+    promiseRefs.push(new WeakRef(promise))
+    return read(promise)
   }
 
+  const {unmount} = await renderAsync(<Owner />)
+  unmount()
+  // Let the eviction timer fire, releasing the cache entry (which retains both
+  // the instrumented promise and, through it, the settled value).
+  await wait(50)
+
+  await forceGC()
+
+  expect(valueRef!.deref()).toBeUndefined()
+  expect(promiseRefs.length).toBeGreaterThan(0)
+  for (const promiseRef of promiseRefs) {
+    expect(promiseRef.deref()).toBeUndefined()
+  }
+  // Keep the source — the WeakMap key — strongly reachable across the GC above, so the value can
+  // only have been released through eviction, not by the key getting collected.
+  expect(source).toBeInstanceOf(Observable)
+}
+
+describe('releases the settled value and promise after unmount and ttl expiry', () => {
   // Only the hook pins the promise here, so this holds on every React version.
-  test('when the promise is never read', () => expectReleased(() => null))
+  test('when the promise is never read', () => expectReleasedAfterUnmountAndTtl(() => null))
 
   // The stronger check: the value was also handed to React through `use()`. Skipped where React
   // itself retains the thenable, see `reactRetainsUsedThenables`.
   test.skipIf(reactRetainsUsedThenables)(
     'when the promise was read with use() under Suspense',
     () =>
-      expectReleased((promise) => (
+      expectReleasedAfterUnmountAndTtl((promise) => (
         <Suspense fallback={null}>
           <PayloadReader promise={promise} />
         </Suspense>

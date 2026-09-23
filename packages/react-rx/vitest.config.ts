@@ -38,6 +38,23 @@ export default defineConfig({
       {
         extends: true,
         plugins: [react()],
+        // The suites that hand an ObservablePromise to React, run again with
+        // React Native's species-less `Promise.prototype.then` installed (see
+        // `vitest-hermes-promise.ts`). A `Promise` subclass in
+        // `observablePromise.ts` recurses or hangs `use()` here instead of on
+        // a device (#626).
+        test: {
+          name: 'hermes-promise',
+          setupFiles: ['vitest-cleanup-after-each.ts', 'vitest-hermes-promise.ts'],
+          include: [
+            'src/__tests__/observablePromise*.test.ts',
+            'src/__tests__/useObservablePromise*.test.tsx',
+          ],
+        },
+      },
+      {
+        extends: true,
+        plugins: [react()],
         // The oldest React in the `^19.2` peer range. Some assertions only hold on one side of a
         // React change (e.g. React 19.3 retains `use()`d thenables after unmount, see
         // `useObservablePromise.leaks.test.tsx`), so the suite runs against both versions. The 19.2

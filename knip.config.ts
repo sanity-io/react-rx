@@ -16,6 +16,7 @@ const config: KnipConfig = {
         'vitest.config.ts',
         'tsdown.config.ts',
         'vitest-cleanup-after-each.ts',
+        'vitest-hermes-promise.ts',
       ],
       project: ['src/**/*.{ts,tsx}', '*.{ts,tsx}'],
       // React 19.2 for the `react-19.2` vitest project; only referenced as `resolve.alias` targets
