@@ -9,6 +9,11 @@
  * https://github.com/reactwg/async-react/discussions/3). Rejection handlers
  * are attached via `Promise.prototype.then` to avoid subclass species
  * recursion from `this.then(...)` inside the constructor.
+ *
+ * Engines that ignore `Symbol.species` (Hermes) build derived `.then()`
+ * promises with `new ObservablePromiseImpl(executor)`, so the constructor
+ * forwards an executor when one is passed and only attaches its own no-op
+ * handler for instances created without one.
  */
 
 function noop() {}
@@ -31,15 +36,26 @@ export class ObservablePromiseImpl<T> extends Promise<T> {
     return Promise
   }
 
-  constructor() {
+  constructor(
+    executor?: (
+      resolve: (value: T | PromiseLike<T>) => void,
+      reject: (reason?: unknown) => void,
+    ) => void,
+  ) {
     let resolve!: (value: T | PromiseLike<T>) => void
     let reject!: (reason?: unknown) => void
     super((res, rej) => {
       resolve = res
       reject = rej
+      executor?.(res, rej)
     })
     this.#resolve = resolve
     this.#reject = reject
+    // A derived promise built by an engine without species support: its
+    // settlement belongs to the caller, so do not attach handlers or recurse.
+    if (executor) {
+      return
+    }
     // Prevent unhandled-rejection noise if nothing consumes the promise before
     // an error settles (e.g. preload that nobody mounts).
     // Use Promise.prototype.then — `this.then` would construct another subclass
