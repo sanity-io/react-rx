@@ -18,6 +18,8 @@ const config: KnipConfig = {
         'vitest-cleanup-after-each.ts',
       ],
       project: ['src/**/*.{ts,tsx}', '*.{ts,tsx}'],
+      // React 19.2 for the `react-19.2` vitest project; only referenced as `resolve.alias` targets
+      ignoreDependencies: ['react-19.2', 'react-dom-19.2'],
     },
     'website': {
       entry: [
