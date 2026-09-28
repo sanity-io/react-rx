@@ -255,7 +255,7 @@ importers:
         specifier: ^8.1.1
         version: 8.1.1
       '@types/node':
-        specifier: ^26.6.2
+        specifier: ^26.6.3
         version: 26.6.3
       '@types/react':
         specifier: ^19.3.0
