@@ -423,7 +423,7 @@ test('initialValue initializers resolve once per hook instance, like useState, s
   expect(initializerCalls).toBe(1)
 })
 
-test('the initialValue argument is read on the first render only, like useState', () => {
+test('while the observable identity is stable, initialValue is read on the first render only', () => {
   const values$ = new Subject<string>()
   const useValue = (initialValue: string | undefined) => useSyncObservable(values$, initialValue)
 

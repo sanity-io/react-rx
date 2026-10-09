@@ -1,8 +1,9 @@
-import {useCallback, useDeferredValue, useMemo, useState, useSyncExternalStore} from 'react'
+import {useCallback, useDeferredValue, useMemo, useSyncExternalStore} from 'react'
 import type {Observable, ObservedValueOf} from 'rxjs'
 
 import {getOrCreateStore} from './cache'
 import type {UseObservableOptions} from './types'
+import {useResolvedInitialValue} from './useResolvedInitialValue'
 import {EMPTY_OBJECT, missingInitialValueError, UNSET_INITIAL_VALUE} from './utils'
 
 /**
@@ -16,20 +17,28 @@ import {EMPTY_OBJECT, missingInitialValueError, UNSET_INITIAL_VALUE} from './uti
  *
  * `initialValue` is required: it is what renders until the observable emits. Every value is a
  * valid initial value, `undefined` included — pass it explicitly; omitting the argument throws
- * during render. Functions act as initializers, exactly like `useState`: pass `() => value` to
- * compute the initial value lazily, and an initializer returning the function when the initial
- * value should be a function itself. When there is no meaningful initial value, or you want to
- * show fallback UI while the observable is "loading", reach for {@link useObservablePromise} with
- * `use()` and Suspense instead.
+ * during render. Functions act as initializers, like `useState`: pass `() => value` to compute
+ * the initial value lazily, and an initializer returning the function when the initial value
+ * should be a function itself. The argument is resolved again when the observable identity
+ * changes, and ignored on later renders while that identity is stable. When there is no
+ * meaningful initial value, or you want to show fallback UI while the observable is "loading",
+ * reach for {@link useObservablePromise} with `use()` and Suspense instead.
  *
  * The observable is never subscribed during render: every render — the first one and every
- * identity change alike — shows `initialValue` (or the shared entry's last emission) and the live
- * subscription starts on commit, keeping subscribe-time side effects out of the render phase. A
- * synchronous emission replaces the `initialValue` right after that commit. Keep the observable's
- * identity stable across renders (`useMemo`, `useState`, module scope) — like
+ * identity change alike — shows the resolved `initialValue` for the current identity (or the
+ * shared entry's last emission) and the live subscription starts on commit, keeping
+ * subscribe-time side effects out of the render phase. A synchronous emission replaces the
+ * `initialValue` right after that commit, so a source that emits synchronously does not paint
+ * the initial value. An entry that has already emitted elsewhere never shows it. Keep the
+ * observable's identity stable across renders (`useMemo`, `useState`, module scope) — like
  * `useSyncExternalStore`'s `subscribe`, an observable rebuilt on every render is re-subscribed on
- * every render, and when it synchronously replays a value that differs from the `initialValue`
- * this forces a render loop.
+ * every render. A fresh initial-value reference on those renders does not by itself loop: nothing
+ * notifies the store unless the new subscription synchronously replays a value. The replay loops
+ * when it is not `Object.is` to the initial value resolved for that identity. v7 only compared
+ * the replay with the initial value captured at mount, so a replay of that captured value settled
+ * even while later renders passed a different placeholder. Memoize placeholders that must stay
+ * `Object.is` to the replay (`useMemo`, module scope). `useCallback` on a factory does not help
+ * when calling it returns a new reference.
  *
  * The deferral is identity-coherent: unlike a bare `useDeferredValue(useObservable(...))`, the
  * observable identity and its value are deferred as one snapshot, and when the observable identity
@@ -68,11 +77,9 @@ export function useObservable<ObservableType extends Observable<any>, InitialVal
   }
   const {disabled = false} = args[1] ?? EMPTY_OBJECT
 
-  // Resolve function initializers once per hook instance, exactly like `useState`.
-  // `getSnapshot` must return the same reference on every pre-emission read: an
-  // initializer producing a fresh object per call would make `useSyncExternalStore`'s
-  // consistency check see a store change on every render and loop until React aborts.
-  const [resolvedInitialValue] = useState(initialValue)
+  // Once per observable identity, not on every `getSnapshot` read and not on every render.
+  // See `useResolvedInitialValue`.
+  const resolvedInitialValue = useResolvedInitialValue(observable, initialValue)
 
   const instance = useMemo(() => getOrCreateStore(observable), [observable])
 
