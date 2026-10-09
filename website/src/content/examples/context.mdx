@@ -1,3 +1,21 @@
 import Example from '@/examples/context'
 
+# Share a stream with context
+
+React context can provide an observable rather than its current value. Descendants choose where
+to read that stream with [`useObservable`](/reference#useobservable).
+
+Change the mode in either of the first two panels. Both share the provider's subject, so both
+update. Then change the bottom panel: it uses a separate default subject and does not affect the
+first pair.
+
 <Example />
+
+The provider keeps the same subject instance with `useMemo`. `useModeValue` reads it and supplies
+`light` as the initial value; `useSetMode` sends changes to it. Since this is a plain `Subject`,
+it does not replay past events by itself.
+
+This pattern is useful when a subtree needs to share an existing stream. Context with ordinary
+React state is still an option when there is no stream to compose.
+
+Next: [fetch a value in response to a click](/examples/fetch).

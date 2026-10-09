@@ -1,3 +1,21 @@
 import Example from '@/examples/event-handlers'
 
+# Read mouse events
+
+An event handler can send values into an observable just as a timer can. Here, a `Subject`
+receives mouse events and `map` extracts the pointer coordinates.
+
+Move the pointer inside the dashed box. The coordinates are relative to the preview's viewport,
+not the box. Before the first move, the component shows an instruction.
+
 <Example />
+
+`useMemo` keeps the derived position stream stable, and
+[`useObservable`](/reference#useobservable) reads it with `null` as the initial value. The display
+can use deferred updates because it is not controlling an input.
+
+The subject in this example is shared at module scope. For events that belong to a single
+component instance, [`useObservableSubject`](/reference#useobservablesubject) provides a stable
+event handler and stream without exposing the subject itself.
+
+Next: [compose streams with different timings](/examples/counters).

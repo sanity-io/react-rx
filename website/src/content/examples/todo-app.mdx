@@ -1,3 +1,19 @@
 import Example from '@/examples/todo-app'
 
+# Build a list from events
+
+A text stream and a submit stream can describe a small form without copying the derived list into
+React state. Each submission reads the latest text and appends an item.
+
+Type an item and press Enter or click **Add**. Add another, then try submitting with an empty
+field. The input clears after submission, and empty strings are ignored. This example adds items
+only; it does not save them between visits.
+
 <Example />
+
+`withLatestFrom` reads the text when a submit event arrives. `filter` rejects empty text, and
+`scan` accumulates the list. The controlled field uses
+[`useSyncObservable`](/reference#usesyncobservable); the list uses
+[`useObservable`](/reference#useobservable), since it can update in the background.
+
+Next: [save a form to local storage](/examples/form-data).
