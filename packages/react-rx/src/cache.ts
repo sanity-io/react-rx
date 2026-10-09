@@ -10,7 +10,7 @@ interface ObservableState<T> {
 interface CacheRecord<T> {
   observable: Observable<void>
   state: ObservableState<T>
-  /** `resolvedInitialValue` must be a plain value: the hooks resolve function initializers once per instance. */
+  /** `resolvedInitialValue` must be a plain value: the hooks resolve it once per observable identity. */
   getSnapshot: (resolvedInitialValue: unknown) => T
 }
 
