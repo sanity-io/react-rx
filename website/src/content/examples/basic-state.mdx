@@ -1,0 +1,42 @@
+import TextField from '@/examples/text-field'
+import Checkbox from '@/examples/checkbox'
+import Form from '@/examples/form'
+
+# Basic state
+
+The [`useState` reference](https://react.dev/reference/react/useState#examples-basic) opens with four basic state shapes: a counter, a text field, a checkbox, and a form. [First steps](/examples/simple) covered the counter. Here are the other three, as streams.
+
+The pattern is always the same:
+
+- State lives in a `Subject` (or a `BehaviorSubject` when it has a current value).
+- Plain event handlers push into it.
+- Components read it with a hook.
+
+One split to remember: **controlled inputs read [`useSyncObservable`](/reference#usesyncobservable)**. The caret and IME need synchronous updates. Everything else defaults to [`useObservable`](/reference#useobservable).
+
+## Text field (string)
+
+The `Subject` here belongs to the component, so [`useObservableSubject`](/reference#useobservablesubject) owns it. The hook returns the stream to read plus a stable handler to push into it. Nothing else can push into that stream.
+
+<TextField />
+
+## Checkbox (boolean)
+
+This one uses a **module-scoped `BehaviorSubject`** instead. Two things follow from that:
+
+- It holds a current value, so remounts and later readers get the real state with no flash.
+- It lives outside the component, so it can be shared or composed with other streams.
+
+The `initialValue` still renders first on a cold mount, because react-rx never subscribes during render. Seeding both with the same value keeps that paint stable.
+
+<Checkbox />
+
+## Form (two variables)
+
+Two independent pieces of state, just like two `useState` calls. Also a preview of the hook split: the name feeds a controlled input (`useSyncObservable`), while the age only feeds rendering (`useObservable`).
+
+<Form />
+
+## Where to next
+
+So far streams have only replaced `useState`. The payoff starts when state involves _time_. Continue to [Timers & time ago](/examples/timers).

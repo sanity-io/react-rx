@@ -17,7 +17,7 @@ data layer and `react-rx` connects it to `use()` and Suspense:
 - **Actions and feedback**: native transitions and `useOptimistic()` keep immediate feedback
   correctly scheduled while Observable-backed content loads.
 
-View the app: https://async-react.dev/
+View the app: https://async-react.sanity.dev/
 
 ## Setup
 

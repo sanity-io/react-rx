@@ -4,10 +4,17 @@ import Example from '@/examples/activity'
 
 Compare three strategies for the same ~1s tab fetch:
 
-1. **No prefetch** — the fetch starts when the visible tab's owner commits; the Suspense fallback shows
-2. **Hover preload** — `preloadObservablePromise` on `mouseenter` warms the cache before the click
-3. **Activity pre-render** — an always-visible wrapper owns `useObservablePromise` for every tab and passes each promise into a hidden `<Activity>` panel, which pre-renders with the data as it arrives
+1. **No prefetch:** the fetch starts when the visible tab's owner commits, so the Suspense fallback shows.
+2. **Hover preload:** `preloadObservablePromise` on `mouseenter` warms the cache before the click.
+3. **Activity pre-render:** an always-visible wrapper owns `useObservablePromise` for every tab. It passes each promise into a hidden `<Activity>` panel, which pre-renders with the data as it arrives.
 
-Rendering never starts a fetch: a hook called inside a hidden `<Activity>` tree stays paused until the tree is revealed. Pre-rendering hidden content _with_ data therefore means owning the promise in a visible component and letting the hidden tree `use()` it.
+Rendering never starts a fetch. A hook called inside a hidden `<Activity>` tree stays paused until the tree is revealed.
+
+So pre-rendering hidden content _with_ data means two things:
+
+- Own the promise in a visible component.
+- Let the hidden tree `use()` it.
+
+The [Async React demo](https://async-react.sanity.dev/) uses this for hidden routes that pre-render with data.
 
 <Example />

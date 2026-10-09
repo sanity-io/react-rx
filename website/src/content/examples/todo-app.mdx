@@ -1,3 +1,12 @@
 import Example from '@/examples/todo-app'
 
+# Todo app
+
+The classic, as streams. Events push into two `Subject`s from plain handlers: `text$` for keystrokes, `submit$` for the form. The list derives from them. Each submit samples the latest text with `withLatestFrom`, and `scan` accumulates the items.
+
+Note the hook split:
+
+- The controlled input reads [`useSyncObservable`](/reference#usesyncobservable). The caret and IME need synchronous updates.
+- The list reads [`useObservable`](/reference#useobservable). It's deferred, so a long list can't make typing lag.
+
 <Example />

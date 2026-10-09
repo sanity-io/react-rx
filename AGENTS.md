@@ -1,11 +1,16 @@
 # AGENTS.md
 
+## Skills
+
+Agent skills live in `.agents/skills/` (symlinked into `.claude/skills/`). When writing or reviewing React components that consume observables — including the website examples and docs snippets — follow `.agents/skills/react-rx-best-practices/SKILL.md`. For general RxJS composition, follow `.agents/skills/rxjs-like-a-pro/SKILL.md`.
+
 ## Cursor Cloud specific instructions
 
 This is the `sanity-io/react-rx` pnpm monorepo (workspaces defined in `pnpm-workspace.yaml`):
 
 - `packages/react-rx` — the `react-rx` library (RxJS + React hooks/utilities). Built with `tsdown` (configured through `@sanity/tsdown-config` in `packages/react-rx/tsdown.config.ts`), tested with Vitest.
 - `website` — the docs site at react-rx.dev, built with Next.js 15 + Nextra. Interactive examples live in `website/src/examples`.
+- `async-react` — a fork of Rick Hanlon's React Conf 2025 Async React demo, ported to react-rx. Vite app, not part of `pnpm build` or the docs site.
 
 Standard commands are defined in the root `package.json` scripts and mirror CI (`.github/workflows/ci.yml`): `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm dev`. Dependencies are installed with `pnpm install` (pnpm version is pinned via `packageManager`).
 
@@ -18,5 +23,5 @@ Non-obvious notes:
 - `pnpm test` runs Vitest with `--typecheck` (type-level tests in `*.test-d.ts`) and runs each suite twice: once normally and once through the React Compiler (the `react-compiler` project in `packages/react-rx/vitest.config.ts`).
 - The build ends with a `publint` warning about a missing `engines.node` field; it is expected and not a failure.
 - tsdown owns the `exports` map in `packages/react-rx/package.json`, so a local `pnpm build` can rewrite it (regeneration is skipped in CI, where the committed file is already current). Locally `exports` points at `./src/index.ts` and `publishConfig.exports` carries the `dist` entry points, which `pnpm publish` swaps in — `changeset publish` detects pnpm, so this is the path releases take.
-- TypeScript is pinned to 6.0.3 in all three workspaces. Do not move to 7: it is the native port, whose `typescript` entry point is only a version stub, while tsdown's `.d.ts` generation, Vitest's typechecker, and Next.js all still need the JS API that 6.x ships. 6.x also satisfies `@sanity/tsdown-config`'s peer range, so `pnpm peers check` is clean.
+- TypeScript is `7.0.2` in the root, `packages/react-rx` and `async-react`, and stays pinned to `6.0.3` in `website`, which still needs the JS API that 6.x ships. tsdown's `.d.ts` emit works against 7 but prints a `TypeScript 7.0 does not yet have a stable API` warning; that is expected, not a failure.
 - `packages/react-rx/tsdown.config.ts` annotates its default export with `satisfies Promise<UserConfig[]>`. Without it, declaration emit can only name the type through `@sanity/tsdown-config`'s own copy of `tsdown` and `tsc` fails with TS2883. `pnpm lint` (Oxlint type-aware + type-check) also flags a mismatch if this is `Promise<UserConfig>` instead of `Promise<UserConfig[]>`.

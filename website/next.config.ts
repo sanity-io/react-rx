@@ -6,9 +6,6 @@ const withNextra = nextra({
 })
 
 const nextConfig = {
-  compiler: {
-    styledComponents: true,
-  },
   // Native React Compiler via Turbopack (no babel-plugin-react-compiler).
   reactCompiler: true,
   experimental: {
@@ -19,6 +16,16 @@ const nextConfig = {
   },
   productionBrowserSourceMaps: true,
   transpilePackages: ['react-rx'],
+  async redirects() {
+    // Example pages that moved during the docs restructuring.
+    return [
+      {source: '/examples/animation', destination: '/examples/llm-chat', permanent: false},
+      {source: '/examples/counters', destination: '/examples/basic-state', permanent: false},
+      {source: '/examples/sync', destination: '/examples/timers', permanent: false},
+      {source: '/examples/relative-time', destination: '/examples/timers', permanent: false},
+      {source: '/examples/event-handlers', destination: '/examples/simple', permanent: false},
+    ]
+  },
   async headers() {
     return [
       {

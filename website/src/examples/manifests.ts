@@ -30,12 +30,20 @@ export const exampleManifests = {
       '/api.ts': 'api.ts',
     },
   },
-  'animation': {
-    files: {'/App.tsx': 'AnimationExample.tsx'},
-    dependencies: {
-      'bezier-easing': 'latest',
-      'styled-components': 'latest',
-    },
+  'checkbox': {
+    files: {'/App.tsx': 'App.tsx'},
+  },
+  'clicks-bridge': {
+    files: {'/App.tsx': 'App.tsx'},
+  },
+  'clicks-count': {
+    files: {'/App.tsx': 'App.tsx'},
+  },
+  'clicks-throttle': {
+    files: {'/App.tsx': 'App.tsx'},
+  },
+  'clicks-values': {
+    files: {'/App.tsx': 'App.tsx'},
   },
   'context': {
     files: {
@@ -59,11 +67,6 @@ export const exampleManifests = {
       'use-error-boundary': 'latest',
     },
   },
-  'event-handlers': {
-    files: {
-      '/App.tsx': 'EventHandlersExample.tsx',
-    },
-  },
   'fetch': {
     files: {'/App.tsx': 'FetchExample.tsx'},
     transform: (source) =>
@@ -74,47 +77,58 @@ export const exampleManifests = {
           : 'https://react-rx.sanity.dev',
       ),
   },
-  'fizz-buzz': {
-    files: {'/App.tsx': 'FizzBuzzExample.tsx'},
+  'form': {
+    files: {'/App.tsx': 'App.tsx'},
   },
   'form-data': {
     files: {
       '/App.tsx': 'FormDataExample.tsx',
       '/storage.ts': 'storage.ts',
     },
-    dependencies: {'styled-components': 'latest'},
   },
-  'hello-world': {
-    files: {'/App.tsx': 'HelloWorldExample.tsx'},
+  'interval-observable': {
+    files: {'/App.tsx': 'App.tsx'},
   },
-  'reactive-state': {
+  'llm-chat': {
     files: {
-      '/App.tsx': 'ReactiveStateExample.tsx',
+      '/App.tsx': 'App.tsx',
+      '/chat.ts': 'chat.ts',
+      '/llm.ts': 'llm.ts',
+    },
+  },
+  'resilient-fetch': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/api.ts': 'api.ts',
     },
   },
   'search': {
     files: {'/App.tsx': 'SearchExample.tsx'},
   },
-  'simple': {
-    files: {'/App.tsx': 'Counter.example.tsx'},
-  },
   'suspense': {
     files: {'/App.tsx': 'SuspenseExample.tsx'},
   },
-  'sync': {
-    files: {'/App.tsx': 'Sync.example.tsx'},
+  'text-field': {
+    files: {'/App.tsx': 'App.tsx'},
   },
-  'tick': {
+  'time-ago': {
     files: {
-      '/App.tsx': 'TickExample.tsx',
-      './Ticker.tsx': 'Ticker.tsx',
-      './TickerWithSubTick.tsx':
-        'TickerWithSubTick.tsx',
+      '/App.tsx': 'App.tsx',
+      '/timeAgo.ts': 'timeAgo.ts',
+    },
+  },
+  'time-ago-ssr': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/Message.tsx': 'Message.tsx',
+      '/timeAgo.ts': 'timeAgo.ts',
     },
   },
   'todo-app': {
     files: {'/App.tsx': 'TodoApp.example.tsx'},
-    dependencies: {'styled-components': 'latest'},
+  },
+  'use-interval': {
+    files: {'/App.tsx': 'App.tsx'},
   },
   'transitions': {
     files: {

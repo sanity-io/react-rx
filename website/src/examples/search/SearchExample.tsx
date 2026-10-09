@@ -30,7 +30,7 @@ const range = (len: number) => {
   return res
 }
 
-// Create subject for search input
+// Search input pushes into a Subject
 const keyword$ = new Subject<string>()
 
 // A search function that takes longer time to complete for shorter keywords
@@ -47,15 +47,13 @@ const search = (
         title: `Hit #${i}`,
       })),
     ),
-    map((hits) => ({
-      keyword,
-      hits,
-    })),
+    map((hits) => ({keyword, hits})),
   )
 }
 
 function SearchExample() {
-  // Create search results stream
+  // Search results stream: switchMap cancels the previous search when a new
+  // keyword arrives, so out-of-order responses can never win.
   const results$ = useMemo(
     () =>
       keyword$.pipe(
@@ -64,7 +62,7 @@ function SearchExample() {
         switchMap((kw: string) => search(kw)),
         map((result: SearchResult) => (
           <>
-            <h1>Searched for {result.keyword}</h1>
+            <h4>Searched for {result.keyword}</h4>
             <div>
               Got {result.hits.length} hits
             </div>
@@ -90,17 +88,16 @@ function SearchExample() {
     <>
       <input
         type="search"
-        style={{width: '100%'}}
         value={keyword}
         placeholder="Type a keyword to search"
         onChange={(event) =>
           keyword$.next(event.currentTarget.value)
         }
       />
-      <div>
+      <small>
         The more characters you type, the faster
         the results will appear
-      </div>
+      </small>
       {results}
     </>
   )
