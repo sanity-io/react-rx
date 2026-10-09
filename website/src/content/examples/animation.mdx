@@ -1,3 +1,22 @@
 import Example from '@/examples/animation'
 
+# Animate with a timer
+
+This example turns elapsed ticks into a ball's vertical position. It demonstrates composing
+timing and easing functions in an observable, rather than a general-purpose animation system.
+
+Select a few easing functions and compare the motion near the top and bottom of the box. Each
+selection starts the movement again. You can also edit `easeCustom` to try your own curve.
+
 <Example />
+
+`switchMap` replaces the running timer when the easing changes. Each tick maps to a position,
+then the selected easing function reshapes that position.
+[`useObservable`](/reference#useobservable) reads the resulting position and easing name together.
+
+The timer requests a tick every 16 milliseconds; it is not synchronized with the browser's
+animation frames, and React need not paint every emission. CSS animations or a dedicated animation
+API may be a better fit when you do not otherwise need an observable.
+
+Next: revisit [composing timer streams](/examples/counters), or explore the
+[full app demo](https://async-react.sanity.dev/) for the async data patterns in a larger application.

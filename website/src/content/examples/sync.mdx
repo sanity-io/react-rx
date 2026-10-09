@@ -1,3 +1,18 @@
 import Example from '@/examples/sync'
 
+# Synchronous emissions
+
+An observable can emit several values as soon as something subscribes. That does not mean React
+will display each one as a separate frame.
+
+Try changing the final string in the array. The component starts with `…`, then receives the
+array's values immediately after commit. The result settles on the last value, `mount!`.
+
 <Example />
+
+This example uses [`useObservable`](/reference#useobservable), not `useSyncObservable`. Neither
+hook subscribes during render, and both require an initial value. Choose
+[`useSyncObservable`](/reference#usesyncobservable) when an emitted value controls an input, not
+merely because the source emits synchronously.
+
+Next: [turn mouse events into values to render](/examples/event-handlers).

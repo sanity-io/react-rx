@@ -1,4 +1,7 @@
-# Getting Started
+# Using react-rx
+
+This guide assumes you know the basics of React hooks and RxJS observables. If RxJS is new to you,
+start with its [introduction to observables](https://rxjs.dev/guide/observable).
 
 ## Installation
 
@@ -6,84 +9,73 @@
 npm i react-rx rxjs
 ```
 
+You need React `^19.2` and RxJS `^7.2`. Import operators from `rxjs`, not `rxjs/operators`.
+
+## From a stream to a component
+
+An observable describes a sequence of values. A subscription starts listening to that sequence.
+react-rx manages that subscription for a React component and gives you a value to render.
+
+Keep the two jobs separate: use RxJS to decide which values reach the component, and use React to
+display them. For example, a search stream can wait for a pause in typing and cancel an older request.
+The component only needs to render the results.
+
 ## Observable Hooks
 
 ### Which one should I use?
 
-- **Default to `useObservable`** — store updates are deferred, so previews, validation, lists, and other chrome stay responsive and play nicely with Suspense.
-- **Reach for `useSyncObservable`** only when the value feeds a controlled input (caret/IME breakage or lost keystrokes under load) or must be read back synchronously in the same event.
-- **Reach for `useObservablePromise`** when the observable has no meaningful initial value, or you want fallback UI while waiting for the first emission — it returns a `use()`-compatible promise for Suspense.
+| You want to…                                               | Start with             |
+| ---------------------------------------------------------- | ---------------------- |
+| Display a value from an observable                         | `useObservable`        |
+| Use that value to control an input                         | `useSyncObservable`    |
+| Show a Suspense fallback while waiting for the first value | `useObservablePromise` |
+| Send events from a component into a stream                 | `useObservableSubject` |
 
-See [Suspense & deferred values](/examples/suspense) for a side-by-side demo, and the [v4 → v5 migration guide](/migrate/v4-to-v5) if you are upgrading.
+The first two hooks need an initial value. The promise hook lets Suspense provide the loading UI
+instead. The subject hook creates an event stream; it does not subscribe to it.
+
+You can use more than one hook with the same stream. For example, an input can use
+`useSyncObservable` while its results list uses `useObservable`.
 
 ### useObservable()
 
-Use observables in React components with the `useObservable` hook.
-
-If you need to subscribe to an observable in your component, this hook will give you the current value from it. Later emissions update the component at deferred priority — urgent renders keep the previous value until a background render catches up.
-
-Example:
+Start here for values you want to display. Pass an observable and an initial value:
 
 ```tsx
 import {useMemo} from 'react'
 import {useObservable} from 'react-rx'
-import {interval} from 'rxjs'
+import {timer} from 'rxjs'
 
-function MyComponent(props) {
-  const observable = useMemo(() => interval(100), [])
-  const number = useObservable(observable, 0)
+function ElapsedTime() {
+  const seconds$ = useMemo(() => timer(0, 1000), [])
+  const seconds = useObservable(seconds$, 0)
 
-  return <>The number is {number}</>
+  return <p>{seconds} seconds elapsed</p>
 }
 ```
 
-The `initialValue` argument is **required**: it is what the component renders until the observable emits. Every value is a valid initial value — `undefined` included, pass it explicitly — and omitting the argument throws during render. Functions act as initializers, exactly like `useState`: pass `() => value` to compute the initial value lazily, and an initializer returning the function when the initial value should be a function itself.
+The first render shows `0`. The subscription starts when React commits the component, not while it
+renders. Even a `BehaviorSubject` that supplies a value immediately must wait for that subscription.
+If another component is already reading the same observable, the hook can use its latest shared value.
 
-The observable is never subscribed during render. Every render — the first one and every identity change alike — shows the `initialValue` (or the shared entry's last emission), and the subscription starts when the component commits — an observable that emits _synchronously_ at subscription time (`of`, `startWith`, a `BehaviorSubject`, …) replaces the `initialValue` right after that commit. This keeps subscribe-time side effects (for example a `fromFetch` request) out of the render phase.
+Later updates are deferred: React can finish urgent work, such as typing, before updating this
+component. Until then, the component keeps its previous value.
 
-Keep the observable's identity stable across renders (`useMemo`, `useState`, module scope, or React Compiler memoization). Like `useSyncExternalStore`'s `subscribe`, an observable rebuilt on every render is re-subscribed on every render — and when it synchronously replays a value that differs from the `initialValue`, the resulting re-render builds yet another identity and the component loops forever.
+**Choosing an initial value.** The argument is required; omitting it throws. Pass `undefined`
+explicitly if that is the value you want. Like `useState`, the hook accepts an initializer function
+and stores its result for that hook instance. To store a function as the value, wrap it in an
+initializer: `() => myFunction`.
 
-```tsx
-import {useMemo} from 'react'
-import {useObservable} from 'react-rx'
-import {of} from 'rxjs'
+**Keeping the observable stable.** The `useMemo` above keeps the same timer across renders.
+Without it, each render would create a new timer and restart the subscription. Sources that emit
+immediately can even cause a render loop. See [keeping observables stable](#keeping-observables-stable)
+for streams that depend on props.
 
-// The first render shows "mars"; the synchronous emission "world" takes over
-// right after mount, once the live subscription delivers it.
-function MyComponent(props) {
-  const observable = useMemo(() => of('world'), [])
-  const planet = useObservable(observable, 'mars')
+**Pausing a subscription.** Pass `{disabled: true}` to stop this hook from subscribing. It keeps
+the last value it received, or the initial value if it has received nothing yet. Re-enable it to
+subscribe again. Other components can still subscribe to the same observable.
 
-  return <>Hello {planet}!</>
-}
-```
-
-If there is no initial value that makes sense for your observable — or you want to show fallback UI while the observable is "loading" — that is what [`useObservablePromise`](#useobservablepromise) is for: it returns a `use()`-compatible promise that suspends until the first emission instead of painting a placeholder value.
-
-The difference between `useObservable` and `useSyncObservable` is how _updates_ propagate (deferred vs synchronous), not the first render. On the server both hooks render the resolved `initialValue` — exactly what the first client paint will show — and neither ever subscribes the observable there.
-
-The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription. A disabled hook performs no subscriptions at all — even when the observable is rebuilt on every render — so `disabled: true` guarantees zero subscriptions until it is re-enabled.
-
-```tsx
-import {useEffect, useState} from 'react'
-import {useObservable} from 'react-rx'
-import {Subject} from 'rxjs'
-
-// While `disabled` is true, later async emissions are ignored and the last
-// received value (here the initialValue "mars") is returned.
-function MyComponent(props) {
-  const [observable] = useState(() => new Subject<string>())
-  const planet = useObservable(observable, 'mars', {disabled: true})
-
-  useEffect(() => {
-    observable.next('world')
-  }, [observable])
-
-  return <>Hello {planet}!</>
-}
-```
-
-That guarantee makes `disabled` the tool for gating observables with subscribe-time side effects:
+For example, this request only starts on behalf of `Users` when `shouldFetch` is true:
 
 ```tsx
 import {useMemo} from 'react'
@@ -98,9 +90,6 @@ function Users({shouldFetch}: {shouldFetch: boolean}) {
       }),
     [],
   )
-  // Nothing subscribes during render, and `disabled` skips the commit-time
-  // subscription too — the request is guaranteed not to fire until
-  // `shouldFetch` becomes true.
   const users = useObservable(users$, null, {disabled: !shouldFetch})
 
   return <pre>{JSON.stringify(users, null, 2)}</pre>
@@ -109,30 +98,32 @@ function Users({shouldFetch}: {shouldFetch: boolean}) {
 
 ### useSyncObservable()
 
-Same signature as `useObservable`, but updates are synchronous (the previous default). Use it for controlled inputs:
+Use this when an observable supplies a controlled input's value. The input needs each edit immediately;
+deferring it can interfere with typing. The arguments and initial-value rules are the same as
+`useObservable`; only the update timing differs.
 
 ```tsx
-import type {ChangeEvent} from 'react'
-import {useMemo} from 'react'
 import {useObservableSubject, useSyncObservable} from 'react-rx'
-import {map} from 'rxjs'
 
 function SearchField() {
-  const [changes$, handleChange] = useObservableSubject<ChangeEvent<HTMLInputElement>>()
-  const text$ = useMemo(() => changes$.pipe(map((event) => event.currentTarget.value)), [changes$])
+  const [text$, setText] = useObservableSubject<string>()
   const text = useSyncObservable(text$, '')
 
-  return <input value={text} onChange={handleChange} />
+  return <input value={text} onChange={(event) => setText(event.currentTarget.value)} />
 }
 ```
 
+If a child suspends in response to one of these updates, React can replace visible content with the
+nearest Suspense fallback. Prefer `useObservable` for results, previews, and other values that do not
+control the input. The [side-by-side example](/examples/suspense) shows the difference.
+
 ### useObservablePromise()
 
-Use this when you want **Suspense-powered data fetching** instead of tracking loading state in the stream.
+Use this when there is no useful initial value and you want Suspense to show a loading state.
+Unlike `useObservable`, it returns a promise rather than the value itself.
 
-`useObservable` is built on `useSyncExternalStore`. That is great for live values, but it cannot activate a [`Suspense`](https://react.dev/reference/react/Suspense#what-activates-a-suspense-boundary) boundary, and React 19.2 [`Activity`](https://react.dev/reference/react/Activity#pre-rendering-content-thats-likely-to-become-visible) pre-rendering can only wait on data read with `use(promise)`.
-
-`useObservablePromise` returns an instrumented Promise meant to be passed as a prop to a child component, which reads it with React's `use()`. The hook itself does **not** suspend, and mounting renders never subscribe the source — the fetch starts when the component that called the hook **commits**, when an already-live consumer swaps to a new observable (see below), or when you call `preloadObservablePromise`. Place a `<Suspense>` boundary between the hook caller and the child that reads the promise:
+Call the hook in a parent, pass the promise to a child, and read it there with React's `use()`.
+Place a `<Suspense>` boundary between them:
 
 ```tsx
 import {Suspense, use, useMemo} from 'react'
@@ -162,39 +153,55 @@ function UsersList({promise}: {promise: Promise<unknown>}) {
 }
 ```
 
-The boundary placement is load-bearing: it must sit **between** the component calling `useObservablePromise` and the child calling `use()`. Without a boundary in between, the child's suspension propagates to the hook caller itself — and a suspended component never commits, so the fetch can never start.
+The parent must be able to commit while the child waits. That commit starts the subscription.
+Without a boundary between them, the parent also suspends and the request cannot start.
 
-For the same reason, never call `use()` on the promise in the component that created it:
+For the same reason, do not combine the two calls in one component:
 
 ```tsx
 function UsersList({users$}) {
-  // 🚫 Wrong: suspends this component on its own pending promise before the
-  // commit that would start the fetch — it deadlocks. This is unsafe in the
-  // same way as use()-ing a promise you created during your own render, and
-  // it is intentionally not guarded against.
+  // This component waits for a subscription it cannot start until it commits.
   const users = use(useObservablePromise(users$))
   return <pre>{JSON.stringify(users, null, 2)}</pre>
 }
 ```
 
-**Semantics**
+**What happens as values arrive**
 
-- Fetching has three triggers: a non-`disabled` hook caller **commits**; an already-**live** consumer (committed, visible, subscribed) re-renders with a **new observable**, whose swap render starts the new source so `startTransition` / `useDeferredValue` swaps can settle and commit; or `preloadObservablePromise` is called. Mounting renders, hidden [`Activity`](https://react.dev/reference/react/Activity) pre-renders, and `disabled` consumers never trigger fetching from render.
-- Suspends until the observable's **first** emission (`firstValueFrom` semantics).
-- Later emissions update the UI **without** re-showing the Suspense fallback.
-- Sync sources (`of`, `BehaviorSubject`, replayed `shareReplay`) resolve during the hook caller's commit, so a cold mount still shows one fallback pass. Preload the observable (or share an already-settled entry) to render them without a fallback.
-- Errors reject the promise and surface through the nearest Error Boundary. Prefer `catchError` on the _inner_ observable when you want graceful degradation instead of a boundary.
-- Completing without emitting rejects with RxJS `EmptyError`.
-- Swapping to a **different** observable returns a new pending promise, so a sync swap shows the fallback again. To keep the previous content visible instead, change the observable inside [`startTransition`](https://react.dev/reference/react/startTransition) or read the promise through [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue), React's [refetch pattern](https://react.dev/reference/react/use#re-fetching-data-in-client-components). Both also give you a staleness signal (`isPending`, or `deferredPromise !== promise`) to dim stale content while the new data loads. The live consumer's swap render starts the fetch itself; preloading first, for example on hover, is optional and lets the swap commit with no pending period. See the [Transitions and refetching example](/examples/transitions).
+- The child shows the Suspense fallback until the first value arrives.
+- Later values from the same observable update the content without showing the fallback again.
+- Stream errors reach the nearest Error Boundary. Completing without a value rejects with RxJS
+  `EmptyError`.
+- A fresh subscription to a synchronous source still needs the parent's commit. To avoid its initial
+  fallback, preload the source or reuse an already-settled cache entry.
+
+The hook does not wait for the observable to complete. It keeps listening after the first value.
+Do not add `startWith('loading')` to a stream used this way: `"loading"` would count as the first
+value and immediately replace the fallback. Use `useObservable` for loading states represented as
+stream values.
+
+**Changing the observable**
+
+A different observable gets its own promise. If it is not already settled, the child can show a
+fallback again. Wrap the change in [`startTransition`](https://react.dev/reference/react/startTransition)
+or defer the promise with [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue)
+to keep existing content visible while the next value loads.
+
+There is an important difference from the initial mount: when a visible, subscribed component
+switches to a new observable, the hook starts that source during the update render. This lets a
+transition finish without waiting for a commit that is itself waiting for data. Initial renders,
+hidden components, and disabled hooks do not start subscriptions this way.
+
+Try [transitions and refetching](/examples/transitions) to see both approaches.
 
 **Activity**
 
-A hidden `<Activity>` tree that calls the hook is fully paused — no subscription, no fetching — until it is revealed and effects mount. To pre-render hidden content _with_ data, own the promise in a visible component and pass it into the hidden tree, where `use(promise)` lets React pre-render in the background and suspend only while the observable has not emitted yet:
+A hook inside a hidden `<Activity>` does not subscribe until the activity is shown. To load data
+while a tab is hidden, call the hook in a visible parent and pass its promise into the hidden tree:
 
 ```tsx
-function PrerenderedTab({tab, active}) {
-  // Visible owner: its commit starts the fetch.
-  const promise = useObservablePromise(fetchTab$(tab))
+function PrerenderedTab({tab$, active}) {
+  const promise = useObservablePromise(tab$)
   return (
     <Activity mode={active ? 'visible' : 'hidden'}>
       <Suspense fallback={<Spinner />}>
@@ -205,24 +212,26 @@ function PrerenderedTab({tab, active}) {
 }
 ```
 
-**Not for `startWith` placeholders.** Because the first emission unblocks Suspense, `startWith('loading')` fulfills with `"loading"`. For placeholder / loading-value patterns, use `useObservable` instead.
+Here `tab$` is a stable observable supplied by the parent. The [Activity example](/examples/activity)
+compares loading on reveal with loading ahead of time.
 
 **Options**
 
-```ts
-useObservablePromise(observable$, {
-  disabled?: boolean // default false — when true, this component starts no fetch
-  ttl?: number // default 500 — retention (ms) after settle with no subscribers
-})
-```
+| Option     | Default | What it does                                                                        |
+| ---------- | ------- | ----------------------------------------------------------------------------------- |
+| `disabled` | `false` | Stops this component from subscribing or receiving update notifications.            |
+| `ttl`      | `500`   | Keeps a settled cache entry for this many milliseconds after it has no subscribers. |
 
-Like `useObservable`'s `disabled`, `disabled: true` fully prevents fetching on behalf of this component: it skips the commit-time store subscription, so it also receives no re-render notifications for later emissions. The returned promise is still the shared cache entry — a sibling or `preloadObservablePromise` can warm it.
+A disabled hook still returns the shared promise. Another component or a preload can resolve it.
 
-`ttl` controls how long a settled value stays reusable after unmount. Remount within the window reuses the promise (no refetch, no fallback). After it expires, the next mount refetches. Eviction only affects future consumers: components that are still mounted keep their value — hiding an `<Activity>` tree longer than `ttl` never drops what it already rendered.
+Remounting within `ttl` reuses the settled promise. After eviction, a new consumer starts a new
+subscription. Eviction does not erase values held by mounted components, including hidden
+activities.
 
 **Deferring expensive re-renders**
 
-Like every external-store subscription, emission-driven updates render at synchronous priority — React cannot time-slice them directly. If an emission re-renders something expensive, defer the promise itself and memoize the expensive subtree. The synchronous pass then skips the memoized subtree (it still sees the old promise), and its re-render happens at deferred priority: time-sliced, interruptible by urgent updates, and coalesced under rapid emissions.
+Unlike `useObservable`, the promise hook does not defer stream updates by default. If rendering the
+result is expensive, defer the promise and memoize the child:
 
 ```tsx
 const BigChart = memo(function BigChart({promise}) {
@@ -241,14 +250,20 @@ function Dashboard({metrics$}) {
 }
 ```
 
-The `memo` is load-bearing: without it the subtree re-renders during the synchronous pass anyway (with the old promise), defeating the deferral — see [deferring re-rendering for a part of the UI](https://react.dev/reference/react/useDeferredValue#deferring-re-rendering-for-a-part-of-the-ui). The boundary between `Dashboard` and `BigChart` is load-bearing too: `Dashboard` must commit while `BigChart` suspends on the initial pending promise, since that commit starts the fetch. Swapped promises are always pre-settled, so after the first load the deferred subtree never re-suspends — it just lags by a paint under load. When the stream itself is too chatty, throttling in the pipe (`auditTime`, `throttleTime`) remains the RxJS-native complement.
+`memo` lets the chart skip the urgent render while it still has the old promise. React can then
+render the new chart in the background. Keep the Suspense boundary between the hook and the child
+for the initial load.
+
+For more, see React's [guide to deferring a subtree](https://react.dev/reference/react/useDeferredValue#deferring-re-rendering-for-a-part-of-the-ui).
+If you also need fewer stream values, use RxJS operators such as `auditTime` or `throttleTime`.
 
 **Preloading**
 
-Warm the cache before any consumer is live (hover, route loaders, ahead of a transition swap) with `preloadObservablePromise`. Calling it starts the source subscription immediately, before any component has committed, which also makes it the tool for sync sources that should mount without a fallback. On the server it is a no-op (see below), so a preload in shared/isomorphic code only takes effect in the browser. Pending entries are never timed out — if the observable never emits or completes, the promise stays pending and the subscription stays alive until it settles (or the process tears down). Bound hang risk with RxJS [`timeout`](https://rxjs.dev/api/operators/timeout) (or cancel the source) when the preload can stall:
+Call `preloadObservablePromise` in the browser to start listening before a component needs the data.
+For example, you can preload when someone hovers over a tab:
 
 ```tsx
-import {preloadObservablePromise, useObservablePromise} from 'react-rx'
+import {preloadObservablePromise} from 'react-rx'
 
 function TabButton({users$, onSelect}) {
   return (
@@ -263,32 +278,37 @@ function TabButton({users$, onSelect}) {
 }
 ```
 
+The component must use the **same observable object** as the preload to reuse its result.
+Preloading subscribes immediately in the browser and does nothing on the server. Its default `ttl`
+is 5,000 ms, compared with the hook's 500 ms.
+
+`ttl` does not time out a pending request. If a source might never emit or complete, give it an RxJS
+[`timeout`](https://rxjs.dev/api/operators/timeout) or another cancellation mechanism.
+
+See the [Async React demo](https://async-react.sanity.dev/) for preloading in a complete application.
+
 **Server rendering and Server Components**
 
-react-rx is a **client-only** library — every export ships behind `'use client'`, and observables are **never subscribed on the server**. A server-started subscription has no unmount to tear it down, a never-settling source would keep it (and the response stream) alive forever, and the module-scope promise cache would be shared across requests. Concretely:
+react-rx hooks belong in Client Components. Those components can still render HTML on the server,
+but react-rx never subscribes to their observables there.
 
-- `useObservable` / `useSyncObservable` server-render like `useSyncExternalStore`: the server paints the resolved `initialValue` and the live subscription starts on the client.
-- `useObservablePromise` returns a pending promise on the server, so server rendering emits the Suspense fallback; the fetch starts on the client once the hydrated hook caller commits.
-- `preloadObservablePromise` is a no-op on the server: it returns an inert, forever-pending promise and subscribes nothing, so preloads in shared/isomorphic code (route loaders) only take effect in the browser.
+- The value hooks render the initial value.
+- The promise hook returns a pending promise, so the child shows its Suspense fallback.
+- Preloading does not start a request.
 
-This is not the library for React Server Components or server-only data flows. Hooks imported from a Server Component are client references and cannot be called there. When you need server-fetched data, fetch it in the Server Component with async/await or RxJS [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) (same settle semantics as the hook's promise) and pass the value — or the un-awaited promise, for [`use()`](https://react.dev/reference/react/use#streaming-data-from-server-to-client) — as a prop into your client components.
+Subscriptions start on the client after hydration. Choose a deterministic initial value so the
+server markup matches the client's first render.
 
-**Which hook when?**
-
-| Need                                                | Hook                   |
-| --------------------------------------------------- | ---------------------- |
-| Live values, timers, subjects (with `initialValue`) | `useObservable`        |
-| Controlled inputs / synchronous store updates       | `useSyncObservable`    |
-| No meaningful `initialValue`, Suspense, Activity    | `useObservablePromise` |
-| Events pushed from handlers                         | `useObservableSubject` |
-
-For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
+For data that must be fetched on the server, use your framework's server-data facilities and pass
+the result into a Client Component. You can also pass a server-created promise for React's
+[`use()`](https://react.dev/reference/react/use#streaming-data-from-server-to-client) to read.
 
 ### Handling events
 
-`useObservableSubject` creates a `Subject` for the component and returns its observable side plus a stable handler that pushes events into it. Read the derived stream with whichever hook fits the read. This is the same mental model the upcoming [native Observable API](https://github.com/WICG/observable) builds on: events become observables, and state is derived from them.
+`useObservableSubject` returns an observable and a handler that sends values into it. Both stay
+stable across renders. Use it when a component event needs RxJS processing.
 
-Here's a component that displays the current value from a range input. The pipeline's emissions _are_ the rendered value — no local `useState` mirror, no `tap`:
+This slider sends strings into a stream, converts them to numbers, and reads the result:
 
 ```tsx
 import {useMemo} from 'react'
@@ -315,7 +335,18 @@ const ShowSliderValue = () => {
 }
 ```
 
-Pipelines with nothing to render (analytics, persistence, …) subscribe the observable in an effect instead:
+Extract `event.currentTarget.value` in the event handler, as above. Do not pass a DOM event into
+a delayed pipeline and try to read `currentTarget` later.
+
+The hook uses a plain `Subject`: events sent before anything subscribes are lost. It does not store
+an initial value or replay past events. Use a `BehaviorSubject` when late subscribers need the
+current value.
+
+If all you need is the slider's local value, `useState` is simpler. This pattern becomes useful
+when you add stream behavior such as debouncing, combining inputs, or cancelling requests.
+
+For work that renders no value, keep the subscription in an effect. In this example, `saveSearch`
+is an application function that returns a promise or observable:
 
 ```tsx
 import {useEffect} from 'react'
@@ -334,29 +365,33 @@ function SaveSearchButton({term}: {term: string}) {
 }
 ```
 
-Everything RxJS offers applies on the way from event to value — `debounceTime`, `distinctUntilChanged`, `switchMap`, `scan`, and friends all go in the `pipe`, as in the [search example](/examples/search).
+`concatMap` queues saves in order. Unmounting unsubscribes the pipeline; if every save must finish
+even after navigation, its owner should live outside this component.
 
-For **event-driven Suspense data**, seed a `BehaviorSubject` with the initial query and derive the request stream from it. [`useObservablePromise`](#useobservablepromise) suspends until the first result, and later events swap in new data without re-showing the fallback (while `switchMap` cancels the stale request):
+For a search that uses Suspense, give each search component a `BehaviorSubject` with an initial
+query. It starts a request as soon as the promise hook subscribes:
 
 ```tsx
-import {Suspense, use, useMemo} from 'react'
+import {Suspense, use, useMemo, useState} from 'react'
 import {useObservablePromise} from 'react-rx'
 import {BehaviorSubject, switchMap} from 'rxjs'
 import {fromFetch} from 'rxjs/fetch'
 
-const query$ = new BehaviorSubject('react')
-
 function Search() {
+  const [query$] = useState(() => new BehaviorSubject('react'))
   const results$ = useMemo(
     () =>
       query$.pipe(
         switchMap((query) =>
-          fromFetch(`https://api.github.com/search/repositories?q=${query}&per_page=5`, {
-            selector: (response) => response.json(),
-          }),
+          fromFetch(
+            `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&per_page=5`,
+            {
+              selector: (response) => response.json(),
+            },
+          ),
         ),
       ),
-    [],
+    [query$],
   )
   const promise = useObservablePromise(results$)
 
@@ -377,3 +412,77 @@ function Results({promise}: {promise: Promise<unknown>}) {
   return <pre>{JSON.stringify(use(promise), null, 2)}</pre>
 }
 ```
+
+The first result replaces the fallback. Later queries keep the existing results visible until new
+ones arrive. `switchMap` unsubscribes from the old request, and `fromFetch` aborts it. This example
+does not show a new loading indicator for each query; use explicit stream state if you need one.
+
+## Keeping observables stable
+
+Hooks identify a stream by its observable object, not by the data or URL inside it. Two calls to
+`fromFetch(url)` create two different observables.
+
+- Put a stream outside the component when it should be shared and does not depend on props.
+- Use `useMemo` for a stream built from props, with those props in the dependency list.
+- Use a lazy `useState` initializer for a subject owned by one component instance.
+- If React Compiler already memoizes the expression, do not add redundant wrappers. Check that
+  the component is actually compiled before relying on that behavior.
+
+Keep request creation lazy, too. `fromFetch` starts on subscription; `from(fetch(url))` starts
+`fetch` as soon as the expression runs. Use `defer(() => fetch(url))` when adapting an eager API.
+
+When a prop selects a different stream, `useObservable` does not show the old stream's value under
+the new prop. It uses the new stream's available value or the hook's initial value. If you want to
+keep the old results during a refresh, model that explicitly in the stream or use a
+[transition with the promise hook](/examples/transitions).
+
+## Loading, errors, and retries
+
+Decide what the component should display before choosing operators.
+
+**Use a boundary for a failed section.** Unhandled stream errors reach an Error Boundary. This works
+when the whole section should be replaced with an error message.
+
+**Use values for recoverable states.** If the user should keep seeing results alongside a retry
+button, emit a state such as `{status: 'error', data, error}`. Read it with `useObservable` and give
+the hook a matching initial state.
+
+**Recover inside each request.** Put `catchError` inside `switchMap` when later searches or refresh
+events must still work. Catching outside it replaces the whole event stream, so later events no
+longer start requests.
+
+**Retry deliberately.** Put `retry` on the request, with a bounded count and a delay. A retry
+resubscribes; use a cold request observable so it makes a new attempt. Do not automatically retry
+non-idempotent writes unless the API makes that safe.
+
+**Keep useful results.** Use `scan` to carry the last successful data through loading and error
+states. Use a refresh event to start another request rather than a second subscription that
+updates separate React state.
+
+Try the [search](/examples/search), [form submission](/examples/form-data), and
+[error handling](/examples/errors) examples to see different choices.
+
+## Choosing between libraries
+
+react-rx is a way to read observables in React, not a requirement to use observables everywhere.
+
+| If your main need is…                                 | Consider                            |
+| ----------------------------------------------------- | ----------------------------------- |
+| Local component state                                 | React's `useState` or `useReducer`  |
+| Shared application state                              | Zustand or Jotai                    |
+| Explicit states and allowed transitions               | XState                              |
+| Request caching, invalidation, and refetch policies   | TanStack Query                      |
+| Combining events, timing, cancellation, and live data | RxJS, with react-rx for React reads |
+
+These tools can coexist. For example, a page can use a query cache for server data and an observable
+for upload progress. The promise hook's `ttl` only retains an observable's result briefly; it is
+not a query cache with keys and invalidation policies.
+
+If you are already choosing between RxJS bindings, [observable-hooks](https://observable-hooks.js.org/)
+and [React-RxJS](https://react-rxjs.org/) are other options. Compare their subscription lifecycle,
+initial-value rules, and Suspense model with what your application needs. react-rx's defaults are
+explicit initial values, subscriptions after commit for its value hooks, and deferred display
+updates. Controlled inputs and Suspense have separate hooks.
+
+A hand-written effect is still appropriate for imperative work with clear cleanup. Prefer a
+react-rx hook when that effect's only purpose is copying the latest stream value into React state.

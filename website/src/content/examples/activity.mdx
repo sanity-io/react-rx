@@ -2,12 +2,38 @@ import Example from '@/examples/activity'
 
 # Activity and preload
 
-Compare three strategies for the same ~1s tab fetch:
+Preloading data and preparing hidden content solve related but different problems. This example
+compares three ways to prepare a tab whose data takes about one second to arrive.
 
-1. **No prefetch** — the fetch starts when the visible tab's owner commits; the Suspense fallback shows
-2. **Hover preload** — `preloadObservablePromise` on `mouseenter` warms the cache before the click
-3. **Activity pre-render** — an always-visible wrapper owns `useObservablePromise` for every tab and passes each promise into a hidden `<Activity>` panel, which pre-renders with the data as it arrives
+Try each option in the strategy menu:
 
-Rendering never starts a fetch: a hook called inside a hidden `<Activity>` tree stays paused until the tree is revealed. Pre-rendering hidden content _with_ data therefore means owning the promise in a visible component and letting the hidden tree `use()` it.
+1. **No prefetch:** select a tab you have not opened yet. The request begins when that tab is
+   selected, and the panel shows a fallback while waiting.
+2. **Hover preload:** hover over an unopened tab for a second before clicking it. The hover handler
+   calls [`preloadObservablePromise`](/reference#preloadobservablepromise), so the data can be
+   ready when the panel needs it.
+3. **Activity pre-render:** select this strategy, wait a second, then switch tabs. Visible wrappers
+   call [`useObservablePromise`](/reference#useobservablepromise) for every tab and pass the
+   promises into panels, including panels hidden by `<Activity>`.
 
 <Example />
+
+The example simulates requests with timers and reuses observable instances by tab name. Cached
+results can affect later comparisons; restart the preview if you want to compare each strategy
+from an empty cache. Hover preloads use a ten-second retention window here.
+
+A hook called inside a hidden `<Activity>` tree does not start fetching until reveal. In the
+third strategy, the hook is deliberately **outside** that hidden tree. Its visible caller can
+commit, while React prepares the hidden child and waits for its promise as needed.
+
+The first mount starts its subscription at commit. Selecting a new source in an already-visible,
+enabled hook can start that source during render, as described in
+[transitions and refetching](/examples/transitions). That exception does not apply to hidden
+pre-renders.
+
+Choose hover preload when you want to start likely requests early. Use a visible promise owner
+with Activity when you also want React to prepare hidden content. Both can do work for a tab the
+user never opens.
+
+Next: [explore timer-driven animation](/examples/animation), or try the
+[full app demo](https://async-react.sanity.dev/) for a larger async interface.

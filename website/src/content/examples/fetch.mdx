@@ -1,3 +1,25 @@
 import Example from '@/examples/fetch'
 
+# Fetch on demand
+
+Use `switchMap` when a new selection should replace the result you are waiting for. This example
+turns URL clicks into text requests and renders the latest selected request's response.
+
+Click either file button, then switch to the other. Clicking the same URL twice in a row does not
+fetch again because `distinctUntilChanged` skips consecutive duplicates. The preview needs network
+access to the example text files.
+
 <Example />
+
+The response starts as `null`. Once a response has arrived, it remains visible while another
+request is pending; the pipeline does not emit a loading value between requests.
+
+This code passes a `fetch` promise to `switchMap`. Switching stops an older result from reaching
+the output, but it does **not** abort that HTTP request. Cancellation of a promise result and
+cancellation of the network request are different concerns.
+
+There is no local error recovery in this example. A rejected request reaches
+[`useObservable`](/reference#useobservable) as an observable error.
+
+Next: [handle observable errors with an Error Boundary](/examples/errors). For a loading fallback
+instead of an initial value, see [load data with Suspense](/examples/data-fetching).
