@@ -10,10 +10,6 @@
   "ignorePatterns": ["dist/**", ".next/**", "pnpm-lock.yaml", "CHANGELOG.md"],
   "overrides": [
     {
-      "files": [".changeset/*.md"],
-      "options": {"singleQuote": false}
-    },
-    {
       "files": [
         "website/src/examples/**/*.js",
         "website/src/examples/**/*.jsx",

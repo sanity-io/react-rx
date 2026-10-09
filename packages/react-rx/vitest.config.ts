@@ -35,6 +35,23 @@ export default defineConfig({
           name: 'react-compiler',
         },
       },
+      {
+        extends: true,
+        plugins: [react()],
+        // The suites that hand an ObservablePromise to React, run again with
+        // React Native's species-less `Promise.prototype.then` installed (see
+        // `vitest-hermes-promise.ts`). A `Promise` subclass in
+        // `observablePromise.ts` recurses or hangs `use()` here instead of on
+        // a device (#626).
+        test: {
+          name: 'hermes-promise',
+          setupFiles: ['vitest-cleanup-after-each.ts', 'vitest-hermes-promise.ts'],
+          include: [
+            'src/__tests__/observablePromise*.test.ts',
+            'src/__tests__/useObservablePromise*.test.tsx',
+          ],
+        },
+      },
     ],
   },
 })

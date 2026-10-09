@@ -31,6 +31,23 @@ const formData$ = new Subject<
 >()
 const submit$ = new Subject<void>()
 
+const handleChange = (
+  event: ChangeEvent<
+    HTMLInputElement | HTMLTextAreaElement
+  >,
+) =>
+  formData$.next({
+    [event.currentTarget.name]:
+      event.currentTarget.value,
+  })
+
+const handleSubmit = (
+  event: SyntheticEvent<HTMLFormElement>,
+) => {
+  event.preventDefault()
+  submit$.next()
+}
+
 function FormDataExample() {
   // Form data stream: start from what's in storage, then fold in every edit
   const [data$] = useState(() =>
@@ -80,23 +97,6 @@ function FormDataExample() {
     submitState$,
     {status: 'unsaved' as const},
   )
-
-  const handleChange = (
-    event: ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >,
-  ) =>
-    formData$.next({
-      [event.currentTarget.name]:
-        event.currentTarget.value,
-    })
-
-  const handleSubmit = (
-    event: SyntheticEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault()
-    submit$.next()
-  }
 
   return (
     <form onSubmit={handleSubmit}>
