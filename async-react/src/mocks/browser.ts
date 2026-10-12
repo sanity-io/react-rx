@@ -9,7 +9,7 @@ let startPromise: Promise<void> | null = null
 
 async function startWorker(): Promise<void> {
   await worker.start({
-    onUnhandledRequest: 'bypass',
+    onUnhandledFrame: 'bypass',
     serviceWorker: {
       url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
     },
