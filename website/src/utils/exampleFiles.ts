@@ -7,10 +7,13 @@ import {readExample} from '@/utils/readExample'
  */
 export function getExampleFiles(example: ExampleName): Record<string, string> {
   const {files, transform}: ExampleManifest = exampleManifests[example]
-  return Object.fromEntries(
-    Object.entries(files).map(([sandpackPath, sourceFile]) => {
-      const source = readExample(example, sourceFile)
-      return [sandpackPath, transform ? transform(source) : source]
-    }),
-  )
+  return {
+    ...Object.fromEntries(
+      Object.entries(files).map(([sandpackPath, sourceFile]) => {
+        const source = readExample(example, sourceFile)
+        return [sandpackPath, transform ? transform(source) : source]
+      }),
+    ),
+    '/styles.css': readExample('styles.css'),
+  }
 }

@@ -1,0 +1,142 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: light-dark(#18232d, #e5edf3);
+  background: light-dark(#f7f9fb, #141b22);
+  accent-color: #537bea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1.25rem;
+}
+
+main {
+  max-width: 48rem;
+  margin-inline: auto;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+}
+
+p,
+li,
+output {
+  overflow-wrap: anywhere;
+}
+
+section,
+fieldset,
+article {
+  min-width: 0;
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid light-dark(#d8e1e9, #354554);
+  border-radius: 0.75rem;
+  background: light-dark(#fff, #1b2630);
+}
+
+legend {
+  padding-inline: 0.35rem;
+  font-weight: 600;
+}
+
+label {
+  display: block;
+  margin-block: 0.75rem;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+  font: inherit;
+}
+
+input:not([type='checkbox'], [type='radio'], [type='range']),
+select,
+textarea {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  color: inherit;
+  background: light-dark(#fff, #141b22);
+  border: 1px solid light-dark(#9baebd, #61798d);
+  border-radius: 0.4rem;
+}
+
+input[type='range'] {
+  width: 100%;
+}
+
+button {
+  padding: 0.5rem 0.8rem;
+  margin: 0.25rem 0.35rem 0.25rem 0;
+  color: light-dark(#fff, #101e45);
+  background: light-dark(#315bcb, #a1b9ff);
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  cursor: pointer;
+  white-space: normal;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 3px solid light-dark(#142f77, #e2eaff);
+  outline-offset: 3px;
+}
+
+pre {
+  max-width: 100%;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: light-dark(#edf1f6, #111a23);
+  border-radius: 0.4rem;
+}
+
+small {
+  color: light-dark(#526373, #b0c0cd);
+}
+
+output {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 360px) {
+  body {
+    padding: 0.75rem;
+  }
+
+  section,
+  article,
+  fieldset {
+    padding: 0.75rem;
+  }
+}

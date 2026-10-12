@@ -1,38 +1,29 @@
-import ReactiveState from '@/examples/reactive-state'
-import DelayedTick from '@/examples/tick'
-import FizzBuzz from '@/examples/fizz-buzz'
+import BasicState from '@/examples/basic-state'
 
-# Compose timer streams
+# Controlled state
 
-These examples keep timing and value transformations in RxJS. React reads the result with
+React controlled inputs need their value available synchronously on every keystroke. That is the one
+place to reach for [`useSyncObservable`](/reference#usesyncobservable) instead of the deferred
 [`useObservable`](/reference#useobservable).
 
-## Configurable interval
+<BasicState />
 
-Move the slider to change the interval. Each change creates a new timer, so the count restarts
-after its initial 500-millisecond delay. `useMemo` recreates the observable only when the interval
-changes; the slider itself uses ordinary React state.
+This form keeps two text fields and a checkbox in a single stream:
 
-<ReactiveState />
+- [`useObservableSubject`](/reference#useobservablesubject) gives one stable `handleChange` for every
+  input; its identity never changes between renders.
+- `scan` folds each `{field, value}` change into one `FormState` object — a single source of truth,
+  like a tiny reducer.
+- `useSyncObservable` reads that state synchronously, so typing never drops or lags a character.
 
-## Delayed tick
+The greeting combines two variables, `first` and `last`, plus the checkbox — all derived from the
+same state value.
 
-Watch the three displays together. One shows the main tick, one follows it after 300 milliseconds,
-and one counts smaller ticks between the main ticks.
+**Try this:** add a third field. Extend `FormState` and `FormChange` with `city`, add one more
+`<input>`, and read `state.city`. The subject, the `scan`, and the hook need no other changes.
 
-<DelayedTick />
+**Try this:** swap `useSyncObservable` for `useObservable`. Updates become deferred, and fast typing
+can momentarily show a stale value in the input — the reason controlled inputs use the synchronous
+hook.
 
-`switchMap` replaces the inner timer whenever a main tick arrives. In the subtick display,
-`sampleTime(20)` limits how often the stream emits a value for React to read.
-
-## Fizz Buzz
-
-Watch the output at multiples of three, five, and fifteen. The stream maps each timer value to a
-label, then to an element, and stops after 100 emissions.
-
-<FizzBuzz />
-
-These are separate choices: RxJS controls timing and transformations, while the hook controls
-how their output reaches the component.
-
-Next: [apply `switchMap` to search input](/examples/search).
+Next: [drive timers and pause them](/examples/sync).

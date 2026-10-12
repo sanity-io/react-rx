@@ -1,0 +1,32 @@
+import Example from '@/examples/streaming-chat'
+
+# Streaming chat
+
+Streaming interfaces are mostly a lifecycle problem: a new run should replace the old run for one
+conversation, stopping should cancel its timer, and switching to another conversation should not
+silently stop work that still has an owner.
+
+Try starting replies in two rooms, then move between them. Stop one room without affecting the other.
+Enable **Interrupt the next stream** to see a transport error become room state; you can immediately
+start again because the error is caught inside that room's `switchMap`.
+
+<Example />
+
+The simulated transport splits a deterministic local reply into tokens. `concatMap` spaces those
+tokens over time, while `scan` folds explicit `started`, `token`, `completed`, `failed`, `stopped`,
+and `cleared` events into immutable per-room state. `groupBy` gives each room an independent
+`switchMap`: restarting one room cancels only its previous run. There are no external APIs, secrets,
+or random responses.
+
+## Who owns background work?
+
+Each conversation panel is wrapped in React `<Activity>`. A hidden Activity tree releases its active
+hook subscriptions, so putting `useObservable` inside each panel would pause its stream when hidden.
+Instead, the always-visible `App` owns one subscription and passes plain room state into every panel.
+That explicit owner is why hidden rooms keep generating. If background generation is undesirable,
+move ownership into the panel instead.
+
+In production, replace `tokenEvents$` with a cold observable that adapts your streaming response,
+WebSocket, or SDK. Keep the event reducer and room pipeline: teardown from `switchMap` must abort or
+unsubscribe the real transport, and transport errors should still be caught in the inner chain so
+future user commands remain usable.

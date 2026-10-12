@@ -19,6 +19,17 @@ const nextConfig = {
   },
   productionBrowserSourceMaps: true,
   transpilePackages: ['react-rx'],
+  async redirects() {
+    return [
+      {source: '/examples/event-handlers', destination: '/examples/simple', permanent: true},
+      {source: '/examples/hello-world', destination: '/examples/simple', permanent: true},
+      {source: '/examples/animation', destination: '/examples/streaming-chat', permanent: true},
+      {source: '/examples/relative-time', destination: '/examples/sync', permanent: true},
+      {source: '/examples/tick', destination: '/examples/sync', permanent: true},
+      {source: '/examples/fizz-buzz', destination: '/examples/sync', permanent: true},
+      {source: '/examples/reactive-state', destination: '/examples/sync', permanent: true},
+    ]
+  },
   async headers() {
     return [
       {

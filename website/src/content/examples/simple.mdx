@@ -1,29 +1,42 @@
-import HelloWorld from '@/examples/hello-world'
 import Simple from '@/examples/simple'
 
 # Read your first observable
 
-Start with a value that arrives once, then a value that changes over time. In both cases,
-[`useObservable`](/reference#useobservable) reads the stream and handles the component's
-subscription.
-
-## Hello World
-
-The component starts with `…`. Once it commits, `of('World')` emits and the greeting updates.
-Try changing `World` in the editor. The explicit initial value is required even though `of` emits
-synchronously when subscribed.
-
-<HelloWorld />
-
-## Counter
-
-Watch the counter for a few seconds, then change the timer's second argument from `1000` to `500`.
-It controls the interval in milliseconds. The observable lives outside the component so
-rerendering does not create a new timer.
+A button's clicks are a stream of events over time — exactly what an observable models. This lesson
+counts the same clicks four ways, so you can see what [`useObservable`](/reference#useobservable)
+replaces and what RxJS adds on top.
 
 <Simple />
 
-The hook supplies a value to render; RxJS decides when that value changes. You do not need an
-effect or a separate state setter to copy each emission into React.
+## Manual wiring vs. the hook
 
-Next: [see what happens when several values arrive synchronously](/examples/sync).
+The first two rows always agree, because they count the same stream:
+
+- **Manual useEffect** subscribes in an effect, copies each value into `useState`, and unsubscribes
+  on cleanup. This is the integration boilerplate react-rx exists to remove.
+- **react-rx useObservable** reads the `scan` stream directly — no effect, no setter, no cleanup to
+  forget.
+
+`scan((total) => total + 1, 0)` is the running count: RxJS's version of `reduce` that emits a new
+total on every step.
+
+**Try this:** delete the `ManualCount` component and its usage in the editor. The react-rx row keeps
+working with a fraction of the code.
+
+## Flow control
+
+The throttled row pipes the same clicks through `throttleTime(1000)` before counting, so it rises by
+at most one per second no matter how fast you click.
+
+**Try this:** change `throttleTime(1000)` to `throttleTime(250)` and click quickly. More clicks get
+through now, because flow control lives in the pipeline, not in the component.
+
+## Value transformations
+
+The last row maps the count to a label with `map((total) => (total % 2 === 0 ? 'even' : 'odd'))`.
+RxJS turns the raw count into something ready to render, and the hook just reads the result.
+
+Each number is the value the hook currently holds — a real count of emissions, not a tally of
+renders.
+
+Next: [keep state in controlled inputs](/examples/counters).

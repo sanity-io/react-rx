@@ -1,18 +1,52 @@
-import Example from '@/examples/sync'
+import Timers from '@/examples/sync'
+import TimeAgo from '@/examples/time-ago'
+import TimeAgoSsr from '@/examples/time-ago-ssr'
 
 # Synchronous emissions
 
-An observable can emit several values as soon as something subscribes. That does not mean React
-will display each one as a separate frame.
+Timers are the clearest place to watch RxJS keep logic out of the component while
+[`useObservable`](/reference#useobservable) simply reads the result.
 
-Try changing the final string in the array. The component starts with `…`, then receives the
-array's values immediately after commit. The result settles on the last value, `mount!`.
+## Pause and resume a timer
 
-<Example />
+The same pause/resume timer is built twice. On the left, plain React drives it with a declarative
+`useInterval` hook (passing `delay = null` to pause). On the right, RxJS combines a `running` and a
+`delay` subject: `switchMap` swaps the interval in and out, while `scan` keeps the running total.
 
-This example uses [`useObservable`](/reference#useobservable), not `useSyncObservable`. Neither
-hook subscribes during render, and both require an initial value. Choose
-[`useSyncObservable`](/reference#usesyncobservable) when an emitted value controls an input, not
-merely because the source emits synchronously.
+<Timers />
+
+Both keep their count across a pause, because pausing stops emissions without resetting the fold.
+
+**Try this:** start both, then drag a slider. React restarts its `setInterval`; RxJS's `switchMap`
+disposes the old interval and subscribes a new one — same result, but the swap is part of the
+stream.
+
+## Emit only when the value changes
+
+`TimeAgo` ticks every second but should only re-render when the words change. It maps the elapsed
+time to a numeric `{unit, value}`, then `distinctUntilChanged` drops every tick that would look the
+same, and `Intl.RelativeTimeFormat` turns that pair into localized text.
+
+<TimeAgo />
+
+The emission counts prove it: the seconds row climbs every second, while the hours and days rows
+stay flat for a long time even though the underlying timer never stops.
+
+**Try this:** change the locale select. The same numeric `{unit, value}` renders as different words,
+because formatting is separate from the stream.
+
+## Server render, then hydrate
+
+Because `useObservable` never subscribes during render, the server and the client's first paint show
+the same initial value — so hydration is clean, and the live timer starts only afterward.
+
+<TimeAgoSsr />
+
+This example really calls `renderToString` and `hydrateRoot` in your browser. The server HTML is
+frozen at the moment the module loaded; after `hydrateRoot` attaches, the clock ticks with no
+hydration mismatch.
+
+**Try this:** open the console panel. You will see no hydration warnings, even though the clock
+starts updating every second right after it mounts.
 
 Next: [turn mouse events into values to render](/examples/event-handlers).

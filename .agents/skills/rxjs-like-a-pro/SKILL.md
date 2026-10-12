@@ -16,124 +16,15 @@ should happen on loading, errors, and cancellation. Preserve those behaviors.
 
 ## React components with react-rx
 
-Use these rules when the project uses `react-rx`. They describe v7; check the installed version
-before editing older call sites. This is usage guidance, not a request to migrate an application.
+When the project uses `react-rx`, the React-specific decisions — auditing `useState` +
+`useEffect` + `.subscribe()` bridges, choosing between `useObservable`, `useSyncObservable`,
+`useObservablePromise`, and `useObservableSubject`, keeping the observable identity stable, and
+the SSR / `<Activity>` / Suspense pitfalls — live in the dedicated **`react-rx-best-practices`**
+skill. Use that skill for anything that reads an observable from a React component. Keep using
+this skill for composing the observables themselves (operators, flattening, error handling,
+sharing, custom operators) regardless of framework.
 
-### Choose the hook from the UI's needs
-
-| Need                                                 | Hook                   |
-| ---------------------------------------------------- | ---------------------- |
-| Render a stream value with an explicit initial value | `useObservable`        |
-| Keep a controlled input synchronized with a stream   | `useSyncObservable`    |
-| Let Suspense show a fallback until the first value   | `useObservablePromise` |
-| Send component events into a stream                  | `useObservableSubject` |
-
-Use ordinary React state when there is no stream behavior to express. Do not introduce a subject
-just to replace a local `useState`.
-
-`useObservable` defers updates so React can prioritize urgent work. `useSyncObservable` does not;
-use it for input values, not every value on a page with an input.
-
-Both value hooks require `initialValue`, including an explicit `undefined` when appropriate.
-Functions are lazy initializers, as with `useState`; wrap a function value in an initializer.
-The initial value is initialized per hook instance, not reset whenever an argument changes.
-
-Neither value hook subscribes during render. The subscription starts on commit. An existing
-shared subscription may already have a value; otherwise even a synchronous source needs that
-commit before it can replace the initial value.
-
-### Replace subscriptions only when the behavior still fits
-
-An effect whose only job is copying stream values into React state can often become a value hook:
-
-```tsx
-const value = useObservable(value$, initialValue)
-```
-
-Before replacing the effect, check:
-
-- Does the value control an input? Use `useSyncObservable`.
-- Does the old code keep previous data while a new request loads? Preserve that policy.
-- Are loading and error flags meaningful UI states? Derive one state value in the stream.
-- Does the effect dispatch mutations, write to storage, send analytics, or coordinate an external
-  API? It may need to remain an effect with cleanup.
-- Must work finish after unmount? Give it an owner outside the component.
-
-Do not turn every `.subscribe()` into a hook. A hook is for a React read, not a replacement for
-all subscription lifecycles.
-
-### Keep the observable object stable
-
-Hooks share work by observable reference, not by URL or equivalent pipeline contents.
-Use module scope for intentionally shared streams, `useMemo` for streams that depend on props,
-and a lazy `useState` initializer for a component-owned subject.
-
-Check whether React Compiler already memoizes the component before adding wrappers. The presence
-of a compiler dependency alone does not prove this particular component is compiled.
-
-Do not create an observable inline on every render. Each new object can trigger a new subscription.
-If it immediately emits a value different from the initial value, that pattern can loop.
-
-Keep the underlying operation lazy as well. `from(fetch(url))` starts a request while constructing
-the observable. Prefer `fromFetch` for fetch cancellation, or `defer` for a promise-returning API.
-Unsubscribing from an ordinary promise does not cancel its work.
-
-When `useObservable` receives a different observable, it does not carry the old observable's value
-over to the new one. For previous-results-while-loading behavior, model it in the stream or use
-the promise hook with a transition.
-
-### Send values, not delayed DOM events
-
-`useObservableSubject<T>()` returns `[events$, handleEvent]`. Both are stable and belong to one
-component instance. Extract event data immediately, before any asynchronous operators:
-
-```tsx
-const [text$, setText] = useObservableSubject<string>()
-const text = useSyncObservable(text$, '')
-
-return <input value={text} onChange={(event) => setText(event.currentTarget.value)} />
-```
-
-The underlying subject does not replay events. Values sent without a subscriber are dropped.
-Use `BehaviorSubject` when new subscribers need a current value, and share it at module scope
-only when sharing between components is intentional.
-
-`useObservableEvent` was removed in v7. Do not generate new calls to it.
-
-### Put Suspense between the promise owner and reader
-
-Call `useObservablePromise` in a parent. Pass its promise to a child that calls React's `use()`,
-with a `<Suspense>` boundary between the two components. The parent must commit to start its
-initial subscription. Calling `use(useObservablePromise(source$))` in one component can wait
-forever because that component cannot commit.
-
-The first value resolves the promise; later values update the UI without another fallback.
-A stream error rejects it, and completion without a value rejects with `EmptyError`.
-Do not add a `startWith` placeholder unless that placeholder really should resolve Suspense.
-
-A fresh mount does not subscribe during render, even for synchronous sources. A visible,
-already-subscribed consumer switching to a new observable can start it during the update render,
-which lets transitions finish. Do not generalize the value hooks' no-render-subscription rule
-to this promise-hook update path.
-
-`preloadObservablePromise` starts a browser subscription immediately. The preload and hook must
-receive the same observable object. Its default `ttl` is 5,000 ms; the hook's is 500 ms. These
-limits retain settled, unused entries, not pending requests. Use `timeout` or cancellation for
-sources that may never settle.
-
-### Account for visibility and server rendering
-
-- `disabled: true` prevents subscriptions on behalf of that hook, not other consumers. The
-  promise hook can still return a promise resolved by another consumer.
-- Hiding an `<Activity>` removes its active hook subscriptions; revealing it restores them.
-  To load data for a hidden tree, keep the promise hook in a visible parent.
-- react-rx never subscribes on the server. Value hooks render the initial value, and the promise
-  hook leaves the child showing the Suspense fallback. Preloading does nothing on the server.
-- Use these hooks in Client Components. For server-fetched data, use the framework's server
-  facilities and pass a value or promise to the client.
-
-For details, read the [guide](https://react-rx.dev/guide), [API reference](https://react-rx.dev/reference),
-or [full docs with runnable example source](https://react-rx.dev/llms-full.txt).
+This is usage guidance, not a request to migrate an application.
 
 ## Reference files
 

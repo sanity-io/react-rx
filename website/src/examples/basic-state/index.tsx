@@ -1,7 +1,5 @@
 import ExampleSandpack from '@/components/ExampleSandpack'
 
 export default function Example() {
-  return (
-    <ExampleSandpack example="event-handlers" />
-  )
+  return <ExampleSandpack example="basic-state" />
 }

@@ -16,10 +16,11 @@ The full documentation, including the source code of every interactive example, 
 
 ## Agent skill
 
-Install the repository's RxJS and react-rx guidance with \`npx skills add sanity-io/react-rx --skill rxjs-like-a-pro\`.
-It covers hook selection, stable observables, Suspense boundaries, and when to keep a manual subscription.
+Install the dedicated react-rx best-practices skill with \`npx skills add sanity-io/react-rx --skill react-rx-best-practices\`.
+It covers hook selection, explicit initial values, stable observables, Suspense boundaries and preloading, and when to keep a manual subscription.
+A broader RxJS skill is also available: \`npx skills add sanity-io/react-rx --skill rxjs-like-a-pro\`.
 
-- [Skill source](https://github.com/sanity-io/react-rx/blob/current/.agents/skills/rxjs-like-a-pro/SKILL.md)
+- [Skill source](https://github.com/sanity-io/react-rx/tree/current/.agents/skills)
 
 ## Docs
 
