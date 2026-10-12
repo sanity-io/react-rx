@@ -10,6 +10,9 @@ catalogMode: prefer
 
 autoDedupe: true
 
+lockfile:
+  includeResolutionSettings: true
+
 allowBuilds:
   es5-ext: false
   esbuild: false
