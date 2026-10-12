@@ -27,6 +27,7 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
+    "**/*.mts",
     "**/*.tsx",
     "mdx-components.jsx",
     ".next/dev/types/**/*.ts"
