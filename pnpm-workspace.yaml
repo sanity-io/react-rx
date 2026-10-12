@@ -47,7 +47,7 @@ minimumReleaseAgeExclude:
 # nextra-theme-docs 4.6.1 Layout breaks on zod 4.4.x (children stripped before safeParse).
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).
 overrides:
-  'nextra-theme-docs>zod': 4.3.6
+  'nextra-theme-docs>zod': 4.6.6
 
 # @vitest/mocker 5.0.3 still declares msw ^2.4.9, and only touches msw in Vitest Browser Mode,
 # which this repo does not use. Remove when a release includes vitest-dev/vitest#11482
