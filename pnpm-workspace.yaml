@@ -26,6 +26,7 @@ minimumReleaseAgeExclude:
   - '@vitejs/plugin-react@6.1.0 || 6.1.1'
   - '@types/react@19.3.0'
   - '@types/react-dom@19.3.0'
+  - '@types/node@24.19.2'
   # next 16.3.6 is the GHSA-vcvr-r3jv-pc5j security fix; it pins its @next/* companions to the
   # exact same version, and they were all published in the same batch, so they need the same pass.
   - 'next@16.3.6'
