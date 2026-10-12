@@ -24,7 +24,14 @@ describe('documentation sandbox manifests', () => {
 
         for (const [, specifier] of source.matchAll(/(?:from\s+|import\s*)['"](\.[^'"]+)['"]/g)) {
           if (!specifier) continue
-          const resolved = path.posix.resolve(path.posix.dirname(sandboxPath), specifier)
+          const relative = path.posix.normalize(
+            path.posix.join(path.posix.dirname(sandboxPath.slice(1)), specifier),
+          )
+          expect(
+            relative === '..' || relative.startsWith('../'),
+            `${name}: ${sandboxPath} imports ${specifier} outside the exported example`,
+          ).toBe(false)
+          const resolved = `/${relative}`
           const candidates = [
             resolved,
             `${resolved}.ts`,

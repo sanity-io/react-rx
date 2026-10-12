@@ -23,8 +23,8 @@ copy stream values into state, not to erase every subscription. When in doubt, l
 alone and explain why.
 
 The examples here target react-rx **v7**. Three of the contracts the recipes rely on are v7-specific:
-`initialValue` is **required** (the value hooks throw when it is omitted), the hooks **never subscribe
-during render** (the source starts at commit), and `useObservableSubject` returns
+`initialValue` is **required** (the value hooks throw when it is omitted), the value hooks **never
+subscribe during render** (the source starts at commit), and `useObservableSubject` returns
 `[events$, handleEvent]`. Older majors differ — v4's `useObservable` was synchronous (now
 `useSyncObservable`), and earlier v5 releases let you omit `initialValue`.
 
@@ -115,11 +115,14 @@ When the "loading" UI maps 1:1 to a Suspense fallback and there's no meaningful 
 show, `useObservablePromise` turns an observable into a `use()`-compatible promise: suspend until the
 first emission, then update in place on later emissions without re-triggering the fallback.
 
-A **cold mount shows the fallback once even for a synchronous source** — rendering never subscribes,
+A **cold mount shows the fallback once even for a synchronous source** — the initial render never subscribes,
 so the source starts only at commit and the first render pass is still pending. What skips the
 fallback is a warm entry: `preloadObservablePromise` before the mount, or a settled entry reused
 within `ttl` on a remount. (This differs from earlier v5 behavior; the v7 contract is verified by the
 `sync sources fetch at commit` test.)
+
+Once the hook is live, replacing its observable can start the new source during an update render.
+Do not extend the value hooks' no-render-subscription guarantee to this Suspense path.
 
 The boundary must sit **between** the hook and the reader (see
 [pitfalls](#ssr-activity-and-suspense-pitfalls)): call the

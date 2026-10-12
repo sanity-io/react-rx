@@ -30,6 +30,33 @@ function firstNumber(element: Element | null): number {
   return Number(match?.[1])
 }
 
+function throttledCount(): number {
+  return trailingNumber(screen.getByText(/Throttled to 1\/sec:/))
+}
+
+function parityLabel(): string {
+  return screen.getByText(/Mapped to parity:/).textContent?.trim() ?? ''
+}
+
+function timeText(container: HTMLElement): string {
+  return container.querySelector('time')?.textContent ?? ''
+}
+
+// The count sits mid-text, e.g. "(2 emissions)".
+function emissionCount(container: HTMLElement): number {
+  const match = (container.querySelector('small')?.textContent ?? '').match(/(\d+)/)
+  return Number(match?.[1])
+}
+
+// The same serialized snapshot a server would render and ship to the client.
+function makeSnapshot(publishedAt: number): ServerSnapshot {
+  return {publishedAt, initial: {unit: 'second', value: 55}, locale: 'en'}
+}
+
+function hostTime(): string {
+  return document.querySelector('section time')?.textContent ?? ''
+}
+
 describe('simple clicks example', () => {
   test('the manual and react-rx counters each count their own clicks', () => {
     render(<SimpleApp />)
@@ -53,17 +80,15 @@ describe('simple clicks example', () => {
     vi.useFakeTimers()
     render(<SimpleApp />)
     const button = screen.getByRole('button', {name: 'Click quickly'})
-    const throttled = () => trailingNumber(screen.getByText(/Throttled to 1\/sec:/))
-    const parity = () => screen.getByText(/Mapped to parity:/).textContent?.trim()
 
-    expect(throttled()).toBe(0)
+    expect(throttledCount()).toBe(0)
 
     // Three clicks inside one throttle window: only the leading one is counted.
     fireEvent.click(button)
     fireEvent.click(button)
     fireEvent.click(button)
-    expect(throttled()).toBe(1)
-    expect(parity()).toMatch(/odd$/)
+    expect(throttledCount()).toBe(1)
+    expect(parityLabel()).toMatch(/odd$/)
 
     // Let the 1s window elapse, then click once more: the throttled row advances
     // and the mapped parity flips to even.
@@ -71,8 +96,8 @@ describe('simple clicks example', () => {
       await vi.advanceTimersByTimeAsync(1000)
     })
     fireEvent.click(button)
-    expect(throttled()).toBe(2)
-    expect(parity()).toMatch(/even$/)
+    expect(throttledCount()).toBe(2)
+    expect(parityLabel()).toMatch(/even$/)
   })
 })
 
@@ -161,15 +186,6 @@ describe('sync pause/resume timer example', () => {
 })
 
 describe('time-ago example', () => {
-  function timeText(container: HTMLElement): string {
-    return container.querySelector('time')?.textContent ?? ''
-  }
-  function emissions(container: HTMLElement): number {
-    // The count sits mid-text, e.g. "(2 emissions)".
-    const match = (container.querySelector('small')?.textContent ?? '').match(/(\d+)/)
-    return Number(match?.[1])
-  }
-
   test('crosses the minute threshold and then stops emitting per second', async () => {
     vi.useFakeTimers()
     // 59 seconds in the past: one second from flipping to the "minute" unit.
@@ -181,7 +197,7 @@ describe('time-ago example', () => {
       await vi.advanceTimersByTimeAsync(0)
     })
     expect(timeText(container)).toMatch(/59 seconds ago/)
-    expect(emissions(container)).toBe(1)
+    expect(emissionCount(container)).toBe(1)
 
     // One more second: the label changes unit to minutes — a new emission.
     await act(async () => {
@@ -189,7 +205,7 @@ describe('time-ago example', () => {
     })
     expect(timeText(container)).toMatch(/1 minute ago/)
     expect(timeText(container)).not.toMatch(/second/)
-    expect(emissions(container)).toBe(2)
+    expect(emissionCount(container)).toBe(2)
 
     // Thirty more seconds of ticks within the same minute: distinctUntilChanged
     // collapses them, so no new value reaches React.
@@ -198,7 +214,7 @@ describe('time-ago example', () => {
     })
     expect(timeText(container)).toMatch(/1 minute ago/)
     expect(timeText(container)).not.toMatch(/second/)
-    expect(emissions(container)).toBe(2)
+    expect(emissionCount(container)).toBe(2)
   })
 })
 
@@ -216,11 +232,6 @@ describe('time-ago-ssr hydration example', () => {
       .filter((message: string) =>
         /hydrat|did not match|Text content does not match/i.test(message),
       )
-  }
-
-  // The same serialized snapshot a server would render and ship to the client.
-  function makeSnapshot(publishedAt: number): ServerSnapshot {
-    return {publishedAt, initial: {unit: 'second', value: 55}, locale: 'en'}
   }
 
   test('LiveClock hydrates the captured server snapshot with no mismatch, then ticks live', async () => {
@@ -299,7 +310,6 @@ describe('time-ago-ssr hydration example', () => {
 
     // Before hydration: the host already shows useful server markup.
     expect(screen.getByRole('status').textContent).toBe('Server HTML only')
-    const hostTime = () => document.querySelector('section time')?.textContent ?? ''
     expect(hostTime()).toMatch(/55 seconds ago/)
 
     // Hydrate on demand; the snapshot is reused so no recoverable errors fire.

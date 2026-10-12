@@ -9,7 +9,7 @@ import {
 import {
   type Elapsed,
   selectUnit,
-} from '../time-ago/selectUnit'
+} from './selectUnit'
 
 export interface ServerSnapshot {
   publishedAt: number

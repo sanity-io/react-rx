@@ -1,12 +1,8 @@
-/* oxlint-disable typescript/ban-ts-comment, typescript/prefer-ts-expect-error -- Cross-workspace imports need TS6059 suppression. */
 import {BehaviorSubject} from 'rxjs'
 import {afterEach, describe, expect, test, vi} from 'vitest'
 
-// @ts-ignore -- this regression suite intentionally imports runnable website source.
 import {createCount$} from '../../../../website/src/examples/sync/RxTimer'
-// @ts-ignore -- this regression suite intentionally imports runnable website source.
 import {selectUnit} from '../../../../website/src/examples/time-ago/selectUnit'
-// @ts-ignore -- this regression suite intentionally imports runnable website source.
 import {createSnapshot$} from '../../../../website/src/examples/time-ago/TimeAgo'
 
 afterEach(() => {

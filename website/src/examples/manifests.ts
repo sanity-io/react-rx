@@ -122,8 +122,7 @@ export const exampleManifests = {
     files: {
       '/App.tsx': 'App.tsx',
       '/LiveClock.tsx': 'LiveClock.tsx',
-      '/time-ago/selectUnit.ts':
-        '../time-ago/selectUnit.ts',
+      '/selectUnit.ts': 'selectUnit.ts',
     },
   },
   'todo-app': {
