@@ -5,7 +5,7 @@
   "scripts": {
     "build": "next build --turbopack",
     "dev": "next dev --turbopack",
-    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
+    "postbuild": "node scripts/pagefind.mts",
     "prebuild": "pnpm --filter react-rx build",
     "predev": "pnpm --filter react-rx build",
     "start": "next start"
