@@ -47,3 +47,10 @@ minimumReleaseAgeExclude:
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).
 overrides:
   'nextra-theme-docs>zod': 4.3.6
+
+# @vitest/mocker 5.0.3 still declares msw ^2.4.9, and only touches msw in Vitest Browser Mode,
+# which this repo does not use. Remove when a release includes vitest-dev/vitest#11482
+# (peer widened to ^2.4.9 || ^3.0.0; not published yet, latest is 5.0.3).
+peerDependencyRules:
+  allowedVersions:
+    '@vitest/mocker>msw': '3'
