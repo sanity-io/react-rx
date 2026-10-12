@@ -1,58 +1,139 @@
 import {
   useEffect,
-  useMemo,
+  useCallback,
   useRef,
   useState,
 } from 'react'
-import {hydrateRoot} from 'react-dom/client'
+import {
+  hydrateRoot,
+  type Root,
+} from 'react-dom/client'
 import {renderToString} from 'react-dom/server'
 
-import {LiveClock} from './LiveClock'
+import {
+  LiveClock,
+  type ServerSnapshot,
+} from './LiveClock'
+
+function prepareServerPage() {
+  const snapshot: ServerSnapshot = {
+    publishedAt: Date.now() - 55_000,
+    initial: {unit: 'second', value: 55},
+    locale: 'en',
+  }
+  return {
+    html: renderToString(
+      <LiveClock snapshot={snapshot} />,
+    ),
+    payload: JSON.stringify(snapshot),
+  }
+}
 
 export default function App() {
-  // Render the clock to a string once — this is exactly what a server would send.
-  const serverHtml = useMemo(
-    () => renderToString(<LiveClock />),
+  // A real server sends both rendered HTML and these same serialized props.
+  const [page] = useState(prepareServerPage)
+  const hostRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<Root | null>(null)
+  const [status, setStatus] = useState(
+    'Server HTML only',
+  )
+  const [errors, setErrors] = useState<
+    {id: number; message: string}[]
+  >([])
+  const onHydrated = useCallback(
+    () => setStatus('Hydrated'),
     [],
   )
-  const hostRef = useRef<HTMLDivElement>(null)
-  const [status, setStatus] =
-    useState('Hydrating…')
 
   useEffect(() => {
-    const host = hostRef.current
-    if (!host) {
-      return
+    return () => {
+      const root = rootRef.current
+      rootRef.current = null
+      // Dispose the nested root after the outer root finishes its own cleanup.
+      if (root)
+        queueMicrotask(() => root.unmount())
     }
-    // Place the server markup, then attach React to it instead of re-creating it.
-    host.innerHTML = serverHtml
-    const root = hydrateRoot(host, <LiveClock />)
-    setStatus(
-      'Hydrated with no mismatch — now ticking live.',
+  }, [])
+
+  function hydrate() {
+    if (!hostRef.current || rootRef.current)
+      return
+    setStatus('Hydrating…')
+    const snapshot = JSON.parse(
+      page.payload,
+    ) as ServerSnapshot
+    rootRef.current = hydrateRoot(
+      hostRef.current,
+      <LiveClock
+        snapshot={snapshot}
+        onHydrated={onHydrated}
+      />,
+      {
+        onRecoverableError(error) {
+          setErrors((current) => [
+            ...current,
+            {
+              id: current.length,
+              message:
+                error instanceof Error
+                  ? error.message
+                  : String(error),
+            },
+          ])
+        },
+      },
     )
-    return () => root.unmount()
-  }, [serverHtml])
+  }
 
   return (
     <main>
-      <h1>Server render → hydrate</h1>
+      <h2>
+        Time ago, before JavaScript takes over
+      </h2>
       <p>
-        Server HTML, generated once with{' '}
-        <code>renderToString</code>. It stays
-        frozen at the server value:
+        This browser simulation uses React’s real
+        server renderer. Wait a few seconds before
+        hydrating: the HTML already shows a useful
+        time.
       </p>
-      <pre>
-        <code>{serverHtml}</code>
-      </pre>
+      <section>
+        <div
+          ref={hostRef}
+          dangerouslySetInnerHTML={{
+            __html: page.html,
+          }}
+        />
+        <button
+          type="button"
+          onClick={hydrate}
+          disabled={status !== 'Server HTML only'}
+        >
+          Hydrate
+        </button>
+        <p role="status">{status}</p>
+        <p>
+          Hydration errors captured:{' '}
+          {errors.length}
+        </p>
+        {errors.map((error) => (
+          <pre key={error.id}>
+            {error.message}
+          </pre>
+        ))}
+      </section>
       <p>
-        The same markup after{' '}
-        <code>hydrateRoot</code> attaches and the
-        timer starts:
+        Hydration reuses the server snapshot, not
+        the client’s current time. After commit,
+        the observable catches up and starts
+        ticking.
       </p>
-      <div ref={hostRef} />
-      <p>
-        <small>{status}</small>
-      </p>
+      <details>
+        <summary>
+          Inspect the server HTML and props
+        </summary>
+        <pre>{page.html}</pre>
+        <pre>{page.payload}</pre>
+      </details>
     </main>
   )
 }

@@ -1,10 +1,9 @@
-/* oxlint-disable typescript/ban-ts-comment, typescript/prefer-ts-expect-error -- Cross-workspace imports need TS6059 suppression. */
+import {act, fireEvent, render, screen, within} from '@testing-library/react'
 import {BehaviorSubject, Subject} from 'rxjs'
 import {afterEach, describe, expect, test, vi} from 'vitest'
 
-// @ts-ignore -- this regression suite intentionally imports runnable website source.
 import * as requestExample from '../../../../website/src/examples/resilient-fetch/request'
-// @ts-ignore -- this regression suite intentionally imports runnable website source.
+import StreamingChatApp from '../../../../website/src/examples/streaming-chat/App'
 import * as chatExample from '../../../../website/src/examples/streaming-chat/stream'
 
 type ChatCommand = chatExample.ChatCommand
@@ -19,6 +18,72 @@ afterEach(() => {
 })
 
 describe('streaming chat example', () => {
+  test('keeps a hidden room live, then stops and restarts it', async () => {
+    vi.useFakeTimers()
+    const view = render(<StreamingChatApp />)
+    const incident = screen.getByDisplayValue('Summarize the recovery plan').closest('section')
+    const release = screen.getByDisplayValue('How should we roll this out?').closest('section')
+
+    expect(incident).not.toBeNull()
+    expect(release).not.toBeNull()
+    if (!incident || !release) return
+
+    fireEvent.click(
+      within(incident).getByRole('button', {
+        name: 'Start',
+      }),
+    )
+    await act(() => vi.advanceTimersByTimeAsync(200))
+    const textBeforeHiding =
+      within(incident).getByText('Assistant').closest('article')?.textContent ?? ''
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Release room',
+      }),
+    )
+    fireEvent.click(
+      within(release).getByRole('button', {
+        name: 'Start',
+      }),
+    )
+    await act(() => vi.advanceTimersByTimeAsync(400))
+
+    const textWhileHidden =
+      within(incident).getByText('Assistant').closest('article')?.textContent ?? ''
+    expect(textWhileHidden.length).toBeGreaterThan(textBeforeHiding.length)
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /Incident room/,
+      }),
+    )
+    fireEvent.click(
+      within(incident).getByRole('button', {
+        name: 'Stop',
+      }),
+    )
+    const stoppedText =
+      within(incident).getByText('Assistant').closest('article')?.textContent ?? ''
+    await act(() => vi.advanceTimersByTimeAsync(500))
+
+    expect(within(incident).getByText('stopped')).toBeTruthy()
+    expect(within(incident).getByText('Assistant').closest('article')?.textContent).toBe(
+      stoppedText,
+    )
+
+    fireEvent.click(
+      within(incident).getByRole('button', {
+        name: 'Start',
+      }),
+    )
+    await act(() => vi.advanceTimersByTimeAsync(5_000))
+
+    expect(within(incident).getByText('completed')).toBeTruthy()
+    expect(within(incident).getAllByText('Assistant')).toHaveLength(2)
+    view.unmount()
+  })
+
   test('accumulates tokens and stops only the selected room', async () => {
     vi.useFakeTimers()
     const commands = new Subject<ChatCommand>()

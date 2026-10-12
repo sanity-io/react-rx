@@ -1,7 +1,7 @@
 ---
 name: react-rx-best-practices
 description: >
-  Decide when and how to read RxJS observables from React with react-rx (v5+). Use this skill when
+  Decide when and how to read RxJS observables from React with react-rx v7. Use this skill when
   writing, reviewing, refactoring, or auditing React components that bridge observables into render —
   especially `useState` + `useEffect` + `.subscribe()` pairs, or existing `useObservable`,
   `useSyncObservable`, `useObservablePromise`, and `useObservableSubject` call sites. Trigger when you
@@ -22,10 +22,18 @@ event listeners, side effects, non-RxJS pub/sub. The goal is to replace imperati
 copy stream values into state, not to erase every subscription. When in doubt, leave working code
 alone and explain why.
 
-The guidance here describes react-rx v5 and later (v5 bakes deferral into `useObservable`; v5.1 adds
-`useObservablePromise`). Check the installed version before changing old call sites — v4's
-`useObservable` was synchronous and is now `useSyncObservable`. Verify against
-`packages/react-rx/src` and its `__tests__` if a detail matters.
+The examples here target react-rx **v7**. Three of the contracts the recipes rely on are v7-specific:
+`initialValue` is **required** (the value hooks throw when it is omitted), the hooks **never subscribe
+during render** (the source starts at commit), and `useObservableSubject` returns
+`[events$, handleEvent]`. Older majors differ — v4's `useObservable` was synchronous (now
+`useSyncObservable`), and earlier v5 releases let you omit `initialValue`.
+
+**Confirm the version you're actually on before changing old call sites.** In a consuming project,
+read the `react-rx` entry in that project's `package.json` and lockfile. When a behavioral detail
+matters, the public docs are the portable source of truth — the [guide](https://react-rx.dev/guide)
+and [API reference](https://react-rx.dev/reference). (The library's own source and tests under
+`packages/react-rx/src` exist only inside the react-rx repository itself, not in a repo that merely
+depends on it.)
 
 ## The audit workflow
 
@@ -38,9 +46,9 @@ When you're asked to review or clean up observable usage in React code:
 2. **Classify each one** using the decision below. Most fall into "plain read," some into
    "loading/error state," a few into "leave it alone."
 3. **Refactor the clean ones** with the matching recipe, one small change at a time.
-4. **Write down the exceptions.** For every subscription you deliberately keep, say why in a comment
-   or the PR description. The exceptions are as important as the changes — a reviewer needs to see
-   you considered them.
+4. **Note the exceptions.** Where you deliberately keep a subscription and the reason isn't obvious,
+   say why — in the PR or a short comment. The exceptions are as important as the changes; a reviewer
+   needs to see you considered them.
 5. **Run the behavior-preservation checklist** (below) against each change before calling it done.
 
 ## Decision: does this belong in a react-rx hook at all?
@@ -72,7 +80,7 @@ not a general replacement for every subscription lifecycle. Ask:
 `useObservable` defers store updates through `useDeferredValue`: under load, React can keep showing
 the previous value while a background render catches up, and children that suspend keep their
 already-revealed content instead of flashing the nearest Suspense fallback. This is the right default
-for chrome — presence, previews, permissions, badges, anything that is display, not an input value.
+for display values — presence, previews, permissions, badges — anything shown rather than typed into.
 
 `useSyncObservable` updates synchronously (this is v4's old `useObservable` behavior). Reach for it
 exactly when the value **feeds a controlled input**, **gates a write**, or **must stay consistent
@@ -83,9 +91,8 @@ gate on an editor. Its caveat (from the React docs): suspending on a value it re
 visible content with the Suspense fallback, because its updates can't be marked as transitions.
 
 Default to `useObservable`; switch a specific site to `useSyncObservable` only when you can name the
-input, write, or event that needs the synchronous value. Making the choice explicit per call site —
-and writing a one-line comment for each `useSyncObservable` — keeps the sync-vs-deferred intent
-legible.
+input, write, or event that needs the synchronous value. Where that choice isn't self-evident,
+record the reason — in the PR or a short comment — but there's no need to annotate every call site.
 
 Both require an **`initialValue`**: it is what renders until the observable emits (and what the
 server renders). Every value is valid, `undefined` included — pass it explicitly; omitting it throws
@@ -106,10 +113,16 @@ shared observable.
 
 When the "loading" UI maps 1:1 to a Suspense fallback and there's no meaningful initial value to
 show, `useObservablePromise` turns an observable into a `use()`-compatible promise: suspend until the
-first emission, then update in place on later emissions without re-triggering the fallback. A
-synchronous source never flashes the fallback at all.
+first emission, then update in place on later emissions without re-triggering the fallback.
 
-The boundary placement is load-bearing (see [pitfalls](#ssr-activity-and-suspense-pitfalls)): call the
+A **cold mount shows the fallback once even for a synchronous source** — rendering never subscribes,
+so the source starts only at commit and the first render pass is still pending. What skips the
+fallback is a warm entry: `preloadObservablePromise` before the mount, or a settled entry reused
+within `ttl` on a remount. (This differs from earlier v5 behavior; the v7 contract is verified by the
+`sync sources fetch at commit` test.)
+
+The boundary must sit **between** the hook and the reader (see
+[pitfalls](#ssr-activity-and-suspense-pitfalls)): call the
 hook in a **parent**, pass the promise to a **child** that calls `use(promise)`, with `<Suspense>`
 **between** them. Never call `use()` on the promise in the same component that produced it.
 
@@ -145,9 +158,11 @@ memoization covers the observable construction. When unsure, keep the explicit `
 correct whether or not the compiler runs.
 
 Keep the underlying work lazy too: `from(fetch(url))` starts the request while the observable is being
-constructed, and unsubscribing from a plain promise does not cancel it. Prefer `fromFetch` (cancels
-on unsubscribe) or `defer(() => promiseApi())` for a cold, per-subscription request. See
-[cancellation](#recipe-cancellation-of-a-cold-request).
+constructed, and unsubscribing from a plain promise does not cancel it. `fromFetch` fixes both — it is
+lazy and **aborts the request on unsubscribe**. `defer(() => promiseApi())` only makes the work lazy
+(it re-runs per subscription instead of firing at construction); it does **not** abort an
+already-started promise. See [the cancellation recipe](#recipe-cancellation-of-a-cold-request) for how
+to make a promise API genuinely cancellable.
 
 ## Recipes
 
@@ -249,10 +264,20 @@ const data = useObservable(data$, initialData)
 // Update params with params$.next(nextParams) instead of swapping the observable identity.
 ```
 
-`switchMap` cancels the in-flight previous request when params change (right for "only the latest
-matters"). If instead you need every result, choose `concatMap`/`mergeMap`/`exhaustMap` per
-`rxjs-like-a-pro`. For an explicit "keep showing previous list across a filter change," the deferred
-`useObservable` already keeps the prior frame visible while the new one loads.
+`switchMap` unsubscribes from the previous request when params change (right for "only the latest
+matters"). The source must support cancellation to stop the underlying work. If every request must
+run, choose `concatMap` for ordered work or `mergeMap` for concurrent work. `exhaustMap` instead
+ignores new triggers while work is active.
+
+Note what does **not** preserve the previous list on its own: the deferred `useObservable` only holds
+the prior frame while the **same** observable defers. It does not carry a value across an observable
+identity change, so building a fresh observable per filter (a new `useMemo` keyed on the filter) falls
+back to `initialValue` — a blank list — not the previous one. To keep the previous list visible across
+a filter change, either keep the observable identity stable and drive filters through the params
+`Subject` above (so the hook retains the last emission until the next arrives), or retain the last
+value explicitly with `scan` in that stable pipeline. Alternatively, use `useObservablePromise`
+with a child Suspense reader and change its observable inside `startTransition`. A transition alone
+does not make a value hook wait for an asynchronous result.
 
 ### Recipe: refresh / retry a cold request
 
@@ -273,7 +298,7 @@ const state$ = useMemo(
         ),
       ),
     ),
-  [retry$],
+  [retry$, request$],
 )
 const state = useObservable(state$, {status: 'loading'})
 
@@ -282,17 +307,41 @@ const handleRetry = useCallback(() => retry$.next(retry$.getValue() + 1), [retry
 
 ### Recipe: cancellation of a cold request
 
-Keep the request cold and cancellable so unsubscribing (unmount, `switchMap` switch) actually stops
-it. Build it lazily inside the pipeline, not eagerly during render:
+Two separate goals. **Cold/lazy**: don't start the request while constructing the observable, so each
+subscription runs its own and discarded concurrent renders don't fire requests. **Cancellable**:
+unsubscribing (unmount, `switchMap` switch) actually aborts in-flight work. `defer` buys you the first
+but not the second.
 
 ```tsx
-// ❌ starts the request during render; unsubscribing can't cancel a bare promise
+// ❌ not cold: starts the request at construction; unsubscribing can't cancel a bare promise
 const observable = useMemo(() => from(fetch(url)), [url])
 
-// ✅ cancels on unsubscribe
+// ✅ cold AND cancellable: fromFetch aborts the fetch on unsubscribe
 const observable = useMemo(() => fromFetch(url), [url])
-// or, for a promise-returning API that supports an AbortSignal:
+
+// ⚠️ cold but NOT cancellable by itself: defer re-runs per subscription, but the promise it
+//    returns keeps running after unsubscribe unless apiCall is itself wired to abort
 const observable = useMemo(() => defer(() => apiCall(params)), [params])
+```
+
+To make a promise API genuinely cancellable, thread an `AbortSignal` through it and abort on teardown:
+
+```tsx
+const observable = useMemo(
+  () =>
+    new Observable<Result>((subscriber) => {
+      const controller = new AbortController()
+      apiCall(params, {signal: controller.signal}).then(
+        (value) => {
+          subscriber.next(value)
+          subscriber.complete()
+        },
+        (error) => subscriber.error(error),
+      )
+      return () => controller.abort()
+    }),
+  [params],
+)
 ```
 
 If the request comes from an eager, non-cancellable promise API (one that fires the moment you call
@@ -302,16 +351,17 @@ that is a reason to **keep** an `AbortController`-coordinated effect rather than
 
 ### Recipe: seed the initial value to avoid a first-paint flash
 
-When the correct first value is readable synchronously, pass it as the initial value (or `startWith`
-it) so there's no flash of the fallback:
+When the correct first value is already available, pass it as the hook's initial value:
 
 ```tsx
-const visible$ = useMemo(() => {
-  const seed = 'checkVisibility' in element ? element.checkVisibility() : false
-  return intersection$.pipe(/* … */, startWith(seed))
-}, [element])
-const visible = useObservable(visible$, false)
+// Both values are supplied by the caller; visibility$ is stable.
+const visible = useObservable(visibility$, initialVisibility)
 ```
+
+`startWith(initialVisibility)` seeds a subscription, not the first render. In v7 the subscription
+starts at commit, so passing `false` to the hook still initially renders `false`, regardless of
+`startWith`. For SSR, pass the same initial snapshot from server to client rather than measuring the
+DOM during hydration. An initial-value argument does not reset an already-mounted hook.
 
 ### Recipe: event subjects and DOM extraction
 
@@ -325,8 +375,9 @@ const text = useSyncObservable(text$, '') // controlled input → sync
 return <input value={text} onChange={(event) => setText(event.currentTarget.value)} />
 ```
 
-Pull `event.currentTarget.value` out **before** any async operator; React reuses synthetic events and
-the data would be gone by the time an async operator reads it. Use a `BehaviorSubject` (shared at
+Pull `event.currentTarget.value` out **before** any async operator; `currentTarget` only identifies the
+element while its event handler runs. Modern React does not pool these events, but that does not make
+`currentTarget` safe to read later. Use a `BehaviorSubject` (shared at
 module scope only when sharing is intended) if a new subscriber needs the current value.
 
 ### Recipe: Suspense loading via `useObservablePromise`
@@ -422,10 +473,13 @@ Before finishing each change, confirm the new code matches the old behavior:
       `useObservable`.
 - [ ] **Observable identity is stable** (`useMemo` / module scope / `useState`), and any
       fresh-each-render argument is stabilized by value. Don't rely on React Compiler unless verified.
-- [ ] **Cold requests stay cold and cancellable** (`fromFetch` / `defer`), not eager (`from(fetch())`).
+- [ ] **Requests are cold** (`fromFetch` / `defer`, not `from(fetch())`), and **cancellation** is
+      wired where it matters — `fromFetch`, or an `AbortSignal` tied to teardown. Plain `defer` and
+      bare promises are lazy but do not abort.
 - [ ] **Optimistic local writes** (if any) are still merged into the stream so the UI updates before
       the server round-trip.
-- [ ] Every subscription you **kept** has a one-line reason.
+- [ ] Non-obvious **kept** subscriptions are explained (in the PR, or a short comment where the
+      reason isn't self-evident) — you don't need to annotate the obvious ones.
 
 ## Tests to run
 
@@ -436,14 +490,19 @@ Validate against the smallest suite that covers the changed behavior, then widen
   cleanly when an argument changes.
 - For identity/tear-sensitive reads, add a test that changes the keyed argument and asserts the
   previous value never renders under the new identity.
-- For `useObservablePromise`, assert: suspends until first emission, no fallback flash for a sync
-  source, in-place update on later emissions, and that sibling state survives a re-suspension.
-- In this repo, react-rx's own contracts live in `packages/react-rx/src/__tests__` — e.g.
-  `useObservable.test.tsx`, `useObservable.activity.test.tsx`, `useObservable.hydration.test.tsx`,
-  `useObservable.suspense.test.tsx`, `useObservablePromise.*`, `requiredInitialValue.test.tsx`,
-  `strictmode.test.tsx`, `*.test-d.ts` (type-level). Run `pnpm test` (Vitest with `--typecheck`, each
-  suite run normally and through the React Compiler) and `pnpm lint`. See the repo's AGENTS.md for the
-  exact command behavior.
+- For `useObservablePromise`, assert: suspends until first emission (the fallback commits once, even
+  for a synchronous source), no fallback flash when the entry is preloaded/warm, in-place update on
+  later emissions, and that sibling state survives a re-suspension.
+- Run them with **the consuming project's own commands.** Check that project's `package.json`
+  `scripts` and its lockfile for the package manager and test/lint runner (e.g. `test`, `lint`), and
+  use those — don't assume `pnpm`, a monorepo layout, or any particular script name. Many react-rx
+  projects use Vitest, but confirm rather than assume.
+- The react-rx library's own contract tests (`useObservable.*`, `useObservablePromise.*`,
+  `requiredInitialValue`, `strictmode`, `*.test-d.ts`, etc.) live under `packages/react-rx/src/__tests__`
+  **in the react-rx repository** — read them there (or browse them on GitHub) as the authoritative
+  spec. They won't be present in a project that only depends on react-rx; for those, the
+  [guide](https://react-rx.dev/guide) and [API reference](https://react-rx.dev/reference) are the
+  portable reference.
 
 ## SSR, Activity, and Suspense pitfalls
 
@@ -478,8 +537,8 @@ Validate against the smallest suite that covers the changed behavior, then widen
 ## Provenance
 
 The recipes and exception list are distilled from a real upgrade stack (react-rx v4 → v5.1.1) and
-verified against this repo's `packages/react-rx/src` and its tests. Read these PRs for the concrete
-call sites, review discussion, and the reasoning behind each "kept as-is":
+verified against the react-rx repository's `packages/react-rx/src` and its tests. Read these PRs for
+the concrete call sites, review discussion, and the reasoning behind each "kept as-is":
 
 - **sanity-io/sanity #13788** — _replace `useState`/`useEffect` observable subscriptions with
   `useObservable`._ Source of the live-read, loading/error-union, seed-initial-value, and

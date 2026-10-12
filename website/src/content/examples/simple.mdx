@@ -1,42 +1,51 @@
 import Simple from '@/examples/simple'
 
-# Read your first observable
+# Clicks become streams
 
-A button's clicks are a stream of events over time — exactly what an observable models. This lesson
-counts the same clicks four ways, so you can see what [`useObservable`](/reference#useobservable)
-replaces and what RxJS adds on top.
+A click is an event. A sequence of clicks is a stream. This lesson follows the
+[RxJS overview](https://rxjs.dev/guide/overview): count events, control how often they get through,
+then transform their values. Here, the starting point is React with RxJS rather than plain JavaScript.
+
+Try both counters, then open `ManualCounter.tsx` and `ReactRxCounter.tsx` to compare their source.
+Each is a complete component you can copy into a project.
 
 <Simple />
 
 ## Manual wiring vs. the hook
 
-The first two rows always agree, because they count the same stream:
+The first two buttons keep independent counts but perform the same calculation:
 
-- **Manual useEffect** subscribes in an effect, copies each value into `useState`, and unsubscribes
-  on cleanup. This is the integration boilerplate react-rx exists to remove.
-- **react-rx useObservable** reads the `scan` stream directly — no effect, no setter, no cleanup to
-  forget.
+- **React + RxJS** creates a stable `Subject`, subscribes in an effect, copies each count into
+  `useState`, and unsubscribes on cleanup. It does not import react-rx.
+- **With react-rx**, `useObservableSubject` supplies the event stream and handler.
+  `useObservable` reads the count and owns the subscription. The `scan` calculation is unchanged.
 
 `scan((total) => total + 1, 0)` is the running count: RxJS's version of `reduce` that emits a new
 total on every step.
 
-**Try this:** delete the `ManualCount` component and its usage in the editor. The react-rx row keeps
-working with a fraction of the code.
+**Try this:** change `total + 1` to `total + 2` in either counter. You are changing the stream's
+calculation, not how the component subscribes. `useMemo` keeps the react-rx pipeline stable between
+renders; creating it inline would restart its subscription.
 
 ## Flow control
 
-The throttled row pipes the same clicks through `throttleTime(1000)` before counting, so it rises by
-at most one per second no matter how fast you click.
+The third section's **Click quickly** button feeds two displays. The first pipes clicks through
+`throttleTime(1000)` before counting. It accepts the first click immediately, then ignores clicks for
+one second. Ignored clicks are not queued for later.
 
 **Try this:** change `throttleTime(1000)` to `throttleTime(250)` and click quickly. More clicks get
 through now, because flow control lives in the pipeline, not in the component.
 
 ## Value transformations
 
-The last row maps the count to a label with `map((total) => (total % 2 === 0 ? 'even' : 'odd'))`.
-RxJS turns the raw count into something ready to render, and the hook just reads the result.
+The parity display counts every click, without throttling, and maps the count to `even` or `odd`.
+It can change while the throttled count stays still. Different pipelines can describe different
+uses of the same event stream.
 
-Each number is the value the hook currently holds — a real count of emissions, not a tally of
-renders.
+**Try this:** add `throttleTime(1000)` before `scan` in `Parity`. Both displays now count only accepted
+clicks. The order of the operators determines what “a click” means to each result.
+
+For a counter on its own, `useState` is simpler. The benefit here is that counting, timing, and
+transformations compose in RxJS without adding effects or timers to the component.
 
 Next: [keep state in controlled inputs](/examples/counters).

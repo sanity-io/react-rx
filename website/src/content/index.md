@@ -22,16 +22,16 @@ function ElapsedTime() {
 ```
 
 The component starts at `0`. Once it commits, the hook subscribes to the timer and updates the
-display; when it unmounts, the hook cleans up. Updates are deferred through React's scheduler, so a
-busy stream never blocks typing.
+display; when it unmounts, the hook cleans up. Updates are deferred through React's scheduler, so
+React can prioritize typing over stream-driven renders.
 
 ## Start here
 
 - **New to react-rx?** The [guide](/guide) covers each hook, its contract, and the caveats that
   matter.
 - **Prefer to experiment?** Open the [first lesson](/examples/simple) and edit it in your browser.
-- **Building controlled UI?** Try [controlled state](/examples/counters) and
-  [synchronous emissions](/examples/sync), which includes a live `hydrateRoot` demo.
+- **Building controlled UI?** Try [controlled inputs](/examples/counters) and
+  [timers and time ago](/examples/sync), which includes a live `hydrateRoot` demo.
 - **Loading states?** Read about [Suspense](/guide#useobservablepromise), then work through
   [data fetching](/examples/data-fetching), [streaming chat](/examples/streaming-chat), and
   [resilient fetch](/examples/resilient-fetch).

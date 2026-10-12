@@ -8,10 +8,27 @@ import {
   combineLatest,
   EMPTY,
   interval,
+  type Observable,
   scan,
   startWith,
   switchMap,
 } from 'rxjs'
+
+// Built outside render: pausing swaps in EMPTY; resuming swaps in a fresh
+// interval. switchMap disposes the previous timer, and scan keeps the running
+// total across every pause and interval change.
+export function createCount$(
+  running$: Observable<boolean>,
+  delay$: Observable<number>,
+): Observable<number> {
+  return combineLatest([running$, delay$]).pipe(
+    switchMap(([running, delay]) =>
+      running ? interval(delay) : EMPTY,
+    ),
+    scan((total) => total + 1, 0),
+    startWith(0),
+  )
+}
 
 // react-rx: two stable subjects hold the controls, one stream holds the logic.
 export function RxTimer() {
@@ -21,16 +38,7 @@ export function RxTimer() {
   }))
 
   const count$ = useMemo(
-    () =>
-      combineLatest([running$, delay$]).pipe(
-        // Pausing swaps in EMPTY; resuming swaps in a fresh interval. switchMap
-        // disposes the previous timer, and scan below keeps the running total.
-        switchMap(([running, delay]) =>
-          running ? interval(delay) : EMPTY,
-        ),
-        scan((total) => total + 1, 0),
-        startWith(0),
-      ),
+    () => createCount$(running$, delay$),
     [running$, delay$],
   )
 

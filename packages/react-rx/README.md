@@ -73,7 +73,7 @@ render. On the server they render that initial value without starting the observ
 ## Built for how React renders today
 
 - **Concurrent-safe updates.** `useObservable` defers its updates through React's concurrent
-  scheduler, so a fast-changing stream won't block typing or other urgent work. Updates are keyed by
+  scheduler, so React can prioritize typing over stream-driven renders. Updates are keyed by
   the observable's identity, so switching sources never shows a stale value under the new one. When
   an edit must land immediately — a controlled input — `useSyncObservable` updates synchronously.
 - **Suspense and `use()`.** `useObservablePromise` returns a promise a child reads with React's
@@ -84,8 +84,9 @@ render. On the server they render that initial value without starting the observ
   keeps the result briefly after the last subscriber leaves.
 - **`<Activity>` aware.** A hook inside a hidden `<Activity>` waits to subscribe until the tree is
   shown; preload or hand it a promise from a visible parent to warm data behind a hidden tab.
-- **Deterministic SSR.** Hooks render their initial value on the server and only subscribe on the
-  client after hydration, so markup is stable and hydration-safe.
+- **SSR without starting streams.** Value hooks render their initial value on the server; the promise
+  hook lets a child show its Suspense fallback. Pass the same initial state to the client for matching
+  markup, then let the subscription bring it up to date after hydration.
 - **Typed and tested.** Ships TypeScript types, works under the React Compiler, and its own suite
   runs twice — once normally and once compiled — to keep both paths honest.
 

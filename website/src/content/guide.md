@@ -23,7 +23,7 @@ You need React `^19.2` and RxJS `^7.2`. Import operators from `rxjs`, not `rxjs/
 | Show a Suspense fallback until the first value arrives | `useObservablePromise` |
 | Send component events into a stream                    | `useObservableSubject` |
 
-Two contracts apply to every hook:
+Two rules to keep in mind:
 
 - **Give the value hooks an initial value.** `useObservable` and `useSyncObservable` require it,
   even if it is `undefined`. On the server they render that value and never subscribe.
@@ -31,8 +31,9 @@ Two contracts apply to every hook:
   component, or memoize it (see [keeping observables stable](#keeping-observables-stable)). A fresh
   observable every render restarts the work.
 
-Subscriptions start after React commits, never during render — so a component can suspend or bail out
-of an update without leaking one.
+The value hooks subscribe after React commits, never during render. The promise hook also waits for
+the initial commit; once live, it can start a replacement source during an update to support Suspense
+transitions.
 
 ## useObservable()
 
@@ -56,8 +57,8 @@ function ElapsedTime() {
 - Pass `{disabled: true}` to pause subscribing; the hook keeps its last value.
 - Stream errors reach the nearest Error Boundary.
 
-See it both ways in [read your first observable](/examples/simple) and
-[compose timer streams](/examples/counters).
+See it in action in [clicks become streams](/examples/simple) and
+[timers and time ago](/examples/sync).
 
 ## useSyncObservable()
 
@@ -75,8 +76,8 @@ function SearchField() {
 ```
 
 Prefer `useObservable` for results and previews that follow the input, so a suspending child cannot
-replace what the user is typing. The [controlled-state lesson](/examples/counters) and the
-[synchronous emissions lesson](/examples/sync) show the difference.
+replace what the user is typing. The [text fields, checkboxes, and forms lesson](/examples/counters)
+shows the difference.
 
 ## useObservablePromise()
 
@@ -104,8 +105,8 @@ function UsersList({promise}: {promise: Promise<unknown>}) {
 - **Put the Suspense boundary between the hook and the `use()` call.** The parent must commit to
   start the subscription; reading the promise in the same component deadlocks it.
 - The first value replaces the fallback; later values update the content without it.
-- Errors reach the nearest Error Boundary. Completing with no value rejects with RxJS `EmptyError`,
-  so do not `startWith('loading')` a stream read this way.
+- Errors reach the nearest Error Boundary. Completing with no value rejects with RxJS `EmptyError`.
+  Don't use `startWith('loading')` to request a fallback: that is a value, so it resolves the promise.
 - `preloadObservablePromise(users$)` starts listening early in the browser (for example on hover);
   the component must use the **same observable object**. A hook inside a hidden `<Activity>` only
   subscribes once shown, so preload or pass the promise from a visible parent.
@@ -169,7 +170,7 @@ subscribing. The value hooks emit their initial value there, so pick one that ma
 first render; the promise hook returns a pending promise, so the child shows its fallback; and
 `preloadObservablePromise` does nothing. Subscriptions start on the client after hydration. For data
 fetched on the server, use your framework's server-data facilities or pass a server-created promise
-for `use()` to read. The [synchronous emissions lesson](/examples/sync) includes a live
+for `use()` to read. The [timers and time ago lesson](/examples/sync) includes a live
 `hydrateRoot` demo.
 
 ## Loading, errors, and retries

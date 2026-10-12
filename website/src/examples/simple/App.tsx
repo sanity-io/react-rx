@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react'
+import {useMemo} from 'react'
 import {
   useObservable,
   useObservableSubject,
@@ -10,37 +10,8 @@ import {
   throttleTime,
 } from 'rxjs'
 
-// Manual integration: a subscription wired by hand with useEffect + useState.
-// This is the boilerplate react-rx exists to remove.
-function ManualCount({
-  clicks$,
-}: {
-  clicks$: Observable<unknown>
-}) {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    const subscription = clicks$
-      .pipe(scan((total) => total + 1, 0))
-      .subscribe(setCount)
-    return () => subscription.unsubscribe()
-  }, [clicks$])
-  return <li>Manual useEffect: {count}</li>
-}
-
-// react-rx: the same scan, read as a value. No effect, no setter.
-function ReactRxCount({
-  clicks$,
-}: {
-  clicks$: Observable<unknown>
-}) {
-  const total$ = useMemo(
-    () =>
-      clicks$.pipe(scan((total) => total + 1, 0)),
-    [clicks$],
-  )
-  const count = useObservable(total$, 0)
-  return <li>react-rx useObservable: {count}</li>
-}
+import ManualCounter from './ManualCounter'
+import ReactRxCounter from './ReactRxCounter'
 
 // Flow control: throttleTime drops clicks that arrive within one second of the
 // last counted one, so the stream emits fewer values than were clicked.
@@ -86,20 +57,29 @@ export default function App() {
     useObservableSubject<void>()
   return (
     <main>
-      <p>
+      <section>
+        <h2>1. React + RxJS</h2>
+        <ManualCounter />
+      </section>
+      <section>
+        <h2>2. With react-rx</h2>
+        <ReactRxCounter />
+      </section>
+      <section>
+        <h2>
+          3. Control the flow and transform values
+        </h2>
         <button
           type="button"
           onClick={() => handleClick()}
         >
-          Click me
+          Click quickly
         </button>
-      </p>
-      <ul>
-        <ManualCount clicks$={clicks$} />
-        <ReactRxCount clicks$={clicks$} />
-        <ThrottledCount clicks$={clicks$} />
-        <Parity clicks$={clicks$} />
-      </ul>
+        <ul>
+          <ThrottledCount clicks$={clicks$} />
+          <Parity clicks$={clicks$} />
+        </ul>
+      </section>
     </main>
   )
 }

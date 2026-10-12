@@ -31,7 +31,12 @@ export const exampleManifests = {
     },
   },
   'basic-state': {
-    files: {'/App.tsx': 'App.tsx'},
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/TextField.tsx': 'TextField.tsx',
+      '/Checkbox.tsx': 'Checkbox.tsx',
+      '/NameForm.tsx': 'NameForm.tsx',
+    },
   },
   'context': {
     files: {
@@ -82,7 +87,11 @@ export const exampleManifests = {
     },
   },
   'simple': {
-    files: {'/App.tsx': 'App.tsx'},
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/ManualCounter.tsx': 'ManualCounter.tsx',
+      '/ReactRxCounter.tsx': 'ReactRxCounter.tsx',
+    },
   },
   'streaming-chat': {
     files: {
@@ -113,6 +122,8 @@ export const exampleManifests = {
     files: {
       '/App.tsx': 'App.tsx',
       '/LiveClock.tsx': 'LiveClock.tsx',
+      '/time-ago/selectUnit.ts':
+        '../time-ago/selectUnit.ts',
     },
   },
   'todo-app': {

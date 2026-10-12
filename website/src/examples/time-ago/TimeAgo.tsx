@@ -13,7 +13,7 @@ import {
   selectUnit,
 } from './selectUnit'
 
-interface Snapshot extends Elapsed {
+export interface Snapshot extends Elapsed {
   /** How many values reached React — not how many times the timer ticked. */
   emissions: number
 }
@@ -26,7 +26,7 @@ const initialSnapshot: Snapshot = {
 
 // Built outside render: the wall clock is read only inside the pipeline, which
 // runs on subscribe (commit), never during rendering.
-function createSnapshot$(
+export function createSnapshot$(
   date: Date,
 ): Observable<Snapshot> {
   return timer(0, 1000).pipe(

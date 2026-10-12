@@ -24,8 +24,8 @@ is which style fits your codebase.
 
 react-rx's `useObservable` defers its updates with
 [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) and keeps the observable's
-identity and value deferred as one snapshot, so a fast stream never blocks urgent work and a new
-source never shows a stale value; controlled inputs opt into synchronous updates with
+identity and value deferred as one snapshot, so React can prioritize urgent work without pairing a
+new source with the old one's value; controlled inputs opt into synchronous updates with
 `useSyncObservable`. The other two deliver values synchronously after commit, which is equally
 concurrent-safe — it is a different default, not a missing feature.
 
