@@ -334,4 +334,49 @@ describe('time-ago-ssr hydration example', () => {
     })
     expect(hydrationErrors()).toEqual([])
   })
+
+  test('delayed hydration keeps the server text and captures zero recoverable errors before ticks', async () => {
+    vi.useFakeTimers()
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const {unmount} = render(<TimeAgoSsrApp />)
+
+    // The server HTML is already useful and on screen before any hydration.
+    expect(screen.getByRole('status').textContent).toBe('Server HTML only')
+    expect(hostTime()).toMatch(/55 seconds ago/)
+
+    // The reader waits well past the captured instant — real client time now drifts
+    // past the snapshot. The static server markup is unaffected: no stream yet.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000)
+    })
+    expect(hostTime()).toMatch(/55 seconds ago/)
+    expect(screen.getByText(/Hydration errors captured:/).textContent).toMatch(/0\s*$/)
+
+    // Hydrate after the delay, but do not advance the stream yet. The server snapshot —
+    // not the drifted client clock — governs the initial client render, so the text is
+    // identical to the server HTML: hydration reconciles with zero recoverable errors.
+    fireEvent.click(screen.getByRole('button', {name: 'Hydrate'}))
+    await act(async () => {})
+    expect(screen.getByRole('status').textContent).toBe('Hydrated')
+    expect(hydrationErrors()).toEqual([])
+    expect(hostTime()).toMatch(/55 seconds ago/)
+    expect(screen.getByText(/Hydration errors captured:/).textContent).toMatch(/0\s*$/)
+
+    // Only now does the live stream emit, catching up to the true elapsed time: the
+    // 10s drift pushes the label past a minute. This tick happens after hydration, not
+    // during it, so it never counts as a mismatch.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(hostTime()).toMatch(/1 minute ago/)
+    expect(hydrationErrors()).toEqual([])
+    expect(screen.getByText(/Hydration errors captured:/).textContent).toMatch(/0\s*$/)
+
+    await act(async () => {
+      unmount()
+      await Promise.resolve()
+    })
+    expect(hydrationErrors()).toEqual([])
+  })
 })
