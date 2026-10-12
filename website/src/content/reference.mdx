@@ -162,6 +162,73 @@ function preloadObservablePromise<T>(
 
 Default `ttl` is `5000` (longer than the hook default) so a hover-warmed value survives until click/navigation.
 
+## createObservableCache()
+
+Creates a keyed cache of shared observables for request-like sources (ones that complete), so every caller of a key gets the same observable. Not a hook — call it once, in module scope or wherever the data layer lives.
+
+Sharing the identity is the point: [`useObservablePromise`](#useobservablepromise) caches its promise per observable, so consumers of a key share one request _and_ one settled promise, and a sibling or a remount renders the loaded value instead of suspending again. An observable built per component (`useMemo(() => fetchUser(id), [id])`) is a new identity for every consumer, and every one of them fetches and suspends on its own.
+
+Pass the cache's `ttl` to the hook as well: a remount within that window reuses the promise the hook settled, so it renders no fallback. The two windows nest rather than coincide — the hook holds the cached observable for its own `ttl` after the last consumer unmounts, and the cache's `ttl` only starts once it lets go. So a remount in between renders a fallback but makes no request, and a key is refetched only after both have elapsed: `ttl: 60_000` on each means two minutes, not one.
+
+`share` dedupes the rest: concurrent subscribers join the same request, and its result replays to later ones. A key is released `ttl` after its last subscriber leaves — and an entry nothing ever subscribed to, such as one a render that never committed created, `ttl` after it was created. The same `ttl` is the grace an abandoned request gets: one that loses every subscriber keeps running for `ttl`, long enough for a remount to rejoin it, and is torn down with its key after that rather than left connected for nobody. Teardown unsubscribes the source; whether it also aborts the work in flight is the input's business — [`fromFetch`](https://rxjs.dev/api/fetch/fromFetch) aborts, a plain promise keeps going and has its result dropped. `cache.clear()` forgets every key at once, for invalidating after a mutation: live subscribers keep theirs, and everything else is torn down now — pending timers included — rather than waiting out its `ttl`.
+
+Failures are never cached: an error releases the key before it reaches subscribers, so the next caller — an error handler reading the cache included — retries on a fresh entry. A request that completes without emitting counts as a failure, erroring with RxJS [`EmptyError`](https://rxjs.dev/api/index/class/EmptyError) the same way `firstValueFrom` and [`useObservablePromise`](#useobservablepromise) treat an empty source. Since nothing holds the failure, a key that keeps failing is fetched again by every render that reads it — bound that with RxJS [`retry`](https://rxjs.dev/api/operators/retry) inside `fetch` when an endpoint can stay down. Keys are plain strings, built by the caller from whatever identifies the request.
+
+The cached observable ends at the first value the request produces and then stays open, because subscribers are what keep the key — a completing source would release it the moment the result arrived, and the hook stops subscribing to a terminated source. The hooks handle the open end, but outside them take the result with [`first()`](https://rxjs.dev/api/operators/first) or `firstValueFrom`, not an operator that waits for completion.
+
+Expect one value per key. A source that keeps emitting, or that fails after its result, is truncated at that first value rather than forwarded to subscribers who have already settled — a late failure would otherwise release the key while they still hold the result, and every one of them would refetch on its next render. Keyed streams that should keep emitting are a different primitive; this one caches requests.
+
+**Signature**
+
+```ts
+function createObservableCache<T>(
+  fetch: (key: string) => ObservableInput<T>,
+  options: {ttl: number},
+): ObservableCache<T>
+
+interface ObservableCache<T> {
+  (key: string): Observable<T>
+  clear(): void
+}
+```
+
+**Example**
+
+```tsx
+import {Suspense, use} from 'react'
+import {createObservableCache, useObservablePromise} from 'react-rx'
+import {fromFetch} from 'rxjs/fetch'
+
+const USER_TTL = 60_000
+const users = createObservableCache(
+  (id: string) =>
+    fromFetch(`/api/users/${id}`, {
+      // `fromFetch` resolves 4xx/5xx the way `fetch` does, so without this an error
+      // body is a successful result and gets cached as a user for the whole ttl
+      selector: (response) => {
+        if (!response.ok) {
+          throw new Error(`GET /api/users/${id} failed with ${response.status}`)
+        }
+        return response.json()
+      },
+    }),
+  {ttl: USER_TTL},
+)
+
+function Avatar({id}: {id: string}) {
+  const promise = useObservablePromise(users(id), {ttl: USER_TTL})
+  return (
+    <Suspense fallback={<AvatarSkeleton />}>
+      <AvatarImage promise={promise} />
+    </Suspense>
+  )
+}
+
+function AvatarImage({promise}: {promise: Promise<{imageUrl: string}>}) {
+  return <img src={use(promise).imageUrl} alt="" />
+}
+```
+
 ## useObservableSubject()
 
 Creates an RxJS `Subject` scoped to the component instance and returns its two halves: an observable of the values pushed into it, plus a stable handler that pushes them.
