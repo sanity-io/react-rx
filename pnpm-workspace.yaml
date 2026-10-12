@@ -62,8 +62,14 @@ minimumReleaseAgeExclude:
 
 # nextra-theme-docs 4.6.1 Layout breaks on zod 4.4.x (children stripped before safeParse).
 # Remove when a release includes shuding/nextra#4990 (not published yet; latest is 4.6.1).
+# next 16.4.0 fails the website's `Vercel – react-rx` deployment on every branch that resolved it,
+# going back to 2026-10-09, while `next build` succeeds locally and in CI. The website asks for
+# `^16.3.6`, so lock file maintenance keeps pulling 16.4.0 back in — it landed that way twice in
+# one afternoon. 16.3.6 is the last version this project is known to deploy green.
+# Remove once a `Vercel – react-rx` deploy goes green on a newer release.
 overrides:
   'nextra-theme-docs>zod': 4.3.6
+  next: 16.3.6
 
 # @vitest/mocker 5.0.3 still declares msw ^2.4.9, and only touches msw in Vitest Browser Mode,
 # which this repo does not use. Remove when a release includes vitest-dev/vitest#11482
