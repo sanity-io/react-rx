@@ -159,12 +159,8 @@ snapshots:
 lockfileVersion: '9.0'
 
 settings:
-  autoDedupe: true
   autoInstallPeers: true
-  dedupeInjectedDeps: true
-  dedupePeerDependents: true
   excludeLinksFromLockfile: false
-  linkWorkspacePackages: false
 
 catalogs:
   default:
@@ -361,7 +357,7 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       next:
-        specifier: ^16.3.6
+        specifier: ^16.4.0
         version: 16.4.0(@types/node@24.19.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       nextra:
         specifier: ^4.6.1
