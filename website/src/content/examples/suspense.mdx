@@ -2,16 +2,29 @@ import Example from '@/examples/suspense'
 
 # Suspense & deferred values
 
-Type into the search field and watch the two panels side by side.
+The same search text can update an input immediately and update results in the background.
+This example shows why those reads need different hooks when rendering results can suspend.
 
-- **Left (`useSyncObservable`)** — each keystroke is a synchronous store update. When results suspend, React replaces already-visible content with the Suspense fallback (and may log _“A component suspended while responding to synchronous input”_ — open Sandpack’s console).
-- **Right (`useObservable`)** — store updates are deferred. Already-revealed results stay on screen (dimmed while stale) until the new ones are ready.
-- **The input itself** reads `useSyncObservable` so typing never lags — this is exactly when you need the sync hook.
+Type a word, wait for results, then add another letter. Compare the two panels:
+
+- **Left (`useSyncObservable`)**: when the next results suspend, React shows the loading fallback
+  in place of the previous results.
+- **Right (`useObservable`)**: previous results stay visible and are dimmed until the next results
+  are ready.
+- **The input** uses `useSyncObservable` so its controlled value updates synchronously.
 
 <Example />
 
 ## Why this happens
 
-[`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore#caveats) cannot mark store mutations as Transitions, so suspending on its value triggers the nearest Suspense fallback. Wrapping the value in [`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) (what `useObservable` does) is how you [prevent unwanted fallbacks](https://react.dev/reference/react/Suspense#preventing-unwanted-fallbacks) for already-revealed content.
+[`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore#caveats) cannot
+mark store mutations as Transitions. `useObservable` uses
+[`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) to let an update wait in
+the background when a child suspends. A second, synchronous read in the right panel lets it compare
+the displayed keyword with the current one and dim stale results.
 
-See also [jantimon/react-hydration-rules](https://github.com/jantimon/react-hydration-rules) for the broader hydration/Suspense matrix, and the React reconciler tests for `useDeferredValue` / `useSyncExternalStore` in [facebook/react](https://github.com/facebook/react). Hydration-time differences between the two hooks are covered by the library’s Vitest suite (Sandpack examples are client-only).
+The simulated search caches promises by keyword. Returning to a keyword that already loaded may
+not suspend, so try new text when comparing the panels. These previews run on the client; they do
+not demonstrate server rendering or hydration.
+
+Next: [let an observable provide the promise for Suspense](/examples/data-fetching).

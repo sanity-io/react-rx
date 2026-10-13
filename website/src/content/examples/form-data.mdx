@@ -1,3 +1,23 @@
 import Example from '@/examples/form-data'
 
+# Save form data
+
+This form combines partial field updates into one value, then reads that value when the user
+submits. The storage adapter uses the browser's `localStorage`; no server request is involved.
+
+Edit the title and description, then click **Save**. The button changes to **Saved!**. Refresh the
+preview to read the stored values again, if local storage is available in your browser.
+
 <Example />
+
+`scan` merges each field change into the form data. `withLatestFrom` takes a snapshot for each
+submission. The fields read [`useSyncObservable`](/reference#usesyncobservable) so their controlled
+values update synchronously; the save status reads
+[`useObservable`](/reference#useobservable).
+
+The submission stream emits `saving` followed by `saved`, but this adapter writes synchronously,
+so you may not see the intermediate label. Editing a field after saving does not reset the
+status: in this example, **Saved!** reports the last submission, not whether the current form has
+unsaved changes.
+
+Next: [share an observable through React context](/examples/context).

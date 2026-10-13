@@ -1,0 +1,100 @@
+# How react-rx compares
+
+There are a few good ways to read RxJS observables in React, and a few good reasons to use something
+other than RxJS entirely. This page describes what react-rx does, how it differs from the other
+established RxJS bindings, and which non-RxJS tools pair well with it.
+
+All three RxJS libraries below are concurrent-mode compatible and support React Suspense. The
+differences are in API shape and in how updates and shared state are handled, so the useful question
+is which style fits your codebase.
+
+## RxJS bindings for React
+
+|                            | **react-rx**                                     | **observable-hooks**                                         | **@react-rxjs/core**                                        |
+| -------------------------- | ------------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------- |
+| Core idea                  | Read an observable you already have              | Create/transform and read observables from props and state   | Bind observables into shared state, read with hooks         |
+| Read a value               | `useObservable(stream$, initial)`                | `useObservableState(stream$, initial)`                       | `useStateObservable(state$)`                                |
+| Build a stream from inputs | `useMemo` / `useObservableSubject`               | `useObservable(init, inputs)`                                | `state(...)` / `bind(...)` factories                        |
+| Event handlers             | `useObservableSubject()`                         | `useObservableCallback()`                                    | push into a `Subject`, expose it as `state`                 |
+| Suspense                   | `useObservablePromise` + `use()`                 | `ObservableResource` + `useObservableSuspense`               | suspends until first value; `SUSPENSE` sentinel re-suspends |
+| Initial value              | required for the value hooks                     | optional `initialState`, passed to `useState`                | `withDefault`, otherwise it suspends                        |
+| Update scheduling          | deferred by default; `useSyncObservable` is sync | delivered after commit                                       | delivered after commit                                      |
+| Sharing across components  | one shared source subscription per observable    | one subscription per hook; multicast in RxJS (`shareReplay`) | shared multicast state is the core model                    |
+| Peer range (React / RxJS)  | `react ^19.2` / `rxjs ^7.2`                      | `react >=16.8` / `rxjs >=6`                                  | `react >=16.8` / `rxjs >=7`                                 |
+
+react-rx's `useObservable` defers its updates with
+[`useDeferredValue`](https://react.dev/reference/react/useDeferredValue) and keeps the observable's
+identity and value deferred as one snapshot, so React can prioritize urgent work without pairing a
+new source with the old one's value; controlled inputs opt into synchronous updates with
+`useSyncObservable`. The other two deliver values synchronously after commit, which is equally
+concurrent-safe — it is a different default, not a missing feature.
+
+Sources, checked **2026-10-12**: the [react-rx guide](/guide), [API reference](/reference), and the
+[`useObservable`](https://github.com/sanity-io/react-rx/blob/current/packages/react-rx/src/useObservable.ts)
+and [shared-cache](https://github.com/sanity-io/react-rx/blob/current/packages/react-rx/src/cache.ts)
+source; observable-hooks [README](https://github.com/crimx/observable-hooks/blob/main/README.md),
+[`package.json`](https://github.com/crimx/observable-hooks/blob/main/packages/observable-hooks/package.json),
+[`useSubscription`](https://github.com/crimx/observable-hooks/blob/main/packages/observable-hooks/src/use-subscription.ts),
+and [Suspense API](https://github.com/crimx/observable-hooks/blob/main/docs/api/suspense.md);
+React-RxJS [README](https://github.com/re-rxjs/react-rxjs/blob/main/README.md),
+[`package.json`](https://github.com/re-rxjs/react-rxjs/blob/main/packages/core/package.json), and
+[`useStateObservable`](https://github.com/re-rxjs/react-rxjs/blob/main/packages/core/src/useStateObservable.ts).
+
+### When each one feels natural
+
+**react-rx** fits best when the observable already exists — a live document, a search pipeline, a
+progress stream — and you want to drop its current value into a component. Its hooks keep the two
+jobs separate: RxJS decides what the value is, the hook renders it. Value hooks take an explicit
+initial value and subscribe after commit, controlled inputs get a synchronous hook, and Suspense is
+a distinct `useObservablePromise` path with preloading and `<Activity>` awareness. If you like
+observables staying plain and the React integration staying small, this is the style.
+
+**[observable-hooks](https://observable-hooks.js.org/)** leans into building observables from React
+inputs. `useObservable` takes an epic-like function that turns a stream of props or state into an
+output stream, `useObservableState` reads it, and `useObservableCallback` turns events into streams.
+If you think in terms of "transform this stream of inputs into that stream of outputs" inside the
+component, its API maps directly onto that. Each `useObservableState`/`useSubscription` call
+subscribes to the source on its own, so when several components read one stream you multicast it in
+RxJS (for example with `shareReplay`) rather than relying on the hook to share it.
+
+**[@react-rxjs/core](https://react-rxjs.org/)** treats shared state as the primary unit. You `bind`
+or declare `state` observables, subscribe through a `<Subscribe>` boundary, and read with
+`useStateObservable`. A `state` with no default value suspends until its first emission; `withDefault`
+opts out of that, and the `SUSPENSE` sentinel lets a stream re-enter the fallback on demand. If you
+want a decentralized, composable, code-split-friendly state layer built entirely out of observables,
+its model is the most opinionated in that direction.
+
+**No library (DIY).** You can always subscribe by hand: `useState` for the value, `useEffect` to
+subscribe and unsubscribe. That's the right choice for imperative work with clear cleanup, or when
+you'd rather not add a dependency for a single stream. A binding earns its place once you repeat that
+pattern — and once you want commit-time subscriptions, deferred updates, Suspense, and SSR handling
+that are fiddly to get right by hand. If the effect's only job is copying the latest value into
+state, a hook says the same thing in one line.
+
+None of these is a strict superset of the others. Picking one is mostly about whether you want to
+read existing observables (react-rx), transform input streams in place (observable-hooks), or model
+shared application state as observables (React-RxJS).
+
+## When RxJS isn't the answer
+
+react-rx connects observables to React; it is not a general state manager, and reaching for an
+observable isn't always the simplest path. These tools solve different problems and pair well with
+react-rx rather than competing with it:
+
+| If your main need is…                                   | Reach for                                                               |
+| ------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Local component state                                   | React's `useState` / `useReducer`                                       |
+| Shared application state                                | [Zustand](https://zustand.docs.pmnd.rs/) or [Jotai](https://jotai.org/) |
+| Explicit states and allowed transitions                 | [XState](https://stately.ai/docs/xstate)                                |
+| Server-data caching, invalidation, and refetching       | [TanStack Query](https://tanstack.com/query)                            |
+| Timing, cancellation, and several live sources combined | RxJS, read with react-rx                                                |
+
+These happily coexist. A page can keep server data in a query cache, local toggles in `useState`,
+and read an upload-progress observable with react-rx at the same time. react-rx's promise cache has
+a short `ttl`; it is not a keyed query cache with invalidation policies, so use a query library when
+you need that. A hand-written `useEffect` subscription is still the right call for imperative work
+with clear cleanup — prefer a react-rx hook when the effect's only job is copying the latest stream
+value into React state.
+
+For more on choosing a hook once you've decided RxJS fits, see the [guide](/guide) and the runnable
+[examples](/examples/simple).

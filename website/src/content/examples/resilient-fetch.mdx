@@ -1,0 +1,33 @@
+import Example from '@/examples/resilient-fetch'
+
+# Resilient fetch
+
+A useful loading model does not erase good data whenever a refresh starts or fails. This example
+keeps the last successful report while showing refresh, retry, offline, and error state separately.
+
+Try increasing latency and clicking **Refresh report** twice: the newer command cancels the older
+timer. Turn on **Fail every attempt** to watch three bounded attempts with exponential backoff.
+During a slow request, enable **Simulate offline**, wait, then reconnect; the interrupted generation
+deliberately restarts from attempt 1.
+
+<Example />
+
+This sandbox uses an RxJS `timer` as a clearly labeled request simulation. Timer teardown makes
+cancellation observable without depending on a public API. The pipeline has the same boundaries a
+real request needs:
+
+- the refresh event's `switchMap` cancels an obsolete generation;
+- connectivity switches cancel the request and its backoff timer;
+- `retry` is bounded, with exponential delays;
+- inner `catchError` converts the final failure to an event, so later refreshes still work; and
+- `scan` preserves `data` across refreshing, offline, and failed events.
+
+The effective connection combines the browser's real `online`/`offline` events with the demo
+override. `navigator.onLine` is only a reachability hint, not proof that your server is available,
+so production code must still handle request failures.
+
+For a real HTTP endpoint, replace `simulatedRequest` with
+[`fromFetch`](https://rxjs.dev/api/fetch/fromFetch). It creates an `AbortController` per
+subscription, so the existing `switchMap` teardown aborts the old fetch. Check HTTP status codes
+inside that request adapter—`fetch` does not throw for a 500 response—and only retry failures your
+application considers transient.

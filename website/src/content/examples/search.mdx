@@ -1,3 +1,23 @@
 import Example from '@/examples/search'
 
+# Search as you type
+
+Keep typing responsive while slower work produces results. This example uses
+[`useSyncObservable`](/reference#usesyncobservable) for the input and
+[`useObservable`](/reference#useobservable) for the result list.
+
+Type a short word, then add more letters before the results arrive. The search is simulated with
+a timer: longer keywords finish sooner. New non-empty keywords replace the previous search.
+
 <Example />
+
+`distinctUntilChanged` skips repeated keywords, and `switchMap` unsubscribes from the previous
+search timer. There is no debounce here: each distinct, non-empty keyword starts work immediately.
+Already-rendered results stay visible until the next search emits.
+
+Notice what happens when you clear the input. Empty strings are filtered out before `switchMap`,
+so clearing does not cancel the pending search or clear the last results. That behavior comes
+from the pipeline, not the rendering hook.
+
+Next: [build a list from input and submit events](/examples/todo-app). To compare Suspense
+behavior directly, jump to [keep results visible](/examples/suspense).

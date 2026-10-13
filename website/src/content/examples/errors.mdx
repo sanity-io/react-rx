@@ -1,3 +1,22 @@
 import Example from '@/examples/errors'
 
+# Handle observable errors
+
+An observable error can be handled by a React Error Boundary. Here, the stream deliberately
+errors when you click the button, so you can see the failure and recovery paths.
+
+Let the counter run, click **DO NOT CLICK THE BUTTON**, then click **Try again**. The boundary
+shows the error message and remounts the example when reset; the counter starts again.
+
 <Example />
+
+[`useObservable`](/reference#useobservable) throws the stream's error during rendering. The
+boundary replaces the failed subtree with its error UI. Resetting works here because a fresh
+mount creates the derived pipeline again; resetting a boundary alone does not repair an
+arbitrary failed source.
+
+If a failure is expected, such as an unavailable search result, you can instead use RxJS
+`catchError` to emit a value the component knows how to display. Use an Error Boundary for errors
+that should interrupt that part of the UI.
+
+Next: [compare synchronous and deferred reads with Suspense](/examples/suspense).

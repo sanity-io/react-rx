@@ -2,21 +2,48 @@ import Example from '@/examples/transitions'
 
 # Transitions and refetching
 
-Swapping which observable a live component renders follows React's [client-side refetch pattern](https://react.dev/reference/react/use#re-fetching-data-in-client-components): change the data source inside `startTransition` or behind `useDeferredValue`, and the previous content stays visible until the new data is ready. No Suspense fallback.
-
-A suspended transition render never commits, and commit is otherwise what starts a fetch. So for exactly this case `useObservablePromise` starts the swapped-in source during the transition render itself. A consumer that is already **live**, meaning committed, visible, and subscribed, re-rendering with a new observable identity starts the fetch; the suspended transition settles and the swap commits. Mounts, server rendering, `disabled` consumers, and hidden `<Activity>` pre-renders have no live subscription and stay fully lazy. Rendering alone still never fetches for them.
+Once a profile is visible, selecting another should not have to replace it with a loading message.
+This example uses React's
+[client-side refetch pattern](https://react.dev/reference/react/use#re-fetching-data-in-client-components):
+change the observable inside `startTransition` and keep the previous profile visible while the
+next one loads.
 
 Try it:
 
-1. Click **Grace**. The pending timer runs for about 1.5s while Ada stays on screen, then the swap commits. No preloading, no fallback flash.
-2. Click **Ada** again. Settled observables are retained (`ttl: 60_000` here), so swapping back commits instantly.
-3. Click **Reset demo**. A fresh mount is not a swap: the initial fetch starts at the hook caller's commit while the Suspense fallback shows.
+1. Wait for Ada to load, then click **Grace**. Ada stays visible while the pending timer runs for
+   about 1.5 seconds.
+2. Click **Ada** again within a minute. With `ttl: 60_000`, the settled result is still cached, so
+   this switch does not need another wait.
+3. Click **Reset demo**. This creates fresh observables and remounts the switcher. The initial
+   request starts at commit and shows the Suspense fallback.
 
 <Example />
 
+The requests here are simulated with timers. The same subscription rules apply to an observable
+that performs a network request.
+
+Normally, [`useObservablePromise`](/reference#useobservablepromise) starts its subscription when
+the caller commits. There is one important exception: an already-committed, visible, enabled
+consumer can start a newly selected observable during render. Without that exception, a suspended
+transition could wait for data whose subscription cannot start until it commits.
+
+This also works when the selected source is behind `useDeferredValue`. Fresh mounts, server
+renders, disabled consumers, and hidden `<Activity>` pre-renders do not start subscriptions
+during render.
+
 ## The rules that still apply
 
-- **Identities must be stable.** react-rx keys its promise cache by observable identity, so every render asking for the same data must receive the same instance. That is what the `Map` in `fetchProfile$` is for. A factory creating a fresh observable per call gives every render its own entry.
-- **The `<Suspense>` boundary sits between the hook caller and the `use()` reader.** The hook caller must be able to commit, or already be live. `use()`-ing the hook's own promise in the same component still deadlocks, exactly like `use()`-ing a promise created during your own render.
-- **Preloading is now an optimization, not a requirement.** `preloadObservablePromise` on hover or in a route loader means the swap target can already be in flight, or even settled, by the time the transition renders. That shortens or removes the pending period. See [Activity and preload](/examples/activity).
-- **An abandoned transition may have started a fetch nobody consumes.** It settles into the shared cache and stays reusable within `ttl`. Cap never-settling sources with RxJS [`timeout`](https://rxjs.dev/api/index/function/timeout), just as you would for preloads.
+- **Reuse observable instances.** The `Map` in `fetchProfile$` gives each profile one instance.
+  Creating a new observable on every render would create a different cache entry each time.
+- **Keep the boundary between parent and child.** The hook caller passes the promise to a child
+  that calls `use()`, with Suspense between them. Calling `use()` on the hook's own pending promise
+  in the same component prevents the initial mount from committing and starting its subscription.
+- **Preloading is optional for a live swap.** Starting a request on hover can shorten the wait,
+  but this example does not need it to complete a transition.
+- **Abandoned transitions may leave work running.** A request started during a transition can
+  outlive that transition. Once settled, an unused entry expires after `ttl`. Pending work is not
+  timed out by the cache; use RxJS [`timeout`](https://rxjs.dev/api/index/function/timeout) or
+  source cancellation if it might never settle.
+
+Next: [start loading before a tab is selected](/examples/activity). You can also explore the
+[full app demo](https://async-react.sanity.dev/) to see async navigation in a larger application.

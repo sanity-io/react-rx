@@ -1,18 +1,30 @@
 ---
 name: rxjs-like-a-pro
 description: >
-  How to write idiomatic, efficient RxJS code. Use this skill whenever the user is writing, refactoring,
-  reviewing, or debugging code that uses RxJS — including any file that imports from 'rxjs'.
+  Write and review RxJS code, including React components that use react-rx. Use this skill when writing,
+  refactoring, reviewing, or debugging code that imports from 'rxjs' or 'react-rx'.
   Trigger on mentions of observables, subscriptions, RxJS operators, or reactive streams. Even if the user
   doesn't say "RxJS" explicitly, activate when you see patterns like `.pipe()`, `.subscribe()`, `Observable`,
   `Subject`, `BehaviorSubject`, `switchMap`, `mergeMap`, or similar.
 ---
 
-# RxJS Like a Pro
+# Working with RxJS and react-rx
 
-This skill helps you write RxJS code that is idiomatic, composable, and free of common pitfalls. The core
-philosophy: **keep logic in the observable chain**. Every time you reach for `.subscribe()`, ask whether the
-work could instead be expressed as a transformation inside `.pipe()`.
+Use operators to describe how values change, and subscribe where a consumer needs the result.
+Before refactoring, identify who owns the subscription, when it should start and stop, and what
+should happen on loading, errors, and cancellation. Preserve those behaviors.
+
+## React components with react-rx
+
+When the project uses `react-rx`, the React-specific decisions — auditing `useState` +
+`useEffect` + `.subscribe()` bridges, choosing between `useObservable`, `useSyncObservable`,
+`useObservablePromise`, and `useObservableSubject`, keeping the observable identity stable, and
+the SSR / `<Activity>` / Suspense pitfalls — live in the dedicated **`react-rx-best-practices`**
+skill. Use that skill for anything that reads an observable from a React component. Keep using
+this skill for composing the observables themselves (operators, flattening, error handling,
+sharing, custom operators) regardless of framework.
+
+This is usage guidance, not a request to migrate an application.
 
 ## Reference files
 
@@ -28,16 +40,14 @@ For detailed examples and patterns, read the relevant reference file:
 - `references/custom-operators.md` — How to write inline and extracted custom operators with `OperatorFunction`.
   Read when extracting reusable stream logic.
 
-## The #1 Anti-pattern: Premature Subscribe
+## Compose before subscribing
 
 The most common RxJS mistake is subscribing too early and then doing imperative work inside the callback —
 tracking state in variables, calling functions with side effects, or worse, subscribing to _another_ observable
 inside the callback (the "subscribe-in-subscribe" pattern).
 
-Why this matters: when you subscribe early, you lose the power of the reactive chain. You can no longer
-compose, retry, cancel, debounce, or share that work. You've escaped from the declarative world into
-imperative spaghetti, and every new requirement (add a retry, add a timeout, combine with another stream)
-means more manual state management.
+Nested subscriptions make cancellation, retries, and cleanup harder to follow. Put dependent work in
+the same pipeline so one subscription controls its lifetime.
 
 ```typescript
 // ❌ Bad: subscribe-in-subscribe with manual state tracking
@@ -58,11 +68,11 @@ const data$ = input$.pipe(switchMap((value) => fetchData(value)))
 
 For loading state, derive it inside the chain using `startWith` — see `references/loading-state-patterns.md`.
 
-## The Massive `new Observable()` Antipattern
+## Keep observable constructors focused
 
-Another common antipattern is stuffing an entire program into a single `new Observable(subscriber => { ... })`
-constructor — setting up listeners, resolving promises, subscribing to other observables, managing retry
-state, all in one giant callback. This is imperative code wearing an Observable costume.
+Avoid putting listeners, promises, retries, and nested subscriptions into one large
+`new Observable(subscriber => { ... })` callback. Separate the source adapter from the operations
+that transform its values.
 
 The `new Observable()` constructor should be small and focused — a thin bridge from _one_ non-reactive source
 into the reactive world. For promise-based sources, use `defer(() => promise)` instead. Retry logic, error
@@ -79,7 +89,9 @@ See `references/massive-observable.md` for a full before/after example.
 | `concatMap`  | Queues inner observables, runs in order       | Order matters and nothing should be dropped (sequential writes, queues)        |
 | `exhaustMap` | Ignores new values while inner is running     | Preventing duplicate submissions (form submit clicks)                          |
 
-Default to `switchMap` for most UI/request scenarios.
+Use `switchMap` when only the latest result matters, such as a search. Do not use it for writes
+that all need to finish; consider `concatMap`, `mergeMap`, or `exhaustMap` according to the required
+ordering and duplicate-submission behavior.
 
 The inner observable doesn't have to be a single request — it can be an entire timeline of events using
 `concat`, `merge`, `timer`, `delay`. See `references/inner-observable-chains.md` for animation and timing
@@ -131,19 +143,23 @@ someObservable$.pipe(
 // In teardown: destroy$.next(); destroy$.complete();
 ```
 
-**`takeUntil` must be the last operator in the pipe.** Operators after it (especially flattening operators)
-can create inner subscriptions that `takeUntil` doesn't know about, causing leaks.
+Place `takeUntil` after flattening operators when it should stop their inner subscriptions too.
+Operators after it can otherwise keep work running after the notifier emits.
 
 4. **Compose into a single subscription** — if you have multiple independent streams with side effects,
    `merge` them into one and subscribe once.
 
 ## Hot vs Cold
 
-- **Cold** observables (`new Observable(...)`, `of()`, HTTP requests) create a new execution per subscriber
-- **Hot** observables (`Subject`, `fromEvent`) share a single execution
+- **Cold** observables start work for each subscription. Examples include `of()` and `fromFetch`.
+- **Hot** sources produce values independently of an individual subscriber. A `Subject` broadcasts
+  values to its current subscribers.
+- `fromEvent` observes an external event source, but attaches a separate handler per subscription.
+  Creating an observable with `new Observable` does not, by itself, tell you whether its source is hot.
 
-Share cold observables with `shareReplay({ bufferSize: 1, refCount: true })`. Always use `refCount: true` —
-without it, the source subscription stays alive after all subscribers unsubscribe (memory leak).
+Use `shareReplay({bufferSize: 1, refCount: true})` when consumers should share work and receive the
+latest value. `refCount: true` releases an ongoing source when the last subscriber leaves. Keep a
+subscription alive without consumers only when that lifetime is intentional and bounded.
 
 ## Deriving State Reactively
 
@@ -176,9 +192,9 @@ provide initial values and unblock the stream.
 
 ## Subjects: Use Sparingly
 
-`Subject`, `BehaviorSubject`, `ReplaySubject` are escape hatches for bridging imperative and reactive code.
-Appropriate for event buses and bridging callbacks. _Not_ appropriate as general-purpose state containers —
-if you're calling `.next()` in multiple places to keep a Subject in sync, use a derived stream instead.
+`Subject`, `BehaviorSubject`, and `ReplaySubject` connect imperative producers to streams. They are
+useful for callbacks, event buses, and state with an explicit owner. If several callers use `.next()`
+to keep derived values in sync, calculate those values with operators instead.
 
 ## Custom Operators
 
@@ -186,11 +202,14 @@ Don't be afraid to write them — they're just functions with the signature
 `(source: Observable<A>) => Observable<B>`. Extract repeated `.pipe()` chains into named operators with
 `OperatorFunction<In, Out>`. See `references/custom-operators.md` for inline and extracted examples.
 
-## Side Effects Belong in `tap`, Not in `subscribe`
+## Use `tap` for effects that belong in the pipeline
 
-A good rule of thumb: `.subscribe()` should have no arguments. All side effects — logging, updating the DOM,
-writing to a database, sending analytics — belong in `tap` inside the chain. The `.subscribe()` at the end
-just activates the stream.
+Use `tap` when an effect should be part of a composed pipeline, such as logging a successful result.
+A final `subscribe` callback is also valid at a consumer boundary. Do not move it merely to make
+every `.subscribe()` argument-free.
+
+`tap` does not await promises. For an asynchronous write that must finish before the next operation,
+use a flattening operator such as `concatMap`.
 
 ```typescript
 // ❌ Bad: side effects crammed into subscribe
@@ -215,9 +234,9 @@ source$
   .subscribe()
 ```
 
-Why this matters: when side effects are in the chain, they're composable. You can add, remove, or reorder
-them. You can put a `filter` between them. You can share the stream and have different subscribers without
-duplicating side-effect logic. When everything is stuffed into `.subscribe()`, you've lost all of that.
+Effects in the pipeline can be placed before or after filters and sharing operators. Placement matters:
+an effect before `share` runs once per shared source emission; an effect after it runs for each subscriber.
+Moving an effect can therefore change how often it runs.
 
 `tap` also accepts an observer object with lifecycle hooks — particularly useful for debugging:
 

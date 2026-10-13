@@ -1,3 +1,64 @@
-import Example from '@/examples/sync'
+import Timers from '@/examples/sync'
+import TimeAgo from '@/examples/time-ago'
+import TimeAgoSsr from '@/examples/time-ago-ssr'
 
-<Example />
+# Timers and time ago
+
+Timers are the clearest place to watch RxJS keep logic out of the component while
+[`useObservable`](/reference#useobservable) simply reads the result.
+
+## Pause and resume a timer
+
+The same pause/resume timer is built twice. On the left, plain React drives it with a declarative
+`useInterval` hook (passing `delay = null` to pause). On the right, RxJS combines a `running` and a
+`delay` subject: `switchMap` swaps the interval in and out, while `scan` keeps the running total.
+
+The React version follows the pattern explained in Dan Abramov's
+[Making setInterval Declarative with React Hooks](https://overreacted.io/making-setinterval-declarative-with-react-hooks/).
+Open `useInterval.ts`: one effect keeps the callback current; another replaces the timer only when
+its delay changes. The RxJS version expresses that timer lifetime with `switchMap` instead.
+
+<Timers />
+
+Both keep their count across a pause, because pausing stops emissions without resetting the fold.
+
+**Try this:** start both, then drag a slider. React restarts its `setInterval`; RxJS's `switchMap`
+disposes the old interval and subscribes a new one — same result, but the swap is part of the
+stream.
+
+## Emit only when the value changes
+
+`TimeAgo` ticks every second but should only re-render when the words change. It maps the elapsed
+time to a numeric `{unit, value}`, then `distinctUntilChanged` drops every tick that would look the
+same, and `Intl.RelativeTimeFormat` turns that pair into localized text.
+
+<TimeAgo />
+
+The emission counts prove it: the seconds row climbs every second, while the hours and days rows
+stay flat for a long time even though the underlying timer never stops.
+
+**Try this:** change the locale select. The same numeric `{unit, value}` renders as different words,
+because formatting is separate from the stream.
+
+## Server render, then hydrate
+
+The server can already tell the reader how old a message is. It sends that value along with the HTML,
+so the client does not have to guess it again during hydration.
+
+<TimeAgoSsr />
+
+This browser simulation calls React's real `renderToString` and `hydrateRoot`. The server snapshot
+contains the publication timestamp, an initial `{unit, value}`, and the locale. Open **Inspect the
+server HTML and props** to see the serialized payload. In an application, your server or framework
+would send those props to the client.
+
+**Try this:** wait at least five seconds, then press **Hydrate**. The server HTML already says
+“55 seconds ago.” Hydration first reuses that exact snapshot and existing DOM node. Only after
+commit does the observable read the current clock and catch up to “1 minute ago.”
+
+The status changes to **Hydrated** when the child's effect runs, and the error counter records
+React's `onRecoverableError` callbacks. There is no `suppressHydrationWarning` and no hard-coded
+success message. Recomputing the initial elapsed time on the client would break this guarantee.
+
+Next: [keep several conversations streaming at once](/examples/streaming-chat), or
+[retry a request without losing the last result](/examples/resilient-fetch).

@@ -30,11 +30,12 @@ export const exampleManifests = {
       '/api.ts': 'api.ts',
     },
   },
-  'animation': {
-    files: {'/App.tsx': 'AnimationExample.tsx'},
-    dependencies: {
-      'bezier-easing': 'latest',
-      'styled-components': 'latest',
+  'basic-state': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/TextField.tsx': 'TextField.tsx',
+      '/Checkbox.tsx': 'Checkbox.tsx',
+      '/NameForm.tsx': 'NameForm.tsx',
     },
   },
   'context': {
@@ -59,11 +60,6 @@ export const exampleManifests = {
       'use-error-boundary': 'latest',
     },
   },
-  'event-handlers': {
-    files: {
-      '/App.tsx': 'EventHandlersExample.tsx',
-    },
-  },
   'fetch': {
     files: {'/App.tsx': 'FetchExample.tsx'},
     transform: (source) =>
@@ -74,9 +70,6 @@ export const exampleManifests = {
           : 'https://react-rx.sanity.dev',
       ),
   },
-  'fizz-buzz': {
-    files: {'/App.tsx': 'FizzBuzzExample.tsx'},
-  },
   'form-data': {
     files: {
       '/App.tsx': 'FormDataExample.tsx',
@@ -84,32 +77,52 @@ export const exampleManifests = {
     },
     dependencies: {'styled-components': 'latest'},
   },
-  'hello-world': {
-    files: {'/App.tsx': 'HelloWorldExample.tsx'},
-  },
-  'reactive-state': {
-    files: {
-      '/App.tsx': 'ReactiveStateExample.tsx',
-    },
-  },
   'search': {
     files: {'/App.tsx': 'SearchExample.tsx'},
   },
+  'resilient-fetch': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/request.ts': 'request.ts',
+    },
+  },
   'simple': {
-    files: {'/App.tsx': 'Counter.example.tsx'},
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/ManualCounter.tsx': 'ManualCounter.tsx',
+      '/ReactRxCounter.tsx': 'ReactRxCounter.tsx',
+    },
+  },
+  'streaming-chat': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/Conversation.tsx': 'Conversation.tsx',
+      '/stream.ts': 'stream.ts',
+    },
   },
   'suspense': {
     files: {'/App.tsx': 'SuspenseExample.tsx'},
   },
   'sync': {
-    files: {'/App.tsx': 'Sync.example.tsx'},
-  },
-  'tick': {
     files: {
-      '/App.tsx': 'TickExample.tsx',
-      './Ticker.tsx': 'Ticker.tsx',
-      './TickerWithSubTick.tsx':
-        'TickerWithSubTick.tsx',
+      '/App.tsx': 'App.tsx',
+      '/ReactTimer.tsx': 'ReactTimer.tsx',
+      '/RxTimer.tsx': 'RxTimer.tsx',
+      '/useInterval.ts': 'useInterval.ts',
+    },
+  },
+  'time-ago': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/TimeAgo.tsx': 'TimeAgo.tsx',
+      '/selectUnit.ts': 'selectUnit.ts',
+    },
+  },
+  'time-ago-ssr': {
+    files: {
+      '/App.tsx': 'App.tsx',
+      '/LiveClock.tsx': 'LiveClock.tsx',
+      '/selectUnit.ts': 'selectUnit.ts',
     },
   },
   'todo-app': {

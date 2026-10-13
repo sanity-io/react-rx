@@ -1,15 +1,44 @@
-import ReactiveState from '@/examples/reactive-state'
-import DelayedTick from '@/examples/tick'
-import FizzBuzz from '@/examples/fizz-buzz'
+import BasicState from '@/examples/basic-state'
 
-## Configurable interval
+# Text fields, checkboxes, and forms
 
-<ReactiveState />
+Start with the familiar examples from React's
+[`useState` guide](https://react.dev/reference/react/useState#examples-basic): a string, a boolean,
+then two fields together. This time the values come from streams.
 
-## Delayed tick
+All three use [`useSyncObservable`](/reference#usesyncobservable). A controlled input must receive
+each edit synchronously; a result list can use the deferred `useObservable` instead.
 
-<DelayedTick />
+<BasicState />
 
-## Fizz Buzz
+## 1. A string from a text field
 
-<FizzBuzz />
+Open `TextField.tsx`. The handler sends `event.currentTarget.value` into the stream.
+`useSyncObservable(text$, '')` supplies the empty initial value and reads subsequent edits.
+There is no second copy of the text in `useState`.
+
+**Try this:** type your name and erase it. The greeting returns to “stranger.” Change the initial
+value from `''` to your name and restart the preview to see the difference before any events arrive.
+
+## 2. A boolean from a checkbox
+
+Open `Checkbox.tsx`. The shape is the same, but the event provides `checked`, not `value`.
+The observable carries booleans and the hook starts at `false`.
+
+**Try this:** toggle **Send me updates**. Notice that it does not change either of the text examples;
+each component owns its own event stream.
+
+## 3. Two variables in one form value
+
+Open `NameForm.tsx`. A change to either field sends a partial update such as `{first: 'Ada'}`.
+`scan` merges it with the previous name. The untouched field stays intact, and React derives the full
+name from the resulting object.
+
+**Try this:** enter a first and last name, then edit only the first. Add a middle name by extending the
+`Name` type, initial value, and JSX. The stream's merge logic does not need to change.
+
+These examples deliberately stay small. Plain `useState` is still a good choice for local fields.
+Reach for the stream version when you need to combine changes with validation, autosaving, or other
+async work. Extract values from the DOM event immediately, before adding delays or request operators.
+
+Next: [drive timers and pause them](/examples/sync).

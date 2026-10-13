@@ -2,8 +2,23 @@ import Example from '@/examples/data-fetching'
 
 # Suspense data fetching
 
-`useObservablePromise` returns a promise for React's `use()`. The Suspense
-fallback shows until the first emission; later stream updates do not re-trigger
-it.
+Use [`useObservablePromise`](/reference#useobservablepromise) when a child should wait for the
+first value rather than render an initial value you supply. This example pairs a simulated profile
+request with a continuously updating clock.
+
+Select **alpha** and **beta**. A profile takes about 800 milliseconds to arrive, and its Suspense
+boundary shows a loading message while it waits. Watch the clock after its first tick: later
+emissions update it without returning to a fallback.
 
 <Example />
+
+The parent calls the hook, then passes the promise to a child that reads it with React's `use()`.
+The Suspense boundary sits between them. This placement lets the parent commit and start the
+subscription even while the child waits.
+
+Profile observables are kept in a `Map`, so each ID has a stable instance. Selecting a different
+ID changes the observable and resets the profile boundary through `key={id}`. The clock keeps the
+same observable throughout. These sources use timers, not HTTP requests.
+
+Next: [switch profiles while keeping the previous one visible](/examples/transitions). For these
+patterns in a larger interface, try the [full app demo](https://async-react.sanity.dev/).

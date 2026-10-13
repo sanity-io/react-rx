@@ -1,9 +1,9 @@
 'use client'
 
-import {Sandpack} from '@codesandbox/sandpack-react'
+import {Sandpack, type SandpackFiles} from '@codesandbox/sandpack-react'
 import {atomDark, githubLight} from '@codesandbox/sandpack-themes'
 import {useTheme} from 'nextra-theme-docs'
-import {type ComponentProps, useMemo} from 'react'
+import {useMemo} from 'react'
 
 import reactRxPackageJson from '../../../packages/react-rx/package.json'
 import websitePackageJson from '../../package.json'
@@ -16,7 +16,8 @@ export default function SandpackComponent({
   files = EMPTY_FILES,
   dependencies = null,
   reactRxSource,
-}: Pick<ComponentProps<typeof Sandpack>, 'files'> & {
+}: {
+  files?: SandpackFiles
   dependencies?: Partial<Record<keyof typeof websiteDependencies, 'latest'>> | null
   /** Local react-rx build injected into Sandpack in development. */
   reactRxSource?: string
@@ -43,10 +44,15 @@ export default function SandpackComponent({
         showLineNumbers: true,
         showInlineErrors: true,
         wrapContent: true,
+        initModeObserverOptions: {rootMargin: '200px 0px'},
       }}
       theme={resolvedTheme === 'dark' ? atomDark : githubLight}
       files={{
-        ...(files as any),
+        ...files,
+        '/styles.css':
+          typeof files['/styles.css'] === 'string'
+            ? {code: files['/styles.css'], hidden: true}
+            : {...files['/styles.css'], hidden: true},
         /**
          * In production we should always use the package on npm, which supports canaries
          * while locally we use the build package
