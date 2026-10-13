@@ -159,12 +159,8 @@ snapshots:
 lockfileVersion: '9.0'
 
 settings:
-  autoDedupe: true
   autoInstallPeers: true
-  dedupeInjectedDeps: true
-  dedupePeerDependents: true
   excludeLinksFromLockfile: false
-  linkWorkspacePackages: false
 
 catalogs:
   default:
@@ -173,7 +169,7 @@ catalogs:
       version: 7.8.2
 
 overrides:
-  nextra-theme-docs>zod: 4.3.6
+  nextra-theme-docs>zod: 4.6.7
 
 importers:
 
@@ -5110,11 +5106,8 @@ packages:
     resolution: {integrity: sha512-XrBh9ZiQK5mJVRxZBAvD6LwRyAYrK3MFtH3+onyuxFL5hFD44EC3QOmIC1FjTj6H2MMwq46/NAI+NZxLZPZgxg==}
     engines: {node: '>=14.18.0'}
 
-  zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
-
-  zod@4.6.6:
-    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
   zustand@5.0.15:
     resolution: {integrity: sha512-MpSEjRiBkA9crSYeOUH32rJC7SVqAbm0Fqcqge/bUi2PPoLcBWKOsG+C8mevmpr8TwXHBVkChbbJiyvkE+i/3A==}
@@ -8074,7 +8067,7 @@ snapshots:
       tinyglobby: 0.2.17
       unbash: 5.0.0
       yaml: 2.9.1
-      zod: 4.6.6
+      zod: 4.6.7
 
   launch-editor@2.14.2:
     dependencies:
@@ -8829,7 +8822,7 @@ snapshots:
       react-compiler-runtime: 19.1.0-rc.3(react@19.3.0)
       react-dom: 19.3.0(react@19.3.0)
       scroll-into-view-if-needed: 3.1.0
-      zod: 4.3.6
+      zod: 4.6.7
       zustand: 5.0.15(@types/react@19.3.0)(react@19.3.0)(use-sync-external-store@1.7.0(react@19.3.0))
     transitivePeerDependencies:
       - '@types/react'
@@ -8879,7 +8872,7 @@ snapshots:
       unist-util-visit: 5.1.0
       unist-util-visit-children: 3.0.0
       yaml: 2.9.1
-      zod: 4.6.6
+      zod: 4.6.7
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -10019,9 +10012,7 @@ snapshots:
       '@yuku-toolchain/types': 0.19.0
       yuku-core: 0.19.0
 
-  zod@4.3.6: {}
-
-  zod@4.6.6: {}
+  zod@4.6.7: {}
 
   zustand@5.0.15(@types/react@19.3.0)(react@19.3.0)(use-sync-external-store@1.7.0(react@19.3.0)):
     optionalDependencies:
