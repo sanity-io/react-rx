@@ -5,7 +5,7 @@
   "scripts": {
     "build": "next build --turbopack",
     "dev": "next dev --turbopack",
-    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
+    "postbuild": "node scripts/pagefind.mts",
     "prebuild": "pnpm --filter react-rx build",
     "predev": "pnpm --filter react-rx build",
     "start": "next start"
@@ -13,7 +13,7 @@
   "dependencies": {
     "@codesandbox/sandpack-react": "^2.20.0",
     "@codesandbox/sandpack-themes": "^2.0.21",
-    "@types/node": "^24.19.0",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "next": "^16.3.6",

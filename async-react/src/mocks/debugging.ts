@@ -2,13 +2,13 @@ export type ApiPath = '/api/lessons' | '/api/lesson/:id/toggle'
 
 export type EndpointLatency = {mode: 'fixed' | 'real'; ms: number}
 
-/** @see https://github.com/mswjs/msw/blob/49d9d47f613b072f8d20e1a025feaee7c5382b2b/src/core/delay.ts */
+/** @see https://github.com/mswjs/msw/blob/v3.0.3/src/utils/delay.ts */
 const MIN_SERVER_RESPONSE_TIME = 100
 const MAX_SERVER_RESPONSE_TIME = 400
 
 /**
  * Browser half of MSW's `getRealisticResponseTime()`.
- * @see https://github.com/mswjs/msw/blob/49d9d47f613b072f8d20e1a025feaee7c5382b2b/src/core/delay.ts#L14-L17
+ * @see https://github.com/mswjs/msw/blob/v3.0.3/src/utils/delay.ts#L14-L17
  */
 function getRealisticResponseTime(): number {
   return Math.floor(
