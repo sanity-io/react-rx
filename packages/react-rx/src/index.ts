@@ -1,5 +1,6 @@
 'use client'
 
+export * from './createObservableCache'
 export * from './types'
 export * from './useObservable'
 export * from './useObservablePromise'

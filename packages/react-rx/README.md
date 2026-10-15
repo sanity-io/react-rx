@@ -9,6 +9,7 @@ Features:
 - Predictable first paint — the required `initialValue` renders first, and observables are never subscribed during render (no render-phase side effects, server included).
 - Non-blocking by default — `useObservable` defers store updates; reach for `useSyncObservable` for controlled inputs.
 - Suspense-ready — `useObservablePromise` turns an observable into a `use()`-compatible promise for when there is no meaningful initial value.
+- Shared by key — `createObservableCache` hands every consumer of a key the same observable, so they share one request and one settled promise instead of each suspending on its own.
 - Lightweight. Implemented on top of a small React Hook based core.
 - Full TypeScript support.
 

@@ -1,6 +1,5 @@
-import {preloadObservablePromise} from 'react-rx'
+import {createObservableCache, preloadObservablePromise} from 'react-rx'
 
-import {createObservableCache} from './cache'
 import type {Lesson, LessonIcon} from './fake-data'
 
 function delay(ms: number) {
@@ -70,21 +69,20 @@ function lessonsUrl(tab: string, search: string): string {
   return `/api/lessons?${query}`
 }
 
+const lessons = createObservableCache(fetchLessons, {ttl: 5 * 60_000})
+
 /**
- * One shared observable per (tab, search, revision). Concurrent subscribers —
- * renders, Suspense retries, the login prefetch — dedupe into one request, and
- * a result replays for five minutes after it arrives. Mutations and
- * `router.refresh()` call `revalidate()`, which drops every entry eagerly; the
- * router's `revision` is an input too so a refresh changes what a memoized
- * render asks for and re-reads the store.
+ * One shared observable per lessons URL. Concurrent subscribers — renders, Suspense retries, the
+ * login prefetch — dedupe into one request, and the result is reused for five minutes. `revision`
+ * is only a memoization input: a refresh has to change what a memoized render asks for, so it
+ * re-reads the store after `revalidate()`.
  */
-export const lessons$ = createObservableCache(
-  (tab: string, search: string, _revision: number) => fetchLessons(lessonsUrl(tab, search)),
-  {ttl: 5 * 60_000},
-)
+export function lessons$(tab: string, search: string, _revision: number) {
+  return lessons(lessonsUrl(tab, search))
+}
 
 export function revalidate() {
-  lessons$.clear()
+  lessons.clear()
 }
 
 export function prefetchLessons(revision: number) {

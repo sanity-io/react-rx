@@ -282,7 +282,50 @@ This is not the library for React Server Components or server-only data flows. H
 | No meaningful `initialValue`, Suspense, Activity    | `useObservablePromise` |
 | Events pushed from handlers                         | `useObservableSubject` |
 
-For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache.
+For cold observables you want to share across subscribers yourself, keep using RxJS `shareReplay({bufferSize: 1, refCount: true})` — the hook's `ttl` is a lightweight mount/unmount cache, not a full query cache. When the source is keyed, `createObservableCache` does that part for you (see below).
+
+**Sharing a request between consumers of the same key**
+
+`useObservablePromise` caches its promise per observable identity, so two components only share a request — and a settled promise — when they pass the same observable. Keyed sources usually don't: `useMemo(() => fetchUser(id), [id])` builds a new identity per component, so every avatar for the same user fetches and suspends on its own, and a remount suspends again even within `ttl`.
+
+`createObservableCache` hands out one observable per key, with ref-counted release and a grace period:
+
+```tsx
+const USER_TTL = 60_000
+const users = createObservableCache(
+  (id) =>
+    fromFetch(`/api/users/${id}`, {
+      // `fromFetch` resolves 4xx/5xx the way `fetch` does, so without this an error
+      // body is a successful result and gets cached as a user for the whole ttl
+      selector: (response) => {
+        if (!response.ok) throw new Error(`GET /api/users/${id} failed with ${response.status}`)
+        return response.json()
+      },
+    }),
+  {ttl: USER_TTL},
+)
+
+function Avatar({id}) {
+  const promise = useObservablePromise(users(id), {ttl: USER_TTL})
+  return (
+    <Suspense fallback={<AvatarSkeleton />}>
+      <AvatarImage promise={promise} />
+    </Suspense>
+  )
+}
+```
+
+Pass the same `ttl` to both. A second avatar for a loaded user, or a remount within that window after every avatar for it unmounted, renders without a fallback: the hook reuses the promise it settled for that observable. The two windows nest rather than coincide — the hook holds the cached observable for its own `ttl` after the last consumer unmounts, and the cache's `ttl` only starts once it lets go — so a remount in between renders a fallback but makes no request, and a key is refetched only after both have elapsed. Failures are never cached, so the next consumer retries. See [`createObservableCache`](/reference#createobservablecache) for the full semantics.
+
+**Make `ttl` environment-dependent** wherever the cache is reachable outside a browser. Releasing a key is a pending timer, and a pending timer keeps a Node process alive for the whole `ttl`: a one-minute window is a minute of a test runner refusing to exit, or of a leak detector reporting a held resource. Measured on a 3-second `ttl`, the process exited after 3002 ms; at `0`, after 2 ms.
+
+```ts
+const users = createObservableCache(fetchUser, {
+  ttl: process.env.NODE_ENV === 'test' ? 0 : USER_TTL,
+})
+```
+
+`0` still shares a request between concurrent subscribers, but it gives up every window that outlives them: a test that asserts on reuse across a remount, or on rejoining an abandoned request, needs a real `ttl` and fake timers rather than this. `cache.clear()` is the lever that costs nothing: it releases every key and tears down whatever is left with no subscribers, pending timers included, so calling it in a teardown drops them without changing the `ttl` the app ships.
 
 ### Handling events
 
