@@ -39,7 +39,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "oxc-transform-react": "^0.153.0",
     "typescript": "7.0.2",
-    "vite": "^8.3.4",
+    "vite": "^8.3.6",
     "vitest": "^5.0.4"
   },
   "engines": {
