@@ -41,6 +41,16 @@ import {EMPTY_OBJECT, missingInitialValueError, UNSET_INITIAL_VALUE} from './uti
  * — exactly what the client's first paint will show. Prefer {@link useSyncObservable} for
  * controlled inputs or when the value must stay consistent within the same event.
  *
+ * **`<Activity>`:** while the component is inside a hidden
+ * [`<Activity>`](https://react.dev/reference/react/Activity), this hook unsubscribes from the
+ * source (Effects and `useSyncExternalStore` subscriptions are torn down). A source that does not
+ * replay its latest value on subscribe — a plain `Subject`, hot event streams, and similar —
+ * therefore drops every value it emits while hidden; when the component is shown again it only
+ * sees values emitted after that. Sources that replay
+ * (`BehaviorSubject`, `ReplaySubject(1)`, `shareReplay({bufferSize: 1, refCount: true})`, or cold
+ * observables that re-read state on subscribe) resync correctly. Covered by
+ * `useObservable.activity.test.tsx`.
+ *
  * @public
  */
 export function useObservable<ObservableType extends Observable<any>>(
