@@ -62,6 +62,41 @@ If there is no initial value that makes sense for your observable — or you wan
 
 The difference between `useObservable` and `useSyncObservable` is how _updates_ propagate (deferred vs synchronous), not the first render. On the server both hooks render the resolved `initialValue` — exactly what the first client paint will show — and neither ever subscribes the observable there.
 
+#### Hidden `<Activity>` unsubscribes
+
+While a component is inside a hidden React [`<Activity>`](https://react.dev/reference/react/Activity), `useObservable` and `useSyncObservable` unsubscribe from the source — the same way Effects and `useSyncExternalStore` subscriptions are torn down. The last rendered value stays on screen (`display: none`), but nothing is listening.
+
+A source that does **not** replay its latest value on subscribe therefore drops every value it emits while the component is hidden. When the component is shown again it only sees values emitted after that:
+
+```tsx
+import {useObservable} from 'react-rx'
+import {Subject} from 'rxjs'
+
+// Before: plain Subject — emissions while hidden are gone for good.
+const events$ = new Subject<string>()
+
+function Panel() {
+  // Hide → events$.next('missed') → show: still the pre-hide value, never "missed".
+  const value = useObservable(events$, 'none')
+  return <div>{value}</div>
+}
+```
+
+Sources that replay on subscribe resync correctly — `BehaviorSubject`, `ReplaySubject(1)`, `shareReplay({bufferSize: 1, refCount: true})`, or a cold observable that re-reads state on subscribe:
+
+```tsx
+import {BehaviorSubject, Subject, shareReplay} from 'rxjs'
+
+// After: BehaviorSubject replays its current value on every subscribe.
+const state$ = new BehaviorSubject('initial')
+
+// Or wrap a hot stream so the latest value is replayed when Activity reveals again:
+const hot$ = new Subject<string>()
+const replayed$ = hot$.pipe(shareReplay({bufferSize: 1, refCount: true}))
+```
+
+This behavior is asserted in `packages/react-rx/src/__tests__/useObservable.activity.test.tsx` and `useSyncObservable.activity.test.tsx` (the "emissions while Activity is hidden are ignored/dropped" cases).
+
 The `disabled` option pauses the hook's _active_ subscription — think of it like `pause: true`. While `disabled` is `true`, the hook will not keep a live subscription that pushes updates into the component, and it returns the last value it already received (or the `initialValue` if nothing has been received yet). Turning `disabled` back to `false` resumes the live subscription. A disabled hook performs no subscriptions at all — even when the observable is rebuilt on every render — so `disabled: true` guarantees zero subscriptions until it is re-enabled.
 
 ```tsx
@@ -109,7 +144,7 @@ function Users({shouldFetch}: {shouldFetch: boolean}) {
 
 ### useSyncObservable()
 
-Same signature as `useObservable`, but updates are synchronous (the previous default). Use it for controlled inputs:
+Same signature as `useObservable`, but updates are synchronous (the previous default). Use it for controlled inputs. The same [hidden `<Activity>` unsubscribe](#hidden-activity-unsubscribes) caveat applies: plain `Subject`s drop values while hidden; replaying sources resync.
 
 ```tsx
 import type {ChangeEvent} from 'react'
