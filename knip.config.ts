@@ -31,6 +31,10 @@ const config: KnipConfig = {
       ],
       project: ['**/*.{ts,tsx,js,jsx}'],
       paths: {'@/*': ['./src/*']},
+      // Nextra injects these as `turbopack.resolveAlias` targets: a Turbopack-internal virtual
+      // module and wildcard path patterns, neither of which is a real import.
+      ignoreDependencies: ['@vercel/turbopack-next'],
+      ignoreUnresolved: ['./*', './content/*'],
     },
   },
 }
