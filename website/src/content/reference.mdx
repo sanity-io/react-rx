@@ -12,6 +12,8 @@ Mounts, remounts, and `<Activity>` reveals still render the current snapshot syn
 
 Prefer this hook for previews, validation, lists, and other non-input reads. Use [`useSyncObservable`](#usesyncobservable) for controlled inputs.
 
+**`<Activity>`:** while the component is inside a hidden [`<Activity>`](https://react.dev/reference/react/Activity), the hook unsubscribes from the source. A plain `Subject` (or any hot stream that does not replay) drops every value emitted while hidden — on reveal the component only sees later emissions. `BehaviorSubject`, `ReplaySubject(1)`, `shareReplay({bufferSize: 1, refCount: true})`, and cold observables that re-read state on subscribe resync correctly. See the [guide](/guide#hidden-activity-unsubscribes) for a before/after example; covered by `useObservable.activity.test.tsx`.
+
 **Signature**
 
 ```ts
@@ -57,6 +59,8 @@ Use it when the value feeds a controlled input, or must stay consistent within t
 `initialValue` is **required** and follows the same rules as [`useObservable`](#useobservable): every value is valid (`undefined` included), functions act as `useState`-style initializers, and omitting the argument throws during render. The server always renders the resolved `initialValue`.
 
 **Caveat:** store mutations cannot be marked as Transitions. Suspending on a value returned by this hook replaces already-visible content with the nearest Suspense fallback — see the [useSyncExternalStore caveats](https://react.dev/reference/react/useSyncExternalStore#caveats). Compare the two hooks in the [Suspense example](/examples/suspense).
+
+The same [hidden `<Activity>` unsubscribe](/guide#hidden-activity-unsubscribes) caveat as [`useObservable`](#useobservable) applies: plain `Subject`s drop values while hidden; replaying sources resync. Covered by `useSyncObservable.activity.test.tsx`.
 
 **Signature**
 
