@@ -18,8 +18,8 @@
     "@changesets/cli": "^3.0.3",
     "knip": "^6.41.0",
     "oxfmt": "^0.80.0",
-    "oxlint": "^1.88.0",
-    "oxlint-tsgolint": "^7.0.2004",
+    "oxlint": "^1.95.0",
+    "oxlint-tsgolint": "^7.0.2008",
     "typescript": "7.0.2"
   },
   "packageManager": "pnpm@12.23.0"
