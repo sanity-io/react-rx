@@ -2,7 +2,10 @@ import type {KnipConfig} from 'knip'
 
 const config: KnipConfig = {
   workspaces: {
-    '.': {},
+    '.': {
+      // oxlint spawns `tsrs-lint` for type-aware linting when tsrs is installed; nothing imports it
+      ignoreDependencies: ['tsrs'],
+    },
     'async-react': {
       entry: ['src/main.tsx', 'src/debugger.ts', 'src/mocks/browser.ts', 'vite.config.ts'],
       project: ['src/**/*.{ts,tsx}', 'vite.config.ts'],
